@@ -1,12 +1,8 @@
-const http = require('http');
-const PORT = 3000;
+async function fetch_demo()
+{
+	const resp = await fetch('https://www.reddit.com/r/programming.json');
 
-const server = http.createServer((req, res) => {
-  res.statusCode = 200;
-  res.setHeader('Content-Type', 'text/plain');
-  res.end('Hello World');
-});
+	console.log(await resp.json());
+}
 
-server.listen(PORT, () => {
-  console.log(`Server running at PORT:${PORT}/`);
-});
+fetch_demo();
