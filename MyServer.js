@@ -1,8 +1,19 @@
-async function fetch_demo()
-{
-	const resp = await fetch('https://www.reddit.com/r/programming.json');
+const axios = require('axios');
+const cheerio = require('cheerio');
 
-	console.log(await resp.json());
-}
+const getPostTitles = async () => {
+	try {
+		const { data } = await axios.get(
+			'https://stackoverflow.com/questions/43996443/js-promises-returns/43996485#43996485'
+		);
+		const $ = cheerio.load(data);
 
-fetch_demo();
+		
+		return aTexts;
+	} catch (error) {
+		throw error;
+	}
+};
+
+getPostTitles()
+    .then((postTitles) => console.log(postTitles));
