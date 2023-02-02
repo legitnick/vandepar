@@ -1,6 +1,7 @@
 //setup modules
 const axios = require('axios');
 const cheerio = require('cheerio');
+const fs = require('fs');
 
 const I_MIN_LIKES = 10;
 
@@ -50,4 +51,13 @@ const getSOText = async () => {
 };
 
 getSOText()
-    .then((postTitles) => console.log(postTitles));
+    .then((postTitles) => {
+        console.log(postTitles)
+//TODO: have 1 replaced by a number of a link in SO which was used for getSOText();
+        fs.writeFile("./bin/1.txt",postTitles,(error)=>{
+            if(error)
+                return console.log(error);
+            console.log("file saved");
+        });
+
+    });
