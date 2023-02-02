@@ -29,7 +29,7 @@ const getAText = ($,header)=>{
 		});
     return header;
 }
-const getPostTitles = async () => {
+const getSOText = async () => {
 	try {
 		const { data } = await axios.get(
 			'https://stackoverflow.com/questions/17162334/how-to-use-continue-in-jquery-each-loop'
@@ -50,5 +50,5 @@ const getPostTitles = async () => {
 	}
 };
 
-getPostTitles()
+getSOText()
     .then((postTitles) => console.log(postTitles));
