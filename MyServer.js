@@ -14,7 +14,9 @@ const limiter = new Bottleneck({
 
 //string f(doc?)
 const getTitle = ($)=>{
-    return $('#question-header  a.question-hyperlink').text();
+    const str_tmp = $('#question-header  a.question-hyperlink').text();
+    console.log(str_tmp);
+    return str_tmp;
 }
 
 //string f(doc?)
