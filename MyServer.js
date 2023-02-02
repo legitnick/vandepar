@@ -8,21 +8,21 @@ const getPostTitles = async () => {
 		);
 		const $ = cheerio.load(data);
 
-		
+
 		const title = $('#question-header  a.question-hyperlink').text();
 
 		const qText = $('div.postcell > div.js-post-body').text();
-		const aTexts = [];
+
+        let s_whole-text = title + qText;
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
 			const answer = $(el).text().replace("\n","\t")+"\n";
-			aTexts.push(answer);
+			s_whole-text+=answer;
 		});
-		aTexts.push(qText);
-		aTexts.push(title);
-		return aTexts;
+		return s_whole-text;
 	} catch (error) {
-		throw error;
+	    console.error(e, e.stack);
+        throw error;
 	}
 };
 
