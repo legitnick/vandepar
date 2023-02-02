@@ -11,7 +11,7 @@ const getTitle = ($)=>{
 
 //string f(doc?)
 const getQText = ($)=>{
-            $('div.postcell > div.js-post-body').text();
+            return $('#question > div.post-layout > div.postcell.post-layout--right > div.s-prose.js-post-body').text();
 }
 
 
@@ -21,9 +21,8 @@ const getAText = ($,header)=>{
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
 		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
 
-            console.log(parseInt(a_likes));
             if(parseInt(a_likes) < I_MIN_LIKES)return;
-            console.log("str: " + a_likes);
+
             const answer ="comment:\n" +  $(el).text().replace("\n","\t")+"\n";
 			header+=answer;
 		});
@@ -39,7 +38,7 @@ const getSOText = async () => {
 
 		const title = getTitle($);
 		const qText = getQText($);
-
+        console.log(qText);
         let s_whole_text = title + qText;
         s_whole_text = getAText($,s_whole_text);
 
