@@ -13,13 +13,13 @@ const getPostTitles = async () => {
 
 		const qText = $('div.postcell > div.js-post-body').text();
 
-        let s_whole-text = title + qText;
+        let s_whole_text = title + qText;
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
 			const answer = $(el).text().replace("\n","\t")+"\n";
-			s_whole-text+=answer;
+			s_whole_text+=answer;
 		});
-		return s_whole-text;
+		return s_whole_text;
 	} catch (error) {
 	    console.error(e, e.stack);
         throw error;
