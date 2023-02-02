@@ -1,22 +1,12 @@
 //setup modules
 const axios = require('axios');
-const Bottleneck = require('bottleneck');
 const cheerio = require('cheerio');
-const performTask = require('./src/throttle.js');
 
 const I_MIN_LIKES = 10;
 
-const limiter = new Bottleneck({
-    minTime:100,
-    maxConcurrent:4,
-});
-
-
 //string f(doc?)
 const getTitle = ($)=>{
-    const str_tmp = $('#question-header  a.question-hyperlink').text();
-    console.log(str_tmp);
-    return str_tmp;
+    return $('#question-header  a.question-hyperlink').text();
 }
 
 //string f(doc?)
@@ -39,12 +29,12 @@ const getAText = ($,header)=>{
 		});
     return header;
 }
-const getPostTitles = (i_link_number) => {
-
-		axios.get(
-			'https://stackoverflow.com/questions/'+i_link_number+'/how-to-use-continue-in-jquery-each-loop'
-            ).then((data)=>{
-                const $ = cheerio.load(data);
+const getPostTitles = async () => {
+	try {
+		const { data } = await axios.get(
+			'https://stackoverflow.com/questions/17162334/how-to-use-continue-in-jquery-each-loop'
+            );
+		const $ = cheerio.load(data);
 
 
 		const title = getTitle($);
@@ -54,16 +44,11 @@ const getPostTitles = (i_link_number) => {
         s_whole_text = getAText($,s_whole_text);
 
 		return s_whole_text;
-	})
-        .catch (error=> {
-	    console.error(error, error.stack);
+	} catch (error) {
+	    console.error(e, e.stack);
         throw error;
-	});
-
+	}
 };
 
-const throttledCrawling = limiter.wrap(getPostTitles);
-
-performTask(throttledCrawling);
-const str = getPostTitles();
-console.log(str);
+getPostTitles()
+    .then((postTitles) => console.log(postTitles));
