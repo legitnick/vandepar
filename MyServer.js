@@ -1,9 +1,14 @@
 //setup modules
+const Bottleneck = require('bottleneck');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 
 const I_MIN_LIKES = 10;
+const limiter = new Bottleneck({
+    maxConcurrent:4,
+    minTime:250,
+});
 
 //string f(doc?)
 const getTitle = ($)=>{
@@ -50,7 +55,9 @@ const getSOText = async () => {
 	}
 };
 
-getSOText()
+const wrapped = limiter.wrap(getSOText);
+
+wrapped()
     .then((postTitles) => {
         console.log(postTitles)
 //TODO: have 1 replaced by a number of a link in SO which was used for getSOText();
