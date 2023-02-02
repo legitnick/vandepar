@@ -14,6 +14,10 @@ const getPostTitles = async () => {
 		const qText = $('div.postcell > div.js-post-body').text();
 		const aTexts = [];
 
+		$('div.answercell > div.js-post-body').each((_idx, el) => {
+			const answer = $(el).text().replace("\n","\t")+"\n";
+			aTexts.push(answer);
+		});
 		aTexts.push(qText);
 		aTexts.push(title);
 		return aTexts;
