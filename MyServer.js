@@ -9,6 +9,10 @@ const getPostTitles = async () => {
 		const $ = cheerio.load(data);
 
 		
+		const title = $('#question-header  a.question-hyperlink').text();
+
+		const aTexts = [];
+		aTexts.push(title);
 		return aTexts;
 	} catch (error) {
 		throw error;
