@@ -1,12 +1,12 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
-const I_MIN_LIKES = 3;
+const I_MIN_LIKES = 10;
 
 const getPostTitles = async () => {
 	try {
 		const { data } = await axios.get(
-			'https://stackoverflow.com/questions/43996443/js-promises-returns/43996485#43996485'
-		);
+			'https://stackoverflow.com/questions/17162334/how-to-use-continue-in-jquery-each-loop'
+            );
 		const $ = cheerio.load(data);
 
 
@@ -17,12 +17,12 @@ const getPostTitles = async () => {
         let s_whole_text = title + qText;
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
-		    const a_likes = $(el).closest('post-layout').children('.js-vote-count');
+		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
 
             console.log(parseInt(a_likes));
             if(parseInt(a_likes) < I_MIN_LIKES)return;
-            console.log("smth");
-            const answer = $(el).text().replace("\n","\t")+"\n";
+            console.log("str: " + a_likes);
+            const answer ="comment:\n" +  $(el).text().replace("\n","\t")+"\n";
 			s_whole_text+=answer;
 		});
 		return s_whole_text;
