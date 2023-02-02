@@ -27,17 +27,18 @@ const getAText = ($,header)=>{
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
 		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
 
-            if(parseInt(a_likes) < I_MIN_LIKES)return;
+            const likes_on_A = parseInt(a_likes);
+            if( likes_on_A < I_MIN_LIKES)return;
 
-            const answer ="comment:\n" +  $(el).text().replace("\n","\t")+"\n";
+            const answer ="This answer has helped "+likes_on_A+" people\n" +  $(el).text().replace("\n","\t")+"\n";
 			header+=answer;
 		});
     return header;
 }
-const getSOText = async () => {
+const getSOText = async (i_link) => {
 	try {
 		const { data } = await axios.get(
-			'https://stackoverflow.com/questions/17162334/how-to-use-continue-in-jquery-each-loop'
+			'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
             );
 		const $ = cheerio.load(data);
 
@@ -57,7 +58,8 @@ const getSOText = async () => {
 
 const wrapped = limiter.wrap(getSOText);
 
-wrapped()
+const curr_num = 17162334
+wrapped(curr_num)
     .then((postTitles) => {
         console.log(postTitles)
 //TODO: have 1 replaced by a number of a link in SO which was used for getSOText();
