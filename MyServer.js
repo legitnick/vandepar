@@ -37,9 +37,10 @@ const getAText = ($,header)=>{
 }
 const getSOText = async (i_link) => {
 	try {
-		const { data } = await axios.get(
+        const { data } = await axios.get(
 			'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
             );
+
 		const $ = cheerio.load(data);
 
 
@@ -51,22 +52,29 @@ const getSOText = async (i_link) => {
 
 		return s_whole_text;
 	} catch (error) {
-	    console.error(e, e.stack);
-        throw error;
-	}
+	    console.error(error, error.stack);
+	    return null;
+    }
 };
 
 const wrapped = limiter.wrap(getSOText);
 
-const curr_num = 17162334
-wrapped(curr_num)
+function mainLoop(){
+
+const curr_num = 17162334;
+    for( let i = curr_num/1.01 | 0; i < curr_num; i++)
+
+wrapped(i)
     .then((postTitles) => {
+        if(postTitles){
         console.log(postTitles)
 //TODO: have 1 replaced by a number of a link in SO which was used for getSOText();
-        fs.writeFile("./bin/1.txt",postTitles,(error)=>{
+        fs.writeFile("./bin/"+i+".txt",postTitles,(error)=>{
             if(error)
                 return console.log(error);
             console.log("file saved");
         });
-
+        }
     });
+}
+mainLoop();
