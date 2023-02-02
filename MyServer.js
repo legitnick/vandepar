@@ -1,5 +1,6 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
+const I_MIN_LIKES = 3;
 
 const getPostTitles = async () => {
 	try {
@@ -16,7 +17,12 @@ const getPostTitles = async () => {
         let s_whole_text = title + qText;
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
-			const answer = $(el).text().replace("\n","\t")+"\n";
+		    const a_likes = $(el).closest('post-layout').children('.js-vote-count');
+
+            console.log(parseInt(a_likes));
+            if(parseInt(a_likes) < I_MIN_LIKES)return;
+            console.log("smth");
+            const answer = $(el).text().replace("\n","\t")+"\n";
 			s_whole_text+=answer;
 		});
 		return s_whole_text;
