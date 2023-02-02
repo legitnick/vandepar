@@ -39,8 +39,11 @@ const getSOText = async (i_link) => {
 	try {
         const { data } = await axios.get(
 			'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
-            );
-
+            ).catch((error)=>{
+                console.log(error)
+                return null;
+            });
+        if (data === null) return;
 		const $ = cheerio.load(data);
 
 
@@ -52,8 +55,9 @@ const getSOText = async (i_link) => {
 
 		return s_whole_text;
 	} catch (error) {
-	    console.error(error, error.stack);
-	    return null;
+	    s_whole_text = null;
+        console.error(error, error.stack);
+	    return s_whole_text;
     }
 };
 
