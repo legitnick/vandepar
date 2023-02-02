@@ -11,7 +11,10 @@ const getPostTitles = async () => {
 		
 		const title = $('#question-header  a.question-hyperlink').text();
 
+		const qText = $('div.postcell > div.js-post-body').text();
 		const aTexts = [];
+
+		aTexts.push(qText);
 		aTexts.push(title);
 		return aTexts;
 	} catch (error) {
