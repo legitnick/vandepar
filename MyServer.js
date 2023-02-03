@@ -45,7 +45,7 @@ const getAText = ($,doc)=>{
             return true;
         }
 
-        //    doc.html_text+='<p>this has helped: '+likes_on_A + '</p>';
+        doc.html_text+='<p>this has helped: '+likes_on_A + '</p>';
         //is_answered to skip writing htmls w/o answers
         doc.is_answered = true;
 
@@ -97,7 +97,8 @@ function mainLoop(){
     // const promise_arr =  [];
     // push a promise to an array
     // promise_arr.push(wrapped(i));
-    for( let i = curr_num ; i < curr_num; i--)
+    for( let i = curr_num - 1; i*1.01 > curr_num; i--)
+        //this 1.01 is still shady
         //the number of crawls is too big rn
         wrapped(i)
             .then((postTitles) => {
