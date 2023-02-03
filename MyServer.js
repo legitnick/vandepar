@@ -66,19 +66,30 @@ const wrapped = limiter.wrap(getSOText);
 function mainLoop(){
 
 const curr_num = 17162334;
+// const promise_arr =  [];
+    // push a promise to an array
+    // promise_arr.push(wrapped(i));
     for( let i = curr_num/1.01 | 0; i < curr_num; i++)
+//the number of crawls is too big rn
+        wrapped(i)
+            .then((postTitles) => {
+                if(postTitles){
+                console.log(postTitles)
 
-wrapped(i)
-    .then((postTitles) => {
-        if(postTitles){
-        console.log(postTitles)
-//TODO: have 1 replaced by a number of a link in SO which was used for getSOText();
-        fs.writeFile("./bin/"+i+".txt",postTitles,(error)=>{
-            if(error)
-                return console.log(error);
-            console.log("file saved");
-        });
+                fs.writeFile("./bin/"+i+".txt",postTitles,(error)=>{
+                if(error)
+                    return console.log(error);
+                console.log("file saved");
+            });
         }
     });
+    //after all the crawling to change ip adress
+    //const ip_promise = Promise.all(promise_arr);
+    //ip_promise.then(changeMyIP());
+//void changeMyIP(void);
+    //const changeMyIP = require('./src/windscribe_proxy.js');
+    //there are probably some nodejs tools for proxying
+    //also, maybe shouldn't even use async for a crawler at all, as later
+    //on video-editing will be used, as well as puppeteer running
 }
 mainLoop();
