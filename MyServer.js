@@ -10,6 +10,7 @@ const limiter = new Bottleneck({
     minTime:250,
 });
 
+
 //string f(doc?)
 const getTitle = ($)=>{
     return $('#question-header  a.question-hyperlink');
@@ -21,8 +22,8 @@ const getQText = ($)=>{
 }
 
 
-//string f(doc,string)
-const getAText = ($,header)=>{
+//void f(jQuery_doc,&my_doc)
+const getAText = ($,doc)=>{
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
 		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count');
@@ -30,12 +31,20 @@ const getAText = ($,header)=>{
             const likes_on_A = parseInt(a_likes);
             if( likes_on_A < I_MIN_LIKES)return;
 
+ //is_answered to skip writing htmls w/o answers
+             doc.is_answered = true;
 
-			header+=$(el);
+
+			doc.html_text+=$(el);
         });
-    return header;
 }
+
+// string f(int)
 const getSOText = async (i_link) => {
+let doc = {
+    html_text:"",
+    is_answered:false
+};
 	try {
         const { data } = await axios.get(
 			'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
@@ -50,14 +59,16 @@ const getSOText = async (i_link) => {
 		const title = getTitle($);
 		const qText = getQText($);
         console.log(qText);
-        let s_whole_text = title + qText;
-        s_whole_text = getAText($,s_whole_text);
+        doc.html_text = title + qText;
 
-		return s_whole_text;
+        getAText($,doc);
+
+        if(doc.is_answered)
+		    return doc.html_text;
+        return null;
 	} catch (error) {
-	    s_whole_text = null;
         console.error(error, error.stack);
-	    return s_whole_text;
+	    return null;
     }
 };
 
