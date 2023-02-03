@@ -45,7 +45,7 @@ const getAText = ($,doc)=>{
             return true;
         }
 
-        doc.html_text+='<p class="this-has-helped">this answer has helped '+likes_on_A + ' people.</p>';
+        doc.html_text+='<p class="this-has-helped">This answer has helped '+likes_on_A + ' people.</p>';
         //is_answered to skip writing htmls w/o answers
         doc.is_answered = true;
 
