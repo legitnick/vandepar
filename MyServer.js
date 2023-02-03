@@ -39,13 +39,12 @@ const getAText = ($,doc)=>{
 
             const likes_on_A = parseInt(a_likes);
             if( likes_on_A < I_MIN_LIKES){
-                doc.html_text = null;
-                return;
+                return true;
             }
 
         //    doc.html_text+='<p>this has helped: '+likes_on_A + '</p>';
  //is_answered to skip writing htmls w/o answers
-             doc.is_answered = true;
+            doc.is_answered = true;
 
 
 			doc.html_text+=$(el);
