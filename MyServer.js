@@ -26,11 +26,15 @@ const getQText = ($)=>{
 const getAText = ($,doc)=>{
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
-		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count');
+		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
 
             const likes_on_A = parseInt(a_likes);
-            if( likes_on_A < I_MIN_LIKES)return;
+            if( likes_on_A < I_MIN_LIKES){
+                doc.html_text = null;
+                return;
+            }
 
+        //    doc.html_text+='<p>this has helped: '+likes_on_A + '</p>';
  //is_answered to skip writing htmls w/o answers
              doc.is_answered = true;
 
