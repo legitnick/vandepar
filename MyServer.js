@@ -12,12 +12,12 @@ const limiter = new Bottleneck({
 
 //string f(doc?)
 const getTitle = ($)=>{
-    return $('#question-header  a.question-hyperlink').text();
+    return $('#question-header  a.question-hyperlink');
 }
 
 //string f(doc?)
 const getQText = ($)=>{
-            return $('#question > div.post-layout > div.postcell.post-layout--right > div.s-prose.js-post-body').text();
+            return $('#question > div.post-layout > div.postcell.post-layout--right > div.s-prose.js-post-body');
 }
 
 
@@ -25,14 +25,14 @@ const getQText = ($)=>{
 const getAText = ($,header)=>{
 
 		$('div.answercell > div.js-post-body').each((_idx, el) => {
-		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
+		    const a_likes = $(el).closest('.post-layout').find('.js-vote-count');
 
             const likes_on_A = parseInt(a_likes);
             if( likes_on_A < I_MIN_LIKES)return;
 
-            const answer ="This answer has helped "+likes_on_A+" people\n" +  $(el).text().replace("\n","\t")+"\n";
-			header+=answer;
-		});
+
+			header+=$(el);
+        });
     return header;
 }
 const getSOText = async (i_link) => {
@@ -76,7 +76,7 @@ const curr_num = 17162334;
                 if(postTitles){
                 console.log(postTitles)
 
-                fs.writeFile("./bin/"+i+".txt",postTitles,(error)=>{
+                fs.writeFile("./bin2/"+i+".html",postTitles,(error)=>{
                 if(error)
                     return console.log(error);
                 console.log("file saved");
