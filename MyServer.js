@@ -7,7 +7,7 @@ const HttpProxyAgent = require("http-proxy-agent");
 const HttpsProxyAgent = require("https-proxy-agent");
 
 //setup src files
-const getRecentFile = require("./src/getRecentFile.js");
+const getRecentLinkNum = require("./src/getRecentFile.js");
 
 const limiter = new Bottleneck({
     maxConcurrent:4,
@@ -90,12 +90,14 @@ let doc = {
 const wrapped = limiter.wrap(getSOText);
 
 function mainLoop(){
+//{ file: '16992452.html', mtime: 2023-02-03T13:18:30.372Z }
 
-const curr_num = 17162334;
-// const promise_arr =  [];
+    const curr_num = getRecentLinkNum('./bin2');
+    console.log(curr_num);
+    // const promise_arr =  [];
     // push a promise to an array
     // promise_arr.push(wrapped(i));
-    for( let i = curr_num/1.01 | 0; i < curr_num; i++)
+    for( let i = curr_num ; i < curr_num; i--)
 //the number of crawls is too big rn
         wrapped(i)
             .then((postTitles) => {
@@ -109,7 +111,6 @@ const curr_num = 17162334;
             });
         }
     });
-    console.log(getRecentFile('./bin2'));
     //after all the crawling to change ip adress
     //const ip_promise = Promise.all(promise_arr);
     //ip_promise.then(changeMyIP());
