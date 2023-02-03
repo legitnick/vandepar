@@ -6,6 +6,9 @@ const fs = require('fs');
 const HttpProxyAgent = require("http-proxy-agent");
 const HttpsProxyAgent = require("https-proxy-agent");
 
+//setup src files
+const getRecentFile = require("./src/getRecentFile.js");
+
 const limiter = new Bottleneck({
     maxConcurrent:4,
     minTime:250,
@@ -106,6 +109,7 @@ const curr_num = 17162334;
             });
         }
     });
+    console.log(getRecentFile('./bin2'));
     //after all the crawling to change ip adress
     //const ip_promise = Promise.all(promise_arr);
     //ip_promise.then(changeMyIP());
