@@ -3,12 +3,21 @@ const Bottleneck = require('bottleneck');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
+const HttpProxyAgent = require("http-proxy-agent");
+const HttpsProxyAgent = require("https-proxy-agent");
 
-const I_MIN_LIKES = 10;
 const limiter = new Bottleneck({
     maxConcurrent:4,
     minTime:250,
 });
+
+//setup zenrows proxy
+const proxy = "http://61d9d31d8af64a05690ad2ef1714e5a19db2c014:@proxy.zenrows.com:8001";
+const httpAgent = new HttpProxyAgent(proxy);
+const httpsAgent = new HttpsProxyAgent(proxy);
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
+const I_MIN_LIKES = 10;
 
 
 //string f(doc?)
@@ -52,7 +61,7 @@ let doc = {
 	try {
         const { data } = await axios.get(
 			'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
-            ).catch((error)=>{
+            ,httpAgent,httpsAgent).catch((error)=>{
                 console.log(error)
                 return null;
             });
