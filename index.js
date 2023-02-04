@@ -93,7 +93,7 @@ const wrapped = limiter.wrap(getSOText);
 function mainLoop(){
     //{ file: '16992452.html', mtime: 2023-02-03T13:18:30.372Z }
 
-    const curr_num = getRecentLinkNum('./bin');
+    const curr_num = getRecentLinkNum('./bin/scraped_html');
     console.log(curr_num);
     // const promise_arr =  [];
     // push a promise to an array
@@ -106,7 +106,7 @@ function mainLoop(){
                 if(postTitles){
                     console.log(postTitles)
 
-                    fs.writeFile("./bin/"+i+".html",postTitles,(error)=>{
+                    fs.writeFile("./bin/scraped_html"+i+".html",postTitles,(error)=>{
                         if(error)
                             return console.log(error);
                         console.log("file saved");
