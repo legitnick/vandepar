@@ -44,6 +44,15 @@ const write = (async (path,new_string)=>{
         })
 });
 
+
+
+// strin[] f(string)
+const splitHTML = (html_string)=>{
+    console.log(html_string);
+    return html_string.split('class="s-prose js-post-body"').forEach(el=>'class="s-prose js-post-body"'+el).split('class="this-has-helped"').forEach(el=>'class="this-has-helped"'+el);
+   //this calls for a function splitNoRemove
+};
+
 //void f(string)
 const parse = (async (path)=>{
     //for each post, create a different html file, as well as for
@@ -51,8 +60,12 @@ const parse = (async (path)=>{
     return await fs.readFile(html_from_dir+path,(err,html_string)=>{
         if(err)throw err;
 
-        let new_string = toCompleteHtml(html_string);
-        write(path,new_string);
+        const post_arr = splitHTML(html_string);
+
+        post_arr.forEach((el,i)=>{
+            let new_string = toCompleteHtml(el);
+            write(i+"_"+path,new_string);
+        });
 
     });
 })

@@ -1,24 +1,24 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><html>
-<head>
-<link href="./css/general.css" rel="stylesheet" />
-</head>
-<body>
-    <a href="/questions/2745061/java-lang-illegalargumentexception-view-not-attached-to-window-manager" class="question-hyperlink">java.lang.IllegalArgumentException: View not attached to window manager</a><div class="s-prose js-post-body" itemprop="text">
+            <head>
+                <link href="./css/general.css" rel="stylesheet" />
+            </head>
+            <body>
+                <a href="/questions/2745061/java-lang-illegalargumentexception-view-not-attached-to-window-manager" class="question-hyperlink">java.lang.IllegalArgumentException: View not attached to window manager</a><div class="s-prose js-post-body" itemprop="text">
 
-        <p>I have an activity that starts AsyncTask and shows progress dialog for the duration of operation. The activity is declared NOT be recreated by rotation or keyboard slide.</p>
+                    <p>I have an activity that starts AsyncTask and shows progress dialog for the duration of operation. The activity is declared NOT be recreated by rotation or keyboard slide.</p>
 
-        <pre><code>    &lt;activity android:name=".MyActivity" 
+                    <pre><code>    &lt;activity android:name=".MyActivity" 
               android:label="@string/app_name"
               android:configChanges="keyboardHidden|orientation"
               &gt;
         &lt;intent-filter&gt;
         &lt;/intent-filter&gt;
     &lt;/activity&gt;
-        </code></pre>
+                    </code></pre>
 
-        <p>Once task completed, I dissmiss dialog, but on some phones (framework: 1.5, 1.6) such error is thrown:</p>
+                    <p>Once task completed, I dissmiss dialog, but on some phones (framework: 1.5, 1.6) such error is thrown:</p>
 
-        <pre><code>java.lang.IllegalArgumentException: View not attached to window manager
+                    <pre><code>java.lang.IllegalArgumentException: View not attached to window manager
     at android.view.WindowManagerImpl.findViewLocked(WindowManagerImpl.java:356)
     at android.view.WindowManagerImpl.removeView(WindowManagerImpl.java:201)
     at android.view.Window$LocalWindowManager.removeView(Window.java:400)
@@ -27,11 +27,11 @@
     at android.app.Dialog$1.run(Dialog.java:103)
     at android.app.Dialog.dismiss(Dialog.java:252)
     at xxx.onPostExecute(xxx$1.java:xxx)
-        </code></pre>
+                    </code></pre>
 
-        <p>My code is:</p>
+                    <p>My code is:</p>
 
-        <pre><code>final Dialog dialog = new AlertDialog.Builder(context)
+                    <pre><code>final Dialog dialog = new AlertDialog.Builder(context)
     .setTitle("Processing...")
     .setCancelable(true)
     .create();
@@ -60,17 +60,17 @@ dialog.setOnCancelListener(new OnCancelListener() {
 });
 
 dialog.show();
-        </code></pre>
+                    </code></pre>
 
-        <p>From what I have read (<a href="http://bend-ing.blogspot.com/2008/11/properly-handle-progress-dialog-in.html" rel="noreferrer">http://bend-ing.blogspot.com/2008/11/properly-handle-progress-dialog-in.html</a>) and seen in Android sources, it looks like the only possible situation to get that exception is when activity was destroyed. But as I have mentioned, I forbid activity recreation for basic events.</p>
+                    <p>From what I have read (<a href="http://bend-ing.blogspot.com/2008/11/properly-handle-progress-dialog-in.html" rel="noreferrer">http://bend-ing.blogspot.com/2008/11/properly-handle-progress-dialog-in.html</a>) and seen in Android sources, it looks like the only possible situation to get that exception is when activity was destroyed. But as I have mentioned, I forbid activity recreation for basic events.</p>
 
-        <p>So any suggestions are very appreciated.</p>
-    </div><p class="this-has-helped">This answer has helped 232 people.</p><div class="s-prose js-post-body" itemprop="text">
-        <p>I too get this error <strong>sometimes</strong> when I dismiss dialog and finish activity from onPostExecute method. I guess sometimes activity gets finished before dialog successfully dismisses.</p>
+                    <p>So any suggestions are very appreciated.</p>
+                </div><p class="this-has-helped">This answer has helped 232 people.</p><div class="s-prose js-post-body" itemprop="text">
+                    <p>I too get this error <strong>sometimes</strong> when I dismiss dialog and finish activity from onPostExecute method. I guess sometimes activity gets finished before dialog successfully dismisses.</p>
 
-        <p>Simple, yet effective solution that works for me</p>
+                    <p>Simple, yet effective solution that works for me</p>
 
-        <pre><code>@Override
+                    <pre><code>@Override
 protected void onPostExecute(MyResult result) {
     try {
         if ((this.mDialog != null) &amp;&amp; this.mDialog.isShowing()) {
@@ -84,13 +84,13 @@ protected void onPostExecute(MyResult result) {
         this.mDialog = null;
     }  
 }
-        </code></pre>
-    </div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body" itemprop="text">
-        <p>Here is my "bullet proof" solution, which is compilation of all good answers that I found on this topic (thanks to @Damjan and @Kachi). Here the exception is swallowed only if all other ways of detection did not succeeded. In my case I need to close the dialog automatically and this is the only way to protect the app from crash. 
-        I hope it will help you! 
-        Please, vote and leave comments if you have remarks or better solution. Thank you!</p>
+                    </code></pre>
+                </div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body" itemprop="text">
+                    <p>Here is my "bullet proof" solution, which is compilation of all good answers that I found on this topic (thanks to @Damjan and @Kachi). Here the exception is swallowed only if all other ways of detection did not succeeded. In my case I need to close the dialog automatically and this is the only way to protect the app from crash. 
+                    I hope it will help you! 
+                    Please, vote and leave comments if you have remarks or better solution. Thank you!</p>
 
-        <pre><code>public void dismissWithCheck(Dialog dialog) {
+                    <pre><code>public void dismissWithCheck(Dialog dialog) {
         if (dialog != null) {
             if (dialog.isShowing()) {
 
@@ -132,11 +132,11 @@ protected void onPostExecute(MyResult result) {
             dialog = null;
         }
     }
-        </code></pre>
-    </div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body" itemprop="text">
-        <p>Here is the correct solution to solving this problem:</p>
+                    </code></pre>
+                </div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body" itemprop="text">
+                    <p>Here is the correct solution to solving this problem:</p>
 
-        <pre><code>public void hideProgress() {
+                    <pre><code>public void hideProgress() {
     if(mProgressDialog != null) {
         if(mProgressDialog.isShowing()) { //check if dialog is showing.
 
@@ -154,28 +154,28 @@ protected void onPostExecute(MyResult result) {
         mProgressDialog = null;
     }
 }
-        </code></pre>
+                    </code></pre>
 
-        <p>Instead of blindly catching all exceptions, this solution addresses the root of the problem: trying to dimiss a dialog when the activity used to initialize the dialog has already been finished. Working on my Nexus 4 running KitKat, but should work for all versions of Android.</p>
-    </div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body" itemprop="text">
-        <p>I may have a workaround.</p>
+                    <p>Instead of blindly catching all exceptions, this solution addresses the root of the problem: trying to dimiss a dialog when the activity used to initialize the dialog has already been finished. Working on my Nexus 4 running KitKat, but should work for all versions of Android.</p>
+                </div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body" itemprop="text">
+                    <p>I may have a workaround.</p>
 
-        <p>Was having the same issue, where I am loading lots of items (via the file system) into a <code>ListView</code> via an <code>AsyncTask</code>.  Had the <code>onPreExecute()</code> firing up a <code>ProgressDialog</code>, and then both <code>onPostExecute()</code> and <code>onCancelled()</code> (called when the task is cancelled explicitly via <code>AsyncTask.cancel()</code>) closing it via <code>.cancel()</code>.  </p>
+                    <p>Was having the same issue, where I am loading lots of items (via the file system) into a <code>ListView</code> via an <code>AsyncTask</code>.  Had the <code>onPreExecute()</code> firing up a <code>ProgressDialog</code>, and then both <code>onPostExecute()</code> and <code>onCancelled()</code> (called when the task is cancelled explicitly via <code>AsyncTask.cancel()</code>) closing it via <code>.cancel()</code>.  </p>
 
-        <p>Got the same "java.lang.IllegalArgumentException: View not attached to window manager" error when I was killing the dialog in the <code>onCancelled()</code> method of the <code>AsyncTask</code> (I'd seen this done in the excellent <a href="http://code.google.com/p/shelves/" rel="nofollow noreferrer">Shelves app</a>).  </p>
+                    <p>Got the same "java.lang.IllegalArgumentException: View not attached to window manager" error when I was killing the dialog in the <code>onCancelled()</code> method of the <code>AsyncTask</code> (I'd seen this done in the excellent <a href="http://code.google.com/p/shelves/" rel="nofollow noreferrer">Shelves app</a>).  </p>
 
-        <p>The workaround was to create a public field in the <code>AsyncTask</code> that contains the <code>ProgressDialog</code>:</p>
+                    <p>The workaround was to create a public field in the <code>AsyncTask</code> that contains the <code>ProgressDialog</code>:</p>
 
-        <pre><code>public ProgressDialog mDialog;
-        </code></pre>
+                    <pre><code>public ProgressDialog mDialog;
+                    </code></pre>
 
-        <p>Then, in <code>onDestroy()</code> when I cancel my <code>AsyncTask</code>, I can also kill the associated dialog via:</p>
+                    <p>Then, in <code>onDestroy()</code> when I cancel my <code>AsyncTask</code>, I can also kill the associated dialog via:</p>
 
-        <pre><code>AsyncTask.mDialog.cancel();
-        </code></pre>
+                    <pre><code>AsyncTask.mDialog.cancel();
+                    </code></pre>
 
-        <p>Calling <code>AsyncTask.cancel()</code> DOES trigger <code>onCancelled()</code> in the <code>AsyncTask</code>, but for some reason by the time that method is called, the View has already been destroyed and thus cancelling the dialog is failing.</p>
-    </div>
-</body>
-</html>
-</body></html>
+                    <p>Calling <code>AsyncTask.cancel()</code> DOES trigger <code>onCancelled()</code> in the <code>AsyncTask</code>, but for some reason by the time that method is called, the View has already been destroyed and thus cancelling the dialog is failing.</p>
+                </div>
+            </body>
+        </html>
+        </body></html>
