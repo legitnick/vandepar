@@ -1,7 +1,16 @@
 a{
     color: inherit;
+    text-decoration: inherit;
 }
 .s-prose.js-post-body{
     border: 1px solid grey;
     border-radius: 1rem;
+}
+div{
+    margin-bottom:2em;
+    padding:2em;
+}
+.question-hyperlink{
+    margin:2em 1em;
+   font-size:3em; 
 }
