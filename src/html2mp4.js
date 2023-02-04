@@ -3,6 +3,7 @@
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 
+//void f(Page)
 const scroll = (async (page) =>{
     await page.evaluate(async ()=>{
         await new Promise((resolve)=>{
@@ -20,6 +21,7 @@ const scroll = (async (page) =>{
         });
     });
 });
+//void f(void)
 const transform = (async () => {
     const browser = await puppeteer.launch();
     const page = await browser.newPage();
