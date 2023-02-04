@@ -30,10 +30,27 @@ const transform = (async () => {
         isLandscape: true,
         hasTouch: true
     });
-    const recorder = new PuppeteerScreenRecorder(page);
 
-    await recorder.start("../bin/video/replace3.mp4");
-    await page.goto("file:///home/pawlo/Documents/code/nodejs/vandepar/bin/16657603.html", {waitUntil: 'networkidle0'});
+    const Config = {
+        followNewTab: true,
+        fps: 60,
+        videoFrame: {
+            width: 1920,
+            height: 1080,
+        },
+        videoCrf: 20,
+        videoCodec: 'libx264',
+        videoPreset: 'ultrafast',
+        videoBitrate: 12000,
+        autopad: {
+            color: 'black' | '#35A5FF',
+        },
+        aspectRatio: '16:9',
+    };
+    const recorder = new PuppeteerScreenRecorder(page,Config);
+
+    await recorder.start("./bin/video/replace.mp4");
+    await page.goto("file:///home/pawlo/Documents/code/nodejs/vandepar/bin/scraped_html/16657603.html", {waitUntil: 'networkidle0'});
 
     await scroll(page);
 
