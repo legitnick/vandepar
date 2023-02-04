@@ -1,1 +1,20 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head></body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><a href="/questions/3085615/how-can-i-write-to-a-text-file-reliably-from-excel-vba" class="question-hyperlink">How can I write to a text file reliably from Excel VBA?</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I'm trying to use Excel VBA to write to a text file.  I'm doing a few of these:</p>
+
+<pre><code>MyFile1 = "C:\outputFromExcel1.txt"
+fnum1 = FreeFile()
+Open MyFile1 For Output As fnum1
+</code></pre>
+
+<p>and then writing to them like this:</p>
+
+<pre><code>Print #fnum1, text
+</code></pre>
+
+<p>All variables in the above are declared just with <code>Dim</code>.  I'm writing hundreds of lines to the files and, very rarely, lines are being truncated -- i.e. the ends are being chopped off.  Is there a better way to write to a file in Excel VBA?</p>
+
+<p><strong>EDIT:</strong> I've just realized that it's always the last lines to be written that are truncated.  So I guess I need to close or flush the files somehow?</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>You can use <code>Close #fnum1</code> to close the file handle and it should flush the remaining buffer contents.</p>
+    </div></body></html>
