@@ -68,7 +68,7 @@ const splitHTML = (error,html_string)=>{
     const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass("question-hyperlink",el));
     const posts = $(".s-prose").toArray().map(el=>$(el).html()).map(el=>reAddClass("s-prose",el));
     const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html()).map(el=>reAddClass("this-has-helped",el));
-    //too repetitive to not have a function 
+    //too repetitive to not have a function
 
     let mixed_posts = [];
     for(let i = 0;i < posts.length; i++){
@@ -76,7 +76,7 @@ const splitHTML = (error,html_string)=>{
         if(i<helpeds.length)
             mixed_posts.push(helpeds[i]);
     }
-    const arr = qs.concat(mixed_posts); 
+    const arr = qs.concat(mixed_posts);
 
     console.log(arr);
     return arr;
@@ -99,8 +99,8 @@ const parse = (async (path)=>{
 
     fs.mkdirSync(html_to_dir+newdir+"/");
     return new Promise((resolve,reject)=>{
-        
-        let html; 
+
+        let html;
             fs.readFile(html_from_dir+path,"utf8",splitHTML);
 })
 });
