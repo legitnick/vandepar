@@ -48,8 +48,12 @@ const write = (async (path,new_string)=>{
 
 // strin[] f(string)
 const splitHTML = (html_string)=>{
-    console.log(html_string);
-    return html_string.split('class="s-prose js-post-body"').forEach(el=>'class="s-prose js-post-body"'+el).split('class="this-has-helped"').forEach(el=>'class="this-has-helped"'+el);
+    const post_arr = html_string.split('class="s-prose js-post-body"')
+        //.map(el=>'class="s-prose js-post-body"'+el)
+        //.map(el=>el.split('class="this-has-helped"')).
+      //  forEach((el,i)=>i%2?'class="this-has-helped"'+el:el);
+    console.log(post_arr);
+    return post_arr;
    //this calls for a function splitNoRemove
 };
 
@@ -57,11 +61,13 @@ const splitHTML = (html_string)=>{
 const parse = (async (path)=>{
     //for each post, create a different html file, as well as for
     //this has helped: X paragraphs
-    return await fs.readFile(html_from_dir+path,(err,html_string)=>{
+    return await fs.readFile(html_from_dir+path,"utf8",(err,html_string)=>{
         if(err)throw err;
 
         const post_arr = splitHTML(html_string);
 
+        console.log(post_arr);
+        setTimeout(()=>console.log("wow"),100);
         post_arr.forEach((el,i)=>{
             let new_string = toCompleteHtml(el);
             write(i+"_"+path,new_string);

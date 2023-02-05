@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head> itemprop="text">
+<p>Here is a simpler take on Mike Kinghan's answer. This will detect inherited methods. It will also check for the <em>exact</em> signature (unlike jrok's approach which allows argument conversions).</p>
+
+<pre><code>template &lt;class C&gt;
+class HasGreetMethod
+{
+    template &lt;class T&gt;
+    static std::true_type testSignature(void (T::*)(const char*) const);
+
+    template &lt;class T&gt;
+    static decltype(testSignature(&amp;T::greet)) test(std::nullptr_t);
+
+    template &lt;class T&gt;
+    static std::false_type test(...);
+
+public:
+    using type = decltype(test&lt;C&gt;(nullptr));
+    static const bool value = type::value;
+};
+
+struct A { void greet(const char* name) const; };
+struct Derived : A { };
+static_assert(HasGreetMethod&lt;Derived&gt;::value, "");
+</code></pre>
+
+<p>Runnable <a href="http://ideone.com/LjtMSi" rel="noreferrer">example</a></p>
+    </div></body></html>

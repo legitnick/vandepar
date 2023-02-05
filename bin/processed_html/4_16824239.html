@@ -1,0 +1,232 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head> itemprop="text">
+<p>The accepted answer to this question of compiletime member-function
+introspection, although it is justly popular, has a snag which can be observed
+in the following program:</p>
+
+<pre><code>#include &lt;type_traits&gt;
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+
+/*  Here we apply the accepted answer's technique to probe for the
+    the existence of `E T::operator*() const`
+*/
+template&lt;typename T, typename E&gt;
+struct has_const_reference_op
+{
+    template&lt;typename U, E (U::*)() const&gt; struct SFINAE {};
+    template&lt;typename U&gt; static char Test(SFINAE&lt;U, &amp;U::operator*&gt;*);
+    template&lt;typename U&gt; static int Test(...);
+    static const bool value = sizeof(Test&lt;T&gt;(0)) == sizeof(char);
+};
+
+using namespace std;
+
+/* Here we test the `std::` smart pointer templates, including the
+    deprecated `auto_ptr&lt;T&gt;`, to determine in each case whether
+    T = (the template instantiated for `int`) provides 
+    `int &amp; T::operator*() const` - which all of them in fact do.
+*/ 
+int main(void)
+{
+    cout &lt;&lt; has_const_reference_op&lt;auto_ptr&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;unique_ptr&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;shared_ptr&lt;int&gt;,int &amp;&gt;::value &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+
+<p>Built with GCC 4.6.3, the program outputs <code>110</code> - informing us that 
+<code>T = std::shared_ptr&lt;int&gt;</code> does <em>not</em> provide <code>int &amp; T::operator*() const</code>.</p>
+
+<p>If you are not already wise to this gotcha, then a look at of the definition of
+<code>std::shared_ptr&lt;T&gt;</code> in the header <code>&lt;memory&gt;</code> will shed light. In that
+implementation, <code>std::shared_ptr&lt;T&gt;</code> is derived from a base class
+from which it inherits <code>operator*() const</code>. So the template instantiation
+<code>SFINAE&lt;U, &amp;U::operator*&gt;</code> that constitutes "finding" the operator for
+<code>U = std::shared_ptr&lt;T&gt;</code> will not happen, because <code>std::shared_ptr&lt;T&gt;</code> has no
+<code>operator*()</code> in its own right and template instantiation does not
+"do inheritance".</p>
+
+<p>This snag does not affect the well-known SFINAE approach, using "The sizeof() Trick",
+for detecting merely whether <code>T</code> has some member function <code>mf</code> (see e.g.
+<a href="https://stackoverflow.com/a/257382/1362568">this answer</a> and comments). But
+establishing that <code>T::mf</code> exists is often (usually?) not good enough: you may
+also need to establish that it has a desired signature. That is where the
+illustrated technique scores. The pointerized variant of the desired signature
+is inscribed in a parameter of a template type that must be satisfied by
+<code>&amp;T::mf</code> for the SFINAE probe to succeed. But this template instantiating
+technique gives the wrong answer when <code>T::mf</code> is inherited.</p>
+
+<p>A safe SFINAE technique for compiletime introspection of <code>T::mf</code> must avoid the
+use of <code>&amp;T::mf</code> within a template argument to instantiate a type upon which SFINAE
+function template resolution depends. Instead, SFINAE template function
+resolution can depend only upon exactly pertinent type declarations used
+as argument types of the overloaded SFINAE probe function.</p>
+
+<p>By way of an answer to the question that abides by this constraint I'll
+illustrate for compiletime detection of <code>E T::operator*() const</code>, for
+arbitrary <code>T</code> and <code>E</code>. The same pattern will apply <em>mutatis mutandis</em>
+to probe for any other member method signature.</p>
+
+<pre><code>#include &lt;type_traits&gt;
+
+/*! The template `has_const_reference_op&lt;T,E&gt;` exports a
+    boolean constant `value that is true iff `T` provides
+    `E T::operator*() const`
+*/ 
+template&lt; typename T, typename E&gt;
+struct has_const_reference_op
+{
+    /* SFINAE operator-has-correct-sig :) */
+    template&lt;typename A&gt;
+    static std::true_type test(E (A::*)() const) {
+        return std::true_type();
+    }
+
+    /* SFINAE operator-exists :) */
+    template &lt;typename A&gt; 
+    static decltype(test(&amp;A::operator*)) 
+    test(decltype(&amp;A::operator*),void *) {
+        /* Operator exists. What about sig? */
+        typedef decltype(test(&amp;A::operator*)) return_type; 
+        return return_type();
+    }
+
+    /* SFINAE game over :( */
+    template&lt;typename A&gt;
+    static std::false_type test(...) {
+        return std::false_type(); 
+    }
+
+    /* This will be either `std::true_type` or `std::false_type` */
+    typedef decltype(test&lt;T&gt;(0,0)) type;
+
+    static const bool value = type::value; /* Which is it? */
+};
+</code></pre>
+
+<p>In this solution, the overloaded SFINAE probe function <code>test()</code> is "invoked
+recursively". (Of course it isn't actually invoked at all; it merely has
+the return types of hypothetical invocations resolved by the compiler.)</p>
+
+<p>We need to probe for at least one and at most two points of information:</p>
+
+<ul>
+<li>Does <code>T::operator*()</code> exist at all? If not, we're done.</li>
+<li>Given that <code>T::operator*()</code> exists, is its signature 
+<code>E T::operator*() const</code>?</li>
+</ul>
+
+<p>We get the answers by evaluating the return type of a single call
+to <code>test(0,0)</code>. That's done by:</p>
+
+<pre><code>    typedef decltype(test&lt;T&gt;(0,0)) type;
+</code></pre>
+
+<p>This call might be resolved to the <code>/* SFINAE operator-exists :) */</code> overload
+of <code>test()</code>, or it might resolve to the <code>/* SFINAE game over :( */</code> overload.
+It can't resolve to the <code>/* SFINAE operator-has-correct-sig :) */</code> overload,
+because that one expects just one argument and we are passing two.</p>
+
+<p>Why are we passing two? Simply to force the resolution to exclude 
+<code>/* SFINAE operator-has-correct-sig :) */</code>. The second argument has no other signifance.</p>
+
+<p>This call to <code>test(0,0)</code> will resolve to <code>/* SFINAE operator-exists :) */</code> just
+in case the first argument 0 satifies the first parameter type of that overload,
+which is <code>decltype(&amp;A::operator*)</code>, with <code>A = T</code>. 0 will satisfy that type
+just in case <code>T::operator*</code> exists.</p>
+
+<p>Let's suppose the compiler say's Yes to that. Then it's going with
+<code>/* SFINAE operator-exists :) */</code> and it needs to determine the return type of
+the function call, which in that case is <code>decltype(test(&amp;A::operator*))</code> -
+the return type of yet another call to <code>test()</code>.</p>
+
+<p>This time, we're passing just one argument, <code>&amp;A::operator*</code>, which we now
+know exists, or we wouldn't be here. A call to <code>test(&amp;A::operator*)</code> might
+resolve either to <code>/* SFINAE operator-has-correct-sig :) */</code> or again to
+might resolve to <code>/* SFINAE game over :( */</code>. The call will match 
+<code>/* SFINAE operator-has-correct-sig :) */</code> just in case <code>&amp;A::operator*</code> satisfies
+the single parameter type of that overload, which is <code>E (A::*)() const</code>,
+with <code>A = T</code>.</p>
+
+<p>The compiler will say Yes here if <code>T::operator*</code> has that desired signature,
+and then again has to evaluate the return type of the overload. No more
+"recursions" now: it is <code>std::true_type</code>.</p>
+
+<p>If the compiler does not choose <code>/* SFINAE operator-exists :) */</code> for the
+call <code>test(0,0)</code> or does not choose <code>/* SFINAE operator-has-correct-sig :) */</code>
+for the call <code>test(&amp;A::operator*)</code>, then in either case it goes with
+<code>/* SFINAE game over :( */</code> and the final return type is <code>std::false_type</code>.</p>
+
+<p>Here is a test program that shows the template producing the expected
+answers in varied sample of cases (GCC 4.6.3 again).</p>
+
+<pre><code>// To test
+struct empty{};
+
+// To test 
+struct int_ref
+{
+    int &amp; operator*() const {
+        return *_pint;
+    }
+    int &amp; foo() const {
+        return *_pint;
+    }
+    int * _pint;
+};
+
+// To test 
+struct sub_int_ref : int_ref{};
+
+// To test 
+template&lt;typename E&gt;
+struct ee_ref
+{
+    E &amp; operator*() {
+        return *_pe;
+    }
+    E &amp; foo() const {
+        return *_pe;
+    }
+    E * _pe;
+};
+
+// To test 
+struct sub_ee_ref : ee_ref&lt;char&gt;{};
+
+using namespace std;
+
+#include &lt;iostream&gt;
+#include &lt;memory&gt;
+#include &lt;vector&gt;
+
+int main(void)
+{
+    cout &lt;&lt; "Expect Yes" &lt;&lt; endl;
+    cout &lt;&lt; has_const_reference_op&lt;auto_ptr&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;unique_ptr&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;shared_ptr&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;std::vector&lt;int&gt;::iterator,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;std::vector&lt;int&gt;::const_iterator,
+            int const &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;int_ref,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;sub_int_ref,int &amp;&gt;::value  &lt;&lt; endl;
+    cout &lt;&lt; "Expect No" &lt;&lt; endl;
+    cout &lt;&lt; has_const_reference_op&lt;int *,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;unique_ptr&lt;int&gt;,char &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;unique_ptr&lt;int&gt;,int const &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;unique_ptr&lt;int&gt;,int&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;unique_ptr&lt;long&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;int,int&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;std::vector&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;ee_ref&lt;int&gt;,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;sub_ee_ref,int &amp;&gt;::value;
+    cout &lt;&lt; has_const_reference_op&lt;empty,int &amp;&gt;::value  &lt;&lt; endl;
+    return 0;
+}
+</code></pre>
+
+<p>Are there new flaws in this idea? Can it be made more generic without once again
+falling foul of the snag it avoids?</p>
+    </div><div </body></html>

@@ -1,0 +1,16 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head> itemprop="text">
+<p>This should be sufficient, if you know the name of the member function you are expecting. (In this case, the function bla fails to instantiate if there is no member function (writing one that works anyway is tough because there is a lack of function partial specialization. You may need to use class templates) Also, the enable struct (which is similar to enable_if) could also be templated on the type of function you want it to have as a member.</p>
+
+<pre><code>template &lt;typename T, int (T::*) ()&gt; struct enable { typedef T type; };
+template &lt;typename T&gt; typename enable&lt;T, &amp;T::i&gt;::type bla (T&amp;);
+struct A { void i(); };
+struct B { int i(); };
+int main()
+{
+  A a;
+  B b;
+  bla(b);
+  bla(a);
+}
+</code></pre>
+    </div><div </body></html>

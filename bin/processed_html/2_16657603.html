@@ -1,0 +1,21 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head> itemprop="text">
+        <p>I too get this error <strong>sometimes</strong> when I dismiss dialog and finish activity from onPostExecute method. I guess sometimes activity gets finished before dialog successfully dismisses.</p>
+
+        <p>Simple, yet effective solution that works for me</p>
+
+        <pre><code>@Override
+protected void onPostExecute(MyResult result) {
+    try {
+        if ((this.mDialog != null) &amp;&amp; this.mDialog.isShowing()) {
+            this.mDialog.dismiss();
+        }
+    } catch (final IllegalArgumentException e) {
+        // Handle or log or ignore
+    } catch (final Exception e) {
+        // Handle or log or ignore
+    } finally {
+        this.mDialog = null;
+    }  
+}
+        </code></pre>
+    </div><p class="this-has-helped">This answer has helped 18 people.</p><div </body></html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head> itemprop="text">
+                
+<p>I'm asking for a template trick to detect if a class has a specific member function of a given signature.</p>
+
+<p>The problem is similar to the one cited here
+<a href="http://www.gotw.ca/gotw/071.htm" rel="noreferrer">http://www.gotw.ca/gotw/071.htm</a>
+but not the same: in the item of Sutter's book he answered to the question that a class C MUST PROVIDE  a member function with a particular signature, else the program won't compile. In my problem I need to do something if a class has that function, else do "something else". </p>
+
+<p>A similar problem was faced by boost::serialization but I don't like the solution they adopted: a template function that invokes by default a free function (that you have to define) with a particular signature unless you define a particular member function (in their case "serialize" that takes 2 parameters of a given type) with a particular signature, else a compile error will happens. That is to implement both intrusive and non-intrusive serialization. </p>
+
+<p>I don't like that solution for two reasons:</p>
+
+<ol>
+<li>To be non intrusive you must override the global "serialize" function that is in boost::serialization namespace, so you have IN YOUR CLIENT CODE to open namespace boost and namespace serialization!</li>
+<li>The stack to resolve that
+mess was 10 to 12 function invocations.</li>
+</ol>
+
+<p>I need to define a custom behavior for classes that has not that member function, and my entities are inside different namespaces (and I don't want to override a global function defined in one namespace while I'm in another one)</p>
+
+<p>Can you give me a hint to solve this puzzle?</p>
+    </div><div </body></html>
