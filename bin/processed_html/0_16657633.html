@@ -1,0 +1,17 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+                
+<p>When I write the following code, the annotator tells me that <code>BrowserSelector</code> is not defined in the second typedef:</p>
+
+<pre><code>/**
+ * @typedef {{name: String, minVer: Number, maxVer: Number}} BrowserSelector
+ */
+
+/**
+ * @typedef {{type:String, browser: BrowserSelector, attribute: Object}} Selector
+ */
+</code></pre>
+
+<p>I believe it is not associating the type with the name. How can I do that? </p>
+
+<p>I would prefer not to add actual code for it, just jsdoc comments.</p>
+    </body></html>

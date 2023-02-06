@@ -1,0 +1,199 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+                
+<p>I am trying to make a simple library database. I list the search results in a gridview, then i have a textbox and a button, user enters the isbn and clicks loan button. Then, if there is enough number of items (itemNumber&gt;0) it is loaned by user. Here is the screenshot of user interface:</p>
+
+<p><img src="https://i.stack.imgur.com/SMmeD.jpg" alt="enter image description here"></p>
+
+<p>My question is, when user clicks loan button the loan may or may not be succesful. In both cases, i print a message indicating whether loan is succesful or not, and i also want the updated gridview to be displayed. The problem is, after pressing the loan button the gridview disappears and i just see the textbox, button and the message on the screen. How can i show the updated version of gridview after pressing loan button?</p>
+
+<p>Here is the code file:</p>
+
+<pre><code>&lt;%@ Page Language="C#" AutoEventWireup="true" CodeFile="SearchResults.aspx.cs" Inherits="Pages_SearchResults" %&gt;
+
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;
+
+&lt;html xmlns="http://www.w3.org/1999/xhtml"&gt;
+&lt;head runat="server"&gt;
+&lt;title&gt;&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;form id="form1" runat="server"&gt;
+&lt;div&gt;
+
+&lt;/div&gt;
+&lt;asp:GridView ID="GridView1" runat="server" AutoGenerateColumns="False" 
+    DataKeyNames="ISBN" DataSourceID="SqlDataSource1" 
+    onselectedindexchanged="GridView1_SelectedIndexChanged" 
+    onrowcommand="GridView1_RowCommand"&gt;
+    &lt;Columns&gt;
+        &lt;asp:BoundField DataField="Title" HeaderText="Title" SortExpression="Title" /&gt;
+        &lt;asp:BoundField DataField="ISBN" HeaderText="ISBN" ReadOnly="True" 
+            SortExpression="ISBN" /&gt;
+        &lt;asp:BoundField DataField="AuthorName" HeaderText="AuthorName" 
+            SortExpression="AuthorName" /&gt;
+        &lt;asp:BoundField DataField="AuthorlName" HeaderText="AuthorlName" 
+            SortExpression="AuthorlName" /&gt;
+        &lt;asp:BoundField DataField="ItemType" HeaderText="ItemType" 
+            SortExpression="ItemType" /&gt;
+        &lt;asp:BoundField DataField="PublishYear" HeaderText="PublishYear" 
+            SortExpression="PublishYear" /&gt;
+
+
+
+        &lt;asp:BoundField DataField="numOfCopies" HeaderText="Number of Copies" 
+            SortExpression="numOfCopies" /&gt;
+
+
+
+    &lt;/Columns&gt;
+&lt;/asp:GridView&gt;
+&lt;asp:SqlDataSource ID="SqlDataSource1" runat="server" 
+    ConnectionString="&lt;%$ ConnectionStrings:ConnectionString %&gt;" 
+    SelectCommand="SELECT * FROM [Items] WHERE ([Title] LIKE '%' + @Title + '%')"&gt;
+    &lt;SelectParameters&gt;
+        &lt;asp:FormParameter FormField="tSearchBox" Name="Title" Type="String" /&gt;
+    &lt;/SelectParameters&gt;
+&lt;/asp:SqlDataSource&gt;
+&lt;br /&gt;
+&lt;asp:Label ID="Label1" runat="server" Text="Type ISBN to loan:"&gt;&lt;/asp:Label&gt;
+</code></pre>
+
+<p>&nbsp;&nbsp;
+    
+&nbsp;&nbsp;&nbsp;
+    
+    <br>
+    <br>
+    
+    
+    
+    </p>
+
+<p>And here is the .cs file:</p>
+
+<pre><code>using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+
+public partial class Pages_SearchResults : System.Web.UI.Page
+{
+protected void Page_Load(object sender, EventArgs e)
+{
+
+}
+protected void GridView1_SelectedIndexChanged(object sender, EventArgs e)
+{
+    Response.Redirect("Default.aspx");
+}
+
+
+protected void GridView1_RowCommand(object sender, GridViewCommandEventArgs e)
+{
+    SqlConnection con = new SqlConnection();
+    con.ConnectionString = "Data Source=.\\SQLEXPRESS;AttachDbFilename=D:\\Users\\SUUSER\\Documents\\Visual Studio 2010\\Projects\\Library\\LibWebSite\\App_Data\\LibDatabase.mdf;Integrated Security=True;User Instance=True";
+
+    Int32 verify;
+
+    string title = GridView1.HeaderRow.Cells[0].Text, isbn = GridView1.HeaderRow.Cells[1].Text, name = GridView1.HeaderRow.Cells[2].Text, lname = GridView1.HeaderRow.Cells[3].Text, type = GridView1.HeaderRow.Cells[4].Text, year = GridView1.HeaderRow.Cells[5].Text;
+
+
+}
+protected void bLoanButton_Click(object sender, EventArgs e)
+{
+    SqlConnection con = new SqlConnection();
+    con.ConnectionString = "Data Source=.\\SQLEXPRESS;AttachDbFilename=D:\\Users\\SUUSER\\Documents\\Visual Studio 2010\\Projects\\Library\\LibWebSite\\App_Data\\LibDatabase.mdf;Integrated Security=True;User Instance=True";
+
+    string user = "select CurrentID from CurrentUser";
+
+    SqlCommand cmd1 = new SqlCommand(user, con);
+    con.Open();
+    string get = cmd1.ExecuteScalar().ToString();
+
+    string query1 = "insert into LoanTable(StudId,ISBN,onBorrow) values ("
+        + "'" + get + "'" + "," + "'" + tLoanBox.Text + "'" + ","
+        + "'" + "1" + "'" + ")";
+
+    string numQuery = "select numOfCopies from Items where ISBN='" + tLoanBox.Text + "'";
+
+    SqlCommand cmdnumQuery = new SqlCommand(numQuery, con);
+
+    SqlCommand cmd2 = new SqlCommand(query1, con);
+
+    int result;
+
+    int num=Convert.ToInt32(cmdnumQuery.ExecuteScalar());
+
+
+    result = cmd2.ExecuteNonQuery();
+
+    if (num &gt; 0)
+    {
+
+        if (result &gt; 0)
+            Response.Redirect("LoanSuccesfull.aspx");
+    }
+    else
+        notAvailable.Visible = true;
+
+    con.Close();
+
+
+}
+}
+</code></pre>
+
+<p>And here is the code for loan button:</p>
+
+<pre><code> protected void bLoanButton_Click(object sender, EventArgs e)
+{
+    SqlConnection con = new SqlConnection();
+    con.ConnectionString = "Data Source=.\\SQLEXPRESS;AttachDbFilename=D:\\Users\\SUUSER\\Documents\\Visual Studio 2010\\Projects\\Library\\LibWebSite\\App_Data\\LibDatabase.mdf;Integrated Security=True;User Instance=True";
+
+    string user = "select CurrentID from CurrentUser";
+
+    SqlCommand cmd1 = new SqlCommand(user, con);
+    con.Open();
+    string get = cmd1.ExecuteScalar().ToString();
+
+    string query1 = "insert into LoanTable(StudId,ISBN,onBorrow) values ("
+        + "'" + get + "'" + "," + "'" + tLoanBox.Text + "'" + ","
+        + "'" + "1" + "'" + ")";
+
+
+
+
+
+    SqlCommand cmd2 = new SqlCommand(query1, con);
+
+    int result;
+
+
+
+
+    result = cmd2.ExecuteNonQuery();
+
+
+
+        if (result &gt; 0)
+        {
+            loanSuccesful.Visible = true;
+            Response.Redirect("LoanSuccesfull.aspx");
+
+        }
+
+
+
+
+
+    con.Close();
+
+
+}
+</code></pre>
+
+<p>I appreciate any help. Thanks</p>
+    </body></html>

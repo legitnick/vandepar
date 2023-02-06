@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+
+        <p>I have an activity that starts AsyncTask and shows progress dialog for the duration of operation. The activity is declared NOT be recreated by rotation or keyboard slide.</p>
+
+        <pre><code>    &lt;activity android:name=".MyActivity" 
+              android:label="@string/app_name"
+              android:configChanges="keyboardHidden|orientation"
+              &gt;
+        &lt;intent-filter&gt;
+        &lt;/intent-filter&gt;
+    &lt;/activity&gt;
+        </code></pre>
+
+        <p>Once task completed, I dissmiss dialog, but on some phones (framework: 1.5, 1.6) such error is thrown:</p>
+
+        <pre><code>java.lang.IllegalArgumentException: View not attached to window manager
+    at android.view.WindowManagerImpl.findViewLocked(WindowManagerImpl.java:356)
+    at android.view.WindowManagerImpl.removeView(WindowManagerImpl.java:201)
+    at android.view.Window$LocalWindowManager.removeView(Window.java:400)
+    at android.app.Dialog.dismissDialog(Dialog.java:268)
+    at android.app.Dialog.access$000(Dialog.java:69)
+    at android.app.Dialog$1.run(Dialog.java:103)
+    at android.app.Dialog.dismiss(Dialog.java:252)
+    at xxx.onPostExecute(xxx$1.java:xxx)
+        </code></pre>
+
+        <p>My code is:</p>
+
+        <pre><code>final Dialog dialog = new AlertDialog.Builder(context)
+    .setTitle("Processing...")
+    .setCancelable(true)
+    .create();
+
+final AsyncTask&lt;MyParams, Object, MyResult&gt; task = new AsyncTask&lt;MyParams, Object, MyResult&gt;() {
+
+    @Override
+    protected MyResult doInBackground(MyParams... params) {
+        // Long operation goes here
+    }
+
+    @Override
+    protected void onPostExecute(MyResult result) {
+        dialog.dismiss();
+        onCompletion(result);
+    }
+};
+
+task.execute(...);
+
+dialog.setOnCancelListener(new OnCancelListener() {
+    @Override
+    public void onCancel(DialogInterface arg0) {
+        task.cancel(false);
+    }
+});
+
+dialog.show();
+        </code></pre>
+
+        <p>From what I have read (<a href="http://bend-ing.blogspot.com/2008/11/properly-handle-progress-dialog-in.html" rel="noreferrer">http://bend-ing.blogspot.com/2008/11/properly-handle-progress-dialog-in.html</a>) and seen in Android sources, it looks like the only possible situation to get that exception is when activity was destroyed. But as I have mentioned, I forbid activity recreation for basic events.</p>
+
+        <p>So any suggestions are very appreciated.</p>
+    </body></html>

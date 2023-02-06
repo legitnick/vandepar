@@ -1,0 +1,250 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<p>Here are some usage snippets:
+*The guts for all this are farther down</p>
+
+<p><strong>Check for member <code>x</code> in a given class.  Could be var, func, class, union, or enum:</strong></p>
+
+<pre><code>CREATE_MEMBER_CHECK(x);
+bool has_x = has_member_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Check for member function <code>void x()</code>:</strong></p>
+
+<pre><code>//Func signature MUST have T as template variable here... simpler this way :\
+CREATE_MEMBER_FUNC_SIG_CHECK(x, void (T::*)(), void__x);
+bool has_func_sig_void__x = has_member_func_void__x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Check for member variable <code>x</code>:</strong></p>
+
+<pre><code>CREATE_MEMBER_VAR_CHECK(x);
+bool has_var_x = has_member_var_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Check for member class <code>x</code>:</strong></p>
+
+<pre><code>CREATE_MEMBER_CLASS_CHECK(x);
+bool has_class_x = has_member_class_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Check for member union <code>x</code>:</strong></p>
+
+<pre><code>CREATE_MEMBER_UNION_CHECK(x);
+bool has_union_x = has_member_union_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Check for member enum <code>x</code>:</strong></p>
+
+<pre><code>CREATE_MEMBER_ENUM_CHECK(x);
+bool has_enum_x = has_member_enum_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Check for any member function <code>x</code> regardless of signature:</strong></p>
+
+<pre><code>CREATE_MEMBER_CHECK(x);
+CREATE_MEMBER_VAR_CHECK(x);
+CREATE_MEMBER_CLASS_CHECK(x);
+CREATE_MEMBER_UNION_CHECK(x);
+CREATE_MEMBER_ENUM_CHECK(x);
+CREATE_MEMBER_FUNC_CHECK(x);
+bool has_any_func_x = has_member_func_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p>OR</p>
+
+<pre><code>CREATE_MEMBER_CHECKS(x);  //Just stamps out the same macro calls as above.
+bool has_any_func_x = has_member_func_x&lt;class_to_check_for_x&gt;::value;
+</code></pre>
+
+<p><strong>Details and core:</strong></p>
+
+<pre><code>/*
+    - Multiple inheritance forces ambiguity of member names.
+    - SFINAE is used to make aliases to member names.
+    - Expression SFINAE is used in just one generic has_member that can accept
+      any alias we pass it.
+*/
+
+//Variadic to force ambiguity of class members.  C++11 and up.
+template &lt;typename... Args&gt; struct ambiguate : public Args... {};
+
+//Non-variadic version of the line above.
+//template &lt;typename A, typename B&gt; struct ambiguate : public A, public B {};
+
+template&lt;typename A, typename = void&gt;
+struct got_type : std::false_type {};
+
+template&lt;typename A&gt;
+struct got_type&lt;A&gt; : std::true_type {
+    typedef A type;
+};
+
+template&lt;typename T, T&gt;
+struct sig_check : std::true_type {};
+
+template&lt;typename Alias, typename AmbiguitySeed&gt;
+struct has_member {
+    template&lt;typename C&gt; static char ((&amp;f(decltype(&amp;C::value))))[1];
+    template&lt;typename C&gt; static char ((&amp;f(...)))[2];
+
+    //Make sure the member name is consistently spelled the same.
+    static_assert(
+        (sizeof(f&lt;AmbiguitySeed&gt;(0)) == 1)
+        , "Member name specified in AmbiguitySeed is different from member name specified in Alias, or wrong Alias/AmbiguitySeed has been specified."
+    );
+
+    static bool const value = sizeof(f&lt;Alias&gt;(0)) == 2;
+};
+</code></pre>
+
+<p><em><strong>Macros (El Diablo!):</strong></em></p>
+
+<p><strong>CREATE_MEMBER_CHECK:</strong></p>
+
+<pre><code>//Check for any member with given name, whether var, func, class, union, enum.
+#define CREATE_MEMBER_CHECK(member)                                         \
+                                                                            \
+template&lt;typename T, typename = std::true_type&gt;                             \
+struct Alias_##member;                                                      \
+                                                                            \
+template&lt;typename T&gt;                                                        \
+struct Alias_##member &lt;                                                     \
+    T, std::integral_constant&lt;bool, got_type&lt;decltype(&amp;T::member)&gt;::value&gt;  \
+&gt; { static const decltype(&amp;T::member) value; };                             \
+                                                                            \
+struct AmbiguitySeed_##member { char member; };                             \
+                                                                            \
+template&lt;typename T&gt;                                                        \
+struct has_member_##member {                                                \
+    static const bool value                                                 \
+        = has_member&lt;                                                       \
+            Alias_##member&lt;ambiguate&lt;T, AmbiguitySeed_##member&gt;&gt;            \
+            , Alias_##member&lt;AmbiguitySeed_##member&gt;                        \
+        &gt;::value                                                            \
+    ;                                                                       \
+}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_VAR_CHECK:</strong></p>
+
+<pre><code>//Check for member variable with given name.
+#define CREATE_MEMBER_VAR_CHECK(var_name)                                   \
+                                                                            \
+template&lt;typename T, typename = std::true_type&gt;                             \
+struct has_member_var_##var_name : std::false_type {};                      \
+                                                                            \
+template&lt;typename T&gt;                                                        \
+struct has_member_var_##var_name&lt;                                           \
+    T                                                                       \
+    , std::integral_constant&lt;                                               \
+        bool                                                                \
+        , !std::is_member_function_pointer&lt;decltype(&amp;T::var_name)&gt;::value   \
+    &gt;                                                                       \
+&gt; : std::true_type {}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_FUNC_SIG_CHECK:</strong></p>
+
+<pre><code>//Check for member function with given name AND signature.
+#define CREATE_MEMBER_FUNC_SIG_CHECK(func_name, func_sig, templ_postfix)    \
+                                                                            \
+template&lt;typename T, typename = std::true_type&gt;                             \
+struct has_member_func_##templ_postfix : std::false_type {};                \
+                                                                            \
+template&lt;typename T&gt;                                                        \
+struct has_member_func_##templ_postfix&lt;                                     \
+    T, std::integral_constant&lt;                                              \
+        bool                                                                \
+        , sig_check&lt;func_sig, &amp;T::func_name&gt;::value                         \
+    &gt;                                                                       \
+&gt; : std::true_type {}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_CLASS_CHECK:</strong></p>
+
+<pre><code>//Check for member class with given name.
+#define CREATE_MEMBER_CLASS_CHECK(class_name)               \
+                                                            \
+template&lt;typename T, typename = std::true_type&gt;             \
+struct has_member_class_##class_name : std::false_type {};  \
+                                                            \
+template&lt;typename T&gt;                                        \
+struct has_member_class_##class_name&lt;                       \
+    T                                                       \
+    , std::integral_constant&lt;                               \
+        bool                                                \
+        , std::is_class&lt;                                    \
+            typename got_type&lt;typename T::class_name&gt;::type \
+        &gt;::value                                            \
+    &gt;                                                       \
+&gt; : std::true_type {}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_UNION_CHECK:</strong></p>
+
+<pre><code>//Check for member union with given name.
+#define CREATE_MEMBER_UNION_CHECK(union_name)               \
+                                                            \
+template&lt;typename T, typename = std::true_type&gt;             \
+struct has_member_union_##union_name : std::false_type {};  \
+                                                            \
+template&lt;typename T&gt;                                        \
+struct has_member_union_##union_name&lt;                       \
+    T                                                       \
+    , std::integral_constant&lt;                               \
+        bool                                                \
+        , std::is_union&lt;                                    \
+            typename got_type&lt;typename T::union_name&gt;::type \
+        &gt;::value                                            \
+    &gt;                                                       \
+&gt; : std::true_type {}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_ENUM_CHECK:</strong></p>
+
+<pre><code>//Check for member enum with given name.
+#define CREATE_MEMBER_ENUM_CHECK(enum_name)                 \
+                                                            \
+template&lt;typename T, typename = std::true_type&gt;             \
+struct has_member_enum_##enum_name : std::false_type {};    \
+                                                            \
+template&lt;typename T&gt;                                        \
+struct has_member_enum_##enum_name&lt;                         \
+    T                                                       \
+    , std::integral_constant&lt;                               \
+        bool                                                \
+        , std::is_enum&lt;                                     \
+            typename got_type&lt;typename T::enum_name&gt;::type  \
+        &gt;::value                                            \
+    &gt;                                                       \
+&gt; : std::true_type {}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_FUNC_CHECK:</strong></p>
+
+<pre><code>//Check for function with given name, any signature.
+#define CREATE_MEMBER_FUNC_CHECK(func)          \
+template&lt;typename T&gt;                            \
+struct has_member_func_##func {                 \
+    static const bool value                     \
+        = has_member_##func&lt;T&gt;::value           \
+        &amp;&amp; !has_member_var_##func&lt;T&gt;::value     \
+        &amp;&amp; !has_member_class_##func&lt;T&gt;::value   \
+        &amp;&amp; !has_member_union_##func&lt;T&gt;::value   \
+        &amp;&amp; !has_member_enum_##func&lt;T&gt;::value    \
+    ;                                           \
+}
+</code></pre>
+
+<p><strong>CREATE_MEMBER_CHECKS:</strong></p>
+
+<pre><code>//Create all the checks for one member.  Does NOT include func sig checks.
+#define CREATE_MEMBER_CHECKS(member)    \
+CREATE_MEMBER_CHECK(member);            \
+CREATE_MEMBER_VAR_CHECK(member);        \
+CREATE_MEMBER_CLASS_CHECK(member);      \
+CREATE_MEMBER_UNION_CHECK(member);      \
+CREATE_MEMBER_ENUM_CHECK(member);       \
+CREATE_MEMBER_FUNC_CHECK(member)
+</code></pre>
+    </body></html>

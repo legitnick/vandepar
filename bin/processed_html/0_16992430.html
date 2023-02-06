@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+                
+<p>I have a business logic method that has to be finished before it can be called again. Multiple clients have the ability to call it at once:</p>
+
+<pre><code>public void DoSomething() {}
+</code></pre>
+
+<p>I was thinking about solving it by making the method private, and creating a new public method to put the requests on a queue:</p>
+
+<pre><code>public void QueueSomeWork()
+{
+    // put on a Queue object
+    // How will DoSomething get invoked now?
+}
+
+private void DoSomething() {}
+</code></pre>
+
+<p>I'm trying to solve this issue in an elegant way. My issue is how <code>DoSomething()</code> will know to run. I thought about creating a timer to check the queue, but then it would be running 24/7 for something that happens maybe twice per year.</p>
+
+<p>Another thought is to have <code>DoSomething()</code> fire an event when it's done that something else would subscribe to, pick some work off the queue, and call <code>DoSomething()</code>. Is there a better way?</p>
+    </body></html>

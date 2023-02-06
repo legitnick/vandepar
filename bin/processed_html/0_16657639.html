@@ -1,0 +1,38 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+                
+<p>I am trying to sort an array of Strings using <code>compareTo()</code>. This is my code:</p>
+
+<pre><code>static String Array[] = {" Hello ", " This ", "is ", "Sorting ", "Example"};
+String temp;
+
+public static void main(String[] args)
+{
+
+   for (int j=0; j&lt;Array.length;j++)
+   {
+       for (int i=j+1 ; i&lt;Array.length; i++)
+       {
+           if (Array[i].compareTo(Array[j])&lt;0)
+           {
+               String temp = Array[j];
+               Array[j] = Array[i];
+               Array[i] = temp;
+           }
+       }
+       System.out.print(Array[j]);
+   }
+}
+</code></pre>
+
+<p>Now the output is:</p>
+
+<pre class="lang-none prettyprint-override"><code>Hello  This Example Sorting is
+</code></pre>
+
+<p>I am getting results, but not the results I want to get, which are:</p>
+
+<pre class="lang-none prettyprint-override"><code>Hello This Example Is Sorting
+</code></pre>
+
+<p>How can I adjust my code to sort the string array properly?</p>
+    </body></html>

@@ -1,0 +1,26 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<pre><code>char sep = '\n'  /1\
+; int i = 68    /1  \
+; while (i  ---      1\
+                       \
+                       /1/1/1                               /1\
+                                                            /1\
+                                                            /1\
+                                                            /1\
+                                                            /1\
+                            /           1\
+                           /            1 \
+                          /             1  \
+                         /              1   \
+                         /1            /1    \
+                          /1          /1      \
+                           /1        /1        /1/1&gt; 0) std::cout \
+                              &lt;&lt;i&lt;&lt;                               sep;
+</code></pre>
+<p>For larger numbers, C++20 introduces some more advanced looping features.
+First to catch <code>i</code> we can build an inverse loop-de-loop and deflect it onto the <code>std::ostream</code>. However, the speed of <code>i</code> is implementation-defined, so we can use the new C++20 speed operator <code>&lt;&lt;i&lt;&lt;</code> to speed it up. We must also catch it by building wall, if we don't, <code>i</code> leaves the scope and de referencing it causes undefined behavior. To specify the separator, we can use:</p>
+<pre><code> std::cout \
+           sep
+</code></pre>
+<p>and there we have a for loop from 67 to 1.</p>
+    </body></html>

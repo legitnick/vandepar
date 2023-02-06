@@ -52,6 +52,7 @@ const splitHTML = (html_string)=>{
     const $ = cheerio.load(html_string);
     const divs = $(".s-prose").toArray().map(el=>$(el).html());
     console.log(divs);
+    return divs;
 };
 
 //void f(string)
