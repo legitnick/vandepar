@@ -55,9 +55,9 @@ function reAddClass(class_string,html_string){
 const splitHTML = (html_string)=>{
     const $ = cheerio.load(html_string);
 
-    const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass(".question-hyperlink",el));
-    const posts = $(".s-prose").toArray().map(el=>$(el).html()).map(el=>reAddClass(".s-prose",el));
-    const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html()).map(el=>reAddClass(".this-has-helped",el));
+    const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass("question-hyperlink",el));
+    const posts = $(".s-prose").toArray().map(el=>$(el).html()).map(el=>reAddClass("s-prose",el));
+    const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html()).map(el=>reAddClass("this-has-helped",el));
    //too repetitive to not have a function 
 
     let mixed_posts = [];

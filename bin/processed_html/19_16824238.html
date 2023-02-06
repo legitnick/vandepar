@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='.s-prose'>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='s-prose'>
 
 <p>C and C++ obey the "maximal munch" rule. The same way <code>a---b</code> is translated to <code>(a--) - b</code>, in your case  <code>x--&gt;0</code> translates to <code>(x--)&gt;0</code>.</p>
 <p>What the rule says essentially is that going left to right, expressions are formed by taking the maximum of characters which will form a valid token.</p>
