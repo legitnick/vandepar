@@ -16,10 +16,10 @@ const configForDynamic = {
         width: 1920,
         height: 1080,
     },
-    videoCrf: 20,
+    videoCrf: 30,
     videoCodec: 'libx264',
     videoPreset: 'ultrafast',
-    videoBitrate: 12000,
+    videoBitrate: 1000,
     autopad: {
         color: 'black' | '#35A5FF',
     },
@@ -36,7 +36,7 @@ async function look(page){
 
 //void f(Page)
 async function scroll (page) {
-    await page.evaluate(async ()=>{
+    return await page.evaluate(async ()=>{
         return await new Promise((resolve)=>{
             let current_scrolled = 0;
             let dist = 1;//scroll, px
@@ -44,10 +44,10 @@ async function scroll (page) {
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
                 //problem there?
+                console.log(current_scrolled - document.body.scrollHeight + window.innerHeight)
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
-                    page.browser.close()
-                    resolve();
+                    setTimeout(resolve,100);
                 }
 
             },20)//wait, ms
@@ -70,14 +70,14 @@ async function scroll (page) {
             hasTouch: true
         });
 
-        const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
+        const recorder = new PuppeteerScreenRecorder(page,configForDynamic);
 
         await recorder.start(video_dir + "replace.mp4").catch((err)=>reject(err));//replace replace with html_number
         await page.goto(goto_dir + "16657603.html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
 
         return await look(page).then((res,rej)=>{
             return recorder.stop();
-        })//.then(browser.close()).catch((e)=>console.error(e));
+        }).then((res)=>browser.close()).catch((e)=>console.error(e));
     });
     //await everything
 
