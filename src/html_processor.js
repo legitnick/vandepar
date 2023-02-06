@@ -39,10 +39,10 @@ const toCompleteHtml = (html_string)=>{
 
 //void f(string,string)
 const write = (async (path,new_string)=>{
-        fs.writeFile(html_to_dir+path,new_string,(e)=>{
-            if(e)
-                console.error(e)
-        })
+    fs.writeFile(html_to_dir+path,new_string,(e)=>{
+        if(e)
+            console.error(e)
+    })
 });
 
 
@@ -50,7 +50,9 @@ const write = (async (path,new_string)=>{
 // string[] f(string)
 const splitHTML = (html_string)=>{
     const $ = cheerio.load(html_string);
-    const divs = $(".s-prose").toArray().map(el=>$(el).html());
+    console.log($(".this-has-helped").length);
+    let divs = $(""/*,"this-has-helped"*/).children("").toArray().map(el=>$(el).html());
+
     console.log(divs);
     return divs;
 };
@@ -65,12 +67,12 @@ const parse = (async (path)=>{
         const post_arr = splitHTML(html_string);
 
         //console.log(post_arr);
-        
+
         post_arr.forEach((el,i)=>{
             let new_string = toCompleteHtml(el);
             write(i+"_"+path,new_string);
         });
-        
+
 
     });
 })
