@@ -68,10 +68,6 @@ const splitHTML = (html_string)=>{
     }
     const arr = qs.concat(mixed_posts); 
 
-    console.log(arr);
-    console.log(qs.length);
-    console.log(posts.length);
-    console.log(helpeds.length);
     return arr;
 };
 
@@ -84,7 +80,6 @@ const parse = (async (path)=>{
 
         const post_arr = splitHTML(html_string);
 
-        //console.log(post_arr);
 
         post_arr.forEach((el,i)=>{
             let new_string = toCompleteHtml(el);
