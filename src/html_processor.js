@@ -1,7 +1,7 @@
 'use strict';
 
 const fs = require("fs");
-
+const jsdom = require("jsdom");
 //create a function which moves scraped html file into tmp folder, then parses it, returns multiple htmls, writes them into folder with the name corresponding to the scraped html's name
 
 //void f(string,string)
@@ -46,15 +46,14 @@ const write = (async (path,new_string)=>{
 
 
 
-// strin[] f(string)
+// string[] f(string)
 const splitHTML = (html_string)=>{
-    const post_arr = html_string.split('class="s-prose js-post-body"')
-        //.map(el=>'class="s-prose js-post-body"'+el)
-        //.map(el=>el.split('class="this-has-helped"')).
-      //  forEach((el,i)=>i%2?'class="this-has-helped"'+el:el);
-    console.log(post_arr);
-    return post_arr;
-   //this calls for a function splitNoRemove
+    const dom = new jsdom.JSDOM(html_string);
+    const doc = dom.window.document;
+    console.log(doc);
+    const s_arr = doc.querySelectAll(".s-prose").map(el=>el.innerText);
+    console.log(s_arr);
+    return s_arr;
 };
 
 //void f(string)
