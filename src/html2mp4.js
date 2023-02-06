@@ -27,32 +27,36 @@ const configForDynamic = {
 };
 
 //void f(Page)
-const look = ((page)=>{
-    setTimeout(scroll, 100 ,page);//(functionRef, ms, param1)
-}); 
+async function look(page){
+    await new Promise(resolve=>setTimeout(resolve,100));
+
+    return await scroll(page);//(functionRef, ms, param1)
+
+}; 
 
 //void f(Page)
-const scroll = ((page) =>{
-    page.evaluate(async ()=>{
-        await new Promise((resolve)=>{
+async function scroll (page) {
+    await page.evaluate(async ()=>{
+        return await new Promise((resolve)=>{
             let current_scrolled = 0;
             let dist = 1;//scroll, px
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
+                //problem there?
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
+                    page.browser.close()
                     resolve();
                 }
 
-            },20)
+            },20)//wait, ms
         }).catch((e)=>{
             console.error(e);
             reject(e);;
-            //wait, ms
             });
         });
-    });
+    };
 
     //void f(void) TODO: replace param void -> html_number(int)
     const transform = (async () => {
@@ -69,18 +73,14 @@ const scroll = ((page) =>{
         const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
 
         await recorder.start(video_dir + "replace.mp4").catch((err)=>reject(err));//replace replace with html_number
-        await page.goto("file:///home/pauro/Documents/code/wrk/vandepar/vandepar/bin/scraped_html/16657603.html"
-            /*goto_dir + "16657603.html"*/, {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+        await page.goto(goto_dir + "16657603.html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
 
-        await look(page);
-
-        await recorder.stop().catch((e)=>console.error(e));
-        await new Promise((resolve,rej)=>{
-            setTimeout(console.log,100,"hey");
-            resolve();
-        }).then((res)=>{ browser.close().catch((e)=>console.error(e))});
+        return await look(page).then((res,rej)=>{
+            return recorder.stop();
+        })//.then(browser.close()).catch((e)=>console.error(e));
     });
     //await everything
+
     transform();
 
     module.exports = transform;
