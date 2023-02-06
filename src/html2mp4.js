@@ -3,12 +3,32 @@
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 
+const goto_dir = "file:///home/pawlo/Documents/code/nodejs/vandepar/bin/scraped_html/";
+const video_dir = "./bin/video/";
+
+const configForDynamic = {
+        followNewTab: true,
+        fps: 60,
+        videoFrame: {
+            width: 1920,
+            height: 1080,
+        },
+        videoCrf: 20,
+        videoCodec: 'libx264',
+        videoPreset: 'ultrafast',
+        videoBitrate: 12000,
+        autopad: {
+            color: 'black' | '#35A5FF',
+        },
+        aspectRatio: '16:9',
+    };
+
 //void f(Page)
 const scroll = (async (page) =>{
     await page.evaluate(async ()=>{
         await new Promise((resolve)=>{
             let current_scrolled = 0;
-            let dist = 1;//px
+            let dist = 1;//scroll, px
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
@@ -17,7 +37,7 @@ const scroll = (async (page) =>{
                     resolve();
                 }
 
-            },20);
+            },20);//wait, ms
         });
     });
 });
@@ -34,26 +54,10 @@ const transform = (async () => {
         hasTouch: true
     });
 
-    const Config = {
-        followNewTab: true,
-        fps: 60,
-        videoFrame: {
-            width: 1920,
-            height: 1080,
-        },
-        videoCrf: 20,
-        videoCodec: 'libx264',
-        videoPreset: 'ultrafast',
-        videoBitrate: 12000,
-        autopad: {
-            color: 'black' | '#35A5FF',
-        },
-        aspectRatio: '16:9',
-    };
     const recorder = new PuppeteerScreenRecorder(page,Config);
 
-    await recorder.start("./bin/video/replace.mp4");
-    await page.goto("file:///home/pawlo/Documents/code/nodejs/vandepar/bin/scraped_html/16657603.html", {waitUntil: 'networkidle0'});
+    await recorder.start(video_dir + replace.mp4);
+    await page.goto(goto_dir + 16657603.html, {waitUntil: 'networkidle0'});
 
     await scroll(page);
 
