@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='.s-prose'>
+
         <p>I may have a workaround.</p>
 
         <p>Was having the same issue, where I am loading lots of items (via the file system) into a <code>ListView</code> via an <code>AsyncTask</code>.  Had the <code>onPreExecute()</code> firing up a <code>ProgressDialog</code>, and then both <code>onPostExecute()</code> and <code>onCancelled()</code> (called when the task is cancelled explicitly via <code>AsyncTask.cancel()</code>) closing it via <code>.cancel()</code>.  </p>
@@ -16,4 +17,5 @@
         </code></pre>
 
         <p>Calling <code>AsyncTask.cancel()</code> DOES trigger <code>onCancelled()</code> in the <code>AsyncTask</code>, but for some reason by the time that method is called, the View has already been destroyed and thus cancelling the dialog is failing.</p>
-    </body></html>
+    
+</div></body></html>

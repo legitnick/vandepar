@@ -45,16 +45,21 @@ const write = (async (path,new_string)=>{
     })
 });
 
+//string f(string,string)
+function reAddClass(class_string,html_string){
+    return "<div class='"+class_string+"'>\n"+html_string+"\n</div>"
+}
 
 
 // string[] f(string)
 const splitHTML = (html_string)=>{
     const $ = cheerio.load(html_string);
 
-    const qs = $(".question-hyperlink").toArray().map(el=>$(el).html());
-    const posts = $(".s-prose").toArray().map(el=>$(el).html());
-    const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html());
-    
+    const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass(".question-hyperlink",el));
+    const posts = $(".s-prose").toArray().map(el=>$(el).html()).map(el=>reAddClass(".s-prose",el));
+    const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html()).map(el=>reAddClass(".this-has-helped",el));
+   //too repetitive to not have a function 
+
     let mixed_posts = [];
     for(let i = 0;i < posts.length; i++){
         mixed_posts.push(posts[i]);

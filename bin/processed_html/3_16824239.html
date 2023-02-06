@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='.s-prose'>
+
 <p>I'm not sure if I understand you correctly, but you may exploit SFINAE to detect function presence at compile-time. Example from my code (tests if class has member function size_t used_memory() const).</p>
 
 <pre><code>template&lt;typename T&gt;
@@ -26,4 +27,5 @@ void ReportMemUsage(const TMap&amp; m)
         std::integral_constant&lt;bool, HasUsedMemoryMethod&lt;TMap&gt;::Has&gt;());
 }
 </code></pre>
-    </body></html>
+    
+</div></body></html>

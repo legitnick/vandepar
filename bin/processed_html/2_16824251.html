@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='.s-prose'>
+
 <p>It's type <a href="http://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-790004.3.4" rel="noreferrer">defaulting</a> together with ghci's extended default rules.</p>
 
 <p>Integer literals are polymorphic, they have the type <code>Num a =&gt; a</code> (since they stand for <code>fromInteger literal</code>). But when an expression shall be evaluated - necessary for printing its result, for example - the expression must be given a monomorphic type.</p>
@@ -33,4 +34,5 @@
 <p>It would then choose the default for a <code>Num</code> constraint here, unless an explicit default declaration is in scope, that would be <code>Integer</code>, or, if <code>Integer</code> does not satisfy the constraints, <code>Double</code> is tried.</p>
 
 <p>So when you have an <code>instance YesNo Integer</code>, ghci can successfully default the type variable <code>a</code> to <code>Integer</code>. But with no such instance available, defaulting fails because none of the default candidates has an instance.</p>
-    </body></html>
+    
+</div></body></html>

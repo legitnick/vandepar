@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='.s-prose'>
+
 <p>With c++ 20 this becomes much simpler. Say we want to test if a class <code>T</code> has a member function <code>void T::resize(typename T::size_type)</code>. For example, <code>std::vector&lt;U&gt;</code> has such a member function. Then,</p>
 <pre class="lang-cpp prettyprint-override"><code>template&lt;typename T&gt;
 concept has_resize_member_func = requires {
@@ -10,4 +11,5 @@ concept has_resize_member_func = requires {
 <pre class="lang-cpp prettyprint-override"><code>static_assert(has_resize_member_func&lt;std::string&gt;, "");
 static_assert(has_resize_member_func&lt;int&gt; == false, "");
 </code></pre>
-    </body></html>
+    
+</div></body></html>

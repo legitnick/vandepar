@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><div class='.s-prose'>
+
 <p>Here's a possible implementation relying on C++11 features. It correctly detects the function even if it's inherited (unlike the solution in the accepted answer, as Mike Kinghan observes in <a href="https://stackoverflow.com/a/10707822/947836">his answer</a>).</p>
 
 <p>The function this snippet tests for is called <code>serialize</code>:</p>
@@ -50,4 +51,5 @@ struct Y : X {};
 
 std::cout &lt;&lt; has_serialize&lt;Y, int(const std::string&amp;)&gt;::value; // will print 1
 </code></pre>
-    </body></html>
+    
+</div></body></html>
