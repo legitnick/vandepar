@@ -27,13 +27,13 @@ const configForDynamic = {
 };
 
 //void f(Page)
-const look = (async (page)=>{
-    await setTimeout(scroll, 100 ,page);//(functionRef, ms, param1)
+const look = ((page)=>{
+    setTimeout(scroll, 100 ,page);//(functionRef, ms, param1)
 }); 
 
 //void f(Page)
-const scroll = (async (page) =>{
-    await page.evaluate(async ()=>{
+const scroll = ((page) =>{
+    page.evaluate(async ()=>{
         await new Promise((resolve)=>{
             let current_scrolled = 0;
             let dist = 1;//scroll, px
@@ -45,35 +45,42 @@ const scroll = (async (page) =>{
                     resolve();
                 }
 
-            },20);//wait, ms
+            },20)
+        }).catch((e)=>{
+            console.error(e);
+            reject(e);;
+            //wait, ms
+            });
         });
     });
-});
 
-//void f(void) TODO: replace param void -> html_number(int)
-const transform = (async () => {
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setViewport({
-        width: 1920,
-        height: 1080,
-        deviceScaleFactor: 1,
-        isLandscape: true,
-        hasTouch: true
+    //void f(void) TODO: replace param void -> html_number(int)
+    const transform = (async () => {
+        const browser = await puppeteer.launch().catch((e)=>console.error(e));
+        const page = await browser.newPage().catch((e)=>console.error(e));
+        await page.setViewport({
+            width: 1920,
+            height: 1080,
+            deviceScaleFactor: 1,
+            isLandscape: true,
+            hasTouch: true
+        });
+
+        const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
+
+        await recorder.start(video_dir + "replace.mp4").catch((err)=>reject(err));//replace replace with html_number
+        await page.goto("file:///home/pauro/Documents/code/wrk/vandepar/vandepar/bin/scraped_html/16657603.html"
+            /*goto_dir + "16657603.html"*/, {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+
+        await look(page);
+
+        await recorder.stop().catch((e)=>console.error(e));
+        await new Promise((resolve,rej)=>{
+            setTimeout(console.log,100,"hey");
+            resolve();
+        }).then((res)=>{ browser.close().catch((e)=>console.error(e))});
     });
+    //await everything
+    transform();
 
-    const recorder = new PuppeteerScreenRecorder(page,configForDynamic);
-
-    await recorder.start(video_dir + "replace.mp4").catch((err)=>reject(err));//replace replace with html_number
-    await page.goto("file:///home/pauro/Documents/code/wrk/vandepar/vandepar/bin/scraped_html/16657603.html"
-        /*goto_dir + "16657603.html"*/, {waitUntil: 'networkidle0'});
-
-    await look(page);
-
-    await recorder.stop();
-    await browser.close();
-});
-//await everything
-transform();
-
-module.exports = transform;
+    module.exports = transform;
