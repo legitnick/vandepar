@@ -1,53 +1,22 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-<p><code>(x --&gt; 0)</code> means <code>(x-- &gt; 0)</code>.</p>
-<ol>
-<li>You can use <code>(x --&gt;)</code><br>
-<code>Output: 9 8 7 6 5 4 3 2 1 0</code></li>
-</ol>
-<blockquote>
-</blockquote>
-<ol start="2">
-<li>You can use <code>(-- x &gt; 0)</code>  It's mean <code>(--x &gt; 0)</code><br>
-<code>Output: 9 8 7 6 5 4 3 2 1</code></li>
-</ol>
-<blockquote>
-</blockquote>
-<ol start="3">
-<li>You can use</li>
-</ol>
-<pre><code>(--\
-    \
-     x &gt; 0)
+<p>Conventional way we define condition in while loop parenthesis"<code>()</code>" and terminating condition inside the braces"<code>{}</code>", but this <code>--</code> &amp; <code>&gt;</code> is a way one defines all at once.
+For example:</p>
+<pre><code>int abc(){
+    int a = 5
+    while((a--) &gt; 0){ // Decrement and comparison both at once
+        // Code
+    }
+}
 </code></pre>
-<p><code>Output:  9 8 7 6 5 4 3 2 1</code></p>
-<ol start="4">
-<li>You can use</li>
-</ol>
-<pre><code>(\
-  \
-   x --&gt; 0)
+<p>It says, decrement <code>a</code> and run the loop till the time <code>a</code> is greater than <code>0</code></p>
+<p>Other way it should have been like:</p>
+<pre><code>int abc() {
+    int a = 5;
+    while(a &gt; 0) {
+        a = a -1 // Decrement inside loop
+        // Code
+    }
+}
 </code></pre>
-<p><code>Output: 9 8 7 6 5 4 3 2 1 0</code></p>
-<ol start="5">
-<li>You can use</li>
-</ol>
-<pre><code>(\
-  \
-   x --&gt; 0
-          \
-           \
-            )
-</code></pre>
-<p><code>Output: 9 8 7 6 5 4 3 2 1 0</code></p>
-<ol start="6">
-<li>You can use also</li>
-</ol>
-<pre><code>(
- x 
-  --&gt; 
-      0
-       )
-</code></pre>
-<p><code>Output: 9 8 7 6 5 4 3 2 1 0</code></p>
-<p>Likewise, you can try lot of methods to execute this command successfully.</p>
+<p>Both ways, we do the same thing and achieve the same goals.</p>
     </body></html>

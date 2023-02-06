@@ -1,44 +1,20 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-<p>Apart from the alternative solutions that were posted here (which are correct), no one has actually answered your question by addressing what was wrong with your code.</p>
+<p>Your output is correct. Denote the white characters of  " Hello" and " This" at the beginning.</p>
 
-<p>It seems as though you were trying to implement a <a href="http://www.algolist.net/Algorithms/Sorting/Selection_sort">selection sort</a> algorithm. I will not go into the details of how sorting works here, but I have included a few links for your reference =) </p>
+<p>Another issue is with your methodology. Use the <code>Arrays.sort()</code> method:</p>
 
-<p>Your code was syntactically correct, but logically wrong. You were partially sorting your strings <em>by only comparing each string with the strings that came after it</em>. Here is a corrected version (I retained as much of your original code to illustrate what was "wrong" with it):</p>
-
-<pre><code>static  String Array[]={" Hello " , " This " , "is ", "Sorting ", "Example"};
-String  temp;
-
-//Keeps track of the smallest string's index
-int  shortestStringIndex; 
-
-public static void main(String[] args)  
-{              
-
- //I reduced the upper bound from Array.length to (Array.length - 1)
- for(int j=0; j &lt; Array.length - 1;j++)
- {
-     shortestStringIndex = j;
-
-     for (int i=j+1 ; i&lt;Array.length; i++)
-     {
-         //We keep track of the index to the smallest string
-         if(Array[i].trim().compareTo(Array[shortestStringIndex].trim())&lt;0)
-         {
-             shortestStringIndex = i;  
-         }
-     }
-     //We only swap with the smallest string
-     if(shortestStringIndex != j)
-     {
-         String temp = Array[j];
-         Array[j] = Array[shortestStringIndex]; 
-         Array[shortestStringIndex] = temp;
-     }
- }
-}
+<pre><code>String[] strings = { " Hello ", " This ", "Is ", "Sorting ", "Example" };
+Arrays.sort(strings);
 </code></pre>
 
-<p><strong>Further Reading</strong></p>
+<p><strong>Output:</strong></p>
 
-<p>The problem with this approach is that its <a href="http://rob-bell.net/2009/06/a-beginners-guide-to-big-o-notation/">asymptotic complexity is <strong>O(n^2)</strong></a>. In simplified words, it gets very slow as the size of the array grows (approaches infinity). You may want to read about <a href="http://www.algolist.net/Algorithms/">better ways to sort data</a>, such as <a href="http://www.algolist.net/Algorithms/Sorting/Quicksort">quicksort</a>.</p>
+<pre><code> Hello
+ This
+Example
+Is
+Sorting
+</code></pre>
+
+<p>Here the third element of the array "is" should be "Is", otherwise it will come in last after sorting. Because the sort method internally uses the ASCII value to sort elements.</p>
     </body></html>

@@ -1,21 +1,5 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-<p><code>x</code> can go to zero even faster in the opposite direction in C++:</p>
-<pre><code>int x = 10;
+<p>That's a very complicated operator, so even <a href="https://isocpp.org/std/the-committee" rel="noreferrer">ISO/IEC JTC1 (Joint Technical Committee 1)</a> placed its description in two different parts of the C++ Standard.</p>
 
-while( 0 &lt;---- x )
-{
-   printf("%d ", x);
-}
-</code></pre>
-<p><code>8 6 4 2 </code></p>
-<p>You can control speed with an arrow!</p>
-<pre><code>int x = 100;
-
-while( 0 &lt;-------------------- x )
-{
-   printf("%d ", x);
-}
-</code></pre>
-<p><code>90 80 70 60 50 40 30 20 10 </code></p>
-<p>;)</p>
+<p>Joking aside, they are two different operators: <code>--</code> and <code>&gt;</code> described respectively in §5.2.6/2 and §5.9 of the C++03 Standard.</p>
     </body></html>

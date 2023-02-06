@@ -1,14 +1,12 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-<p>It's</p>
-<pre><code>#include &lt;stdio.h&gt;
-
-int main(void) {
-  int x = 10;
-  while (x-- &gt; 0) { // x goes to 0
-    printf("%d ", x);
-  }
-  return 0;
-}
+<p>It's equivalent to</p>
+<pre class="lang-c prettyprint-override"><code>while (x-- &gt; 0)
 </code></pre>
-<p>Just the space makes the things look funny, <code>--</code> decrements and <code>&gt;</code> compares.</p>
+<p><code>x--</code> (post decrement) is equivalent to <code>x = x-1</code> (but returning the original value of <code>x</code>), so the code transforms to:</p>
+<pre><code>while(x &gt; 0) {
+    x = x-1;
+    // logic
+}
+x--;   // The post decrement done when x &lt;= 0
+</code></pre>
     </body></html>

@@ -50,11 +50,24 @@ const write = (async (path,new_string)=>{
 // string[] f(string)
 const splitHTML = (html_string)=>{
     const $ = cheerio.load(html_string);
-    console.log($(".this-has-helped").length);
-    let divs = $(""/*,"this-has-helped"*/).children("").toArray().map(el=>$(el).html());
 
-    console.log(divs);
-    return divs;
+    const qs = $(".question-hyperlink").toArray().map(el=>$(el).html());
+    const posts = $(".s-prose").toArray().map(el=>$(el).html());
+    const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html());
+    
+    let mixed_posts = [];
+    for(let i = 0;i < posts.length; i++){
+        mixed_posts.push(posts[i]);
+        if(i<helpeds.length)
+            mixed_posts.push(helpeds[i]);
+    }
+    const arr = qs.concat(mixed_posts); 
+
+    console.log(arr);
+    console.log(qs.length);
+    console.log(posts.length);
+    console.log(helpeds.length);
+    return arr;
 };
 
 //void f(string)

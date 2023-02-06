@@ -1,27 +1,13 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-<p>Here is a simpler take on Mike Kinghan's answer. This will detect inherited methods. It will also check for the <em>exact</em> signature (unlike jrok's approach which allows argument conversions).</p>
-
-<pre><code>template &lt;class C&gt;
-class HasGreetMethod
-{
-    template &lt;class T&gt;
-    static std::true_type testSignature(void (T::*)(const char*) const);
-
-    template &lt;class T&gt;
-    static decltype(testSignature(&amp;T::greet)) test(std::nullptr_t);
-
-    template &lt;class T&gt;
-    static std::false_type test(...);
-
-public:
-    using type = decltype(test&lt;C&gt;(nullptr));
-    static const bool value = type::value;
+<p>With c++ 20 this becomes much simpler. Say we want to test if a class <code>T</code> has a member function <code>void T::resize(typename T::size_type)</code>. For example, <code>std::vector&lt;U&gt;</code> has such a member function. Then,</p>
+<pre class="lang-cpp prettyprint-override"><code>template&lt;typename T&gt;
+concept has_resize_member_func = requires {
+    typename T::size_type;
+    { std::declval&lt;T&gt;().resize(std::declval&lt;typename T::size_type&gt;()) } -&gt; std::same_as&lt;void&gt;;
 };
-
-struct A { void greet(const char* name) const; };
-struct Derived : A { };
-static_assert(HasGreetMethod&lt;Derived&gt;::value, "");
 </code></pre>
-
-<p>Runnable <a href="http://ideone.com/LjtMSi" rel="noreferrer">example</a></p>
+<p>and the usage is</p>
+<pre class="lang-cpp prettyprint-override"><code>static_assert(has_resize_member_func&lt;std::string&gt;, "");
+static_assert(has_resize_member_func&lt;int&gt; == false, "");
+</code></pre>
     </body></html>

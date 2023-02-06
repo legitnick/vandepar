@@ -1,0 +1,19 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+        <p>I may have a workaround.</p>
+
+        <p>Was having the same issue, where I am loading lots of items (via the file system) into a <code>ListView</code> via an <code>AsyncTask</code>.  Had the <code>onPreExecute()</code> firing up a <code>ProgressDialog</code>, and then both <code>onPostExecute()</code> and <code>onCancelled()</code> (called when the task is cancelled explicitly via <code>AsyncTask.cancel()</code>) closing it via <code>.cancel()</code>.  </p>
+
+        <p>Got the same "java.lang.IllegalArgumentException: View not attached to window manager" error when I was killing the dialog in the <code>onCancelled()</code> method of the <code>AsyncTask</code> (I'd seen this done in the excellent <a href="http://code.google.com/p/shelves/" rel="nofollow noreferrer">Shelves app</a>).  </p>
+
+        <p>The workaround was to create a public field in the <code>AsyncTask</code> that contains the <code>ProgressDialog</code>:</p>
+
+        <pre><code>public ProgressDialog mDialog;
+        </code></pre>
+
+        <p>Then, in <code>onDestroy()</code> when I cancel my <code>AsyncTask</code>, I can also kill the associated dialog via:</p>
+
+        <pre><code>AsyncTask.mDialog.cancel();
+        </code></pre>
+
+        <p>Calling <code>AsyncTask.cancel()</code> DOES trigger <code>onCancelled()</code> in the <code>AsyncTask</code>, but for some reason by the time that method is called, the View has already been destroyed and thus cancelling the dialog is failing.</p>
+    </body></html>

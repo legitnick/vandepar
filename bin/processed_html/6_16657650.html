@@ -1,0 +1,26 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+    <p><em>I keep this answer for "historic" purpose but don't recommend it anymore. See @Sidnicious' answer above and my Update 2.</em></p>
+
+    <p>Since it looks like a draw between callto and tel guys, I want to throw in a possible solution in the hope, that your comments will bring me back on the way of light ;-)</p>
+
+    <p>Using <code>callto:</code>, since most desktop clients will handle it:</p>
+
+    <pre><code>&lt;a href="callto:0123456789"&gt;call me&lt;/a&gt;
+    </code></pre>
+
+    <p>Then, if the client is an iPhone, replace the links:</p>
+
+    <pre><code>window.onload = function () {
+  if (navigator.userAgent.match (/iPhone/i)) {
+    var a = document.getElementsByTagName ("a");
+    for (var i = 0; i &lt; a.length; i++) {
+      if (a[i].getAttribute ('href').search (/callto:/i) === 0) {
+        a[i].setAttribute ('href', a[i].getAttribute ('href').replace (/^callto:/, "tel:"));
+      }
+    }
+  }
+};
+    </code></pre>
+
+    <p>Any objections against this solution? Should I preferably start from <code>tel:</code>?</p>
+</body></html>

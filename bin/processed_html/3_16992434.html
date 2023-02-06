@@ -1,0 +1,30 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+<p>Phillip Brown is right. you can solve this by controlling yout html-player via js. for example in this case, the video would autostart and will play the videofile should 00:10min to 00:40min</p>
+
+<pre><code>&lt;video id="yourVideoplayer" width="640" height="480" preload="auto"&gt; //preload="auto" buffers the video if initialize. you cannot seek a video which isn t buffering already
+  &lt;source src="test.mp4" type="video/mp4" /&gt;
+  &lt;source src="test.ogv" type="video/ogg" /&gt; 
+  This browser is not compatible with HTML 5
+&lt;/video&gt;
+
+&lt;script type="text/javascript"&gt;
+   window.onload = playVideoTeaserFrom(10,40);   //this event will call the function after page was loaded
+
+   function playVideoTeaserFrom (startTime, endTime) {
+       var videoplayer = document.getElementById("yourVideoplayer");  //get your videoplayer
+
+       videoplayer.currentTime = starttime; //not sure if player seeks to seconds or milliseconds
+       videoplayer.play();
+
+       //call function to stop player after given intervall
+       var stopVideoAfter = (endTime - startTime) * 1000;  //* 1000, because Timer is in ms
+       setTimeout(function(){
+           videoplayer.stop();
+       }, stopVideoAfter);
+
+   }
+ &lt;/script&gt;
+</code></pre>
+
+<p>there might be some bugs in it, but i guess you ll get the point</p>
+    </body></html>

@@ -1,1 +1,49 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>This answer has helped 232 people.</body></html>
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
+        <p>Here is my "bullet proof" solution, which is compilation of all good answers that I found on this topic (thanks to @Damjan and @Kachi). Here the exception is swallowed only if all other ways of detection did not succeeded. In my case I need to close the dialog automatically and this is the only way to protect the app from crash. 
+        I hope it will help you! 
+        Please, vote and leave comments if you have remarks or better solution. Thank you!</p>
+
+        <pre><code>public void dismissWithCheck(Dialog dialog) {
+        if (dialog != null) {
+            if (dialog.isShowing()) {
+
+                //get the Context object that was used to great the dialog
+                Context context = ((ContextWrapper) dialog.getContext()).getBaseContext();
+
+                // if the Context used here was an activity AND it hasn't been finished or destroyed
+                // then dismiss it
+                if (context instanceof Activity) {
+
+                    // Api &gt;=17
+                    if (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                        if (!((Activity) context).isFinishing() &amp;&amp; !((Activity) context).isDestroyed()) {
+                            dismissWithTryCatch(dialog);
+                        }
+                    } else {
+
+                        // Api &lt; 17. Unfortunately cannot check for isDestroyed()
+                        if (!((Activity) context).isFinishing()) {
+                            dismissWithTryCatch(dialog);
+                        }
+                    }
+                } else
+                    // if the Context used wasn't an Activity, then dismiss it too
+                    dismissWithTryCatch(dialog);
+            }
+            dialog = null;
+        }
+    }
+
+    public void dismissWithTryCatch(Dialog dialog) {
+        try {
+            dialog.dismiss();
+        } catch (final IllegalArgumentException e) {
+            // Do nothing.
+        } catch (final Exception e) {
+            // Do nothing.
+        } finally {
+            dialog = null;
+        }
+    }
+        </code></pre>
+    </body></html>

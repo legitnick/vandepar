@@ -1,19 +1,26 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-<p>Why all the complication?</p>
-<p>The simple answer to the original question is just:</p>
-<pre><code>#include &lt;stdio.h&gt;
-
-int main()
-{
-    int x = 10;
-    while (x &gt; 0)
-    {
-        printf("%d ", x);
-        x = x-1;
-    }
-}
+<pre><code>char sep = '\n'  /1\
+; int i = 68    /1  \
+; while (i  ---      1\
+                       \
+                       /1/1/1                               /1\
+                                                            /1\
+                                                            /1\
+                                                            /1\
+                                                            /1\
+                            /           1\
+                           /            1 \
+                          /             1  \
+                         /              1   \
+                         /1            /1    \
+                          /1          /1      \
+                           /1        /1        /1/1&gt; 0) std::cout \
+                              &lt;&lt;i&lt;&lt;                               sep;
 </code></pre>
-<p>It does the same thing. I am not saying you should do it like this, but it does the same thing and would have answered the question in one post.</p>
-<p>The <code>x--</code> is just shorthand for the above, and <code>&gt;</code> is just a normal greater-than <code>operator</code>. No big mystery!</p>
-<p>There are too many people making simple things complicated nowadays  ;)</p>
+<p>For larger numbers, C++20 introduces some more advanced looping features.
+First to catch <code>i</code> we can build an inverse loop-de-loop and deflect it onto the <code>std::ostream</code>. However, the speed of <code>i</code> is implementation-defined, so we can use the new C++20 speed operator <code>&lt;&lt;i&lt;&lt;</code> to speed it up. We must also catch it by building wall, if we don't, <code>i</code> leaves the scope and de referencing it causes undefined behavior. To specify the separator, we can use:</p>
+<pre><code> std::cout \
+           sep
+</code></pre>
+<p>and there we have a for loop from 67 to 1.</p>
     </body></html>

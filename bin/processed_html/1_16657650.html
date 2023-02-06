@@ -1,12 +1,10 @@
 <!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>
-    <p>The <code>tel:</code> scheme was <a href="http://www.mail-archive.com/www-talk@w3.org/msg01660.html" rel="noreferrer">used in the late 1990s</a> and documented in early 2000 with <a href="https://www.rfc-editor.org/rfc/rfc2806" rel="noreferrer">RFC 2806</a> (which was obsoleted by the more-thorough <a href="https://www.rfc-editor.org/rfc/rfc3966" rel="noreferrer">RFC 3966</a> in 2004) and <a href="https://www.rfc-editor.org/rfc/rfc5341" rel="noreferrer">continues to be improved</a>. Supporting <code>tel:</code> on the iPhone was not an arbitrary decision.</p>
-    <p><code>callto:</code>, while supported by Skype, <strong>is not a standard</strong> and should be avoided unless specifically targeting Skype users.</p>
-    <p>Me? I'd just start including properly-formed <code>tel:</code> URIs on your pages (without sniffing the user agent) and wait for the rest of the world's phones to catch up :) .</p>
-    <p><strong>Example</strong>:</p>
-    <p></p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
-        <div class="snippet-code">
-            <pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;a href="tel:+18475555555"&gt;1-847-555-5555&lt;/a&gt;</code></pre>
-        </div>
-    </div>
-    <p></p>
+
+    <p>I want to mark up a phone number as callable link in an HTML document. I have read <a href="http://microformats.org/wiki/hcard-faq#How_do_you_mark_up_a_phone_extension" rel="nofollow noreferrer">the microformats approach</a>, and I know, that the <code>tel:</code> scheme would be standard, but is quite literally nowhere implemented.</p>
+    <p>Skype defines, as far as I know, <code>skype:</code> and <code>callto:</code>, the latter having gained some popularity. I assume, that other companies have either other schemes or jump on the <code>callto:</code> train.</p>
+    <p>What would be a best practice to mark-up a phone number, so that as many people as possible with VoIP software can just click on a link to get a call?</p>
+    <p>Bonus question: Does anyone know about complications with emergency numbers such as 911 in US or 110 in Germany?</p>
+    <p><strong>Update:</strong> Microsoft NetMeeting takes <code>callto:</code> schemes under WinXP. <a href="https://stackoverflow.com/questions/1009181/url-scheme-for-phone-call">This question</a> suggests, that Microsoft Office Communicator will handle <code>tel:</code> schemes but not <code>callto:</code> ones. Great, Redmond!</p>
+    <p><strong>Update 2:</strong> Two and a half years later now. It seems to boil down to what you want to do with the number. In mobile context, <code>tel:</code> is the way to go. Targeting desktops it's up to you, if you think your users are more Skype people (<code>callto:</code>) or will more likely have something like Google Voice (<code>tel:</code>) installed. My personal opinion is, when in doubt use <code>tel:</code> (in line with @Sidnicious' answer).</p>
+    <p><strong>Update 3:</strong> User @rybo111 noted, that Skype in Chrome has meanwhile jumped on the <code>tel:</code> bandwagon. I cannot verify this, because no machine with both at hand, but if it's true, it means we have finally a winner here: <code>tel:</code></p>
 </body></html>
