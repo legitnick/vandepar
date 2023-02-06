@@ -90,6 +90,7 @@ const getSOText = async (i_link) => {
 
 const wrapped = limiter.wrap(getSOText);
 
+//void f(void)
 function mainLoop(){
     //{ file: '16992452.html', mtime: 2023-02-03T13:18:30.372Z }
 
