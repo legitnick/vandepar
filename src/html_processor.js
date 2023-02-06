@@ -1,8 +1,9 @@
 'use strict';
 
+const cheerio = require("cheerio");
 const fs = require("fs");
-const jsdom = require("jsdom");
 //create a function which moves scraped html file into tmp folder, then parses it, returns multiple htmls, writes them into folder with the name corresponding to the scraped html's name
+
 
 //void f(string,string)
 async function move(path_pre,path_post){
@@ -48,10 +49,8 @@ const write = (async (path,new_string)=>{
 
 // string[] f(string)
 const splitHTML = (html_string)=>{
-    const dom = new jsdom.JSDOM(html_string);
-    const doc = dom.window.document;
-    console.log(doc);
-    const s_arr = doc.querySelectAll(".s-prose").map(el=>el.innerText);
+    const $ = cheerio.load(html_string);
+    const s_arr = [...($(".s-prose").text())];
     console.log(s_arr);
     return s_arr;
 };
