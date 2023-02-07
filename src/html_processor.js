@@ -85,21 +85,26 @@ const parse = (async (path)=>{
     //for each post, create a different html file, as well as for
     //this has helped: X paragraphs
     let newdir = ""+parseInt(path);//get_int_string()?
-    console.log(newdir+"of the type"+typeof newdir);
 
-    if(fs.access(html_from_dir + newdir),fs.constants.F_OK,(err)=>{
+    /*if(fs.access(html_from_dir + newdir),fs.constants.F_OK,(err)=>{
         console.log(`${file} ${err ? 'is not readable' : 'is readable'}`);
-    })
-        return new Promise.resolve();
+    })*/
+    if(fs.existsSync(html_to_dir+newdir))
+        return new Promise((resolve)=>resolve());
+        //didn't even check for the correct thing
 
-    fs.mkdir(newdir);
+    fs.mkdirSync(html_to_dir+newdir+"/");
     return new Promise((resolve,reject)=>{
-        const html = fs.readFile(html_from_dir+path,"utf8",(err)=>{
+        
+        let html;
+        fs.readFile(html_from_dir+path,"utf8",(err,data)=>{
             if(err){
                 console.error(err)
                 reject();
             }
+            html = data;//a better way for this?
         });
+        console.log(html);
         const post_arr = splitHTML(html);
 
 
@@ -114,4 +119,3 @@ const parse = (async (path)=>{
 
 parseAll();
 module.exports = parseAll;
-
