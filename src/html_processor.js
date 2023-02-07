@@ -27,7 +27,7 @@ const getHtmlArr = (async ()=>{
 //void f(void)
 const parseAll = (async ()=>{
     const html_filenames = await getHtmlArr();
-    console.log(html_filenames);
+    //console.log(html_filenames);
     html_filenames.forEach(async (el)=>{
         await parse(el);
     });
@@ -60,7 +60,9 @@ function reAddClass(class_string,html_string){
 
 
 // string[] f(string)
-const splitHTML = (html_string)=>{
+const splitHTML = (error,html_string)=>{
+    if(error)console.error(error);
+
     const $ = cheerio.load(html_string);
 
     const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass("question-hyperlink",el));
@@ -99,26 +101,8 @@ const parse = (async (path)=>{
     return new Promise((resolve,reject)=>{
         
         let html; 
-            fs.readFile(html_from_dir+path,"utf8",(err,data)=>{
-            if(err){
-                console.error(err)
-                reject();
-            }
-            resolve(data);
-            html = data;//a better way for this?
-        });
-        console.log(html);
-        const post_arr = splitHTML(html);
-
-
-        for(let i = 0; i < post_arr.length; i++){
-            let new_string = post_arr[i];
-            write(html_to_dir+newdir+"/"+i,new_string);
-        }
-
-        resolve();
-    });
+            fs.readFile(html_from_dir+path,"utf8",splitHTML);
 })
-
+});
 parseAll();
 module.exports = parseAll;
