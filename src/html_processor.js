@@ -27,7 +27,10 @@ const getHtmlArr = (async ()=>{
 //void f(void)
 const parseAll = (async ()=>{
     const html_filenames = await getHtmlArr();
-    html_filenames.forEach((el)=>{parse(el)});
+    console.log(html_filenames);
+    html_filenames.forEach(async (el)=>{
+        await parse(el);
+    });
 });
 
 //void f(string)
@@ -41,8 +44,12 @@ const toCompleteHtml = (html_string)=>{
 //void f(string,string)
 const write = (async (path,new_string)=>{
     fs.writeFile(html_to_dir+path,new_string,(e)=>{
-        if(e)
+        if(e){
             console.error(e)
+            return new Promise((resolve,reject)=>reject());
+        }
+
+        return new Promise((resolve,reject)=>resolve());
     })
 });
 
@@ -78,8 +85,12 @@ const parse = (async (path)=>{
     //for each post, create a different html file, as well as for
     //this has helped: X paragraphs
     let newdir = ""+parseInt(path);//get_int_string()?
+    console.log(newdir+"of the type"+typeof newdir);
 
-    if(fs.access(newdir))return new Promise.resolve();
+    if(fs.access(html_from_dir + newdir),fs.constants.F_OK,(err)=>{
+        console.log(`${file} ${err ? 'is not readable' : 'is readable'}`);
+    })
+        return new Promise.resolve();
 
     fs.mkdir(newdir);
     return new Promise((resolve,reject)=>{
