@@ -43,7 +43,7 @@ const toCompleteHtml = (html_string)=>{
 
 //void f(string,string)
 const write = (async (path,new_string)=>{
-    fs.writeFile(html_to_dir+path,new_string,(e)=>{
+    fs.writeFile(path,new_string,(e)=>{
         if(e){
             console.error(e)
             return new Promise((resolve,reject)=>reject());
@@ -89,19 +89,22 @@ const parse = (async (path)=>{
     /*if(fs.access(html_from_dir + newdir),fs.constants.F_OK,(err)=>{
         console.log(`${file} ${err ? 'is not readable' : 'is readable'}`);
     })*/
-    if(fs.existsSync(html_to_dir+newdir))
+    if(fs.existsSync(html_to_dir+newdir)){
+        console.log(html_to_dir+newdir+" Exists");
         return new Promise((resolve)=>resolve());
+    }
         //didn't even check for the correct thing
 
     fs.mkdirSync(html_to_dir+newdir+"/");
     return new Promise((resolve,reject)=>{
         
-        let html;
-        fs.readFile(html_from_dir+path,"utf8",(err,data)=>{
+        let html; 
+            fs.readFile(html_from_dir+path,"utf8",(err,data)=>{
             if(err){
                 console.error(err)
                 reject();
             }
+            resolve(data);
             html = data;//a better way for this?
         });
         console.log(html);
@@ -110,7 +113,7 @@ const parse = (async (path)=>{
 
         for(let i = 0; i < post_arr.length; i++){
             let new_string = post_arr[i];
-            write(newdir+"/"+i,new_string);
+            write(html_to_dir+newdir+"/"+i,new_string);
         }
 
         resolve();
