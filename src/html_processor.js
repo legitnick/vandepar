@@ -22,11 +22,12 @@ const html_to_dir = "./bin/processed_html/";
 const getHtmlArr = (async ()=>{
     return fs.readdirSync(html_from_dir);
 });
+//this has no business being async function, does it?
 
 //void f(void)
 const parseAll = (async ()=>{
     const html_filenames = await getHtmlArr();
-    html_filenames.forEach(el=>parse(el));
+    html_filenames.forEach((el)=>{parse(el)});
 });
 
 //void f(string)
@@ -58,7 +59,7 @@ const splitHTML = (html_string)=>{
     const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass("question-hyperlink",el));
     const posts = $(".s-prose").toArray().map(el=>$(el).html()).map(el=>reAddClass("s-prose",el));
     const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html()).map(el=>reAddClass("this-has-helped",el));
-   //too repetitive to not have a function 
+    //too repetitive to not have a function 
 
     let mixed_posts = [];
     for(let i = 0;i < posts.length; i++){
@@ -68,6 +69,7 @@ const splitHTML = (html_string)=>{
     }
     const arr = qs.concat(mixed_posts); 
 
+    console.log(arr);
     return arr;
 };
 
@@ -75,18 +77,27 @@ const splitHTML = (html_string)=>{
 const parse = (async (path)=>{
     //for each post, create a different html file, as well as for
     //this has helped: X paragraphs
-    return await fs.readFile(html_from_dir+path,"utf8",(err,html_string)=>{
-        if(err)throw err;
+    let newdir = ""+parseInt(path);//get_int_string()?
 
-        const post_arr = splitHTML(html_string);
+    if(fs.access(newdir))return new Promise.resolve();
 
-
-        post_arr.forEach((el,i)=>{
-            let new_string = toCompleteHtml(el);
-            write(i+"_"+path,new_string);
+    fs.mkdir(newdir);
+    return new Promise((resolve,reject)=>{
+        const html = fs.readFile(html_from_dir+path,"utf8",(err)=>{
+            if(err){
+                console.error(err)
+                reject();
+            }
         });
+        const post_arr = splitHTML(html);
 
 
+        for(let i = 0; i < post_arr.length; i++){
+            let new_string = post_arr[i];
+            write(newdir+"/"+i,new_string);
+        }
+
+        resolve();
     });
 })
 
