@@ -1,6 +1,7 @@
 *{
     padding:0;
     font-family: 'Work Sans', sans-serif;
+    line-height:130%;
     margin:0;
 }
 
@@ -48,4 +49,10 @@ div{
     position:relative;
     top:7em;
     
+}
+/*code*/
+pre {
+    background-color:rgb(227, 230, 232);
+    border-radius:3px;
+    padding:1px;
 }
