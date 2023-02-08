@@ -1,0 +1,349 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><a href="/questions/1642028/what-is-the-operator-in-c" class="question-hyperlink">What is the "--&gt;" operator in C++?</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>After reading <a href="http://groups.google.com/group/comp.lang.c++.moderated/msg/33f173780d58dd20" rel="noreferrer">Hidden Features and Dark Corners of C++/STL</a> on <code>comp.lang.c++.moderated</code>, I was completely surprised that the following snippet compiled and worked in both Visual Studio 2008 and G++ 4.4.</p>
+<p>Here's the code:</p>
+<pre><code>#include &lt;stdio.h&gt;
+int main()
+{
+    int x = 10;
+    while (x --&gt; 0) // x goes to 0
+    {
+        printf("%d ", x);
+    }
+}
+</code></pre>
+<p>Output:</p>
+<pre><code>9 8 7 6 5 4 3 2 1 0
+</code></pre>
+<p>I'd assume this is C, since it works in GCC as well. Where is this defined in the standard, and where has it come from?</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p><code>--&gt;</code> is not an operator. It is in fact two separate operators, <code>--</code> and <code>&gt;</code>.</p>
+<p>The conditional's code decrements <code>x</code>, while returning <code>x</code>'s original (not decremented) value, and then compares the original value with <code>0</code> using the <code>&gt;</code> operator.</p>
+<p><strong>To better understand, the statement could be written as follows:</strong></p>
+<pre class="lang-c prettyprint-override"><code>while( (x--) &gt; 0 )
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Or for something completely different... <code>x</code> slides to <code>0</code>.</p>
+
+<pre><code>while (x --\
+            \
+             \
+              \
+               &gt; 0)
+     printf("%d ", x);
+</code></pre>
+
+<p>Not so mathematical, but... every picture paints a thousand words...</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>That's a very complicated operator, so even <a href="https://isocpp.org/std/the-committee" rel="noreferrer">ISO/IEC JTC1 (Joint Technical Committee 1)</a> placed its description in two different parts of the C++ Standard.</p>
+
+<p>Joking aside, they are two different operators: <code>--</code> and <code>&gt;</code> described respectively in §5.2.6/2 and §5.9 of the C++03 Standard.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p><code>x</code> can go to zero even faster in the opposite direction in C++:</p>
+<pre><code>int x = 10;
+
+while( 0 &lt;---- x )
+{
+   printf("%d ", x);
+}
+</code></pre>
+<p><code>8 6 4 2 </code></p>
+<p>You can control speed with an arrow!</p>
+<pre><code>int x = 100;
+
+while( 0 &lt;-------------------- x )
+{
+   printf("%d ", x);
+}
+</code></pre>
+<p><code>90 80 70 60 50 40 30 20 10 </code></p>
+<p>;)</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>It's equivalent to</p>
+<pre class="lang-c prettyprint-override"><code>while (x-- &gt; 0)
+</code></pre>
+<p><code>x--</code> (post decrement) is equivalent to <code>x = x-1</code> (but returning the original value of <code>x</code>), so the code transforms to:</p>
+<pre><code>while(x &gt; 0) {
+    x = x-1;
+    // logic
+}
+x--;   // The post decrement done when x &lt;= 0
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>It's</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main(void) {
+  int x = 10;
+  while (x-- &gt; 0) { // x goes to 0
+    printf("%d ", x);
+  }
+  return 0;
+}
+</code></pre>
+<p>Just the space makes the things look funny, <code>--</code> decrements and <code>&gt;</code> compares.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>The usage of <code>--&gt;</code> has historical relevance. Decrementing was (and still is in some cases), faster than incrementing on the x86 architecture. Using <code>--&gt;</code> suggests that <code>x</code> is going to <code>0</code>, and appeals to those with mathematical backgrounds.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Utterly geek, but I will be using this:</p>
+
+<pre><code>#define as ;while
+
+int main(int argc, char* argv[])
+{
+    int n = atoi(argv[1]);
+    do printf("n is %d\n", n) as ( n --&gt; 0);
+    return 0;
+}
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<pre class="lang-c prettyprint-override"><code>while( x-- &gt; 0 )
+</code></pre>
+<p>is how that's parsed.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>One book I read (I don't remember correctly which book) stated: <strong>Compilers try to parse expressions to the biggest token</strong> by using the left right rule.</p>
+<p>In this case, the expression:</p>
+<pre><code>x--&gt;0
+</code></pre>
+<p>Parses to biggest tokens:</p>
+<pre><code>token 1: x
+token 2: --
+token 3: &gt;
+token 4: 0
+conclude: x-- &gt; 0
+</code></pre>
+<p><strong>The same rule</strong> applies to this expression:</p>
+<pre><code>a-----b
+</code></pre>
+<p>After parse:</p>
+<pre><code>token 1: a
+token 2: --
+token 3: --
+token 4: -
+token 5: b
+conclude: (a--)-- - b
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>This is exactly the same as</p>
+<pre><code>while (x--)
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Anyway, we have a "goes to" operator now. <code>"--&gt;"</code> is easy to be remembered as a direction, and "while x goes to zero" is meaning-straight.</p>
+
+<p>Furthermore, it is a little more efficient than <code>"for (x = 10; x &gt; 0; x --)"</code> on some platforms.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>This code first compares x and 0 and then decrements x. (Also said in the first answer: You're post-decrementing x and then comparing x and 0 with the <code>&gt;</code> operator.) See the output of this code:</p>
+
+<pre><code>9 8 7 6 5 4 3 2 1 0
+</code></pre>
+
+<p>We now first compare and then decrement by seeing 0 in the output.</p>
+
+<p>If we want to first decrement and then compare, use this code:</p>
+
+<pre><code>#include &lt;stdio.h&gt;
+int main(void)
+{
+    int x = 10;
+
+    while( --x&gt; 0 ) // x goes to 0
+    {
+        printf("%d ", x);
+    }
+    return 0;
+}
+</code></pre>
+
+<p>That output is:</p>
+
+<pre><code>9 8 7 6 5 4 3 2 1
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>My compiler will print out 9876543210 when I run this code.</p>
+
+<pre><code>#include &lt;iostream&gt;
+int main()
+{
+    int x = 10;
+
+    while( x --&gt; 0 ) // x goes to 0
+    {
+        std::cout &lt;&lt; x;
+    }
+}
+</code></pre>
+
+<p>As expected. The <code>while( x-- &gt; 0 )</code> actually means <code>while( x &gt; 0)</code>. The <code>x--</code> post decrements <code>x</code>.</p>
+
+<pre><code>while( x &gt; 0 ) 
+{
+    x--;
+    std::cout &lt;&lt; x;
+}
+</code></pre>
+
+<p>is a different way of writing the same thing.</p>
+
+<p>It is nice that the original looks like "while x goes to 0" though.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>There is a space missing between <code>--</code> and <code>&gt;</code>. <code>x</code> is post decremented, that is, decremented after checking the condition <code>x&gt;0 ?</code>.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p><code>--</code> is the <strong>decrement</strong> operator and <code>&gt;</code> is the <strong>greater-than</strong> operator.</p>
+
+<p>The two operators are applied as a single one like <code>--&gt;</code>.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>It's a combination of two operators. First <code>--</code> is for decrementing the value, and <code>&gt;</code> is for checking whether the value is greater than the right-hand operand.</p>
+
+<pre><code>#include&lt;stdio.h&gt;
+
+int main()
+{
+    int x = 10;
+
+    while (x-- &gt; 0)
+        printf("%d ",x);
+
+    return 0;
+}
+</code></pre>
+
+<p>The output will be:</p>
+
+<pre><code>9 8 7 6 5 4 3 2 1 0            
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>C and C++ obey the "maximal munch" rule. The same way <code>a---b</code> is translated to <code>(a--) - b</code>, in your case  <code>x--&gt;0</code> translates to <code>(x--)&gt;0</code>.</p>
+<p>What the rule says essentially is that going left to right, expressions are formed by taking the maximum of characters which will form a valid token.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Actually, <code>x</code> is post-decrementing and with that condition is being checked. It's not <code>--&gt;</code>, it's <code>(x--) &gt; 0</code></p>
+
+<p>Note: value of <code>x</code> is changed after the condition is checked, because it post-decrementing. Some similar cases can also occur, for example:</p>
+
+<pre><code>--&gt;    x--&gt;0
+++&gt;    x++&gt;0
+--&gt;=   x--&gt;=0
+++&gt;=   x++&gt;=0
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Instead of regular arrow operator (--&gt;) you can use armor-piercing arrow operator: --x&gt; (note those sharp barbs on the arrow tip). It adds +1 to armor piercing, so it finishes the loop 1 iteration faster than regular arrow operator. Try it yourself:</p>
+<pre><code>int x = 10;
+while( --x&gt; 0 )
+    printf("%d ", x);
+</code></pre>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<pre><code>char sep = '\n'  /1\
+; int i = 68    /1  \
+; while (i  ---      1\
+                       \
+                       /1/1/1                               /1\
+                                                            /1\
+                                                            /1\
+                                                            /1\
+                                                            /1\
+                            /           1\
+                           /            1 \
+                          /             1  \
+                         /              1   \
+                         /1            /1    \
+                          /1          /1      \
+                           /1        /1        /1/1&gt; 0) std::cout \
+                              &lt;&lt;i&lt;&lt;                               sep;
+</code></pre>
+<p>For larger numbers, C++20 introduces some more advanced looping features.
+First to catch <code>i</code> we can build an inverse loop-de-loop and deflect it onto the <code>std::ostream</code>. However, the speed of <code>i</code> is implementation-defined, so we can use the new C++20 speed operator <code>&lt;&lt;i&lt;&lt;</code> to speed it up. We must also catch it by building wall, if we don't, <code>i</code> leaves the scope and de referencing it causes undefined behavior. To specify the separator, we can use:</p>
+<pre><code> std::cout \
+           sep
+</code></pre>
+<p>and there we have a for loop from 67 to 1.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Why all the complication?</p>
+<p>The simple answer to the original question is just:</p>
+<pre><code>#include &lt;stdio.h&gt;
+
+int main()
+{
+    int x = 10;
+    while (x &gt; 0)
+    {
+        printf("%d ", x);
+        x = x-1;
+    }
+}
+</code></pre>
+<p>It does the same thing. I am not saying you should do it like this, but it does the same thing and would have answered the question in one post.</p>
+<p>The <code>x--</code> is just shorthand for the above, and <code>&gt;</code> is just a normal greater-than <code>operator</code>. No big mystery!</p>
+<p>There are too many people making simple things complicated nowadays  ;)</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Conventional way we define condition in while loop parenthesis"<code>()</code>" and terminating condition inside the braces"<code>{}</code>", but this <code>--</code> &amp; <code>&gt;</code> is a way one defines all at once.
+For example:</p>
+<pre><code>int abc(){
+    int a = 5
+    while((a--) &gt; 0){ // Decrement and comparison both at once
+        // Code
+    }
+}
+</code></pre>
+<p>It says, decrement <code>a</code> and run the loop till the time <code>a</code> is greater than <code>0</code></p>
+<p>Other way it should have been like:</p>
+<pre><code>int abc() {
+    int a = 5;
+    while(a &gt; 0) {
+        a = a -1 // Decrement inside loop
+        // Code
+    }
+}
+</code></pre>
+<p>Both ways, we do the same thing and achieve the same goals.</p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p><code>(x --&gt; 0)</code> means <code>(x-- &gt; 0)</code>.</p>
+<ol>
+<li>You can use <code>(x --&gt;)</code><br>
+<code>Output: 9 8 7 6 5 4 3 2 1 0</code></li>
+</ol>
+<blockquote>
+</blockquote>
+<ol start="2">
+<li>You can use <code>(-- x &gt; 0)</code>  It's mean <code>(--x &gt; 0)</code><br>
+<code>Output: 9 8 7 6 5 4 3 2 1</code></li>
+</ol>
+<blockquote>
+</blockquote>
+<ol start="3">
+<li>You can use</li>
+</ol>
+<pre><code>(--\
+    \
+     x &gt; 0)
+</code></pre>
+<p><code>Output:  9 8 7 6 5 4 3 2 1</code></p>
+<ol start="4">
+<li>You can use</li>
+</ol>
+<pre><code>(\
+  \
+   x --&gt; 0)
+</code></pre>
+<p><code>Output: 9 8 7 6 5 4 3 2 1 0</code></p>
+<ol start="5">
+<li>You can use</li>
+</ol>
+<pre><code>(\
+  \
+   x --&gt; 0
+          \
+           \
+            )
+</code></pre>
+<p><code>Output: 9 8 7 6 5 4 3 2 1 0</code></p>
+<ol start="6">
+<li>You can use also</li>
+</ol>
+<pre><code>(
+ x 
+  --&gt; 
+      0
+       )
+</code></pre>
+<p><code>Output: 9 8 7 6 5 4 3 2 1 0</code></p>
+<p>Likewise, you can try lot of methods to execute this command successfully.</p>
+    </div></body></html>

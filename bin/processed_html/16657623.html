@@ -1,0 +1,258 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><a href="/questions/16617073/spring-security-rest-basic-authentication-issue" class="question-hyperlink">Spring Security, REST basic authentication issue</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I got an issue related to the HTTP response header "Access-Control-Allow-Origin" when using basic authetication with Spring. When I authenticate manually, like the code bellow (I'm using REST):</p>
+
+<pre class="lang-java prettyprint-override"><code>@RequestMapping(value = "/login", method = RequestMethod.POST, consumes = "application/json")
+@ResponseStatus(value = HttpStatus.OK)
+public void login(@RequestBody String body, HttpServletResponse response)
+        throws IOException {
+    try {
+        User user = gson.fromJson(body, User.class);
+
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(
+                usuario.getUsername(), usuario.getPassword());
+
+        authenticationManager.authenticate(token);
+    } catch (BadCredentialsException e) {
+        response.sendError(HttpServletResponse.SC_UNAUTHORIZED);
+    } catch (Exception e) {
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+}
+</code></pre>
+
+<p>everything works fine, I receive the following HTTP response:</p>
+
+<pre><code>HTTP/1.1 401 Unauthorized
+Server: Apache-Coyote/1.1
+Access-Control-Allow-Origin: null
+Access-Control-Allow-Credentials: true
+Content-Type: text/html;charset=utf-8
+Content-Length: 951
+Date: Fri, 17 May 2013 19:14:36 GMT
+</code></pre>
+
+<p>as you can see, "Access-Control-Allow-Origin" is present on the response.
+Everything is fine here. I can catch a 401 error in my ajax call.</p>
+
+<p>But when the authentication is performed automatically, like the code bellow:</p>
+
+<pre class="lang-java prettyprint-override"><code>@RequestMapping(value = "/name", method = RequestMethod.POST, consumes = "application/json")
+@PreAuthorize("hasRole('ROLE_CUSTOMER')")
+public @ResponseBody String getName(HttpServletResponse response) throws IOException {
+    String json = null;
+
+    try {
+        User userSession = (User) SecurityContextHolder.getContext()
+                .getAuthentication().getPrincipal();
+
+        Customer customer = customerDao.getNameByUsername(userSession.getUsername());
+
+        json = gson.toJson(customer);
+
+    } catch (Exception e) {
+        response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    return json;
+}
+</code></pre>
+
+<p>the HTTP response is:</p>
+
+<pre><code>HTTP/1.1 401 Unauthorized
+Server: Apache-Coyote/1.1
+WWW-Authenticate: Basic realm="Spring Security Application"
+Content-Type: text/html;charset=utf-8
+Content-Length: 981
+Date: Fri, 17 May 2013 19:41:08 GMT
+</code></pre>
+
+<p>There is no "Access-Control-Allow-Origin" in the response</p>
+
+<p>Google Chrome console show the following error:</p>
+
+<pre><code>Origin null is not allowed by Access-Control-Allow-Origin
+</code></pre>
+
+<p>My ajax call does not return a 401 Unauthorized error, even though the HTTP response return it (response above), I receive an unknow error.</p>
+
+<p>I figured out that for all browsers, I need a "Access-Control-Allow-Origin" in the HTTP response, otherwise they will generate some kind of silent error and my ajax call will fail (can't catch the 401 error). Actually, javascript will fail silently. XMLHttpRequest
+does not accept an HTTP response without "Access-Control-Allow-Origin".</p>
+
+<p>How can I make Spring inject this "Access-Control-Allow-Origin" in HTTP responses for basic authentication?</p>
+
+<p>this is my Spring Security xml:</p>
+
+<pre class="lang-xml prettyprint-override"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+          http://www.springframework.org/schema/beans
+          http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+          http://www.springframework.org/schema/security
+          http://www.springframework.org/schema/security/spring-security-3.1.xsd"&gt;
+
+    &lt;security:http create-session="stateless" entry-point-ref="authenticationEntryPoint"&gt;
+        &lt;security:intercept-url pattern="/customer/**" /&gt;
+        &lt;security:http-basic /&gt;
+        &lt;security:custom-filter ref="basicAuthenticationFilter"
+            after="BASIC_AUTH_FILTER" /&gt;
+    &lt;/security:http&gt;
+
+    &lt;bean id="basicAuthenticationFilter"
+        class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter"&gt;
+        &lt;property name="authenticationManager" ref="authenticationManager" /&gt;
+        &lt;property name="authenticationEntryPoint" ref="authenticationEntryPoint" /&gt;
+    &lt;/bean&gt;
+
+    &lt;bean id="authenticationEntryPoint"
+        class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint"&gt;
+        &lt;property name="realmName" value="teste.com" /&gt;
+    &lt;/bean&gt;
+
+    &lt;!-- It is responsible for validating the user's credentials --&gt;
+    &lt;security:authentication-manager alias="authenticationManager"&gt;
+
+        &lt;!-- It is responsible for providing credential validation to the AuthenticationManager --&gt;
+        &lt;security:authentication-provider&gt;
+            &lt;security:password-encoder ref="passwordEncoder" /&gt;
+
+            &lt;security:jdbc-user-service
+                data-source-ref="mySQLdataSource"
+                users-by-username-query="select username, password, enabled from usuario where username = ?"
+                authorities-by-username-query="select username, papel from autoridade where username = ?" /&gt;
+
+        &lt;/security:authentication-provider&gt;
+
+    &lt;/security:authentication-manager&gt;
+
+    &lt;bean class="org.springframework.security.crypto.password.StandardPasswordEncoder"
+        id="passwordEncoder" /&gt;
+
+&lt;/beans&gt;
+</code></pre>
+    </div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>Just found my own way:</p>
+
+<p>First of all, I don't really remember why I put this line here, but it was messing up my code:</p>
+
+<pre><code>&lt;security:http-basic /&gt;
+</code></pre>
+
+<p>Second, this answer show me the path: <a href="https://stackoverflow.com/questions/4397062/handle-unauthorized-error-message-for-basic-authentication-in-spring-security">Handle unauthorized error message for Basic Authentication in Spring Security</a>. I had to create a custom authentication entry point in order to send the Access-Control-Allow-Origin thing.</p>
+
+<p>So this is my code now:</p>
+
+<pre class="lang-xml prettyprint-override"><code>&lt;?xml version="1.0" encoding="UTF-8"?&gt;
+&lt;beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:security="http://www.springframework.org/schema/security"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="
+              http://www.springframework.org/schema/beans
+              http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+              http://www.springframework.org/schema/security
+              http://www.springframework.org/schema/security/spring-security-3.1.xsd"&gt;
+
+    &lt;security:http create-session="stateless"
+        entry-point-ref="authenticationEntryPoint"&gt;
+        &lt;security:intercept-url pattern="/api/admin/**" /&gt;
+        &lt;security:intercept-url pattern="/medico/**" /&gt;
+        &lt;!-- &lt;security:http-basic /&gt;  --&gt;
+        &lt;security:custom-filter ref="basicAuthenticationFilter"
+            after="BASIC_AUTH_FILTER" /&gt;
+    &lt;/security:http&gt;
+
+    &lt;bean id="basicAuthenticationFilter"
+        class="org.springframework.security.web.authentication.www.BasicAuthenticationFilter"&gt;
+        &lt;property name="authenticationManager" ref="authenticationManager" /&gt;
+        &lt;property name="authenticationEntryPoint" ref="authenticationEntryPoint" /&gt;
+    &lt;/bean&gt;
+
+            &lt;!-- 
+    &lt;bean id="authenticationEntryPoint" 
+        class="org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint"&gt;
+        &lt;property name="realmName" value="test.com" /&gt;
+    &lt;/bean&gt; --&gt;
+
+
+    &lt;bean id="authenticationEntryPoint" 
+        class="com.test.util.PlainTextBasicAuthenticationEntryPoint"&gt;
+        &lt;property name="realmName" value="test.com" /&gt;
+    &lt;/bean&gt; 
+
+    &lt;!-- It is responsible for validating the user's credentials --&gt;
+    &lt;security:authentication-manager alias="authenticationManager"&gt;
+
+        &lt;!-- It is responsible for providing credential validation to the AuthenticationManager --&gt;
+        &lt;security:authentication-provider&gt;
+            &lt;security:password-encoder ref="passwordEncoder" /&gt;
+
+            &lt;security:jdbc-user-service
+                data-source-ref="mySQLdataSource"
+                users-by-username-query="select username, password, enabled from usuario where username = ?"
+                authorities-by-username-query="select username, papel from autoridade where username = ?" /&gt;
+
+        &lt;/security:authentication-provider&gt;
+
+    &lt;/security:authentication-manager&gt;
+
+    &lt;bean
+        class="org.springframework.security.crypto.password.StandardPasswordEncoder"
+        id="passwordEncoder" /&gt;
+
+&lt;/beans&gt;
+</code></pre>
+
+<pre class="lang-java prettyprint-override"><code>package com.test.util;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.web.authentication.www.BasicAuthenticationEntryPoint;
+
+public class PlainTextBasicAuthenticationEntryPoint extends
+        BasicAuthenticationEntryPoint {
+
+      @Override
+        public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException, ServletException {
+            response.addHeader("Access-Control-Allow-Origin", "null");
+            response.addHeader("WWW-Authenticate", "Basic realm=\"" + getRealmName() + "\"");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            PrintWriter writer = response.getWriter();
+            writer.println("HTTP Status " + HttpServletResponse.SC_UNAUTHORIZED + " - " + authException.getMessage());
+        }
+
+}
+</code></pre>
+
+<p>My http response now:</p>
+
+<pre><code>HTTP/1.1 401 Unauthorized
+Server: Apache-Coyote/1.1
+Access-Control-Allow-Origin: null
+WWW-Authenticate: Basic realm="test.com"
+Content-Length: 35
+Date: Mon, 20 May 2013 20:05:03 GMT
+
+HTTP Status 401 - Bad credentials
+</code></pre>
+
+<p>before the alteration, I got this error message:</p>
+
+<pre><code>OPTIONS http://localhost:8080/test/customer/name 200 (OK) jquery-1.8.2.min.js:2
+XMLHttpRequest cannot load http://localhost:8080/test/customer/name. Origin null is     not allowed by Access-Control-Allow-Origin. 
+</code></pre>
+
+<p>and now as expected I get this one:</p>
+
+<pre><code>OPTIONS http://localhost:8080/test/customer/name 200 (OK) jquery-1.8.2.min.js:2
+POST http://localhost:8080/test/customer/name 401 (Unauthorized) 
+</code></pre>
+    </div></body></html>

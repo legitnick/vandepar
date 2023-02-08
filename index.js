@@ -7,7 +7,7 @@ const HttpProxyAgent = require("http-proxy-agent");
 const HttpsProxyAgent = require("https-proxy-agent");
 
 //setup src files
-const html2mp4 = require("./src/");
+const html2mp4 = require("./src/html2mp4.js");
 const getRecentLinkNum = require("./src/getRecentFile.js");
 
 const limiter = new Bottleneck({

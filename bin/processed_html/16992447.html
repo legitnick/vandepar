@@ -1,0 +1,84 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><a href="/questions/16986471/proc-arity-vs-lambda-arity" class="question-hyperlink">Proc.arity vs Lambda.arity</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>Why do proc and lambda return different values for arity?</p>
+
+<p>e.g. </p>
+
+<pre><code>proc   { |x = 0| }.arity       #=&gt; 0
+lambda { |a = 0| }.arity       #=&gt; -1
+proc   { |x=0, y| }.arity      #=&gt; 1
+lambda { |x=0, y| }.arity      #=&gt; -2
+</code></pre>
+
+<p>See: <a href="http://www.ruby-doc.org/core-2.0/Proc.html#method-i-arity" rel="noreferrer">http://www.ruby-doc.org/core-2.0/Proc.html#method-i-arity</a></p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>Per the docs you linked to:</p>
+
+<blockquote>
+  <p>Returns the number of arguments that would not be ignored. If the block is declared to take no arguments, returns 0. If the block is known to take exactly n arguments, returns n. If the block has optional arguments, return -n-1, where n is the number of mandatory arguments. A proc with no argument declarations is the same a block declaring || as its arguments.</p>
+</blockquote>
+
+<p>What the doc forgets to mention is that procs and lambda don't treat arguments precisely the same way e.g.:</p>
+
+<pre><code>&gt;&gt; p = proc { |a = 1, b| b }
+=&gt; #&lt;Proc:0x007ff0091ef810@(irb):1&gt;
+&gt;&gt; l = lambda { |a = 1, b| b }
+=&gt; #&lt;Proc:0x007ff0098099f8@(irb):2 (lambda)&gt;
+&gt;&gt; p.call
+=&gt; nil
+&gt;&gt; l.call
+ArgumentError: wrong number of arguments (0 for 1..2)
+    from (irb):2:in `block in irb_binding'
+    from (irb):4:in `call'
+    from (irb):4
+    from /usr/local/bin/irb:12:in `&lt;main&gt;'
+</code></pre>
+
+<p>Edit: The Ruby Programming Language, from O'Reilly, is the one with a tiny bit more details:</p>
+
+<blockquote>
+  <p>6.5.3 The Arity of a Proc</p>
+  
+  <p>The arity of a proc or lambda is the number of arguments it expects.
+  (The word is derived from the “ary” suffix of unary, binary, ternary,
+  etc.) Proc objects have an arity method that returns the number of
+  arguments they expect. For example:</p>
+
+<pre><code>lambda{||}.arity # =&gt; 0. No arguments expected
+lambda{|x| x}.arity # =&gt; 1. One argument expected
+lambda{|x,y| x+y}.arity # =&gt; 2. Two arguments expected
+</code></pre>
+  
+  <p>The notion of arity gets confusing when a Proc accepts an arbitrary
+  number of argu- ments in an *-prefixed final argument. When a Proc
+  allows optional arguments, the arity method returns a negative number
+  of the form -n-1. A return value of this form indicates that the Proc
+  requires n arguments, but it may optionally take additional arguments
+  as well. -n-1 is known as the one’s-complement of n, and you can
+  invert it with the ~ operator. So if arity returns a negative number
+  m, then ~m (or -m-1) gives you the number of required arguments:</p>
+
+<pre><code>lambda {|*args|}.arity # =&gt; -1. ~-1 = -(-1)-1 = 0 arguments required
+lambda {|first, *rest|}.arity # =&gt; -2. ~-2 = -(-2)-1 = 1 argument required
+</code></pre>
+  
+  <p>There is one final wrinkle to the arity method. In Ruby 1.8, a Proc
+  declared without any argument clause at all (that is, without any ||
+  characters) may be invoked with any number of arguments (and these
+  arguments are ignored). The arity method returns –1 to indicate that
+  there are no required arguments. This has changed in Ruby 1.9: a Proc
+  declared like this has an arity of 0. If it is a lambda, then it is an
+  error to invoke it with any arguments:</p>
+
+<pre><code>puts lambda {}.arity # –1 in Ruby 1.8; 0 in Ruby 1.9
+</code></pre>
+</blockquote>
+
+<p>Edit 2: Stefan adds the precise reason they differ in a comment:</p>
+
+<p><a href="http://www.ruby-doc.org/core-2.0/Proc.html#method-i-call">http://www.ruby-doc.org/core-2.0/Proc.html#method-i-call</a></p>
+
+<blockquote>
+  <p>For <code>procs</code> created using <code>lambda</code> or <code>-&gt;()</code> an error is generated if the wrong number of parameters are passed to a <code>Proc</code> with multiple parameters. For <code>procs</code> created using <code>Proc.new</code> or <code>Kernel.proc</code>, extra parameters are silently discarded.</p>
+</blockquote>
+    </div></body></html>

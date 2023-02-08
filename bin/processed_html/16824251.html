@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><a href="/questions/16824047/haskell-yesno-type-class-why-integer" class="question-hyperlink">Haskell: YesNo type class. Why Integer?</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I have a question on how GHCi assumes type of a whole number.</p>
+
+<p>I was reading Yes-No type class of Learn you a Haskell. </p>
+
+<p>Here is a link if you want to read the whole thing.
+<a href="http://learnyouahaskell.com/making-our-own-types-and-typeclasses#a-yes-no-typeclass" rel="noreferrer">http://learnyouahaskell.com/making-our-own-types-and-typeclasses#a-yes-no-typeclass</a></p>
+
+<p>To put it shortly, this chapter shows that by defining my own class, I can make a function that works with a lot of types.</p>
+
+<p>This book defines YesNo class with a function</p>
+
+<pre><code>yesno :: a -&gt; Bool
+</code></pre>
+
+<p>and make <code>Int</code> as a instance of YesNo class</p>
+
+<pre><code>instance YesNo Int where
+    yesno 0 = False
+    yesno _ = True
+</code></pre>
+
+<p>When I loaded this on my GHCi and typed</p>
+
+<pre><code>yesno 0
+</code></pre>
+
+<p>it returned error. I thought it is probably because GHCi cannot tell whether 0 is meant to be <code>Int</code> or <code>Integer</code> or <code>Double</code> or other type in <code>Num</code> class. Actually when I typed yesno (0::Int) it worked.</p>
+
+<p>So just for fun I made <code>Integer</code> as an instance of <code>YesNo</code> class and wrote</p>
+
+<pre><code>instance YesNo Integer where
+    yesno 0 = True
+    yesno _ = False
+</code></pre>
+
+<p>(Note that I flipped True and False)
+and again, I typed </p>
+
+<pre><code>yesno 0
+</code></pre>
+
+<p>(without any type declaration) then GHCi showed <code>True</code>.</p>
+
+<p>Moreover, when I typed</p>
+
+<pre><code>yesno $ fromIntegral 0
+</code></pre>
+
+<p>it returned <code>True</code>, which means that GHCi thinks the type of <code>fromIntegral 0</code> is <code>Integer</code>.</p>
+
+<p>So, does this mean that when I just type a whole number on GHCi, it usually assumes its value is <code>Integer</code> in stead of? I am confused because <code>:t 0</code> returns <code>Num a =&gt; a</code></p>
+    </div><div class="s-prose js-post-body" itemprop="text">
+<p>It's type <a href="http://www.haskell.org/onlinereport/haskell2010/haskellch4.html#x10-790004.3.4" rel="noreferrer">defaulting</a> together with ghci's extended default rules.</p>
+
+<p>Integer literals are polymorphic, they have the type <code>Num a =&gt; a</code> (since they stand for <code>fromInteger literal</code>). But when an expression shall be evaluated - necessary for printing its result, for example - the expression must be given a monomorphic type.</p>
+
+<p>By itself,</p>
+
+<pre><code>yesno 0
+</code></pre>
+
+<p>imposes the two constraints <code>Num a</code> and <code>YesNo a</code> on the <code>0</code>, and the entire expression would have the ambiguous type</p>
+
+<pre><code>yesno 0 :: (Num a, YesNo a) =&gt; Bool
+</code></pre>
+
+<p>(it's ambiguous, since the type variable in the constraint is not reachable from the type on the right of the <code>=&gt;</code>).</p>
+
+<p>Generally, ambiguous types are type errors, however, in some cases the ambiguity is resolved by instantiating the constrained type variable with a default type. The rules in the language specification are that a type variable can be defaulted if</p>
+
+<blockquote>
+  <p>In situations where an ambiguous type is discovered, an ambiguous type variable, <code>v</code>, is defaultable if:</p>
+</blockquote>
+
+<pre><code>- `v` appears only in constraints of the form `C v`, where `C` is a class, and
+- at least one of these classes is a numeric class, (that is, `Num` or a subclass of `Num`), and
+- all of these classes are defined in the Prelude or a standard library (Figures 6.2–6.3 show the numeric classes, and Figure 6.1 shows the classes defined in the Prelude.)
+</code></pre>
+
+<p>The constraint <code>(Num a, YesNo a)</code> meets the first two requirements, but not the third. So by the language standard, it is not defaultable and should be a type error.</p>
+
+<p>However, ghci uses extended default rules and also defaults type variables constrained by classes not defined in the Prelude or the standard libraries.</p>
+
+<p>It would then choose the default for a <code>Num</code> constraint here, unless an explicit default declaration is in scope, that would be <code>Integer</code>, or, if <code>Integer</code> does not satisfy the constraints, <code>Double</code> is tried.</p>
+
+<p>So when you have an <code>instance YesNo Integer</code>, ghci can successfully default the type variable <code>a</code> to <code>Integer</code>. But with no such instance available, defaulting fails because none of the default candidates has an instance.</p>
+    </div></body></html>
