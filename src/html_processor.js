@@ -31,7 +31,7 @@ const getHTMLArr = (async ()=>{
 
 //void f(string)
 const ensureDir = (async(path)=>{
-   if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err)); 
+   if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err));
 });
 
 //void f(void)
@@ -52,7 +52,7 @@ const writeCompleteHTML = (path,html_string)=>{
 
 //string f(string)
 const toCompleteHTML = (html_string)=>{
-    let new_string = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
+    let new_string = '<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
     new_string+=html_string;
     new_string+='</body></html>';
     return new_string;
@@ -78,7 +78,7 @@ function reAddClass(class_string,html_string){
 //void f(string)
 const parse = (async (path)=>{
     fs.readFile(html_from_dir+path,"utf8",(err,data)=>writeCompleteHTML(html_to_dir + path,data));
-    
+
 
 });
 parseAll();
