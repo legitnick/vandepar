@@ -24,10 +24,11 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    await scroll(page);
-    return await new Promise((resolve,reject)=>{
-        setTimeout(()=>resolve(),1);
-    });
+    return await scroll(page)
+            .catch((e)=>{
+            console.error(e);
+            reject(e);;
+        });
 };
 
 //void f(Page)
@@ -38,7 +39,7 @@ async function scroll (page) {
             let current_scrolled = 0;
             let dist = 1;//scroll, px
             var timer = setInterval(()=>{
-                window.scrollBy(0,dist);
+                window.scrollBy(0,dist*100);//this waited for some reason for very long, then the output is 1 sec
                 current_scrolled+=dist;
 
                 console.log(document.body.scrollHeight+","+window.innerHeight);
@@ -48,10 +49,7 @@ async function scroll (page) {
                 }
 
             },20)//wait, ms
-        }).catch((e)=>{
-            console.error(e);
-            reject(e);;
-        });
+        })
     });
 };
 
@@ -112,4 +110,4 @@ const transformAll =(async ()=>{
 });
 transformAll();
 
-module.exports = transform;
+module.exports = transformAll();
