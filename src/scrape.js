@@ -91,10 +91,10 @@ const getSOText = async (i_link) => {
 const wrapped = limiter.wrap(getSOText);
 
 //void f(void)
-function scrape(){
+async function scrape(){
     //{ file: '16992452.html', mtime: 2023-02-03T13:18:30.372Z }
 
-    const curr_num = mf.getRecentLinkNum('./bin/scraped_html');
+    const curr_num = mf.getMostRecentFilename('./bin/scraped_html');
     console.log(curr_num);
     // const promise_arr =  [];
     // push a promise to an array
@@ -123,4 +123,5 @@ function scrape(){
     //also, maybe shouldn't even use async for a crawler at all, as later
     //on video-editing will be used, as well as puppeteer running
 }
-module.exports = scrape;
+
+module.exports = scrape();

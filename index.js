@@ -5,6 +5,6 @@ const parse = require("./src/html_processor.js");
 
 async function main() {
     scrape();
-    parse();
     html2mp4();
+    parse();
 }

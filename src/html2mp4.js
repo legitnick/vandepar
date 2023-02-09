@@ -37,15 +37,15 @@ async function scroll (page) {
     await page.evaluate(async()=>{
         await new Promise((resolve)=>{
             let current_scrolled = 0;
-            let dist = 1;//scroll, px
+            let dist = 50;//scroll, px
             var timer = setInterval(()=>{
-                window.scrollBy(0,dist*100);//this waited for some reason for very long, then the output is 1 sec
+                window.scrollBy(0,dist);//this waited for some reason for very long, then the output is 1 sec
                 current_scrolled+=dist;
 
                 console.log(document.body.scrollHeight+","+window.innerHeight);
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
-                    clearInterval(timer);
                     resolve();
+                    clearInterval(timer);
                 }
 
             },20)//wait, ms

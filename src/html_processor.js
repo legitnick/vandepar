@@ -67,4 +67,5 @@ const parse = (async (path)=>{
 
 
 });
-module.exports = parseAll;
+parseAll();
+module.exports = parseAll();
