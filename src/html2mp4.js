@@ -70,7 +70,7 @@ const transform = (async (html_number) => {
         await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
 
-        await page.goto(goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+        await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
 
 
         /*return await look(page).then((res,rej)=>{
@@ -79,19 +79,25 @@ const transform = (async (html_number) => {
     });
     //await everything
 
+//void f(string);
 const renameToUsed = (async(html_string) => {
-    mf.move(html_string,"u_"+html_string);
+    mf.move(mf.html_to_dir+html_string,mf.html_to_dir+"u_"+html_string);
 });
 
 //filter html_arr with a function isHTMLUsed
+//bool f(string)
+const isHtmlUnused = (html_string)=>{
+    return html_string.charAt(0)!=='u';//using filenames, dk what else to do here, except from some real DB
+}
 
 //void f(void)
-    const transformAll = (){
-        const html_arr = fs.readdirSync(mf.html_from_dir);
+    const transformAll = ()=>{
+        const html_arr = fs.readdirSync(mf.html_from_dir).filter(isHtmlUnused);
+        console.log(html_arr);
         const html_num_arr = html_arr.map(el=>parseInt(el));
         html_num_arr.forEach(transform);
         html_arr.forEach(renameToUsed);
     }
-    transform();
+    transformAll();
 
     module.exports = transform;
