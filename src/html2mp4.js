@@ -1,16 +1,13 @@
 'use strict';
 
+const fs = require("fs");
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 const process = require('process');
+const mf = require("./myFiles.js");
 
-const curr_dir = process.cwd();
-const goto_dir = "file://" + curr_dir + "/bin/scraped_html/";//this variable needs full path to work in puppeteers Chromium
-console.log(goto_dir);//rm this
-const video_dir = "./bin/video/";
 
 const configForDynamic = {
-    followNewTab: true,
     fps: 60,
     videoFrame: {
         width: 1920,
@@ -31,7 +28,7 @@ async function look(page){
 
     return await scroll(page);//(functionRef, ms, param1)
 
-}; 
+};
 
 //void f(Page)
 async function scroll (page) {
@@ -42,7 +39,7 @@ async function scroll (page) {
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
-                console.log(current_scrolled - document.body.scrollHeight + window.innerHeight)
+
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
                     setTimeout(resolve,100);
@@ -56,8 +53,9 @@ async function scroll (page) {
         });
     };
 
-    //void f(void) TODO: replace param void -> html_number(int)
-    const transform = (async (html_number) => {
+//void f(int)
+const transform = (async (html_number) => {
+        console.log(mf.html_from_dir);
         const browser = await puppeteer.launch().catch((e)=>console.error(e));
         const page = await browser.newPage().catch((e)=>console.error(e));
         await page.setViewport({
@@ -69,15 +67,31 @@ async function scroll (page) {
 
         const recorder = new PuppeteerScreenRecorder(page,configForDynamic);
 
-        await recorder.start(video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
+        await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
+
+
         await page.goto(goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
 
-        return await look(page).then((res,rej)=>{
+
+        /*return await look(page).then((res,rej)=>{
             return recorder.stop();
-        }).then((res)=>browser.close()).catch((e)=>console.error(e));
+        }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
     });
     //await everything
 
+const renameToUsed = (async(html_string) => {
+    mf.move(html_string,"u_"+html_string);
+});
+
+//filter html_arr with a function isHTMLUsed
+
+//void f(void)
+    const transformAll = (){
+        const html_arr = fs.readdirSync(mf.html_from_dir);
+        const html_num_arr = html_arr.map(el=>parseInt(el));
+        html_num_arr.forEach(transform);
+        html_arr.forEach(renameToUsed);
+    }
     transform();
 
     module.exports = transform;

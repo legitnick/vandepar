@@ -4,28 +4,14 @@ const cheerio = require("cheerio");
 const fs = require("fs");
 const pth = require("path");
 //create a function which moves scraped html file into tmp folder, then parses it, returns multiple htmls, writes them into folder with the name corresponding to the scraped html's name
+const mf  = require("./myFiles.js");
 
 
-//void f(string,string)
-async function move(path_pre,path_post){
-    fs.rename(path_pre,path_post,(err)=>{
-        if(err){
-            console.log(err);
-            throw err;
-        }
-    });
-}
 
-const html_from_dir = "./bin/scraped_html/";//it'll be dot for now
-//const html_from_dir = pth.join(__dirname,"/bin/scraped_html/");
-//const html_to_dir = pth.join(__dirname,"/bin/processed_html/");
-const html_to_dir = "./bin/processed_html/";
-console.log(html_to_dir);
-console.log(html_from_dir);
 
 //string[] f(void)
 const getHTMLArr = (async ()=>{
-    return fs.readdirSync(html_from_dir);
+    return fs.readdirSync(mf.html_from_dir);
 });
 //this has no business being async function, does it?
 
@@ -36,7 +22,7 @@ const ensureDir = (async(path)=>{
 
 //void f(void)
 const parseAll = (async ()=>{
-    await ensureDir(html_to_dir);
+    await ensureDir(mf.html_to_dir);
     const html_filenames = await getHTMLArr();
     //console.log(html_filenames);
     html_filenames.forEach(async (el)=>{
@@ -77,7 +63,7 @@ function reAddClass(class_string,html_string){
 
 //void f(string)
 const parse = (async (path)=>{
-    fs.readFile(html_from_dir+path,"utf8",(err,data)=>writeCompleteHTML(html_to_dir + path,data));
+    fs.readFile(mf.html_from_dir+path,"utf8",(err,data)=>writeCompleteHTML(mf.html_to_dir + path,data));
 
 
 });
