@@ -94,7 +94,7 @@ const wrapped = limiter.wrap(getSOText);
 async function scrape(){
     //{ file: '16992452.html', mtime: 2023-02-03T13:18:30.372Z }
 
-    const curr_num = mf.getMostRecentFilename('./bin/scraped_html');
+    const curr_num = mf.getMostRecentFilename(mf.html_from_dir);
     console.log(curr_num);
     // const promise_arr =  [];
     // push a promise to an array
@@ -107,7 +107,7 @@ async function scrape(){
                 if(postTitles){
                     console.log(postTitles)
 
-                    fs.writeFile("./bin/scraped_html"+i+".html",postTitles,(error)=>{
+                    fs.writeFile(mf.html_from_dir + i + ".html",postTitles,(error)=>{
                         if(error)
                             return console.log(error);
                         console.log("file saved");
