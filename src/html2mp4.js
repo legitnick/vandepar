@@ -24,7 +24,6 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    console.document
     await scroll(page);
     return await new Promise((resolve,reject)=>{
         setTimeout(()=>resolve(),1);
@@ -66,7 +65,9 @@ const transform = (async (html_number,browser) => {
         deviceScaleFactor: 1,
         isLandscape: true,
     });
-    await page.goto(mf.goto_dir+html_number+".html");
+    await page.goto(mf.goto_dir+html_number+".html",{
+        waitUntil:"load",
+    });
     const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
     await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
