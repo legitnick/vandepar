@@ -26,7 +26,7 @@ const configForDynamic = {
 async function look(page){
     console.document
     await scroll(page);
-    return new Promise((resolve,reject)=>{
+    return await new Promise((resolve,reject)=>{
         setTimeout(()=>resolve(),1);
     });
 };
@@ -40,7 +40,7 @@ async function scroll (page) {
             let dist = 1;//scroll, px
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
-                current_scrolled+=100;
+                current_scrolled+=dist;
 
                 console.log(document.body.scrollHeight+","+window.innerHeight);
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
