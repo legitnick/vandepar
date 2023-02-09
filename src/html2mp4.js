@@ -24,25 +24,28 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    await new Promise(resolve=>setTimeout(resolve,100));
-
-    return await scroll(page);//(functionRef, ms, param1)
-
+    console.document
+    await scroll(page);
+    return new Promise((resolve,reject)=>{
+        setTimeout(()=>resolve(),1);
+    });
 };
 
 //void f(Page)
 async function scroll (page) {
-    return await page.evaluate(async ()=>{
-        return await new Promise((resolve)=>{
+
+    await page.evaluate(async()=>{
+        await new Promise((resolve)=>{
             let current_scrolled = 0;
             let dist = 1;//scroll, px
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
-                current_scrolled+=dist;
+                current_scrolled+=100;
 
+                console.log(document.body.scrollHeight+","+window.innerHeight);
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
-                    setTimeout(resolve,100);
+                    resolve();
                 }
 
             },20)//wait, ms
@@ -63,16 +66,14 @@ const transform = (async (html_number,browser) => {
         deviceScaleFactor: 1,
         isLandscape: true,
     });
-
-    const recorder = new PuppeteerScreenRecorder(page,configForDynamic);
+    await page.goto(mf.goto_dir+html_number+".html");
+    const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
     await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
 
-    await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+    await look(page).then(recorder.stop()).then(console.log("recorded"));
+    //await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
 
-    await recorder.stop();
-    console.log("recorded");
-    return new Promise((resolve)=>resolve());
 
 });
 //await everything
@@ -100,7 +101,8 @@ const transformAll =(async ()=>{
     await html_num_arr.forEach(((el)=>{
         promise_array.push(transform(el,browser));
     }));
-    await Promise.all(promise_array).then(browser.close,console.error);
+
+    await Promise.all(promise_array).then(()=>browser.close());
 
     html_arr.forEach(renameToUsed);
     /*return await look(page).then((res,rej)=>{

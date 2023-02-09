@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><a href="/questions/1164004/how-to-mark-up-phone-numbers" class="question-hyperlink">How to mark-up phone numbers?</a><div class="s-prose js-post-body" itemprop="text">
+
+    <p>I want to mark up a phone number as callable link in an HTML document. I have read <a href="http://microformats.org/wiki/hcard-faq#How_do_you_mark_up_a_phone_extension" rel="nofollow noreferrer">the microformats approach</a>, and I know, that the <code>tel:</code> scheme would be standard, but is quite literally nowhere implemented.</p>
+    <p>Skype defines, as far as I know, <code>skype:</code> and <code>callto:</code>, the latter having gained some popularity. I assume, that other companies have either other schemes or jump on the <code>callto:</code> train.</p>
+    <p>What would be a best practice to mark-up a phone number, so that as many people as possible with VoIP software can just click on a link to get a call?</p>
+    <p>Bonus question: Does anyone know about complications with emergency numbers such as 911 in US or 110 in Germany?</p>
+    <p><strong>Update:</strong> Microsoft NetMeeting takes <code>callto:</code> schemes under WinXP. <a href="https://stackoverflow.com/questions/1009181/url-scheme-for-phone-call">This question</a> suggests, that Microsoft Office Communicator will handle <code>tel:</code> schemes but not <code>callto:</code> ones. Great, Redmond!</p>
+    <p><strong>Update 2:</strong> Two and a half years later now. It seems to boil down to what you want to do with the number. In mobile context, <code>tel:</code> is the way to go. Targeting desktops it's up to you, if you think your users are more Skype people (<code>callto:</code>) or will more likely have something like Google Voice (<code>tel:</code>) installed. My personal opinion is, when in doubt use <code>tel:</code> (in line with @Sidnicious' answer).</p>
+    <p><strong>Update 3:</strong> User @rybo111 noted, that Skype in Chrome has meanwhile jumped on the <code>tel:</code> bandwagon. I cannot verify this, because no machine with both at hand, but if it's true, it means we have finally a winner here: <code>tel:</code></p>
+</div><div class="s-prose js-post-body" itemprop="text">
+    <p>The <code>tel:</code> scheme was <a href="http://www.mail-archive.com/www-talk@w3.org/msg01660.html" rel="noreferrer">used in the late 1990s</a> and documented in early 2000 with <a href="https://www.rfc-editor.org/rfc/rfc2806" rel="noreferrer">RFC 2806</a> (which was obsoleted by the more-thorough <a href="https://www.rfc-editor.org/rfc/rfc3966" rel="noreferrer">RFC 3966</a> in 2004) and <a href="https://www.rfc-editor.org/rfc/rfc5341" rel="noreferrer">continues to be improved</a>. Supporting <code>tel:</code> on the iPhone was not an arbitrary decision.</p>
+    <p><code>callto:</code>, while supported by Skype, <strong>is not a standard</strong> and should be avoided unless specifically targeting Skype users.</p>
+    <p>Me? I'd just start including properly-formed <code>tel:</code> URIs on your pages (without sniffing the user agent) and wait for the rest of the world's phones to catch up :) .</p>
+    <p><strong>Example</strong>:</p>
+    <p></p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+        <div class="snippet-code">
+            <pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;a href="tel:+18475555555"&gt;1-847-555-5555&lt;/a&gt;</code></pre>
+        </div>
+    </div>
+    <p></p>
+</div><div class="s-prose js-post-body" itemprop="text">
+    <p>My test results:</p>
+
+    <p><strong>callto:</strong></p>
+
+    <ul>
+        <li>Nokia Browser: nothing happens</li>
+        <li>Google Chrome: asks to run skype to call the number</li>
+        <li>Firefox: asks to choose a program to call the number</li>
+        <li>IE: asks to run skype to call the number</li>
+    </ul>
+
+    <p><strong>tel:</strong></p>
+
+    <ul>
+        <li>Nokia Browser: working</li>
+        <li>Google Chrome: nothing happens</li>
+        <li>Firefox: "Firefox doesnt know how to open this url"</li>
+        <li>IE: could not find url</li>
+    </ul>
+</div><div class="s-prose js-post-body" itemprop="text">
+    <p>The best bet is to start off with tel: which works on all mobiles</p>
+
+    <p>Then put in this code, which will only run when on a desktop, and only when a link is clicked.</p>
+
+    <p>I'm using <a href="http://detectmobilebrowsers.com/">http://detectmobilebrowsers.com/</a> to detect mobile browsers, you can use whatever method you prefer</p>
+
+    <pre><code>if (!jQuery.browser.mobile) {
+    jQuery('body').on('click', 'a[href^="tel:"]', function() {
+            jQuery(this).attr('href', 
+                jQuery(this).attr('href').replace(/^tel:/, 'callto:'));
+    });
+}
+    </code></pre>
+
+    <p>So basically you cover all your bases.</p>
+
+    <p>tel: works on all phones to open the dialer with the number</p>
+
+    <p>callto: works on your computer to connect to skype from firefox, chrome</p>
+</div><div class="s-prose js-post-body" itemprop="text">
+    <p>As one would expect, WebKit's support of <code>tel:</code> extends to the Android mobile browser as well - FYI</p>
+</div><div class="s-prose js-post-body" itemprop="text">
+    <p><em>I keep this answer for "historic" purpose but don't recommend it anymore. See @Sidnicious' answer above and my Update 2.</em></p>
+
+    <p>Since it looks like a draw between callto and tel guys, I want to throw in a possible solution in the hope, that your comments will bring me back on the way of light ;-)</p>
+
+    <p>Using <code>callto:</code>, since most desktop clients will handle it:</p>
+
+    <pre><code>&lt;a href="callto:0123456789"&gt;call me&lt;/a&gt;
+    </code></pre>
+
+    <p>Then, if the client is an iPhone, replace the links:</p>
+
+    <pre><code>window.onload = function () {
+  if (navigator.userAgent.match (/iPhone/i)) {
+    var a = document.getElementsByTagName ("a");
+    for (var i = 0; i &lt; a.length; i++) {
+      if (a[i].getAttribute ('href').search (/callto:/i) === 0) {
+        a[i].setAttribute ('href', a[i].getAttribute ('href').replace (/^callto:/, "tel:"));
+      }
+    }
+  }
+};
+    </code></pre>
+
+    <p>Any objections against this solution? Should I preferably start from <code>tel:</code>?</p>
+</div>
+</body></html>

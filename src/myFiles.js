@@ -33,7 +33,7 @@ async function move(path_pre,path_post){
 exports.move = move;
 const curr_dir = process.cwd();
 exports.curr_dir = curr_dir;
-exports.goto_dir = "file://" + curr_dir + "/bin/scraped_html/";//this variable needs full path to work in puppeteers Chromium
+exports.goto_dir = "file://" + curr_dir + "/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium
 exports.video_dir = "./bin/video/";
 exports.html_from_dir = "./bin/scraped_html/";//it'll be dot for now
 //const html_from_dir = pth.join(__dirname,"/bin/scraped_html/");
