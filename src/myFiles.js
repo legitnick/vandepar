@@ -30,8 +30,12 @@ async function move(path_pre,path_post){
     });
 }
 
+function isHtmlUsed(html_string){
+    return html_string.charAt(0)=='u';//using filenames, dk what else to do here, except from some real DB
+}
 exports.move = move;
 const curr_dir = process.cwd();
+exports.isHtmlUsed = isHtmlUsed;
 exports.curr_dir = curr_dir;
 exports.goto_dir = "file://" + curr_dir + "/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium
 exports.video_dir = "./bin/video/";

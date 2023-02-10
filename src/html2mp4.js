@@ -34,12 +34,13 @@ async function look(page){
 //void f(Page)
  const scroll = (async (page) =>{
      await page.evaluate(async ()=>{
-         await new Promise((resolve)=>{
+         return await new Promise((resolve)=>{
              let current_scrolled = 0;
              let dist = 1;//px
              var timer = setInterval(()=>{
                  window.scrollBy(0,dist);
                  current_scrolled+=dist;
+                 console.log(curren_scrolled+","+(document.body.scrollHeight - window.innerHeight));
                  if(current_scrolled > document.body.scrollHeight - window.innerHeight){
                      clearInterval(timer);
                      resolve();

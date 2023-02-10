@@ -8,23 +8,20 @@ const mf  = require("./myFiles.js");
 
 
 
-
-//string[] f(void)
-const getHTMLArr = (async ()=>{
-    return fs.readdirSync(mf.html_from_dir);
-});
-//this has no business being async function, does it?
-
 //void f(string)
-const ensureDir = (async(path)=>{
+const ensureDir = ((path)=>{
    if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err));
 });
 
 //void f(void)
 const parseAll = (async ()=>{
     await ensureDir(mf.html_to_dir);
-    const html_filenames = await getHTMLArr();
+
+    const html_arr_used = fs.readdirSync(mf.html_to_dir).filter(mf.isHtmlUsed);
+
+    const html_filenames = fs.readdirSync(mf.html_from_dir).some(el=>!html_arr_used.includes(el));//only parse files w/o used variant
     //console.log(html_filenames);
+    if(html_filenames.length)
     html_filenames.forEach(async (el)=>{
         await parse(el);
     });
