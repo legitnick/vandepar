@@ -75,6 +75,13 @@ function isHtmlUnused(html_string){
     return html_string.charAt(0)!=='u';//using filenames, dk what else to do here, except from some real DB
 }
 
+
+//look -> promise -> look, until i < len
+ async function wrap(html_arr,page,recorder){
+  if(!html_arr.length) return 1;
+  transform(html_arr.slice(-1),page,recorder).then(()=>{html_arr.pop();wrap(html_arr,page,recorder)})
+ }
+
 //void f(void)
 const transformAll =(async ()=>{
 
@@ -93,12 +100,12 @@ const transformAll =(async ()=>{
     const html_arr = fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
     const html_num_arr = html_arr.map(el=>parseInt(el));
 
+    await wrap(html_num_arr,page,recorder).then(async()=>browser.close());
+    /*
     await html_num_arr.map((async(el)=>{
         el = await transform(el,page,recorder);
     }));
-
-   await Promise.all(html_num_arr).then(console.log).then(async()=>browser.close()).catch(console.error);
-
+*/
     html_arr.forEach(renameToUsed);
     /*return await look(page).then((res,rej)=>{
             return recorder.stop();
