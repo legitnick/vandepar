@@ -4,7 +4,8 @@ const scrape = require("./src/scrape.js");
 const parse = require("./src/html_processor.js");
 
 async function main() {
-    scrape();
+    //scrape();
+    console.log("smt");
     html2mp4();
     parse();
 }
