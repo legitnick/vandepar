@@ -2,40 +2,40 @@
 
 const cheerio = require("cheerio");
 const fs = require("fs");
+const pth = require("path");
 //create a function which moves scraped html file into tmp folder, then parses it, returns multiple htmls, writes them into folder with the name corresponding to the scraped html's name
+const mf  = require("./myFiles.js");
 
 
-//void f(string,string)
-async function move(path_pre,path_post){
-    fs.rename(path_pre,path_post,(err)=>{
-        if(err){
-            console.log(err);
-            throw err;
-        }
-    });
-}
 
-const html_from_dir = "./bin/scraped_html/";
-const html_to_dir = "./bin/processed_html/";
-
-//string[] f(void)
-const getHtmlArr = (async ()=>{
-    return fs.readdirSync(html_from_dir);
+//void f(string)
+const ensureDir = ((path)=>{
+   if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err));
 });
-//this has no business being async function, does it?
 
 //void f(void)
 const parseAll = (async ()=>{
-    const html_filenames = await getHtmlArr();
-    //console.log(html_filenames);
+    await ensureDir(mf.html_to_dir);
+
+    const html_arr_used = fs.readdirSync(mf.html_to_dir).filter(mf.isHtmlUsed);
+
+    const html_filenames = fs.readdirSync(mf.html_from_dir).filter(el=>!html_arr_used.includes(el));//only parse files w/o used variant
+    console.log(html_filenames);
+    if(html_filenames.length)
     html_filenames.forEach(async (el)=>{
         await parse(el);
     });
 });
 
 //void f(string)
-const toCompleteHtml = (html_string)=>{
-    let new_string = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
+const writeCompleteHTML = (path,html_string)=>{
+    let complete_html = toCompleteHTML(html_string);
+    write(path,complete_html);
+}
+
+//string f(string)
+const toCompleteHTML = (html_string)=>{
+    let new_string = '<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
     new_string+=html_string;
     new_string+='</body></html>';
     return new_string;
@@ -58,6 +58,7 @@ function reAddClass(class_string,html_string){
     return "<div class='"+class_string+"'>\n"+html_string+"\n</div>"
 }
 
+<<<<<<< HEAD
 
 // string[] f(string)
 const splitHTML = (error,html_string)=>{
@@ -82,27 +83,22 @@ const splitHTML = (error,html_string)=>{
     return arr;
 };
 
+=======
+>>>>>>> css_not_files
 //void f(string)
 const parse = (async (path)=>{
-    //for each post, create a different html file, as well as for
-    //this has helped: X paragraphs
-    let newdir = ""+parseInt(path);//get_int_string()?
+    fs.readFile(mf.html_from_dir+path,"utf8",(err,data)=>writeCompleteHTML(mf.html_to_dir + path,data));
 
-    /*if(fs.access(html_from_dir + newdir),fs.constants.F_OK,(err)=>{
-        console.log(`${file} ${err ? 'is not readable' : 'is readable'}`);
-    })*/
-    if(fs.existsSync(html_to_dir+newdir)){
-        console.log(html_to_dir+newdir+" Exists");
-        return new Promise((resolve)=>resolve());
-    }
-        //didn't even check for the correct thing
 
+<<<<<<< HEAD
     fs.mkdirSync(html_to_dir+newdir+"/");
     return new Promise((resolve,reject)=>{
 
         let html;
             fs.readFile(html_from_dir+path,"utf8",splitHTML);
 })
+=======
+>>>>>>> css_not_files
 });
-parseAll();
-module.exports = parseAll;
+//parseAll();
+module.exports = parseAll();

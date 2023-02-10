@@ -1,0 +1,318 @@
+<a href="/questions/11114625/android-canvas-redo-and-undo-operation" class="question-hyperlink">Android Canvas Redo and Undo Operation</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I am working on a drawing project.  My code is working perfectly other than canvas redo and undo operations.  My undo operation removes paths from the <code>paths</code> ArrayList and saves to the <code>undonePaths</code> ArrayList, and the redo operation removes the last element from <code>undonePaths</code> and saves to <code>paths</code>.</p>
+
+<p>Here's my code:</p>
+
+<pre><code>import java.util.ArrayList;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
+
+public class DrawView extends View implements OnTouchListener {
+    private Canvas  mCanvas;
+    private Path    mPath;
+    private Paint       mPaint;   
+    private ArrayList&lt;Path&gt; paths = new ArrayList&lt;Path&gt;();
+    private ArrayList&lt;Path&gt; undonePaths = new ArrayList&lt;Path&gt;(); 
+
+    private Bitmap im;
+    public DrawView(Context context) 
+    {
+        super(context);
+        setFocusable(true);
+        setFocusableInTouchMode(true);      
+        this.setOnTouchListener(this);
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
+        mPaint.setColor(0xFFFFFFFF);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeWidth(6);
+        mCanvas = new Canvas();
+        mPath = new Path();
+        paths.add(mPath);
+
+        im=BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_launcher);
+
+
+    }               
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            //mPath = new Path();
+            //canvas.drawPath(mPath, mPaint);
+            for (Path p : paths){
+                canvas.drawPath(p, mPaint);
+            }
+        }
+
+        private float mX, mY;
+        private static final float TOUCH_TOLERANCE = 4;
+
+        private void touch_start(float x, float y) {
+            mPath.reset();
+            mPath.moveTo(x, y);
+            mX = x;
+            mY = y;
+        }
+        private void touch_move(float x, float y) {
+            float dx = Math.abs(x - mX);
+            float dy = Math.abs(y - mY);
+            if (dx &gt;= TOUCH_TOLERANCE || dy &gt;= TOUCH_TOLERANCE) {
+                mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+                mX = x;
+                mY = y;
+            }
+        }
+        private void touch_up() {
+            mPath.lineTo(mX, mY);
+            // commit the path to our offscreen
+            mCanvas.drawPath(mPath, mPaint);
+            // kill this so we don't double draw            
+            mPath = new Path();
+            paths.add(mPath);
+        }
+
+        public void onClickUndo () { 
+            if (paths.size()&gt;0) 
+            { 
+               undonePaths.add(paths.remove(paths.size()-1));
+               invalidate();
+             }
+            else
+            {
+
+            }
+             //toast the user 
+        }
+
+        public void onClickRedo (){
+           if (undonePaths.size()&gt;0) 
+           { 
+               paths.add(undonePaths.remove(undonePaths.size()-1)); 
+               invalidate();
+           } 
+           else 
+           {
+
+           }
+             //toast the user 
+        }
+
+    @Override
+    public boolean onTouch(View arg0, MotionEvent event) {
+          float x = event.getX();
+          float y = event.getY();
+
+          switch (event.getAction()) {
+              case MotionEvent.ACTION_DOWN:
+                  touch_start(x, y);
+                  invalidate();
+                  break;
+              case MotionEvent.ACTION_MOVE:
+                  touch_move(x, y);
+                  invalidate();
+                  break;
+              case MotionEvent.ACTION_UP:
+                  touch_up();
+                  invalidate();
+                  break;
+          }
+          return true;
+    }
+}
+</code></pre>
+
+<p>This code is working perfectly for drawing but not working perfectly for undo and redo operations.  What's wrong with my code?</p>
+
+<p>Here's my full source code:</p>
+
+<p><a href="http://www.4shared.com/rar/8PQQEZdH/test_draw.html" rel="noreferrer">http://www.4shared.com/rar/8PQQEZdH/test_draw.html</a></p>
+
+<h2><strong>UPDATED:</strong></h2>
+
+<p><strong>Finally my problem was solved; here's my drawing class:</strong></p>
+
+<pre><code>import java.util.ArrayList;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Path;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnTouchListener;
+
+public class DrawView extends View implements OnTouchListener {
+    private Canvas  mCanvas;
+    private Path    mPath;
+    private Paint       mPaint;   
+    private ArrayList&lt;Path&gt; paths = new ArrayList&lt;Path&gt;();
+    private ArrayList&lt;Path&gt; undonePaths = new ArrayList&lt;Path&gt;(); 
+
+    private Bitmap im;
+    public DrawView(Context context) 
+    {
+        super(context);
+        setFocusable(true);
+        setFocusableInTouchMode(true);      
+        this.setOnTouchListener(this);
+        mPaint = new Paint();
+        mPaint.setAntiAlias(true);
+        mPaint.setDither(true);
+        mPaint.setColor(0xFFFFFFFF);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeWidth(6);
+        mCanvas = new Canvas();
+        mPath = new Path();
+
+        im=BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_launcher);
+
+
+    }               
+        @Override
+        protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+            super.onSizeChanged(w, h, oldw, oldh);
+        }
+
+        @Override
+        protected void onDraw(Canvas canvas) {
+            //mPath = new Path();
+            //canvas.drawPath(mPath, mPaint);
+            for (Path p : paths){
+                canvas.drawPath(p, mPaint);
+            }
+            canvas.drawPath(mPath, mPaint);
+        }
+
+        private float mX, mY;
+        private static final float TOUCH_TOLERANCE = 4;
+
+        private void touch_start(float x, float y) {
+            undonePaths.clear();
+            mPath.reset();
+            mPath.moveTo(x, y);
+            mX = x;
+            mY = y;
+        }
+        private void touch_move(float x, float y) {
+            float dx = Math.abs(x - mX);
+            float dy = Math.abs(y - mY);
+            if (dx &gt;= TOUCH_TOLERANCE || dy &gt;= TOUCH_TOLERANCE) {
+                mPath.quadTo(mX, mY, (x + mX)/2, (y + mY)/2);
+                mX = x;
+                mY = y;
+            }
+        }
+        private void touch_up() {
+            mPath.lineTo(mX, mY);
+            // commit the path to our offscreen
+            mCanvas.drawPath(mPath, mPaint);
+            // kill this so we don't double draw
+            paths.add(mPath);
+            mPath = new Path();            
+
+        }
+
+        public void onClickUndo () { 
+            if (paths.size()&gt;0) 
+            { 
+               undonePaths.add(paths.remove(paths.size()-1));
+               invalidate();
+             }
+            else
+            {
+
+            }
+             //toast the user 
+        }
+
+        public void onClickRedo (){
+           if (undonePaths.size()&gt;0) 
+           { 
+               paths.add(undonePaths.remove(undonePaths.size()-1)); 
+               invalidate();
+           } 
+           else 
+           {
+
+           }
+             //toast the user 
+        }
+
+    @Override
+    public boolean onTouch(View arg0, MotionEvent event) {
+          float x = event.getX();
+          float y = event.getY();
+
+          switch (event.getAction()) {
+              case MotionEvent.ACTION_DOWN:
+                  touch_start(x, y);
+                  invalidate();
+                  break;
+              case MotionEvent.ACTION_MOVE:
+                  touch_move(x, y);
+                  invalidate();
+                  break;
+              case MotionEvent.ACTION_UP:
+                  touch_up();
+                  invalidate();
+                  break;
+          }
+          return true;
+    }
+}
+</code></pre>
+
+<p><strong>That code is working perfectly...!</strong></p>
+    </div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>At first glance I see the following problems:</p>
+
+<ul>
+<li>By adding your empty <code>Path</code> to <code>paths</code> as soon as you make it, you're going to have a problem as soon as you undo: you're popping that empty <code>Path</code> first, making the first undo not seem to work.  Then if you draw into that <code>Path</code>, it's not added to <code>paths</code>.  The solution is to add the completed <code>Path</code> to paths in <code>touch_up()</code> before creating a new one.</li>
+</ul>
+
+<p>That is, remove</p>
+
+<pre><code>paths.add(mPath);
+</code></pre>
+
+<p>from the constructor, and in <code>touch_up()</code>, change</p>
+
+<pre><code>mPath = new Path();
+paths.add(mPath);
+</code></pre>
+
+<p>to</p>
+
+<pre><code>paths.add(mPath);
+mPath = new Path();
+</code></pre>
+
+<p>You'll also want to add</p>
+
+<pre><code>canvas.drawPath(mPath, mPaint);
+</code></pre>
+
+<p>after your <code>for</code> loop in <code>onDraw()</code> in order to draw the in-progress <code>Path</code>.</p>
+
+<ul>
+<li>You're not emptying <code>undonePaths</code> when the user starts drawing again.</li>
+</ul>
+    </div>

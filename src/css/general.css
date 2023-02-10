@@ -1,6 +1,16 @@
 *{
     padding:0;
+    font-family: 'Work Sans', sans-serif;
+    line-height:130%;
     margin:0;
+}
+
+body > :nth-child(n){
+    min-height:100vmin;
+}
+
+body > div{
+    min-height:100vmin;/*instead of different files*/
 }
 div.pre-q-header {
     font-family: sans-serif;
@@ -31,4 +41,18 @@ div{
 .question-hyperlink{
     margin:2em 1em;
     font-size:3em; 
+    display:inline-block;
+    min-width:100vmax;
+    text-align:center;
+    vertical-align:middle;/*an interesting prop*/
+
+    position:relative;
+    top:7em;
+    
+}
+/*code*/
+pre {
+    background-color:rgb(227, 230, 232);
+    border-radius:3px;
+    padding:1px;
 }

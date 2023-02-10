@@ -1,22 +1,18 @@
 'use strict';
 
+const fs = require("fs");
 const puppeteer = require('puppeteer');
 const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
 const process = require('process');
+const mf = require("./myFiles.js");
 
-const curr_dir = process.cwd();
-const goto_dir = "file://" + curr_dir + "/bin/scraped_html/";//this variable needs full path to work in puppeteers Chromium
-console.log(goto_dir);//rm this
-const video_dir = "./bin/video/";
 
 const configForDynamic = {
-    followNewTab: true,
-    fps: 60,
+    fps: 6/*0*/,
     videoFrame: {
         width: 1920,
         height: 1080,
     },
-    videoCrf: 30,
     videoCodec: 'libx264',
     videoPreset: 'ultrafast',
     videoBitrate: 1000,
@@ -28,59 +24,93 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    await new Promise(resolve=>setTimeout(resolve,100));
-
-    return await scroll(page);//(functionRef, ms, param1)
-
-}; 
+    return await scroll(page)
+        .catch((e)=>{
+            console.error(e);
+            reject(e);;
+        })
+};
 
 //void f(Page)
-async function scroll (page) {
-    return await page.evaluate(async ()=>{
-        return await new Promise((resolve)=>{
+const scroll = (async (page) =>{
+    await page.evaluate(async ()=>{
+        await new Promise((resolve)=>{
             let current_scrolled = 0;
-            let dist = 1;//scroll, px
+            let dist = 1;//px
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
-                //problem there?
-                console.log(current_scrolled - document.body.scrollHeight + window.innerHeight)
+                console.log(curren_scrolled+","+(document.body.scrollHeight - window.innerHeight));
                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
-                    setTimeout(resolve,100);
+                    resolve();
                 }
 
-            },20)//wait, ms
-        }).catch((e)=>{
-            console.error(e);
-            reject(e);;
-            });
+            },20);
         });
-    };
+    })
+    return 1;
+});
+//void f(int,Browser)
+const transform = (async (html_number,page,recorder) => {
 
-    //void f(void) TODO: replace param void -> html_number(int)
-    const transform = (async () => {
-        const browser = await puppeteer.launch().catch((e)=>console.error(e));
-        const page = await browser.newPage().catch((e)=>console.error(e));
-        await page.setViewport({
-            width: 1920,
-            height: 1080,
-            deviceScaleFactor: 1,
-            isLandscape: true,
-            hasTouch: true
-        });
+    await page.goto(mf.goto_dir+html_number+".html");
+    await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
-        const recorder = new PuppeteerScreenRecorder(page,configForDynamic);
 
-        await recorder.start(video_dir + "replace.mp4").catch((err)=>reject(err));//replace replace with html_number
-        await page.goto(goto_dir + "16657603.html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+    await scroll(page).then(recorder.stop()).then(console.log("recorded"));
+    //await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+    return 1;
+});
+//await everything
 
-        return await look(page).then((res,rej)=>{
-            return recorder.stop();
-        }).then((res)=>browser.close()).catch((e)=>console.error(e));
+//void f(string);
+const renameToUsed = (async(html_string) => {
+    mf.move(mf.html_to_dir+html_string,mf.html_to_dir+"u_"+html_string);
+});
+
+//filter html_arr with a function isHTMLUsed
+//bool f(string)
+function isHtmlUnused(html_string){
+    return html_string.charAt(0)!=='u';//using filenames, dk what else to do here, except from some real DB
+}
+
+
+//look -> promise -> look, until i < len
+ async function wrap(html_arr,page,recorder){
+  if(!html_arr.length) return 1;
+  transform(html_arr.slice(-1),page,recorder).then(()=>{html_arr.pop();wrap(html_arr,page,recorder)})
+ }
+
+//void f(void)
+const transformAll =(async ()=>{
+
+    const browser = await puppeteer.launch().catch((e)=>console.error(e));
+
+    const page = await browser.newPage();
+    await page.setViewport({
+        width: 1920,
+        height: 1080,
+        deviceScaleFactor: 1,
+        isLandscape: true,
+
     });
-    //await everything
 
-    transform();
+    const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
+    const html_arr = fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
+    const html_num_arr = html_arr.map(el=>parseInt(el));
 
-    module.exports = transform;
+    await wrap(html_num_arr,page,recorder).then(async()=>browser.close());
+    /*
+    await html_num_arr.map((async(el)=>{
+        el = await transform(el,page,recorder);
+    }));
+*/
+    html_arr.forEach(renameToUsed);
+    /*return await look(page).then((res,rej)=>{
+            return recorder.stop();
+        }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
+});
+transformAll();
+
+module.exports = transformAll();
