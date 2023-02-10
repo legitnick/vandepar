@@ -24,17 +24,18 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    return await scroll(page)
+    await scroll(page)
             .catch((e)=>{
             console.error(e);
             reject(e);;
-        });
+        })
+        return 1;
 };
 
 //void f(Page)
  const scroll = (async (page) =>{
      await page.evaluate(async ()=>{
-         return await new Promise((resolve)=>{
+         await new Promise((resolve)=>{
              let current_scrolled = 0;
              let dist = 1;//px
              var timer = setInterval(()=>{
@@ -48,7 +49,8 @@ async function look(page){
 
              },20);
          });
-     });
+     })
+     return 1;
  });
 //void f(int,Browser)
 const transform = (async (html_number,browser) => {
@@ -107,4 +109,4 @@ const transformAll =(async ()=>{
 });
 transformAll();
 
-module.exports = transformAll();
+module.exports = transformAll;

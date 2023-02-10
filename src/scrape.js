@@ -124,4 +124,4 @@ async function scrape(){
     //on video-editing will be used, as well as puppeteer running
 }
 
-module.exports = scrape();
+module.exports = scrape;
