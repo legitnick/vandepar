@@ -58,47 +58,10 @@ function reAddClass(class_string,html_string){
     return "<div class='"+class_string+"'>\n"+html_string+"\n</div>"
 }
 
-<<<<<<< HEAD
-
-// string[] f(string)
-const splitHTML = (error,html_string)=>{
-    if(error)console.error(error);
-
-    const $ = cheerio.load(html_string);
-
-    const qs = $(".question-hyperlink").toArray().map(el=>$(el).html()).map(el=>reAddClass("question-hyperlink",el));
-    const posts = $(".s-prose").toArray().map(el=>$(el).html()).map(el=>reAddClass("s-prose",el));
-    const helpeds = $(".this-has-helped").toArray().map(el=>$(el).html()).map(el=>reAddClass("this-has-helped",el));
-    //too repetitive to not have a function
-
-    let mixed_posts = [];
-    for(let i = 0;i < posts.length; i++){
-        mixed_posts.push(posts[i]);
-        if(i<helpeds.length)
-            mixed_posts.push(helpeds[i]);
-    }
-    const arr = qs.concat(mixed_posts);
-
-    console.log(arr);
-    return arr;
-};
-
-=======
->>>>>>> css_not_files
 //void f(string)
 const parse = (async (path)=>{
     fs.readFile(mf.html_from_dir+path,"utf8",(err,data)=>writeCompleteHTML(mf.html_to_dir + path,data));
 
-
-<<<<<<< HEAD
-    fs.mkdirSync(html_to_dir+newdir+"/");
-    return new Promise((resolve,reject)=>{
-
-        let html;
-            fs.readFile(html_from_dir+path,"utf8",splitHTML);
-})
-=======
->>>>>>> css_not_files
 });
 //parseAll();
 module.exports = parseAll();
