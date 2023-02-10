@@ -8,7 +8,7 @@ const mf = require("./myFiles.js");
 
 
 const configForDynamic = {
-    fps: 60,
+    fps: 6/*0*/,
     videoFrame: {
         width: 1920,
         height: 1080,
@@ -24,39 +24,37 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    await scroll(page)
-            .catch((e)=>{
+    return await scroll(page)
+        .catch((e)=>{
             console.error(e);
             reject(e);;
         })
 };
 
 //void f(Page)
- const scroll = (async (page) =>{
-     await page.evaluate(async ()=>{
-         await new Promise((resolve)=>{
-             let current_scrolled = 0;
-             let dist = 1;//px
-             var timer = setInterval(()=>{
-                 window.scrollBy(0,dist);
-                 current_scrolled+=dist;
-                 console.log(curren_scrolled+","+(document.body.scrollHeight - window.innerHeight));
-                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
-                     clearInterval(timer);
-                     resolve();
-                 }
+const scroll = (async (page) =>{
+    await page.evaluate(async ()=>{
+        await new Promise((resolve)=>{
+            let current_scrolled = 0;
+            let dist = 1;//px
+            var timer = setInterval(()=>{
+                window.scrollBy(0,dist);
+                current_scrolled+=dist;
+                console.log(curren_scrolled+","+(document.body.scrollHeight - window.innerHeight));
+                if(current_scrolled > document.body.scrollHeight - window.innerHeight){
+                    clearInterval(timer);
+                    resolve();
+                }
 
-             },20);
-         });
-     })
-     return 1;
- });
+            },20);
+        });
+    })
+    return 1;
+});
 //void f(int,Browser)
 const transform = (async (html_number,page,recorder) => {
 
-    await page.goto(mf.goto_dir+html_number+".html",{
-        waitUntil:"load",
-    });
+    await page.goto(mf.goto_dir+html_number+".html");
     await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
 
@@ -92,19 +90,14 @@ const transformAll =(async ()=>{
     });
 
     const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
-//htlm_to_dir actually
     const html_arr = fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
     const html_num_arr = html_arr.map(el=>parseInt(el));
 
-    console.log(html_num_arr);
-    const promise_array = [];
-    await html_num_arr.forEach((async(el)=>{
-        let promise = await transform(el,page,recorder);
-        promise_array.push(promise);
-        console.log(promise);
+    await html_num_arr.map((async(el)=>{
+        el = await transform(el,page,recorder);
     }));
 
-    await Promise.all(promise_array).then(console.log).then(async()=>browser.close());
+   await Promise.all(html_num_arr).then(console.log).then(async()=>browser.close()).catch(console.error);
 
     html_arr.forEach(renameToUsed);
     /*return await look(page).then((res,rej)=>{
