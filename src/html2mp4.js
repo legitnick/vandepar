@@ -32,27 +32,23 @@ async function look(page){
 };
 
 //void f(Page)
-async function scroll (page) {
+ const scroll = (async (page) =>{
+     await page.evaluate(async ()=>{
+         await new Promise((resolve)=>{
+             let current_scrolled = 0;
+             let dist = 1;//px
+             var timer = setInterval(()=>{
+                 window.scrollBy(0,dist);
+                 current_scrolled+=dist;
+                 if(current_scrolled > document.body.scrollHeight - window.innerHeight){
+                     clearInterval(timer);
+                     resolve();
+                 }
 
-    await page.evaluate(async()=>{
-        await new Promise((resolve)=>{
-            let current_scrolled = 0;
-            let dist = 50;//scroll, px
-            var timer = setInterval(()=>{
-                window.scrollBy(0,dist);//this waited for some reason for very long, then the output is 1 sec
-                current_scrolled+=dist;
-
-                console.log(document.body.scrollHeight+","+window.innerHeight);
-                if(current_scrolled > document.body.scrollHeight - window.innerHeight){
-                    resolve();
-                    clearInterval(timer);
-                }
-
-            },20)//wait, ms
-        })
-    });
-};
-
+             },20);
+         });
+     });
+ });
 //void f(int,Browser)
 const transform = (async (html_number,browser) => {
 
@@ -70,7 +66,7 @@ const transform = (async (html_number,browser) => {
     await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
 
-    await look(page).then(recorder.stop()).then(console.log("recorded"));
+    await scroll(page).then(recorder.stop()).then(console.log("recorded"));
     //await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
 
 
