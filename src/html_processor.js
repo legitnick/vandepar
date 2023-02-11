@@ -59,4 +59,4 @@ const parse = (async (path)=>{
 
 });
 //parseAll();
-module.exports = parseAll();
+module.exports= parseAll;

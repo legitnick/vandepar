@@ -32,11 +32,12 @@ async function move(path_pre,path_post){
 
 //void f(string)
 const ensureDir = ((path)=>{
-   if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err));
+   if(!fs.existsSync(path))fs.mkdirSync(path);
 });
 
 //void (void)
 function ensureAllDirs (){
+    console.log("ensured");
     ensureDir("./bin/");
     ensureDir(video_dir);
     ensureDir(html_from_dir);
@@ -48,6 +49,7 @@ function isHtmlUsed(html_string){
     return html_string.charAt(0)=='u';//using filenames, dk what else to do here, except from some real DB
 }
 
+exports.ensureAllDirs = ensureAllDirs;
 exports.ensureDir = ensureDir;
 exports.move = move;
 exports.isHtmlUsed = isHtmlUsed;

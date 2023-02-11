@@ -70,6 +70,7 @@ const transform = (async (html_number) => {
     await page.goto(mf.goto_dir+html_number+".html");
     await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
+    console.log("I've been there");
 
     await scroll(page).then(recorder.stop()).then(console.log("recorded"));
     //await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
@@ -79,7 +80,7 @@ const transform = (async (html_number) => {
 //await everything
 
 //void f(string);
-const renameToUsed = (async(html_string) => {
+const renameToUsed = ((html_string) => {
     mf.move(mf.html_to_dir+html_string,mf.html_to_dir+"u_"+html_string);
 });
 
@@ -114,6 +115,5 @@ const transformAll =(async ()=>{
             return recorder.stop();
         }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
 });
-transformAll();
 
-module.exports = transformAll();
+module.exports = transformAll;
