@@ -52,9 +52,10 @@ const scroll = (async (page) =>{
     return 1;
 });
 //void f(int,Browser)
-const transform = (async (html_number,browser) => {
+const transform = (async (html_number) => {
 
 
+    const browser = await puppeteer.launch().catch((e)=>console.error(e));
     const page = await browser.newPage();
     await page.setViewport({
         width: 1920,
@@ -72,6 +73,7 @@ const transform = (async (html_number,browser) => {
 
     await scroll(page).then(recorder.stop()).then(console.log("recorded"));
     //await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+    browser.close();//think I may not await for it
     return 1;
 });
 //await everything
@@ -91,18 +93,17 @@ function isHtmlUnused(html_string){
 //look -> promise -> look, until i < len
  async function wrap(html_arr,page,recorder){
   if(!html_arr.length) return 1;
-  transform(html_arr.slice(-1),page,recorder).then(()=>{html_arr.pop();wrap(html_arr,page,recorder)})
+  transform(html_arr.slice(-1),page,recorder).then(()=>{html_arr.pop();wrap(html_arr)})
  }
 
 //void f(void)
 const transformAll =(async ()=>{
 
-    const browser = await puppeteer.launch().catch((e)=>console.error(e));
 
     const html_arr = fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
     const html_num_arr = html_arr.map(el=>parseInt(el));
 
-    await wrap(html_num_arr,browser).then(async()=>browser.close());
+    await wrap(html_num_arr)
     /*
     await html_num_arr.map((async(el)=>{
         el = await transform(el,page,recorder);

@@ -4,6 +4,7 @@ const scrape = require("./src/scrape.js");
 const parse = require("./src/html_processor.js");
 
 async function main() {
+    await mf.ensureDirs();
     //scrape();
     html2mp4();
     parse();

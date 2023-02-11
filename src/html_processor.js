@@ -8,14 +8,9 @@ const mf  = require("./myFiles.js");
 
 
 
-//void f(string)
-const ensureDir = ((path)=>{
-   if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err));
-});
 
 //void f(void)
 const parseAll = (async ()=>{
-    await ensureDir(mf.html_to_dir);
 
     const html_arr_used = fs.readdirSync(mf.html_to_dir).filter(mf.isHtmlUsed);
 

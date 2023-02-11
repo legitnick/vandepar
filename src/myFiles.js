@@ -30,9 +30,25 @@ async function move(path_pre,path_post){
     });
 }
 
+//void f(string)
+const ensureDir = ((path)=>{
+   if(!fs.existsSync(path))fs.mkdir(path,(err)=>console.error(err));
+});
+
+//void (void)
+function ensureAllDirs (){
+    ensureDir("./bin/");
+    ensureDir(video_dir);
+    ensureDir(html_from_dir);
+    ensureDir(html_to_dir);
+}
+
+//bool f(string)
 function isHtmlUsed(html_string){
     return html_string.charAt(0)=='u';//using filenames, dk what else to do here, except from some real DB
 }
+
+exports.ensureDir = ensureDir;
 exports.move = move;
 exports.isHtmlUsed = isHtmlUsed;
 exports.goto_dir = "file://" + __dirname + "/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium
