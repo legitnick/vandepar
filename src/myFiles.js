@@ -35,6 +35,10 @@ const ensureDir = ((path)=>{
    if(!fs.existsSync(path))fs.mkdirSync(path);
 });
 
+let html_from_dir = "./bin/scraped_html/";//it'll be dot for now
+let video_dir = "./bin/video/";
+let html_to_dir = "./bin/processed_html/";
+
 //void (void)
 function ensureAllDirs (){
     console.log("ensured");
@@ -52,13 +56,13 @@ function isHtmlUsed(html_string){
 exports.ensureAllDirs = ensureAllDirs;
 exports.ensureDir = ensureDir;
 exports.move = move;
+exports.video_dir = video_dir;
 exports.isHtmlUsed = isHtmlUsed;
 exports.goto_dir = "file://" + __dirname + "/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium
-exports.video_dir = "./bin/video/";
-exports.html_from_dir = "./bin/scraped_html/";//it'll be dot for now
+exports.html_from_dir = html_from_dir;//it'll be dot for now
 //const html_from_dir = pth.join(__dirname,"/bin/scraped_html/");
 //const html_to_dir = pth.join(__dirname,"/bin/processed_html/");
-exports.html_to_dir = "./bin/processed_html/";
+exports.html_to_dir = html_to_dir;
 
 exports.getMostRecentFilename = getMostRecentFilename;
 
