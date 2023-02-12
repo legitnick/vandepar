@@ -72,7 +72,9 @@ const transform = (async (html_number) => {
 
     console.log("I've been there");
 
-    await scroll(page).then(recorder.stop()).then(console.log("recorded"));
+    await scroll(page);
+    await recorder.stop();
+    console.log("recorded");
     //await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
     browser.close();//think I may not await for it
     return 1;
@@ -101,16 +103,21 @@ function isHtmlUnused(html_string){
 const transformAll =(async ()=>{
 
 
-    const html_arr = fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
-    const html_num_arr = html_arr.map(el=>parseInt(el));
+    const html_arr = await fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
+    const html_num_arr = await html_arr.map(el=>parseInt(el));
 
-    await wrap(html_num_arr)
+    const promise_arr = [];
+    const this_time_arr = await html_num_arr.slice(0,4);
+    await this_time_arr.forEach((el)=>{
+        promise_arr.push(transform(el));
+    });
     /*
     await html_num_arr.map((async(el)=>{
         el = await transform(el,page,recorder);
     }));
 */
-    html_arr.forEach(renameToUsed);
+    Promise.all(promise_arr).then(html_arr.slice(0,4).forEach(renameToUsed)).then(setTimeout(transformAll,1000));
+
     /*return await look(page).then((res,rej)=>{
             return recorder.stop();
         }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
