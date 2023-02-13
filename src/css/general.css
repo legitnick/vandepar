@@ -41,14 +41,7 @@ div{
 .question-hyperlink{
     margin:2em 1em;
     font-size:3em; 
-    display:inline-block;
-    min-width:100vmax;
     text-align:center;
-    vertical-align:middle;/*an interesting prop*/
-
-    position:relative;
-    top:7em;
-
 }
 /*code*/
 pre {
