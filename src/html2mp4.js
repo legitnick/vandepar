@@ -67,7 +67,7 @@ const transform = (async (html_number) => {
 
     const recorder = await new PuppeteerScreenRecorder(page,configForDynamic);
 
-    await page.goto(mf.goto_dir+html_number+".html");
+    await page.goto(mf.goto_dir+html_number+".html").catch(page.goto(mf.goto_dir+"u_"+html_number+".html"));
     await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
 
     console.log("I've been there");
@@ -118,6 +118,7 @@ const transformAll =(async ()=>{
 */
     Promise.all(promise_arr).then(html_arr.slice(0,4).forEach(renameToUsed)).then(setTimeout(transformAll,1000));
 
+    return 1;
     /*return await look(page).then((res,rej)=>{
             return recorder.stop();
         }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
