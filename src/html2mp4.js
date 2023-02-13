@@ -32,34 +32,16 @@ async function look(page){
 
 //void f(Page)
 async function scroll (page) {
-            let big_elems = await page.$$("body > :nth-child(n)")
-    //so basically get Height of all body direct children to scroll through them later
-    console.log(big_elems);
-    await big_elems.map((async(el)=>{
-        el =  await el.boundingBox();
-        el = el.height;
-    }));
-    console.log(big_elems);
-    //big_elems = big_elems.reverse();
-    //.reverse();//reverse to pop later on, it's more efficient
 
     return await page.evaluate(async ()=>{
         return await new Promise((resolve)=>{
-            let current_scrolled = 0;
             let overall_scrolled = 0;
             let dist = 1;//scroll, px
 
             // body > :nth-child(n) taken from the css rule
             let timer = setInterval(()=>{
                 window.scrollBy(0,dist);
-                current_scrolled+=dist;
                 overall_scrolled+=dist;
-                if(current_scrolled+window.innerHeight >= big_elems[big_elems.length-1]){
-                    setTimeout(()=>window.scrollBy(window.innerHeigth),100);
-                    current_scrolled = 0;
-                    overall_scrolled += window.innerHeight;
-                    big_elems.pop();
-                }
                 if(overall_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
                     setTimeout(resolve,100);
