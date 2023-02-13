@@ -12,9 +12,10 @@ const mf  = require("./myFiles.js");
 //void f(void)
 const parseAll = (async ()=>{
 
-    const html_arr_used = fs.readdirSync(mf.html_to_dir).filter(mf.isHtmlUsed);
+    const html_arr_used = fs.readdirSync(mf.video_dir);
+    const html_filenames = fs.readdirSync(mf.html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
 
-    const html_filenames = fs.readdirSync(mf.html_from_dir).filter(el=>!html_arr_used.includes(el));//only parse files w/o used variant
+    console.log(html_arr_used);
     console.log(html_filenames);
     if(html_filenames.length)
         html_filenames.forEach(async (el)=>{

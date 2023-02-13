@@ -53,6 +53,9 @@ function isHtmlUsed(html_string){
     return html_string.charAt(0)=='u';//using filenames, dk what else to do here, except from some real DB
 }
 
+    const html_arr_used = fs.readdirSync(video_dir);
+    const html_filenames = fs.readdirSync(html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
+exports.html_filenames = html_filenames;
 exports.ensureAllDirs = ensureAllDirs;
 exports.ensureDir = ensureDir;
 exports.move = move;

@@ -101,7 +101,7 @@ const isHtmlUnused = (html_string)=>{
 
 //void f(void)
 const transformAll =(async ()=>{
-    const html_arr = await fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
+    const html_arr = mf.html_filenames;
     const html_num_arr = await html_arr.map(el=>parseInt(el));
 
     const promise_arr = [];
