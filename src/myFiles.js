@@ -32,7 +32,7 @@ async function move(path_pre,path_post){
 
 //void f(string)
 const ensureDir = ((path)=>{
-   if(!fs.existsSync(path))fs.mkdirSync(path);
+    if(!fs.existsSync(path))fs.mkdirSync(path);
 });
 
 let html_from_dir = "./bin/scraped_html/";//it'll be dot for now

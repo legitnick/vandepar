@@ -17,9 +17,9 @@ const parseAll = (async ()=>{
     const html_filenames = fs.readdirSync(mf.html_from_dir).filter(el=>!html_arr_used.includes(el));//only parse files w/o used variant
     console.log(html_filenames);
     if(html_filenames.length)
-    html_filenames.forEach(async (el)=>{
-        await parse(el);
-    });
+        html_filenames.forEach(async (el)=>{
+            await parse(el);
+        });
 });
 
 //void f(string)
