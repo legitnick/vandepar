@@ -37,20 +37,20 @@ async function scroll (page) {
             let current_scrolled = 0;
             let overall_scrolled = 0;
             let dist = 1;//scroll, px
-            const big_elems = document.querySelectAll("body> :nth-child(n)")//.reverse();//reverse to pop later on, it's more efficient
+            const big_elems = document.querySelectorAll("body > div").reverse();//reverse to pop later on, it's more efficient
 
 // body > :nth-child(n) taken from the css rule
             var timer = setInterval(()=>{
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
                 overall_scrolled+=dist;
-
                 if(current_scrolled+window.innerHeight > big_elems[big_elems.length-1].scrollHeight){
                     setTimeout(()=>window.scrollBy(window.innerHeigth),500);
                     current_scrolled = 0;
                     overall_scrolled += window.innerHeight;
+                    bih_elems.pop();
                 }
-                if(overall_scrolled > document.body.scrollHeight - window.innerHeight){
+  if(overall_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
                     setTimeout(resolve,100);
                 }
