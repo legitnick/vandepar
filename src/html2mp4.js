@@ -76,6 +76,9 @@ const transform = (async (html_number) => {
 
 
     await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: 'networkidle0'}).catch((e)=>console.error(e));
+    await page.waitForNavigation({
+     waitUntil: 'networkidle0',
+    });//this should make it wait all the way
     await look(page);
     await recorder.stop();
     browser.close();
