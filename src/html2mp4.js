@@ -32,23 +32,33 @@ async function look(page){
 
 //void f(Page)
 async function scroll (page) {
+            let big_elems = await page.$$("body > :nth-child(n)")
+    //so basically get Height of all body direct children to scroll through them later
+    console.log(big_elems);
+    await big_elems.map((async(el)=>{
+        el =  await el.boundingBox();
+        el = el.height;
+    }));
+    console.log(big_elems);
+    //big_elems = big_elems.reverse();
+    //.reverse();//reverse to pop later on, it's more efficient
+
     return await page.evaluate(async ()=>{
         return await new Promise((resolve)=>{
             let current_scrolled = 0;
             let overall_scrolled = 0;
             let dist = 1;//scroll, px
-            const big_elems = document.querySelector("body > div")//.reverse();//reverse to pop later on, it's more efficient
 
             // body > :nth-child(n) taken from the css rule
             let timer = setInterval(()=>{
                 window.scrollBy(0,dist);
                 current_scrolled+=dist;
                 overall_scrolled+=dist;
-                if(current_scrolled+window.innerHeight > big_elems[big_elems.length-1].scrollHeight){
+                if(current_scrolled+window.innerHeight >= big_elems[big_elems.length-1]){
                     setTimeout(()=>window.scrollBy(window.innerHeigth),100);
                     current_scrolled = 0;
                     overall_scrolled += window.innerHeight;
-                   // big_elems.pop();
+                    big_elems.pop();
                 }
                 if(overall_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
@@ -115,7 +125,8 @@ const transformAll =(async ()=>{
     const promise_arr = [];
     console.log(html_num_arr);
     await html_num_arr.forEach((el,i)=>{
-        if(i<1){
+        if(i<4){
+            // 4 is an arbitrary number, should get sys recource info, and cli options
             console.log(el);
             promise_arr.push(transform(el));
         }
@@ -123,7 +134,7 @@ const transformAll =(async ()=>{
 
     await Promise.all(promise_arr);
     await html_arr.forEach((el,i)=>{
-        if(i<1)
+        if(i<4)
             renameToUsed(el);
     });//remake as html_arr.slice(0,4).forEeach
     //as it is more clear, and I only use el in the function anyways
