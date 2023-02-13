@@ -7,7 +7,7 @@ const mf = require("./src/myFiles.js");
 async function main() {
     await mf.ensureAllDirs();
     //scrape();
-   transformAll ().catch(console.error);
+   transformAll ();
     parse().catch(console.error);
 }
 main();

@@ -55,6 +55,10 @@ async function scroll (page) {
 
 //void f(int)
 const transform = (async (html_number) => {
+        if(!html_number){
+            console.log("html_num undefined");
+            return false;
+        }
         const browser = await puppeteer.launch().catch((e)=>console.error(e));
         const page = await browser.newPage().catch((e)=>console.error(e));
         await page.setViewport({
@@ -74,7 +78,7 @@ const transform = (async (html_number) => {
         await recorder.stop();
         browser.close();
         console.log("recorded");
-
+        return 1;
         /*return await look(page).then((res,rej)=>{
             return recorder.stop();
         }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
@@ -84,6 +88,7 @@ const transform = (async (html_number) => {
 //void f(string);
 const renameToUsed = ((html_string) => {
     fs.renameSync(mf.html_to_dir+html_string,mf.html_to_dir+"u_"+html_string);
+    //un-sync version made some errors, it probably should be done syncronously anyways?
 });
 
 //filter html_arr with a function isHTMLUsed
@@ -93,22 +98,27 @@ const isHtmlUnused = (html_string)=>{
 }
 
 //void f(void)
-    const transformAll = ()=>{
-        const html_arr = fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
-        console.log(html_arr);
-        const html_num_arr = html_arr.map(el=>parseInt(el));
+    const transformAll =(async ()=>{
+        const html_arr = await fs.readdirSync(mf.html_to_dir).filter(isHtmlUnused);
+        const html_num_arr = await html_arr.map(el=>parseInt(el));
 
-        html_num_arr.forEach((el,i)=>{
-            if(i<4)
-                transform(el);
-        });
-        html_arr.forEach((el,i)=>{
+        const promise_arr = [];
+        console.log(html_num_arr);
+        await html_num_arr.forEach((el,i)=>{
+            if(i<4){
+                console.log(el);
+                promise_arr.push(transform(el));
+            }
+        });//think it'll await only to push all the promises into array (and start transforming, so no false positives on promise all)
+
+       await Promise.all(promise_arr);
+        await html_arr.forEach((el,i)=>{
             if(i<4)
                 renameToUsed(el);
-        });
+        });//remake as html_arr.slice(0,4).forEeach
+        //as it is more clear, and I only use el in the function anyways
+        setTimeout(transformAll,1000);
 
+    });
 
-    }
-    transformAll();
-
-    module.exports = transform;
+    module.exports = transformAll;
