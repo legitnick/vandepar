@@ -1,5 +1,4 @@
 //setup modules
-const Bottleneck = require('bottleneck');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
@@ -9,11 +8,6 @@ const HttpsProxyAgent = require("https-proxy-agent");
 //setup src files
 const html2mp4 = require("./html2mp4.js");
 const mf = require("./myFiles.js");
-
-const limiter = new Bottleneck({
-    maxConcurrent:4,
-    minTime:250,
-});
 
 //setup zenrows proxy
 const proxy = "http://61d9d31d8af64a05690ad2ef1714e5a19db2c014:@proxy.zenrows.com:8001";
@@ -71,6 +65,10 @@ const getSOText = async (i_link) => {
                 return null;
             });
         if (data === null) return;
+        if(data.status == 404){
+            console.log("404");
+            return null;
+        }
         const $ = cheerio.load(data);
 
 
@@ -90,7 +88,6 @@ const getSOText = async (i_link) => {
     }
 };
 
-const wrapped = limiter.wrap(getSOText);
 
 //void f(void)
 async function scrape(){
@@ -104,7 +101,7 @@ async function scrape(){
     for( let i = curr_num - 1; i*1.01 > curr_num; i--)
         //this 1.01 is still shady
         //the number of crawls is too big rn
-        wrapped(i)
+        getSOText(i)
             .then((postTitles) => {
                 if(postTitles){
                     console.log(postTitles)
