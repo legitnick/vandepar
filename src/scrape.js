@@ -33,7 +33,7 @@ const getQText = ($)=>{
 const getAText = ($,doc)=>{
 
     $('div.answercell > div.js-post-body').each((_idx, el) => {
-        const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
+        const a_likes = $(el).closest('.post-layout').find('.js-vote-count').$eval(node=>node.getAttribute("data-value"));
 
         const likes_on_A = parseInt(a_likes);
         if( likes_on_A < I_MIN_LIKES){
@@ -57,9 +57,7 @@ const getSOText = async (i_link) => {
     };
     try {
         const { data } = await axios.get(
-            'https://stackoverflow.com/questions/' + i_link
-            //+ '/how-to-use-continue-in-jquery-each-loop'
-            ,{timeout:500}
+            'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
             ,httpAgent,httpsAgent).catch((error)=>{
                 console.log(error)
                 return null;
