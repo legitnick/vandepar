@@ -45,11 +45,11 @@ div{
 }
 /*code*/
 @font-face{
-    font-family: Anonymous Pro;
-    src:url("../../bin/fonts/Anonymous_Pro.ttf");
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-R.ttf");
 }
 code{
-    font-family: Anonymous Pro;
+    font-family: Ubuntu Mono;
 }
 pre {
     background-color:rgb(227, 230, 232);
