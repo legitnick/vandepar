@@ -46,6 +46,18 @@ div{
 /*code*/
 @font-face{
     font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-B.ttf");
+}
+@font-face{
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-BI.ttf");
+}
+@font-face{
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-RI.ttf");
+}
+@font-face{
+    font-family: Ubuntu Mono;
     src:url("../../bin/fonts/UbuntuMono-R.ttf");
 }
 code{
