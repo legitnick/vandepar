@@ -1,0 +1,145 @@
+<a href="/questions/16657512/apply-function-conditionally" class="question-hyperlink">Apply function conditionally</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I have a dataframe like this:</p>
+
+<pre><code>experiment iter  results
+    A       1     30.0
+    A       2     23.0
+    A       3     33.3
+    B       1     313.0
+    B       2     323.0
+    B       3     350.0
+ ....
+</code></pre>
+
+<p>Is there a way to tally results by applying a function with conditions. In the above example, that condition is all iterations of a particular experiment.</p>
+
+<pre><code>A   sum of results (30 + 23, + 33.3)
+B   sum of results (313 + 323 + 350)
+</code></pre>
+
+<p>I am thinking of "apply" function, but can't find a way to get it work.</p>
+    </div><p class="this-has-helped">This answer has helped 53 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>There are a lot of alternatives to do this. Note that if you are interested in another function different from <code>sum</code>, then just change the argument <code>FUN=any.function</code>, e.g, if you want <code>mean</code>, <code>var</code> <code>length</code>, etc, then just plug those functions into <code>FUN</code> argument, e.g, <code>FUN=mean</code>, <code>FUN=var</code> and so on. Let's explore some alternatives:</p>
+
+<p><code>aggregate</code> function in base.</p>
+
+<pre><code>&gt; aggregate(results ~ experiment, FUN=sum, data=DF)
+  experiment results
+1          A    86.3
+2          B   986.0
+</code></pre>
+
+<hr>
+
+<p>Or maybe <code>tapply</code> ?</p>
+
+<pre><code>&gt; with(DF, tapply(results, experiment, FUN=sum))
+    A     B 
+ 86.3 986.0 
+</code></pre>
+
+<hr>
+
+<p>Also <code>ddply</code> from plyr package</p>
+
+<pre><code>&gt; # library(plyr)
+&gt; ddply(DF[, -2], .(experiment), numcolwise(sum))
+  experiment results
+1          A    86.3
+2          B   986.0
+
+&gt; ## Alternative syntax
+&gt; ddply(DF, .(experiment), summarize, sumResults = sum(results))
+  experiment sumResults
+1          A       86.3
+2          B      986.0
+</code></pre>
+
+<hr>
+
+<p>Also the <code>dplyr</code> package</p>
+
+<pre><code>&gt; require(dplyr)
+&gt; DF %&gt;% group_by(experiment) %&gt;% summarise(sumResults = sum(results))
+Source: local data frame [2 x 2]
+
+  experiment  sumResults
+1          A        86.3
+2          B       986.0
+</code></pre>
+
+<hr>
+
+<p>Using <code>sapply</code> and <code>split</code>, equivalent to <code>tapply</code>.</p>
+
+<pre><code>&gt; with(DF, sapply(split(results, experiment), sum))
+    A     B 
+ 86.3 986.0 
+</code></pre>
+
+<hr>
+
+<p>If you are concern about timing, <code>data.table</code> is your friend:</p>
+
+<pre><code>&gt; # library(data.table)
+&gt; DT &lt;- data.table(DF)
+&gt; DT[, sum(results), by=experiment]
+   experiment    V1
+1:          A  86.3
+2:          B 986.0
+</code></pre>
+
+<hr>
+
+<p>Not so popular, but doBy package is nice (equivalent to <code>aggregate</code>, even in syntax!)</p>
+
+<pre><code>&gt; # library(doBy)
+&gt; summaryBy(results~experiment, FUN=sum, data=DF)
+  experiment results.sum
+1          A        86.3
+2          B       986.0
+</code></pre>
+
+<hr>
+
+<p>Also <code>by</code> helps in this situation</p>
+
+<pre><code>&gt; (Aggregate.sums &lt;- with(DF, by(results, experiment, sum)))
+experiment: A
+[1] 86.3
+------------------------------------------------------------------------- 
+experiment: B
+[1] 986
+</code></pre>
+
+<p>If you want the result to be a matrix then use either <code>cbind</code> or <code>rbind</code></p>
+
+<pre><code>&gt; cbind(results=Aggregate.sums)
+  results
+A    86.3
+B   986.0
+</code></pre>
+
+<hr>
+
+<p><code>sqldf</code> from sqldf package also could be a good option</p>
+
+<pre><code>&gt; library(sqldf)
+&gt; sqldf("select experiment, sum(results) `sum.results`
+      from DF group by experiment")
+  experiment sum.results
+1          A        86.3
+2          B       986.0
+</code></pre>
+
+<hr>
+
+<p><code>xtabs</code> also works (only when <code>FUN=sum</code>)</p>
+
+<pre><code>&gt; xtabs(results ~ experiment, data=DF)
+experiment
+    A     B 
+ 86.3 986.0
+</code></pre>
+    </div>

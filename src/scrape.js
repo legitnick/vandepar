@@ -1,4 +1,5 @@
 //setup modules
+const Bottleneck = require('bottleneck');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
@@ -8,6 +9,11 @@ const HttpsProxyAgent = require("https-proxy-agent");
 //setup src files
 const html2mp4 = require("./html2mp4.js");
 const mf = require("./myFiles.js");
+
+const limiter = new Bottleneck({
+    maxConcurrent:4,
+    minTime:250,
+});
 
 //setup zenrows proxy
 const proxy = "http://61d9d31d8af64a05690ad2ef1714e5a19db2c014:@proxy.zenrows.com:8001";
@@ -33,7 +39,7 @@ const getQText = ($)=>{
 const getAText = ($,doc)=>{
 
     $('div.answercell > div.js-post-body').each((_idx, el) => {
-        const a_likes = $(el).closest('.post-layout').find('.js-vote-count').$eval(node=>node.getAttribute("data-value"));
+        const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
 
         const likes_on_A = parseInt(a_likes);
         if( likes_on_A < I_MIN_LIKES){
@@ -57,15 +63,16 @@ const getSOText = async (i_link) => {
     };
     try {
         const { data } = await axios.get(
-            'https://stackoverflow.com/questions/' + i_link  + '/how-to-use-continue-in-jquery-each-loop'
+            'https://stackoverflow.com/questions/' + i_link
+            //+ '/how-to-use-continue-in-jquery-each-loop'
             ,httpAgent,httpsAgent).catch((error)=>{
                 console.log(error)
                 return null;
             });
         if (data === null) return;
-        if(data.status == 404){
+        if(data.status === 404){
             console.log("404");
-            return null;
+            return;
         }
         const $ = cheerio.load(data);
 
@@ -86,6 +93,7 @@ const getSOText = async (i_link) => {
     }
 };
 
+const wrapped = limiter.wrap(getSOText);
 
 //void f(void)
 async function scrape(){
@@ -99,7 +107,7 @@ async function scrape(){
     for( let i = curr_num - 1; i*1.01 > curr_num; i--)
         //this 1.01 is still shady
         //the number of crawls is too big rn
-        getSOText(i)
+        wrapped(i)
             .then((postTitles) => {
                 if(postTitles){
                     console.log(postTitles)
