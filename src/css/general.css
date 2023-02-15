@@ -44,6 +44,13 @@ div{
     text-align:center;
 }
 /*code*/
+@font-face{
+    font-family: Anonymous Pro;
+    src:url("../../bin/fonts/Anonymous_Pro.ttf");
+}
+code{
+    font-family: Anonymous Pro;
+}
 pre {
     background-color:rgb(227, 230, 232);
     border-radius:3px;
