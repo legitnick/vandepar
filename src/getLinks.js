@@ -22,14 +22,14 @@ async function getLinks(){
     const resp = await fetch(url);
     //console.log(resp);
 
-    const idBodyMap = new Map();
 
-    const data = {}
-    data.arr = resp.data.items;
-    data.arr.forEach(el=>{
-        idBodyMap.set(el.question_id,el.body);
-    })
-    console.log(idBodyMap)
+    const data = {};
+    data.arr = [];
+    await resp.data.items.forEach(el=>
+        data.arr.push(el.question_id+'\n'+el.body)
+    )
+    console.log(data.arr);
+
     fs.writeFile("bin/links.json",JSON.stringify(data),(err)=>console.error(err));
 
     setTimeout(getLinks,100000);//100,000ms == 100s
