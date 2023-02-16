@@ -1,0 +1,38 @@
+<a href="/questions/3437/options-for-google-maps-over-ssl" class="question-hyperlink">Options for Google Maps over SSL</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>We recently discovered that the Google Maps API does not play nicely with SSL.  Fair enough, but what are some options for overcoming this that others have used effectively?</p>
+
+<blockquote>
+  <p><a href="http://code.google.com/support/bin/answer.py?answer=65301&amp;topic=10945" rel="noreferrer">Will the Maps API work over SSL (HTTPS)?</a></p>
+  
+  <p>At this time, the Maps API is not
+  available over a secure (SSL)
+  connection. If you are running the
+  Maps API on a secure site, the browser
+  may warn the user about non-secure
+  objects on the screen.</p>
+</blockquote>
+
+<p>We have considered the following options</p>
+
+<ol>
+<li>Splitting the page so that credit card collection (the requirement for SSL) is not on the same page as the Google Map.</li>
+<li>Switching to another map provider, such as Virtual Earth.  Rumor has it that they support SSL.</li>
+<li>Playing tricks with IFRAMEs.  Sounds kludgy.</li>
+<li>Proxying the calls to Google.  Sounds like a lot of overhead.</li>
+</ol>
+
+<p>Are there other options, or does anyone have insight into the options that we have considered?</p>
+    </div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>I'd agree with the previous two answers that in this instance it may be better from a usability perspective to split the two functions into separate screens. You really want your users to be focussed on entering complete and accurate credit card information, and having a map on the same screen may be distracting.</p>
+
+<p>For the record though, Virtual Earth certainly does fully support SSL. To enable it you simple need to change the script reference from http:// to https:// and append &amp;s=1 to the URL, e.g.</p>
+
+<pre><code>&lt;script src="http://dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=6.1" type="text/javascript"&gt;&lt;/script&gt;
+</code></pre>
+
+<p>becomes</p>
+
+<pre><code>&lt;script src="https://dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=6.1&amp;s=1" type="text/javascript"&gt;&lt;/script&gt;
+</code></pre>
+    </div>

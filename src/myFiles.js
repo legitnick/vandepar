@@ -61,6 +61,7 @@ exports.ensureDir = ensureDir;
 exports.move = move;
 exports.video_dir = video_dir;
 exports.isHtmlUsed = isHtmlUsed;
+exports.browser_dot_dir = "file://" + process.cwd();
 exports.goto_dir = "file://" + process.cwd()+ "/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium,also process.cwd more suitable than __dirname in this case
 exports.html_from_dir = html_from_dir;//it'll be dot for now
 //const html_from_dir = pth.join(__dirname,"/bin/scraped_html/");

@@ -1,0 +1,37 @@
+<a href="/questions/1376/get-the-current-logged-in-os-user-in-adobe-air" class="question-hyperlink">Get the current logged in OS user in Adobe Air</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I need the name of the current logged in user in my <strong>Air/Flex</strong> application. The application will only be deployed on Windows machines. I think I could attain this by regexing the User directory, but am open to other ways.</p>
+    </div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>There's a couple of small cleanups you can make...</p>
+
+<pre><code>package
+{
+    import flash.filesystem.File;
+
+    public class UserUtil
+    {
+        public static function get currentOSUser():String
+        {
+            var userDir:String = File.userDirectory.nativePath;
+            var userName:String = userDir.substr(userDir.lastIndexOf(File.separator) + 1);
+            return userName;
+        }
+    }
+}
+</code></pre>
+
+<p>As Kevin suggested, use <code>File.separator</code> to make the directory splitting cross-platform (just tested on Windows and Mac OS X).</p>
+
+<p>You don't need to use <code>resolvePath("")</code> unless you're looking for a child.</p>
+
+<p>Also, making the function a proper getter allows binding without any further work.</p>
+
+<p>In the above example I put it into a <code>UserUtil</code> class, now I can bind to <code>UserUtil.currentOSUser</code>, e.g:</p>
+
+<pre><code>&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute"&gt;
+    &lt;mx:Label text="{UserUtil.currentOSUser}"/&gt; 
+&lt;/mx:WindowedApplication&gt;
+</code></pre>
+    </div>ty sure this problem is Ω(n²), because you have to calculate the sums for each M[i,j] -- unless someone has a better algorithm for the summation :)</p>
+    </div>
