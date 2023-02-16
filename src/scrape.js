@@ -9,6 +9,7 @@ const HttpsProxyAgent = require("https-proxy-agent");
 //setup src files
 const html2mp4 = require("./html2mp4.js");
 const mf = require("./myFiles.js");
+const getLinksArr = require("./getLinks.js");
 
 const limiter = new Bottleneck({
     maxConcurrent:4,
@@ -23,21 +24,31 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const I_MIN_LIKES = 10;
 
 
-//string f(doc?)
-const getTitle = ($)=>{
-    return $('#question-header  a.question-hyperlink');
+//string f(int)
+const getTitle = (question_json)=>{
+    return "<p class='question-hyperlink'>"+question_json.title+"</p>";
 }
 
-//string f(doc?)
-const getQText = ($)=>{
-    return $('#question > div.post-layout > div.postcell.post-layout--right > div.s-prose.js-post-body');
+//string f(int)
+const getQText = (question_json)=>{
+    return '<div class="s-prose js-post-body">'+question_json.body+'</div';
 }
 
+//string f(int)
+const getAText = (answer_json)=>{
+    return '<div class="s-prose js-post-body">'+answer_json.body+'</div';
+}
+//this is absolutely same, but I think it's ok to have it in regards to readability
 
 //void f(jQuery_doc,&my_doc)
-const getAText = ($,doc)=>{
+const getATexts = (question_json)=>{
 
-    $('div.answercell > div.js-post-body').each((_idx, el) => {
+    //get answers for a question,
+    // likes = answer_json.score
+    // body = '<p class="this-has-helped">This answer has helped '+likes + ' people.</p>'
+
+    /*
+     * $('div.answercell > div.js-post-body').each((_idx, el) => {
         const a_likes = $(el).closest('.post-layout').find('.js-vote-count').text();
 
         const likes_on_A = parseInt(a_likes);
@@ -52,37 +63,22 @@ const getAText = ($,doc)=>{
 
         doc.html_text+=$(el);
     });
+    */
 }
 
 // string f(string)
-const getSOText = async (link) => {
-    let doc = {
-        html_text:"",
-        is_answered:false
-    };
+const getSOText = async (question_json) => {
     try {
-        const { data } = await axios.get(link
-            ,httpAgent,httpsAgent).catch((error)=>{
-                console.log(error)
-                return null;
-            });
-        if (data === null) return;
-        if(data.status === 404){
-            console.log("404");
-            return;
-        }
-        const $ = cheerio.load(data);
+        let doc = "";
+        const title = getTitle(question_json);
+        const qText = getQText(question_json);
 
+        doc = title + qText;
 
-        const title = getTitle($);
-        const qText = getQText($);
-        console.log(qText);
-        doc.html_text = title + qText;
+        doc+=getAText(question_json);
 
-        getAText($,doc);
-
-        if(doc.is_answered)
-            return doc.html_text;
+        if(question_json.is_answered)
+            return doc;
         return null;
     } catch (error) {
         console.error(error, error.stack);
@@ -94,8 +90,7 @@ const wrapped = limiter.wrap(getSOText);
 
 //void f(void)
 async function scrape(){
-    let link_obj = fs.readFileSync('./bin/links.json');
-    let link_arr= JSON.parse(link_obj).arr;
+    const link_arr = getLinksArr();
     await link_arr.forEach((el=>{
         console.log(el);
         const regex = /\d+/
@@ -113,7 +108,7 @@ async function scrape(){
 
     }));
     //getLinks();
-    //setTimeout(scrape,1000);
+    setTimeout(scrape,1000);
 }
 
 module.exports = scrape;

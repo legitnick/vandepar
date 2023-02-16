@@ -16,6 +16,8 @@ var filter = {
 };
 
 // Get all the questions (http://api.stackexchange.com/docs/questions)
+
+//string[] f(void)
 async function getLinks(){
 
     const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=20&sort=votes&site=gaming&filter=withbody";
@@ -23,16 +25,14 @@ async function getLinks(){
     //console.log(resp);
 
 
-    const data = {};
-    data.arr = [];
-    await resp.data.items.forEach(el=>
-        data.arr.push(el.question_id+'\n'+el.body)
-    )
-    console.log(data.arr);
-
-    fs.writeFile("bin/links.json",JSON.stringify(data),(err)=>console.error(err));
-
-    setTimeout(getLinks,100000);//100,000ms == 100s
+    return resp;
 }
-getLinks()
+
+//string[] f(int)
+async function getAnswersToQ(question_id){
+
+    const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=20&sort=votes&site=gaming&filter=withbody";
+    const answer_resp  = await fetch(url);
+    //get every passing answer to a question and return it
+}
 module.exports = getLinks;
