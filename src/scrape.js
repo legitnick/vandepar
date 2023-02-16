@@ -97,15 +97,14 @@ async function scrape(){
     let link_obj = fs.readFileSync('./bin/links.json');
     let link_arr= JSON.parse(link_obj).arr;
     await link_arr.forEach((el=>{
-
+        console.log(el);
+        const regex = /\d+/
+        i = parseInt(el.match(regex)[0]);
         wrapped(el)
             .then((postTitles) => {
                 if(postTitles){
                     console.log(postTitles)
-                    const regex = /\/d+\//
-                    const num = el.match(regex);
-                    fs.writeFile(mf.html_from_dir + num + ".html",postTitles,(error)=>{
-                        console.log("file "+parseInt(el)+" saved");
+                    fs.writeFile(mf.html_from_dir + i + ".html",postTitles,(error)=>{
                         if(error)
                             return console.log(error);
                     });
