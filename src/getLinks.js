@@ -1,5 +1,6 @@
 const stackexchange = require ("stackexchange");
 const fs = require ("fs");
+const fetch = require("axios");//will this work
 
 var options = { version: 2.2 };
 var context = new stackexchange(options);
@@ -9,23 +10,24 @@ var filter = {
     min: 20,
     pagesize: 50,
     sort: 'votes',
-    order: 'asc'
+    order: 'asc',
+    site:'gaming',
+    filter:"withbody",
 };
 
 // Get all the questions (http://api.stackexchange.com/docs/questions)
 async function getLinks(){
 
-    context.questions.questions(filter, function(err, results){
-        if (err) throw err;
+    const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=20&sort=votes&site=gaming&filter=withbody";
+    const resp = await fetch(url);
+    console.log(resp);
+    console.log(resp.data.items)
 
-        results.items =    results.items.map(el=>el.link);
-        console.log(results.items);
-        const data = {}
-        data.arr = results.items;
-        fs.writeFile("bin/links.json",JSON.stringify(data),(err)=>console.error(err));
+    const data = {}
+    data.arr = resp.data.items;
+    resp.data.items.forEach(console.log);
+    fs.writeFile("bin/links.json",JSON.stringify(data),(err)=>console.error(err));
 
-
-    });
     setTimeout(getLinks,100000);//100,000ms == 100s
 }
 getLinks()
