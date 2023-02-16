@@ -20,12 +20,16 @@ async function getLinks(){
 
     const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=20&sort=votes&site=gaming&filter=withbody";
     const resp = await fetch(url);
-    console.log(resp);
-    console.log(resp.data.items)
+    //console.log(resp);
+
+    const idBodyMap = new Map();
 
     const data = {}
     data.arr = resp.data.items;
-    resp.data.items.forEach(console.log);
+    data.arr.forEach(el=>{
+        idBodyMap.set(el.question_id,el.body);
+    })
+    console.log(idBodyMap)
     fs.writeFile("bin/links.json",JSON.stringify(data),(err)=>console.error(err));
 
     setTimeout(getLinks,100000);//100,000ms == 100s
