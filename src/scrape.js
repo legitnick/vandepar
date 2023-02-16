@@ -68,22 +68,18 @@ const getATexts = (question_json)=>{
 
 // string f(string)
 const getSOText = async (question_json) => {
-    try {
-        let doc = "";
-        const title = getTitle(question_json);
-        const qText = getQText(question_json);
-
-        doc = title + qText;
-
-        doc+=getAText(question_json);
-
-        if(question_json.is_answered)
-            return doc;
+    if(!question_json.is_answered)
         return null;
-    } catch (error) {
-        console.error(error, error.stack);
-        return null;
-    }
+    let doc = "";
+    const title = getTitle(question_json);
+    const qText = getQText(question_json);
+
+    doc = title + qText;
+
+    doc+=getATexts(question_json);
+
+    doc = ToCompleteHTML(doc);
+    return doc;
 };
 
 const wrapped = limiter.wrap(getSOText);
@@ -92,13 +88,13 @@ const wrapped = limiter.wrap(getSOText);
 async function scrape(){
     const link_arr = getLinksArr();
     await link_arr.forEach((el=>{
-        console.log(el);
-        const regex = /\d+/
-        i = parseInt(el.match(regex)[0]);
+        console.log(el.body);
         wrapped(el)
             .then((postTitles) => {
                 if(postTitles){
                     console.log(postTitles)
+
+                    const i = el.question_id;
                     fs.writeFile(mf.html_from_dir + i + ".html",postTitles,(error)=>{
                         if(error)
                             return console.log(error);
