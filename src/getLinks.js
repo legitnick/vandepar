@@ -22,27 +22,11 @@ async function getLinks(){
         console.log(results.items);
         const data = {}
         data.arr = results.items;
-        fs.writeFile("links.json",JSON.stringify(data),(err)=>console.error(err));
+        fs.writeFile("bin/links.json",JSON.stringify(data),(err)=>console.error(err));
 
 
     });
+    setTimeout(getLinks,100000);//100,000ms == 100s
 }
 getLinks()
-/*
- * // Get results for a different website within the stackexchange network
-filter.site = 'softwareengineering';
-context.questions.questions(filter, function(err, results){
-  if (err) throw err;
-
-  console.log(results.items);
-  console.log(results.has_more);
-});
-
-// Get all users
-context.users.users(filter, function(err, results){
-  if (err) throw err;
-
-  console.log(results.items);
-  console.log(results.has_more);
-});
-*/
+module.exports = getLinks;

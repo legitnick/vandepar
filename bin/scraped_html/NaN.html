@@ -1,0 +1,20 @@
+<a href="/questions/34284/how-to-fix-build-error-in-visual-studio-lc-exe-exited-with-code-1" class="question-hyperlink">How to fix build error in Visual Studio: '"LC.exe" exited with code -1'</a><div class="s-prose js-post-body" itemprop="text">
+                
+<p>I get the following error when building my Windows Forms solution: </p>
+
+<blockquote>
+  <p>"LC.exe" exited with code -1</p>
+</blockquote>
+
+<p>I use two commercial Windows Forms Libraries: Infragistics and the Gantt-Control from plexityhide.com, that's why I have licenses.licx files in my WinForms Projects. We also use Visual Sourcesafe as our Source Control.</p>
+
+<p>When the licenses.licx files are in the Projects I cannot build without the above error. However, when I exclude them from my projects the build works fine. But I need the licenses.licx files when I want to work with the commercial controls in the designer.</p>
+
+<p>This is a brand new developer machine with Windows XP SP3 (German) and Visual Studio 2005 Team Edition for Software Developers (German) with SP1. </p>
+
+<p>It's Windows XP 32-Bit by the way.</p>
+
+<p>Any suggestions?</p>
+    </div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>Problem mainly arises due to license file. Exclude the file <code>licenses.licx</code> from your project</p>
+    </div>
