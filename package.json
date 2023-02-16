@@ -6,7 +6,8 @@
     "http-proxy-agent": "^5.0.0",
     "https-proxy-agent": "^5.0.1",
     "puppeteer": "^19.6.3",
-    "puppeteer-screen-recorder": "^2.1.2"
+    "puppeteer-screen-recorder": "^2.1.2",
+    "stackexchange": "^2.0.0"
   },
   "scripts": {
     "start": "node index.js"

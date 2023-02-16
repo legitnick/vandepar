@@ -16,9 +16,10 @@ const limiter = new Bottleneck({
 });
 
 //setup zenrows proxy
-const proxy = "http://61d9d31d8af64a05690ad2ef1714e5a19db2c014:@proxy.zenrows.com:8001";
-const httpAgent = new HttpProxyAgent(proxy);
-const httpsAgent = new HttpsProxyAgent(proxy);
+const httpProxy = "http://191.101.1.116:80";
+const httpsProxy = "https://104.223.135.178:10000";
+const httpAgent = new HttpProxyAgent(httpProxy);
+const httpsAgent = new HttpsProxyAgent(httpsProxy);
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 const I_MIN_LIKES = 10;

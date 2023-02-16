@@ -1,0 +1,35 @@
+<a href="/questions/16657399/communication-between-iframes" class="question-hyperlink">Communication between iFrames? [duplicate]</a><div class="s-prose js-post-body" itemprop="text">
+                    <div>
+            <aside class="s-notice s-notice__info post-notice js-post-notice mb16" role="status">
+        <div class="d-flex fd-column fw-nowrap">
+            <div class="d-flex fw-nowrap">
+                <div class="flex--item wmn0 fl1 lh-lg">
+                    <div class="flex--item fl1 lh-lg">
+                        <b>This question already has answers here</b>:
+                        
+                    </div>
+                </div>
+            </div>
+                    <div class="flex--item mb0 mt4">
+                        <a href="/questions/9153445/how-to-communicate-between-iframe-and-the-parent-site" dir="ltr">How to communicate between iframe and the parent site?</a>
+                            <span class="question-originals-answer-count">
+                                (7 answers)
+                            </span>
+                    </div>
+                <div class="flex--item mb0 mt8">Closed <span title="2014-07-03 09:57:31Z" class="relativetime">8 years ago</span>.</div>
+        </div>
+</aside>
+
+    </div>
+
+<p>How can you make two iFrames talk to each other?
+For example I was a element value off the 2nd iframe and the 1st iframe has the display element on it. I need to get the value off the 2nd frame to the 1st. How would I do this?
+Don't say use cookies, cause that will hurt with massive sum of data.</p>
+    </div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body" itemprop="text">
+<p>If the <code>&lt;iframe&gt;</code> elements are served from the same domain, then they can access each other directly. For example, in <code>iframe1</code> you could do:</p>
+
+<pre><code>document.getElementById('someDiv').innerHTML = 
+    top.document.getElementById('otherIframe').contentWindow.
+    document.getElementById('someOtherDiv').innerHTML;
+</code></pre>
+    </div>
