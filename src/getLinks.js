@@ -17,8 +17,6 @@ async function getAnswersJSON(question_id){
 
     const url = "https://api.stackexchange.com/2.3/questions/"+question_id+"/"+"answers?pagesize=50&order=desc&min=5&sort=votes&site=stackoverflow&filter=withbody";
     const answer_resp  = await axios.get(url);
-    console.log("Answer_resp:\n"+answer_resp);
-    console.log(answer_resp.data.items);
 
 
     //get every passing answer to a question and return it

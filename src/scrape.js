@@ -34,7 +34,6 @@ const getAText = (answer_json)=>{
 const getATexts = (async (question_json)=>{
     const answers_arr = await exchange_api.getAnswersJSON(question_json.question_id);
     let res_string = "";
-    console.log("id "+question_json.question_id);
     answers_arr.forEach((el)=>{
         const likes = el.score;
         let doc = "";
@@ -58,7 +57,6 @@ const getSOText = async (question_json) => {
 
     const answers =await getATexts(question_json);
 
-    console.log(answers);
     doc+=answers;
     doc = mf.toCompleteHTML(doc);
     return doc;
@@ -66,8 +64,14 @@ const getSOText = async (question_json) => {
 
 const wrapped = limiter.wrap(getSOText);
 
+function wait(ms){
+    return new Promise(resolve=>setTimeout(resolve,ms));
+}
+
 //void f(void)
 async function scrape(){
+    await wait(10000);
+    //it scrapes too too much comparatively
     const link_arr = await exchange_api.getQuestionJSON();
     await link_arr.forEach((el=>{
         wrapped(el)
@@ -77,14 +81,14 @@ async function scrape(){
                     const i = el.question_id;
                     fs.writeFile(mf.html_from_dir + i + ".html",postTitles,(error)=>{
                         if(error)
-                            console.log(error);
+                           console.log(error);
                     });
                 }
             });
 
     }));
     //getLinks();
-    setTimeout(scrape,100000);
+    setTimeout(scrape,1000000);//1,000,000ms == 1,000s
 }
 
 module.exports = scrape;
