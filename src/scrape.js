@@ -9,7 +9,7 @@ const HttpsProxyAgent = require("https-proxy-agent");
 //setup src files
 const html2mp4 = require("./html2mp4.js");
 const mf = require("./myFiles.js");
-const getLinksArr = require("./getLinks.js");
+const exchange_api = require("./getLinks.js");
 
 const limiter = new Bottleneck({
     maxConcurrent:4,
@@ -40,9 +40,16 @@ const getAText = (answer_json)=>{
 }
 //this is absolutely same, but I think it's ok to have it in regards to readability
 
-//void f(jQuery_doc,&my_doc)
+//void f(obj)
 const getATexts = (question_json)=>{
+    const answers_arr = exchange_api.getAnswersJSON(question_json.question_id);
+    answers_arr.map((el)=>{
+        const likes = el.score;
+        let doc = "";
+        doc+='<p class="this-has-helped">This answer has helped ' + likes + ' people.</p>';
+        doc+=getAText(el.body);
 
+    })
     //get answers for a question,
     // likes = answer_json.score
     // body = '<p class="this-has-helped">This answer has helped '+likes + ' people.</p>'
@@ -78,7 +85,7 @@ const getSOText = async (question_json) => {
 
     doc+=getATexts(question_json);
 
-    doc = ToCompleteHTML(doc);
+    doc = toCompleteHTML(doc);
     return doc;
 };
 
@@ -86,7 +93,7 @@ const wrapped = limiter.wrap(getSOText);
 
 //void f(void)
 async function scrape(){
-    const link_arr = getLinksArr();
+    const link_arr = await exchange_api.getQuestionJSON();
     await link_arr.forEach((el=>{
         console.log(el.body);
         wrapped(el)

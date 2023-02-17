@@ -2,7 +2,7 @@ const fs = require ("fs");
 const axios = require("axios");//will this work
 
 
-//string[] f(void)
+//json f(void)
 async function getLinks(){
 
     const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=20&sort=votes&site=gaming&filter=withbody";
@@ -16,8 +16,11 @@ async function getLinks(){
 //string[] f(int)
 async function getAnswersToQ(question_id){
 
-    const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=20&sort=votes&site=gaming&filter=withbody";
+    const url = "https://api.stackexchange.com/2.3/questions?pagesize=50&order=desc&min=10&sort=votes&site=gaming&filter=withbody";
     const answer_resp  = await axios.get(url);
+
     //get every passing answer to a question and return it
+    return anwer_resp.items;
 }
-module.exports = getLinks;
+exports.getQuestionJSON = getLinks;
+exports.getAnswersJSON = getAnswersToQ;
