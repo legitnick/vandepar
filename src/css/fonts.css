@@ -1,0 +1,25 @@
+
+@font-face{
+    font-family: Nunito;
+    src:url("../../bin/fonts/Nunito-Italic-VariableFont_wght.ttf");
+}
+@font-face{
+    font-family: Nunito;
+    src:url("../../bin/fonts/"Nunito-VariableFont_wght.ttf);
+}
+@font-face{
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-B.ttf");
+}
+@font-face{
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-BI.ttf");
+}
+@font-face{
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-RI.ttf");
+}
+@font-face{
+    font-family: Ubuntu Mono;
+    src:url("../../bin/fonts/UbuntuMono-R.ttf");
+}
