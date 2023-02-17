@@ -26,7 +26,7 @@ async function ensureAllDirs (){
     ensureDir(video_dir);
 }
 
-ensureAllDirs();
+await ensureAllDirs();
 //ensure for these 2 readdirSync functions later
 const html_arr_used = ()=> fs.readdirSync(video_dir);
 console.log(html_arr_used());
