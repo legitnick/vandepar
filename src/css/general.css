@@ -1,3 +1,4 @@
+@import url("_links.scss");
 @font-face{
     font-family: Nunito;
     src:url("../../bin/fonts/Nunito-Italic-VariableFont_wght.ttf");
@@ -52,7 +53,7 @@ div.pre-q-header {
 }
 
 a{
-    color: inherit;
+    color: #6C5CFF;
     text-decoration: inherit;
 }
 .s-prose{
@@ -62,6 +63,14 @@ a{
 div{
     margin-bottom:2em;
     padding:2em;
+}
+.s-prose{
+  background-color: #fefefe;
+  -moz-box-shadow: 2px 2px rgba(0,0,0,0.1);
+  -webkit-box-shadow: 2px 2px rgba(0,0,0,0.1);
+  box-shadow: 2px 2px rgba(0,0,0,0.1);
+  margin: 20px 0 20px 0;
+  overflow: scroll;
 }
 .question-hyperlink{
     margin:2em 1em;

@@ -599,4 +599,4 @@ input:checked+.slider::after {
     from, to {
         content: "Copied";
     }
-}
+
