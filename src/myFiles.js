@@ -29,7 +29,9 @@ async function ensureAllDirs (){
 ensureAllDirs();
 //ensure for these 2 readdirSync functions later
 const html_arr_used = fs.readdirSync(video_dir);
+console.log(html_arr_used);
 const html_filenames = fs.readdirSync(html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
+console.log(html_filenames);
 
 exports.toCompleteHTML = toCompleteHTML;
 exports.html_filenames = html_filenames;
@@ -37,12 +39,11 @@ exports.ensureAllDirs = ensureAllDirs;
 exports.ensureDir = ensureDir;
 exports.video_dir = video_dir;
 exports.browser_dot_dir = "file://" + process.cwd();
-exports.goto_dir = "file://" + process.cwd()+ "/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium,also process.cwd more suitable than __dirname in this case
+exports.goto_dir = "file://" + process.cwd()+ "/bin/scraped_html/"; //"/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium,also process.cwd more suitable than __dirname in this case
 exports.html_from_dir = html_from_dir;//it'll be dot for now
 //const html_from_dir = pth.join(__dirname,"/bin/scraped_html/");
 //const html_to_dir = pth.join(__dirname,"/bin/processed_html/");
 exports.html_to_dir = html_to_dir;
 
-exports.getMostRecentFilename = getMostRecentFilename;
 
 
