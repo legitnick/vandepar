@@ -1,18 +1,2 @@
 <!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Is it possible to hit a mine on first click?</p><div class="s-prose js-post-body"><p>Is it possible for some unlucky guy to hit a mine when they click the first square randomly?</p>
-</div><p class="this-has-helped">This answer has helped 148 people.</p><div class="s-prose js-post-body"><p>It is impossible to click a mine on the first click, at least in Windows 98. If a mine is under the first clicked tile, it is moved to the upper-left corner, if the upper left corner is occupied, the mine moves to the right of the corner tile. It does not appear the behavior has changed since then.</p>
-
-<p><a href="https://web.archive.org/web/20180618103640/http://www.techuser.net/mineclick.html" rel="noreferrer">Source</a></p>
-</div><p class="this-has-helped">This answer has helped 122 people.</p><div class="s-prose js-post-body"><p>No, it is (normally) not possible to hit a mine on the first click in Microsoft's implementation of Minesweeper.</p>
-
-<p>It is pretty easy to convince yourself that it is impossible to lose on the first click.  Here's a test that I do to gauge the quality of other Minesweeper implementations: Run Minesweeper, create a custom game, and set the board size and number of mines to their maximum allowed values.  The Windows 7 version of Minesweeper allows a 24x30 board with 668 mines (92.7% of the board).  Start a game, click a random square.  Create a new game, repeat.  Do it a few more times.  The probability that all your first clicks <em>happen</em> to be lucky quickly gets very small (e.g., after 5 times, the probability that you got lucky on all your first clicks drops to (1 - 0.927)<sup>5</sup> ≈ 0.000002).  Since that is so improbable, the game must be guaranteeing that the first click is always safe. (If that low probability doesn't convince you, keep repeating until it's low enough that it does.)</p>
-
-<p>Additionally, on Windows 7 and later, if you choose to <em>restart</em> a game (with tips enabled), Minesweeper shows a message:</p>
-
-<blockquote>
-  <p>The mines are in the same position as last game.  Be careful!  You can lose on the first click.</p>
-</blockquote>
-
-<p>The last sentence implies that <em>normally</em> you cannot lose on the first click.</p>
-
-<p>Finally, <a href="https://en.wikipedia.org/wiki/Xyzzy_(computing)#Other_computer_games_and_media" rel="noreferrer">old versions of Minesweeper had an <code>xyzzy</code> cheat code</a> that indicated whether a square contained a mine.  However, when enabling this cheat, clicking on a square that is reportedly a mine will <em>not</em> reveal a mine for the first click, providing further evidence that the game has special logic to prevent a first-move loss. (I have verified that this is true at least as far back as Windows 3.1.)</p>
 </div></body></html>

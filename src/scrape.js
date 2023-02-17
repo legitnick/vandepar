@@ -84,7 +84,7 @@ async function scrape(){
 
     }));
     //getLinks();
-    setTimeout(scrape,1000);
+    setTimeout(scrape,100000);
 }
 
 module.exports = scrape;

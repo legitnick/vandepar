@@ -5,8 +5,36 @@
 <p>A couple of drinks later I woke up on the other side of Skyrim in a temple inside Markarth and was greeted by a priestess of the temple. My drinking buddy and the staff that he promised me for winning the drinking contest were nowhere to be found. Also, apparently I made a mess off the temple and now need to clean up. </p>
 
 <p>I looked around and picked up everything that is on the floor, but when I try to talk to her she still says "Talk to me again when you picked up the mess that you made". What do I have to do now?</p>
-</div><p class="this-has-helped">This answer has helped 81 people.</p><div class="s-prose js-post-body"><p>You've probably missed something (I missed the note on the ground).</p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><pre><code>$(this).corner();
+</code></pre>
 
-<p>To have it pointed out to you, open your quest menu (J on PC) and press <kbd>E</kbd> on the quest that you just received (A Night to Remember), and a little arrow will appear over any items you missed both in world and on your compass.</p>
-</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>It's probably the repair supplies note. It blends in almost perfectly with the light on the ground, though I did use clairvoyance to find it myself, if you walk in the front door of the temple and look on the floor to the right of the raised sancrum in front of the shrine, it should be on the floor. That's where it was for me</p>
+<p>See: <a href="http://malsup.com/jquery/corner" rel="nofollow noreferrer">malsup.com/jquery/corner</a> and <a href="http://github.com/malsup/corner" rel="nofollow noreferrer">github repository for future ref</a></p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>I use: <a href="https://code.google.com/p/jquery-roundcorners-canvas/downloads/list" rel="nofollow noreferrer">Jquery-roundcorners-canvas</a></p>
+
+<p>it handles borders, and keeps things the same size, in fact you have to pad in a bit to keep from having letters live in the crease. Its pretty fast, unless you are on ie 6.
+Same pretty syntax of the other corner packs, but just prettier in general.</p>
+
+<p>Edited to add new link for <a href="https://code.google.com/p/jquery-roundcorners-canvas/downloads/list" rel="nofollow noreferrer">jQuery Roundcorners Canvas</a></p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>The way the jQuery UI Theming API accomplishes this in Firefox is with "<a href="http://docs.jquery.com/UI/Theming/API#Corner_Radius_helpers" rel="nofollow noreferrer">Corner Radius Helpers</a>".</p>
+
+<p>Here's what they look like in the CSS that was bundled in my copy of the UI:</p>
+
+<pre><code>/* Corner radius */
+.ui-corner-tl { -moz-border-radius-topleft: 4px; -webkit-border-top-left-radius: 4px; }
+.ui-corner-tr { -moz-border-radius-topright: 4px; -webkit-border-top-right-radius: 4px; }
+.ui-corner-bl { -moz-border-radius-bottomleft: 4px; -webkit-border-bottom-left-radius: 4px; }
+.ui-corner-br { -moz-border-radius-bottomright: 4px; -webkit-border-bottom-right-radius: 4px; }
+.ui-corner-top { -moz-border-radius-topleft: 4px; -webkit-border-top-left-radius: 4px; -moz-border-radius-topright: 4px; -webkit-border-top-right-radius: 4px; }
+.ui-corner-bottom { -moz-border-radius-bottomleft: 4px; -webkit-border-bottom-left-radius: 4px; -moz-border-radius-bottomright: 4px; -webkit-border-bottom-right-radius: 4px; }
+.ui-corner-right {  -moz-border-radius-topright: 4px; -webkit-border-top-right-radius: 4px; -moz-border-radius-bottomright: 4px; -webkit-border-bottom-right-radius: 4px; }
+.ui-corner-left { -moz-border-radius-topleft: 4px; -webkit-border-top-left-radius: 4px; -moz-border-radius-bottomleft: 4px; -webkit-border-bottom-left-radius: 4px; }
+.ui-corner-all { -moz-border-radius: 4px; -webkit-border-radius: 4px; }
+</code></pre>
+
+<p>Unfortunately, these don't appear to have any effect in IE7 as of this post.</p>
+
+<p>In jQuery code, one of these classes might be applied in a fashion something like this:</p>
+
+<pre><code>$('#SomeElementID').addClass("ui-corner-all");
+</code></pre>
 </div></body></html>

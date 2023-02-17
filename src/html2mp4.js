@@ -87,21 +87,12 @@ const transform = (async (html_number) => {
 });
 //await everything
 
-//void f(string);
-const renameToUsed = ((html_string) => {
-    fs.renameSync(mf.html_to_dir+html_string,mf.html_to_dir+"u_"+html_string);
-    //un-sync version made some errors, it probably should be done syncronously anyways?
-});
-
-//filter html_arr with a function isHTMLUsed
-//bool f(string)
-const isHtmlUnused = (html_string)=>{
-    return html_string.charAt(0)!=='u';//using filenames, dk what else to do here, except from some real DB
-}
 
 //void f(void)
 const transformAll =(async ()=>{
-    const html_arr = mf.html_filenames;
+    const html_arr = mf.html_filenames();
+    //html_filenames should not be a function, as the value changes each call
+
     const html_num_arr = await html_arr.map(el=>parseInt(el));
 
     const promise_arr = [];
@@ -113,6 +104,7 @@ const transformAll =(async ()=>{
             promise_arr.push(transform(el));
         }
     });//think it'll await only to push all the promises into array (and start transforming, so no false positives on promise all)
+
 
     await Promise.all(promise_arr);
     //as it is more clear, and I only use el in the function anyways

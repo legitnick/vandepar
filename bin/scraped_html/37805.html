@@ -9,49 +9,22 @@
 <p>How can I fix this?  I was actually wandering around without any head at all for a while, but was able to restore it by <code>sexchange</code>ing twice.  Sadly, it doesn't appear to have been bolted on properly when it reappeared.  I can't even hide my deformity with a hat!</p>
 
 <p>I'm making my <a href="http://dl.dropbox.com/u/12962279/StackExchange/Save%20124%20-%20Slitherskin%20%20Skyrim%20%2070.46.06.ess">medical records</a> available to anyone wishing to study my condition.</p>
-</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><p>When you get killed by a decapitating strike, <strong>a flag gets set in the game state</strong> to denote that an animation should be played showing that you got decapitated. Upon loading the game; the animation of the body appears to be overridden by another animation (eg. your character wobbles even though your standing still), so the flag does not affect the body part. However, it does affect the head...</p>
-
-<p>I see two ways to get rid of this annoying stuck flag:</p>
-
-<ol>
-<li><p><s>Get someone to do a decapitating strike on you without being in immortal mode.</s></p>
-
-<p><s>If lucky, the flag is removed upon death. If unlucky, it just adds and removes a second flag...</s></p>
-
-<p><strong>Update:</strong><br>
-The above fix won't work, once you get killed it will just reload the save game again. In a similar vein the other fixes mentioned in this question (and elsewhere) do not work because they do not clear the flag from the save game. Editing the save game seems to be a necessity to fix this.</p></li>
-<li><p>Get two save games, the one right before and after the incident. It might be more feasible to try to reproduce this and get two save games in which there are less changes...</p>
-
-<p>Then, use Notepad++ to do a regular expression replace to change  <code>::</code> into <code>\n</code>.</p>
-
-<p>Now you can use WinDiff and set it to show right-only lines. If done properly the amount of changes would be minimal and if you look at the lines containing <code>_var</code> variables you could easily figure out which flag affects this. Replacing one character should yield the flag invalid, do however not add/remove characters as that might break the file. </p></li>
-</ol>
-</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>Have you tried werewolf transforming? That seems to re-initalize your body/race.</p>
-
-<p>At the very last resort, you could do <code>showracemenu</code> and change nothing, but that <a href="https://unofficialskyrimpatch.16bugs.com/projects/7078/bugs/209491" rel="noreferrer">has side-effects</a>.</p>
-</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>I've got the same problem and <a href="http://forums.bethsoft.com/index.php?/topic/1313310-immortal-mode-decapitation-glitch/page__pid__19747639#entry19747639" rel="noreferrer">I posted about this</a> on the Bethesda Forums about a week ago. There a kindly young chap dropped me with some wisdom, although not entirely helpful, it was a piece of the puzzle. He claimed that this problem had been posted before, and said the sexchange was necessary, but that I also needed to 'remove gory neck graphic'.</p>
-
-<p>He said this problem can be fixed in console by typing in the following:</p>
-
-<pre><code>sexchange
-sexchange
-player.removeitem 000DB5D0 1
-sexchange
-sexchange
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><pre><code>var result = from o in objList where intList.Contains(o.ID) select o
 </code></pre>
-</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Change into a werewolf then change back!</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><pre><code>using System.Linq;
 
-<p>Use these console commands to gain the werewolf abilities if you haven't gotten them in game yet.</p>
+objList.Where(x =&gt; intList.Contains(x.id));
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>I have had a similar problem just now and used the below solution.  If you already have the list of objects you can remove all not found in the int list, leaving just matches in objList.</p>
 
-<pre><code>player.addspell 00092c48
-player.addspell 000a1a3e
+<pre><code>objList.RemoveAll(x =&gt; !intList.Contains(x.id));
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>Untested, but it'll be something like this:</p>
+
+<pre><code>var matches = from o in objList 
+                  join i in intList on o.ID equals i
+                  select o;
 </code></pre>
 
-<p>Change then change back. Once you are done use these console commands to go back to normal.</p>
-
-<pre><code>player.removespell 00092c48
-player.removespell 000a1a3e
-</code></pre>
-
-<p>Just don't do it in town or near anyone else!</p>
+<p>@Konrad just tested it, and it does work - I just had a typo where I'd written "i.ID" rather than "i".</p>
 </div></body></html>

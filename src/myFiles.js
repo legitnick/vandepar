@@ -30,8 +30,8 @@ ensureAllDirs();
 //ensure for these 2 readdirSync functions later
 const html_arr_used = fs.readdirSync(video_dir);
 console.log(html_arr_used);
-const html_filenames = fs.readdirSync(html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
-console.log(html_filenames);
+const html_filenames = ()=> fs.readdirSync(html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
+console.log(html_filenames());
 
 exports.toCompleteHTML = toCompleteHTML;
 exports.html_filenames = html_filenames;
