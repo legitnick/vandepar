@@ -64,14 +64,9 @@ const getSOText = async (question_json) => {
 
 const wrapped = limiter.wrap(getSOText);
 
-function wait(ms){
-    return new Promise(resolve=>setTimeout(resolve,ms));
-}
 
 //void f(void)
 async function scrape(){
-    await wait(10000);
-    //it scrapes too too much comparatively
     const link_arr = await exchange_api.getQuestionJSON();
     await link_arr.forEach((el=>{
         wrapped(el)
@@ -88,7 +83,6 @@ async function scrape(){
 
     }));
     //getLinks();
-    setTimeout(scrape,1000000);//1,000,000ms == 1,000s
 }
 
 module.exports = scrape;

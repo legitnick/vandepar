@@ -108,7 +108,6 @@ const transformAll =(async ()=>{
 
     await Promise.all(promise_arr);
     //as it is more clear, and I only use el in the function anyways
-    setTimeout(transformAll,1000);
 
 });
 
