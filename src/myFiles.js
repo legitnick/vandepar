@@ -30,6 +30,14 @@ async function move(path_pre,path_post){
     });
 }
 
+//string f(string)
+const toCompleteHTML = (html_string)=>{
+    let new_string = '<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
+    new_string+=html_string;
+    new_string+='</body></html>';
+    return new_string;
+}
+
 //void f(string)
 const ensureDir = ((path)=>{
     if(!fs.existsSync(path))fs.mkdirSync(path);
@@ -55,6 +63,7 @@ function isHtmlUsed(html_string){
 
     const html_arr_used = fs.readdirSync(video_dir);
     const html_filenames = fs.readdirSync(html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
+exports.toCompleteHTML = toCompleteHTML;
 exports.html_filenames = html_filenames;
 exports.ensureAllDirs = ensureAllDirs;
 exports.ensureDir = ensureDir;

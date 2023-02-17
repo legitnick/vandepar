@@ -25,17 +25,10 @@ const parseAll = (async ()=>{
 
 //void f(string)
 const writeCompleteHTML = (path,html_string)=>{
-    let complete_html = toCompleteHTML(html_string);
+    let complete_html = mf.toCompleteHTML(html_string);
     write(path,complete_html);
 }
 
-//string f(string)
-const toCompleteHTML = (html_string)=>{
-    let new_string = '<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
-    new_string+=html_string;
-    new_string+='</body></html>';
-    return new_string;
-}
 
 //void f(string,string)
 const write = (async (path,new_string)=>{
