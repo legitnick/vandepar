@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to handle concurrent operations on relational databases?</p><div class="s-prose js-post-body"><p>I have a client / server application (local) where several clients perform operations concurrently on the server. The server creates a separate thread for each client in which the desired operations (register/login) are then processed. Each thread has its own connection to the database and communicates with the client via its own socket. The operations from the client require read and write access to a database (sqlite) on the server. The register op checks whether the entry already exists, if not it gets added. And the login op is just checking passwords. The thread will then tell the client whether the operation was successful or not.
+When a client is finished, it sends a message to the server to close the connection. The thread on the server interrupts its loop and then closes its socket and its connection to the database.</p>
+<p>When there is just one client, there are no problems with the program. If There are multiple clients concurrently, then i get 2 types of SQLExceptions, &quot;database is locked&quot; and &quot;unique constraint failed&quot;. The former might happen, because there are concurrent transactions being performed on the database. And this is prevented, because of ACID. The latter might happen, because of concurrency (before inserting a new entry into the DB I check whether the primary key is already used, the primary key is a username). Correct me if im wrong.
+Right now I am not using thread synchronization or disabling auto commit when doing the operations on the database.</p>
+<p>I thought that the transactions on ACID DBs are automatically queued up if new ones are invoked while the current one has not finished yet. But this does not seem to be the case. So am I supposed to actively prevent these exceptions by using thread synchronization (e.g. by using Locks) when executing queries/updates or perhaps just retry until the operations succeed? What are common approaches to handle the exceptions? I know that its problematic that the thread wait for a message to end but this is another topic. This is just a program to learn about working with databases.</p>
+<p>Here are some snippets of code that runs on the server's threads.</p>
+<pre><code>private boolean performClientRegistration(ObjectInputStream ois, Connection dbConnection) throws IOException, ClassNotFoundException {
+        String userName = (String)ois.readObject();
+        String pwd = (String)ois.readObject();
+        String firstName = (String)ois.readObject();
+        String lastName = (String)ois.readObject();
+
+        try
+        {
+            boolean isClientRegistrationPossible = !DBHelper.existsEntry(dbConnection, userName);
+            if(isClientRegistrationPossible) {
+                DBHelper.addEntry(dbConnection, userName, pwd, firstName, lastName);
+                return true;
+            }
+        }
+        catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return false;
+    }
+
+public static void addEntry(Connection connection, String userName, String pwd, String firstName, String lastName) throws SQLException {
+    PreparedStatement statement = connection.prepareStatement(&quot;INSERT INTO users &quot; +
+        &quot;(userName, pwd, lastName, firstName) VALUES (?, ?, ?, ?)&quot;);
+    statement.setString(1, userName);
+    statement.setString(2, pwd);
+    statement.setString(3, lastName);
+    statement.setString(4, firstName);
+    statement.executeUpdate();
+}
+
+public static boolean existsEntry(Connection connection, String userName) throws SQLException {
+    PreparedStatement statement = connection.prepareStatement(&quot;SELECT 1 FROM users WHERE userName = ?&quot;);
+    statement.setString(1, userName);
+    ResultSet result = statement.executeQuery();
+
+    if(result.next()) {
+        return true;
+    }
+
+    return false;
+}
+</code></pre>
+</div></body></html>
