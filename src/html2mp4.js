@@ -115,7 +115,6 @@ const transformAll =(async ()=>{
     });//think it'll await only to push all the promises into array (and start transforming, so no false positives on promise all)
 
     await Promise.all(promise_arr);
-    });//remake as html_arr.slice(0,4).forEeach
     //as it is more clear, and I only use el in the function anyways
     setTimeout(transformAll,1000);
 
