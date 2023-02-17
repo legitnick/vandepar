@@ -5,10 +5,13 @@ List of conventions:
 
 - Conventional Commit Messages  https://gist.github.com/qoomon/5dfcdf8eec66a051ecd85625518cfd13
 
-#Setup 
+# Setup 
 `npm install`
 
 # Available Scripts
 `npm start`
 Runs the app 
 
+# Credits
+
+sliva0/slightly_bitten_site - for base.css
