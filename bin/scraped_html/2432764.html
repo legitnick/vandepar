@@ -1,0 +1,400 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I change the URI (URL) for a remote Git repository?</p><div class="s-prose js-post-body"><p>I have a repo (origin) on a USB key that I cloned on my hard drive (local). I moved &quot;origin&quot; to a NAS and successfully tested cloning it from here.</p>
+<p>I would like to know if I can change the URI of &quot;origin&quot; in the settings of &quot;local&quot; so it will now pull from the NAS, and not from the USB key.</p>
+<p>For now, I can see two solutions:</p>
+<ul>
+<li><p>push everything to the USB origin, and copy it to the NAS again (implies a lot of work due to new commits to NAS origin);</p>
+</li>
+<li><p>add a new remote to &quot;local&quot; and delete the old one (I fear I'll break my history).</p>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 9219 people.</p><div class="s-prose js-post-body"><p>You can</p>
+<pre><code>git remote set-url origin new.git.url/here
+</code></pre>
+<p>See <a href="https://git-scm.com/docs/git-remote" rel="noreferrer"><code>git help remote</code></a>. You also can edit <code>.git/config</code> and change the URLs there.</p>
+<p>You're not in any danger of losing history unless you do something very silly (and if you're worried, just make a copy of your repo, since your repo <em>is</em> your history.)</p>
+</div><p class="this-has-helped">This answer has helped 1591 people.</p><div class="s-prose js-post-body"><pre class="lang-sh prettyprint-override"><code>git remote -v
+# View existing remotes
+# origin  https://github.com/user/repo.git (fetch)
+# origin  https://github.com/user/repo.git (push)
+
+git remote set-url origin https://github.com/user/repo2.git
+# Change the 'origin' remote's URL
+
+git remote -v
+# Verify new remote URL
+# origin  https://github.com/user/repo2.git (fetch)
+# origin  https://github.com/user/repo2.git (push)
+</code></pre>
+
+<p><a href="http://help.github.com/articles/changing-a-remote-s-url">Changing a remote's URL</a></p>
+</div><p class="this-has-helped">This answer has helped 187 people.</p><div class="s-prose js-post-body"><p>git remote set-url {name} {url}</p>
+<pre><code>git remote set-url origin https://github.com/myName/GitTest.git
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 134 people.</p><div class="s-prose js-post-body"><p><a href="http://pseudofish.com/blog/2010/06/28/change-host-for-a-git-origin-server/" rel="noreferrer">Change Host for a Git Origin Server</a></p>
+
+<p>from: <a href="http://pseudofish.com/blog/2010/06/28/change-host-for-a-git-origin-server/" rel="noreferrer">http://pseudofish.com/blog/2010/06/28/change-host-for-a-git-origin-server/</a></p>
+
+<p>Hopefully this isn’t something you need to do. The server that I’ve been using to collaborate on a few git projects with had the domain name expire. This meant finding a way of migrating the local repositories to get back in sync.</p>
+
+<p>Update: Thanks to @mawolf for pointing out there is an easy way with recent git versions (post Feb, 2010):</p>
+
+<pre><code>git remote set-url origin ssh://newhost.com/usr/local/gitroot/myproject.git
+</code></pre>
+
+<p>See the man page for details.</p>
+
+<p>If you’re on an older version, then try this:</p>
+
+<p>As a caveat, this works only as it is the same server, just with different names.</p>
+
+<p>Assuming that the new hostname is <code>newhost.com</code>, and the old one was <code>oldhost.com</code>, the change is quite simple.</p>
+
+<p>Edit the <code>.git/config</code> file in your working directory. You should see something like:</p>
+
+<pre><code>[remote "origin"]
+fetch = +refs/heads/*:refs/remotes/origin/*
+url = ssh://oldhost.com/usr/local/gitroot/myproject.git
+</code></pre>
+
+<p>Change <code>oldhost.com</code> to <code>newhost.com</code>, save the file and you’re done.</p>
+
+<p>From my limited testing (<code>git pull origin; git push origin; gitx</code>) everything seems in order. And yes, I know it is bad form to mess with git internals.</p>
+</div><p class="this-has-helped">This answer has helped 110 people.</p><div class="s-prose js-post-body"><p>This is very easy and simple; just follow these instructions.</p>
+<ol>
+<li>For adding or changing the remote origin:
+<pre><code>git remote set-url origin githubrepurl
+</code></pre>
+</li>
+<li>To see which remote URL you have currently in this local repository:
+<pre><code>git remote show origin
+</code></pre>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 85 people.</p><div class="s-prose js-post-body"><h1>Switching remote URLs</h1>
+
+<p>Open Terminal.</p>
+
+<p><strong>Ist Step:</strong>- Change the current working directory to your local project.</p>
+
+<p><strong>2nd Step:</strong>- List your existing remotes in order to get the name of the remote you want to change.</p>
+
+<p><code>git remote -v</code></p>
+
+<pre><code>origin  https://github.com/USERNAME/REPOSITORY.git (fetch)
+
+origin  https://github.com/USERNAME/REPOSITORY.git (push)
+</code></pre>
+
+<p>Change your remote's URL from HTTPS to SSH with the git remote set-url command.</p>
+
+<p><strong>3rd Step:</strong>-  <code>git remote set-url origin git@github.com:USERNAME/REPOSITORY.git</code></p>
+
+<p><strong>4th Step:</strong>- Now Verify that the remote URL has changed.</p>
+
+<p><code>git remote -v</code>
+Verify new remote URL</p>
+
+<pre><code>origin  git@github.com:USERNAME/REPOSITORY.git (fetch)
+origin  git@github.com:USERNAME/REPOSITORY.git (push)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><pre><code>git remote set-url origin git://new.location
+</code></pre>
+
+<p>(alternatively, open <code>.git/config</code>, look for <code>[remote "origin"]</code>, and edit the <code>url =</code> line.</p>
+
+<p>You can check it worked by examining the remotes:</p>
+
+<pre><code>git remote -v
+# origin  git://new.location (fetch)
+# origin  git://new.location (push)
+</code></pre>
+
+<p>Next time you push, you'll have to specify the new upstream branch, e.g.:</p>
+
+<pre><code>git push -u origin master
+</code></pre>
+
+<p>See also: <a href="https://help.github.com/articles/changing-a-remote-s-url/" rel="noreferrer">GitHub: Changing a remote's URL</a></p>
+</div><p class="this-has-helped">This answer has helped 60 people.</p><div class="s-prose js-post-body"><p>As seen <a href="https://gist.github.com/DianaEromosele/fa228f6f6099a8996d3cb891109ab975" rel="noreferrer">here</a>,</p>
+<pre><code>$ git remote rm origin
+$ git remote add origin git@github.com:aplikacjainfo/proj1.git
+$ git config master.remote origin
+$ git config master.merge refs/heads/master
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><ol>
+<li>remove origin using command on gitbash
+<strong>git remote rm origin</strong> </li>
+<li>And now add new Origin using gitbash
+<strong>git remote add origin</strong> (Copy HTTP URL from your project repository in bit bucket)
+done</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 40 people.</p><div class="s-prose js-post-body"><p><strong>First you need to type this command to view existing remotes</strong></p>
+<p><code>git remote -v</code></p>
+<p><strong>Then second you need to type this command to Change the 'origin' remote's URL</strong></p>
+<p><code>git remote set-url origin &lt;paste your GitHub URL&gt;</code></p>
+</div><p class="this-has-helped">This answer has helped 35 people.</p><div class="s-prose js-post-body"><p>Write the below command from your repo terminal:</p>
+<pre><code>git remote set-url origin git@github.com:&lt;username&gt;/&lt;repo&gt;.git
+</code></pre>
+<p>Refer <a href="https://thedeveloperstory.com/2020/03/06/changing-a-git-remote-url/" rel="noreferrer">this</a> link for more details about changing the url in the remote.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>To check git remote connection:</p>
+
+<pre><code>git remote -v
+</code></pre>
+
+<p>Now, set the local repository to remote git: </p>
+
+<pre><code>git remote set-url origin https://NewRepoLink.git
+</code></pre>
+
+<p>Now to make it upstream or push use following code:</p>
+
+<p><strong><code>git push --set-upstream origin master -f</code></strong></p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p><a href="https://i.stack.imgur.com/uH71e.png" rel="noreferrer"><img src="https://i.stack.imgur.com/uH71e.png" alt="enter image description here"></a></p>
+
+<p><strong>Troubleshooting :</strong> </p>
+
+<p>You may encounter these errors when trying to changing a remote.
+No such remote '[name]'</p>
+
+<p>This error means that the remote you tried to change doesn't exist:</p>
+
+<p>git remote set-url sofake <a href="https://github.com/octocat/Spoon-Knife" rel="noreferrer">https://github.com/octocat/Spoon-Knife</a>
+fatal: No such remote 'sofake'</p>
+
+<p>Check that you've correctly typed the remote name.</p>
+
+<p>Reference : <a href="https://help.github.com/articles/changing-a-remote-s-url/" rel="noreferrer">https://help.github.com/articles/changing-a-remote-s-url/</a></p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>Navigate to the project root of the local repository and check for existing remotes:</p>
+<pre><code>git remote -v
+</code></pre>
+<p>If your repository is using <strong>SSH</strong> you will see something like:</p>
+<pre><code>&gt; origin  git@github.com:USERNAME/REPOSITORY.git (fetch)
+&gt; origin  git@github.com:USERNAME/REPOSITORY.git (push)
+</code></pre>
+<p>And if your repository is using <strong>HTTPS</strong> you will see something like:</p>
+<pre><code>&gt; origin  https://github.com/USERNAME/REPOSITORY.git (fetch)
+&gt; origin  https://github.com/USERNAME/REPOSITORY.git (push)
+</code></pre>
+<p>Changing the URL is done with <code>git remote set-url</code>. Depending on the output of <code>git remote -v</code>, you can change the URL in the following manner:</p>
+<p>In case of <strong>SSH</strong>, you can change the URL from <code>REPOSITORY.git</code> to <code>NEW_REPOSITORY.git</code> like:</p>
+<pre><code>$ git remote set-url origin git@github.com:USERNAME/NEW_REPOSITORY.git
+</code></pre>
+<p>And in case of <strong>HTTPS</strong>, you can change the URL from <code>REPOSITORY.git</code> to <code>NEW_REPOSITORY.git</code> like:</p>
+<pre><code>$ git remote set-url origin https://github.com/USERNAME/NEW_REPOSITORY.git
+</code></pre>
+<p><strong>NOTE</strong>: If you've changed your <em>GitHub</em> username, you can follow the same process as above to update the change in the username associated with your repository. You would only have to update the <code>USERNAME</code> in the <code>git remote set-url</code> command.</p>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p>if you cloned your local will automatically consist,</p>
+
+<p>remote URL where it gets  cloned.</p>
+
+<p>you can check  it using <code>git remote -v</code></p>
+
+<p>if you want to made change in it,</p>
+
+<pre><code>git remote set-url origin https://github.io/my_repo.git
+</code></pre>
+
+<p>here,</p>
+
+<p><strong>origin - your branch</strong> </p>
+
+<p>if you want to <strong>overwrite</strong> existing branch you can still use it.. it will override your existing ... it will do,</p>
+
+<pre><code>git remote remove url
+and 
+git remote add origin url
+</code></pre>
+
+<p>for you...</p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>I worked:</p>
+
+<pre><code>git remote set-url origin &lt;project&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>In the Git Bash, enter the command:</p>
+
+<p><code>git remote set-url origin https://NewRepoLink.git</code></p>
+
+<p>Enter the Credentials</p>
+
+<p>Done</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>You have a lot of ways to do that:</p>
+
+<p><strong>Console</strong> </p>
+
+<pre><code>git remote set-url origin [Here new url] 
+</code></pre>
+
+<p>Just be sure that you've opened it in a place where a repository is.</p>
+
+<p><strong>Config</strong></p>
+
+<p>It is placed in .git/config (same folder as repository)</p>
+
+<pre><code>[core]
+    repositoryformatversion = 0
+    filemode = false
+    bare = false
+    logallrefupdates = true
+    symlinks = false
+    ignorecase = true
+[remote "origin"]
+    url = [Here new url]  &lt;------------------------------------
+...
+</code></pre>
+
+<p><strong>TortoiseGit</strong></p>
+
+<p><a href="https://i.stack.imgur.com/3Odbn.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/3Odbn.jpg" alt="Step 1 - open settings"></a></p>
+
+<p><a href="https://i.stack.imgur.com/Unkr4.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/Unkr4.jpg" alt="Step 2 - change url"></a></p>
+
+<p>Then just edit URL.</p>
+
+<p><strong>SourceTree</strong></p>
+
+<ol>
+<li><p>Click on the "Settings" button on the toolbar to open the Repository Settings window.</p></li>
+<li><p>Click "Add" to add a remote repository path to the repository. A "Remote details" window will open.</p></li>
+<li><p>Enter a name for the remote path.</p></li>
+<li><p>Enter the URL/Path for the remote repository</p></li>
+<li><p>Enter the username for the hosting service for the remote repository.</p></li>
+<li><p>Click 'OK' to add the remote path.</p></li>
+<li><p>Back on the Repository Settings window, click 'OK'. The new remote path should be added on the repository now.</p></li>
+<li><p>If you need to edit an already added remote path, just click the 'Edit' button. You should be directed to the "Remote details" window where you can edit the details (URL/Path/Host Type) of the remote path.</p></li>
+<li><p>To remove a remote repository path, click the 'Remove' button</p></li>
+</ol>
+
+<p><a href="https://i.stack.imgur.com/MnWNX.png" rel="noreferrer"><img src="https://i.stack.imgur.com/MnWNX.png" alt="enter image description here"></a></p>
+
+<p><a href="https://i.stack.imgur.com/Mkknl.png" rel="noreferrer"><img src="https://i.stack.imgur.com/Mkknl.png" alt="enter image description here"></a></p>
+
+<p>ref. <a href="https://confluence.atlassian.com/sourcetreekb/changing-remote-repository-path-on-sourcetree-using-git-or-mercurial-785616227.html" rel="noreferrer">Support</a></p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>For me, the accepted answer worked only in the case of fetch but not pull. I did the following to make it work for push as well.</p>
+<pre><code>git remote set-url --push origin new.git.url/here
+</code></pre>
+<p>So to update the fetch URL:</p>
+<pre><code>git remote set-url origin new.git.url/here
+</code></pre>
+<p>To update the pull URL:</p>
+<pre><code>git remote set-url --push origin new.git.url/here
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><blockquote>
+  <p>Change remote git URI to <code>git@github.com</code> rather than <code>https://github.com</code></p>
+</blockquote>
+
+<pre><code>git remote set-url origin git@github.com:&lt;username&gt;/&lt;repo&gt;.git
+</code></pre>
+
+<p>Example:</p>
+
+<pre><code>git remote set-url origin git@github.com:Chetabahana/my_repo_name.git
+</code></pre>
+
+<p>The benefit is that you may do <a href="https://stackoverflow.com/questions/7925850/how-to-automatically-push-after-committing-in-git/57366062#57366062"><code>git push</code> automatically</a> when you use <em><a href="https://stackoverflow.com/questions/40549332/how-to-check-if-ssh-agent-is-already-running-in-bash/57351920#57351920">ssh-agent</a></em> :</p>
+
+<pre><code>#!/bin/bash
+
+# Check ssh connection
+ssh-add -l &amp;&gt;/dev/null
+[[ "$?" == 2 ]] &amp;&amp; eval `ssh-agent`
+ssh-add -l &amp;&gt;/dev/null
+[[ "$?" == 1 ]] &amp;&amp; expect $HOME/.ssh/agent
+
+# Send git commands to push
+git add . &amp;&amp; git commit -m "your commit" &amp;&amp; git push -u origin master
+</code></pre>
+
+<p>Put a script file <code>$HOME/.ssh/agent</code> to let it runs <code>ssh-add</code> using <em><a href="https://stackoverflow.com/questions/40226053/using-cygwin-ssh-agent-is-running-but-git-is-still-prompting-for-passphrase/55779022#55779022">expect</a></em> as below:</p>
+
+<pre><code>#!/usr/bin/expect -f
+set HOME $env(HOME)
+spawn ssh-add $HOME/.ssh/id_rsa
+expect "Enter passphrase for $HOME/.ssh/id_rsa:"
+send "&lt;my_passphrase&gt;\n";
+expect "Identity added: $HOME/.ssh/id_rsa ($HOME/.ssh/id_rsa)"
+interact
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>To <strong>change</strong> the remote upstream:
+<code>git remote set-url origin &lt;url&gt;</code></p>
+
+<hr>
+
+<p>To <strong>add</strong> more upstreams:
+<code>git remote add newplace &lt;url&gt;</code></p>
+
+<p>So you can choose where to work
+<code>git push origin &lt;branch&gt;</code> or <code>git push newplace &lt;branch&gt;</code></p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>You can change the url by editing the config file.
+Go to your project root:</p>
+
+<pre><code>nano .git/config
+</code></pre>
+
+<p>Then edit the url field and set your new url. 
+Save the changes. You can verify the changes by using the command.</p>
+
+<pre><code>git remote -v 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>An alternative approach is to rename the 'old' origin (in the example below I name it simply <code>old-origin</code>) and adding a new one. This might be the <strong>desired approach if you still want to be able to push to the old origin</strong> every now and then:</p>
+<pre class="lang-sh prettyprint-override"><code>git remote rename origin old-origin
+git remote add origin git@new-git-server.com&gt;:&lt;username&gt;/&lt;projectname&gt;.git
+</code></pre>
+<p>And in case you need to push your local state to the new origin:</p>
+<pre class="lang-sh prettyprint-override"><code>git push -u origin --all
+git push -u origin --tags
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>If you're using TortoiseGit then follow the below steps:</p>
+
+<ol>
+<li>Go to your local checkout folder and right click to go to <code>TortoiseGit -&gt; Settings</code></li>
+<li>In the left pane choose <code>Git -&gt; Remote</code></li>
+<li>In the right pane choose <code>origin</code></li>
+<li>Now change the <code>URL</code> text box value to where ever your new remote repository is</li>
+</ol>
+
+<p>Your branch and all your local commits will remain intact and you can keep working as you were before.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>It will work fine, you can try this</p>
+<p><strong>For SSH:</strong></p>
+<p><strong>command:</strong> <code>git remote set-url origin &lt;ssh_url&gt;</code></p>
+<p><strong>example:</strong> <code>git remote set-url origin git@github.com:username/rep_name.git</code></p>
+<p><strong>For HTTPS:</strong></p>
+<p><strong>command:</strong> <code>git remote set-url origin &lt;https_url&gt;</code></p>
+<p><strong>example:</strong> <code>git remote set-url origin https://github.com/username/REPOSITORY.git</code></p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p><strong>Removing a remote</strong></p>
+
+<p>Use the git remote rm command to remove a remote URL from your repository.   </p>
+
+<pre><code>    $ git remote -v
+    # View current remotes
+    &gt; origin  https://github.com/OWNER/REPOSITORY.git (fetch)
+    &gt; origin  https://github.com/OWNER/REPOSITORY.git (push)
+    &gt; destination  https://github.com/FORKER/REPOSITORY.git (fetch)
+    &gt; destination  https://github.com/FORKER/REPOSITORY.git (push)
+
+    $ git remote rm destination
+    # Remove remote
+    $ git remote -v
+    # Verify it's gone
+    &gt; origin  https://github.com/OWNER/REPOSITORY.git (fetch)
+    &gt; origin  https://github.com/OWNER/REPOSITORY.git (push)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>If you would like to set the username and password as well in the origin url, you can follow the below steps.</p>
+<p>Exporting the password in a variable would avoid issues with special characters.</p>
+<p>Steps:</p>
+<pre><code>export gituser='&lt;Username&gt;:&lt;password&gt;@'
+git remote set-url origin https://${gituser}&lt;gitlab_repo_url&gt; 
+git push origin &lt;Branch Name&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>check your privilege </p>
+
+<p>in my case i need to check  my username </p>
+
+<p>i have two or three repository with seperate credentials.</p>
+
+<p>problem is my permission i have two private git server and repositories </p>
+
+<p>this second account is admin of that new repo and first one is my default user account and i should grant permission to first </p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><h2>(Only Windows PS) To change a server/protocol recursively in all local repos</h2>
+<pre><code>Get-ChildItem -Directory -Recurse -Depth [Number] -Hidden -name | %{$_.replace(&quot;\.git&quot;,&quot;&quot;)} | %{git -C $_ remote set-url origin $(git -C $_ remote get-url origin).replace(&quot;[OLD SERVER]&quot;, &quot;[NEW SERVER]&quot;)}
+</code></pre>
+</div></body></html>

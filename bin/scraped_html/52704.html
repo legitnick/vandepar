@@ -1,0 +1,539 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I discard unstaged changes in Git?</p><div class="s-prose js-post-body"><p>How do I discard changes in my working copy that are not in the index?</p>
+</div><p class="this-has-helped">This answer has helped 6877 people.</p><div class="s-prose js-post-body"><p>For all <em>unstaged</em> files in current working directory use:</p>
+<pre><code>git restore .
+</code></pre>
+<p>For a specific file use:</p>
+<pre><code>git restore path/to/file/to/revert
+</code></pre>
+<p>That together with <code>git switch</code> replaces the overloaded <code>git checkout</code> (<a href="https://stackoverflow.com/questions/58003030/what-is-the-git-restore-command-and-what-is-the-difference-between-git-restor">see here</a>), and thus removes the argument disambiguation.</p>
+<p>If a file has both staged and unstaged changes, only the unstaged changes shown in <code>git diff</code> are reverted. Changes shown in <code>git diff --staged</code> stay intact.</p>
+<p><strong>Before Git 2.23</strong></p>
+<p>For all unstaged files in current working directory:</p>
+<pre><code>git checkout -- .
+</code></pre>
+<p>For a specific file:</p>
+<pre><code>git checkout -- path/to/file/to/revert
+</code></pre>
+<p><code>--</code> here to remove ambiguity (this is known as  <a href="https://git-scm.com/docs/git-checkout#_argument_disambiguation" rel="noreferrer">argument disambiguation</a>).</p>
+</div><p class="this-has-helped">This answer has helped 3107 people.</p><div class="s-prose js-post-body"><p>Another quicker way is:</p>
+
+<pre><code>git stash save --keep-index --include-untracked
+</code></pre>
+
+<p>You don't need to include <code>--include-untracked</code> if you don't want to be thorough about it.</p>
+
+<p>After that, you can drop that stash with a <code>git stash drop</code> command if you like.</p>
+</div><p class="this-has-helped">This answer has helped 2233 people.</p><div class="s-prose js-post-body"><p>It seems like the complete solution is:</p>
+<pre><code>git clean -df
+git checkout -- .
+</code></pre>
+<p><strong>WARNING</strong>: while it won't delete ignored files mentioned directly in .gitignore, <code>git clean -df</code> <strong>may delete ignored files residing in folders</strong>.</p>
+<p><a href="https://git-scm.com/docs/git-clean" rel="noreferrer"><code>git clean</code></a> removes all untracked files and <code>git checkout</code> clears all unstaged changes.</p>
+</div><p class="this-has-helped">This answer has helped 397 people.</p><div class="s-prose js-post-body"><p>This checks out the current index for the current directory, throwing away all changes in files from the current directory downwards.</p>
+
+<pre><code>git checkout .
+</code></pre>
+
+<p>or this which checks out all files from the index, overwriting working tree files.</p>
+
+<pre><code>git checkout-index -a -f
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 296 people.</p><div class="s-prose js-post-body"><pre><code>git clean -df
+</code></pre>
+
+<p>Cleans the working tree by recursively removing files that are not under version control, starting from the current directory.</p>
+
+<p><code>-d</code>: Remove untracked directories in addition to untracked files</p>
+
+<p><code>-f</code>: Force (might be not necessary depending on  <code>clean.requireForce</code> setting)</p>
+
+<p>Run <code>git help clean</code> to see the manual</p>
+</div><p class="this-has-helped">This answer has helped 205 people.</p><div class="s-prose js-post-body"><h3>2019 update</h3>
+<p>You can now discard unstaged changes in <strong>one tracked file</strong> with:</p>
+<pre><code>git restore &lt;file&gt;
+</code></pre>
+<p>and in <strong>all tracked files</strong> in the current directory (recursively) with:</p>
+<pre><code>git restore .
+</code></pre>
+<p>If you run the latter from the root of the repository, it will discard unstaged changes in all tracked files in the project.</p>
+<h3>Notes</h3>
+<ul>
+<li><code>git restore</code> was introduced in <a href="https://github.com/git/git/commit/f496b064fc1135e0dded7f93d85d72eb0b302c22" rel="noreferrer">July 2019</a> and released in version 2.23 as part of a split of the <code>git checkout</code> command into <code>git restore</code> for files and <code>git switch</code> for branches.</li>
+<li><code>git checkout</code> still behaves as it used to and the older answers remain perfectly valid.</li>
+<li>When running <code>git status</code> with unstaged changes in the working tree, this is now what Git suggests to use to discard them (instead of <code>git checkout -- &lt;file&gt;</code> as it used to prior to v2.23).</li>
+<li>As with <code>git checkout -- .</code>, this only discards changes in tracked files. So <a href="https://stackoverflow.com/a/12184274/9210961">Mariusz Nowak's answer</a> still applies and if you want to discard all unstaged changes, including untracked files, you could run, as he suggests, an additional <code>git clean -df</code>.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 129 people.</p><div class="s-prose js-post-body"><p>My favorite is</p>
+
+<pre><code>git checkout -p
+</code></pre>
+
+<p>That lets you selectively revert chunks.</p>
+
+<p>See also:</p>
+
+<pre><code>git add -p
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 124 people.</p><div class="s-prose js-post-body"><p>Since no answer suggests the exact option combination that I use, here it is:</p>
+<pre><code>git clean -dxn .  # dry-run to inspect the list of files-to-be-removed
+git clean -dxf .  # REMOVE ignored/untracked files (in the current directory)
+git checkout -- . # ERASE changes in tracked files (in the current directory)
+</code></pre>
+<p>This is the online help text for the used <code>git clean</code> options:</p>
+<p><code>-d</code></p>
+<p>Remove untracked directories in addition to untracked files. If an untracked directory is managed by a different Git repository, it is not removed by default. Use <code>-f</code> option twice if you really want to remove such a directory.</p>
+<p><code>-x</code></p>
+<p>Don’t use the standard ignore rules read from <code>.gitignore</code> (per directory) and <code>$GIT_DIR/info/exclude</code>, but do still use the ignore rules given with <code>-e</code> options. This allows removing all untracked files, including build products. This can be used (possibly in conjunction with <code>git reset</code>) to create a pristine working directory to test a clean build.</p>
+<p><code>-n</code></p>
+<p>Don’t actually remove anything, just show what would be done.</p>
+<p><code>-f</code></p>
+<p>If the Git configuration variable <code>clean.requireForce</code> is not set to <code>false</code>, Git clean will refuse to delete files or directories unless given <code>-f</code>, <code>-n</code>, or <code>-i</code>. Git will refuse to delete directories within the <code>.git</code> subdirectory or file, unless a second <code>-f</code> is given.</p>
+</div><p class="this-has-helped">This answer has helped 83 people.</p><div class="s-prose js-post-body"><p>If you merely wish <strong>to remove changes to existing files</strong>, use <code>checkout</code> (<a href="https://git-scm.com/docs/git-checkout" rel="noreferrer">documented here</a>). </p>
+
+<pre><code>git checkout -- .
+</code></pre>
+
+<ul>
+<li>No branch is specified, so it checks out the current branch. </li>
+<li>The double-hyphen (<code>--</code>) tells Git that what follows should be taken as its second argument (path), that you skipped specification of a branch.</li>
+<li>The period (<code>.</code>) indicates all paths. </li>
+</ul>
+
+<p>If you want <strong>to remove files added</strong> since your last commit, use <code>clean</code> (<a href="https://git-scm.com/docs/git-clean" rel="noreferrer">documented here</a>): </p>
+
+<pre><code>git clean -i 
+</code></pre>
+
+<ul>
+<li>The <code>-i</code> option initiates an interactive <code>clean</code>, to prevent mistaken deletions. </li>
+<li>A handful of other options are available for a quicker execution; see the documentation. </li>
+</ul>
+
+<p>If you wish <strong>to move changes to a holding space for later access</strong>, use <code>stash</code> (<a href="https://git-scm.com/docs/git-stash" rel="noreferrer">documented here</a>): </p>
+
+<pre><code>git stash
+</code></pre>
+
+<ul>
+<li>All changes will be moved to Git's Stash, for possible later access. </li>
+<li>A handful of options are available for more nuanced stashing; see the documentation. </li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 68 people.</p><div class="s-prose js-post-body"><p>The easiest way to do this is by using this command:</p>
+
+<p>This command is used to discard changes in working directory -</p>
+
+<pre><code>git checkout -- .
+</code></pre>
+
+<p><a href="https://git-scm.com/docs/git-checkout" rel="noreferrer">https://git-scm.com/docs/git-checkout</a> </p>
+
+<p>In git command, stashing of untracked files is achieved by using:</p>
+
+<pre><code>git stash -u
+</code></pre>
+
+<p><a href="http://git-scm.com/docs/git-stash" rel="noreferrer">http://git-scm.com/docs/git-stash</a></p>
+</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><p>I really found this article helpful for explaining when to use what command: <a href="http://www.szakmeister.net/blog/2011/oct/12/reverting-changes-git/" rel="noreferrer">http://www.szakmeister.net/blog/2011/oct/12/reverting-changes-git/</a></p>
+
+<p>There are a couple different cases:</p>
+
+<ol>
+<li><p>If you haven't staged the file, then you use <code>git checkout</code>.  Checkout "updates files in the working tree to match the version in the index".  If the files have not been staged (aka added to the index)... this command will essentially revert the files to what your last commit was.  </p>
+
+<p><code>git checkout -- foo.txt</code></p></li>
+<li><p>If you have staged the file, then use git reset.  Reset changes the index to match a commit.</p>
+
+<p><code>git reset -- foo.txt</code> </p></li>
+</ol>
+
+<p>I suspect that using <code>git stash</code> is a popular choice since it's a little less dangerous.  You can always go back to it if you accidently blow too much away when using git reset.  Reset is recursive by default.</p>
+
+<p>Take a look at the article above for further advice.</p>
+</div><p class="this-has-helped">This answer has helped 52 people.</p><div class="s-prose js-post-body"><p>If you aren't interested in keeping the unstaged changes (especially if the staged changes are new files), I found this handy:</p>
+
+<pre><code>git diff | git apply --reverse
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p>As you type git status, 
+<strong>(use "git checkout -- ..." to discard changes in working directory)</strong>
+is shown.</p>
+
+<p>e.g. <code>git checkout -- .</code></p>
+</div><p class="this-has-helped">This answer has helped 46 people.</p><div class="s-prose js-post-body"><p>You can use git stash - if something goes wrong, you can still revert from the stash.
+Similar to some other answer here, but this one also removes all unstaged files and also all unstaged deletes:</p>
+
+<pre><code>git add .
+git stash
+</code></pre>
+
+<p>if you check that everything is OK, throw the stash away:</p>
+
+<pre><code>git stash drop
+</code></pre>
+
+<p>The answer from Bilal Maqsood with <code>git clean</code> also worked for me, but with the stash I have more control - if I do sth accidentally, I can still get my changes back</p>
+
+<p><strong>UPDATE</strong></p>
+
+<p>I think there is 1 more change (don't know why this worked for me before):</p>
+
+<p><code>git add . -A</code> instead of <code>git add .</code></p>
+
+<p>without the <code>-A</code> the removed files will not be staged</p>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p><code>git checkout -f</code></p>
+
+<hr>
+
+<p><code>man git-checkout</code>:</p>
+
+<p><code>-f, --force</code></p>
+
+<p>When switching branches, proceed even if the index or the working tree differs from HEAD. This is used to throw away local changes.</p>
+
+<p>When checking out paths from the index, do not fail upon unmerged entries; instead, unmerged entries are ignored.</p>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>Instead of discarding changes, I reset my remote to the origin. Note - this method is to completely restore your folder to that of the repo. </p>
+
+<p>So I do this to make sure they don't sit there when I git reset (later - excludes gitignores on the Origin/branchname)</p>
+
+<p>NOTE: If you want to keep files not yet tracked, but not in GITIGNORE you may wish to skip this step, as it will Wipe these untracked files not found on your remote repository (thanks @XtrmJosh).</p>
+
+<pre><code>git add --all
+</code></pre>
+
+<p>Then I </p>
+
+<pre><code>git fetch --all
+</code></pre>
+
+<p>Then I reset to origin</p>
+
+<pre><code>git reset --hard origin/branchname
+</code></pre>
+
+<p>That will put it back to square one. Just like RE-Cloning the branch, WHILE keeping all my gitignored files locally and in place.</p>
+
+<p>Updated per user comment below:
+Variation to reset the to whatever current branch the user is on. </p>
+
+<pre><code>git reset --hard @{u}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>Tried all the solutions above but still couldn't get rid of new, unstaged files.</p>
+
+<p>Use <code>git clean -f</code> to remove those new files - <em>with caution though!</em> Note the force option.</p>
+</div><p class="this-has-helped">This answer has helped 33 people.</p><div class="s-prose js-post-body"><p>To do a permanent discard:
+<code>git reset --hard</code></p>
+
+<p>To save changes for later:
+<code>git stash</code></p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>Just use:</p>
+
+<pre><code>git stash -u
+</code></pre>
+
+<p>Done. Easy.</p>
+
+<p>If you <em>really</em> care about your stash stack then you can follow with <code>git stash drop</code>. But at that point you're better off using (from Mariusz Nowak):</p>
+
+<pre><code>git checkout -- .
+git clean -df
+</code></pre>
+
+<p>Nonetheless, I like <code>git stash -u</code> the best because it "discards" all tracked and untracked changes in just <em>one command</em>. Yet <code>git checkout -- .</code> only discards tracked changes,
+and <code>git clean -df</code> only discards untracked changes... and typing both commands is <em>far</em> too much work :)</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>simply say</p>
+
+<pre><code>git stash
+</code></pre>
+
+<p>It will remove all your local changes. You also can use later by saying</p>
+
+<pre><code>git stash apply 
+</code></pre>
+
+<p>or 
+    git stash pop</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>you have a very simple git command <code>git checkout .</code></p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>No matter what state your repo is in you can always reset to any previous commit:</p>
+
+<pre><code>git reset --hard &lt;commit hash&gt;
+</code></pre>
+
+<hr>
+
+<p>This will discard all changes which were made after that commit.</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>This works even in directories that are; outside of normal git permissions.</p>
+
+<pre><code>sudo chmod -R 664 ./* &amp;&amp; git checkout -- . &amp;&amp; git clean -dfx
+</code></pre>
+
+<p>Happened to me recently</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><pre><code>cd path_to_project_folder  # take you to your project folder/working directory 
+git checkout .             # removes all unstaged changes in working directory
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>In my opinion,</p>
+
+<pre><code>git clean -df
+</code></pre>
+
+<p>should do the trick. As per <a href="https://git-scm.com/docs/git-clean/2.2.0">Git documentation on git clean</a></p>
+
+<blockquote>
+  <p>git-clean - Remove untracked files from the working tree</p>
+</blockquote>
+
+<p><strong>Description</strong> </p>
+
+<blockquote>
+  <p>Cleans the working tree by recursively removing files that
+  are not under version control, starting from the current directory.</p>
+  
+  <p>Normally, only files unknown to Git are removed, but if the -x option
+  is specified, ignored files are also removed. This can, for example,
+  be useful to remove all build products.</p>
+  
+  <p>If any optional ... arguments are given, only those paths are
+  affected.</p>
+</blockquote>
+
+<p><strong>Options</strong></p>
+
+<blockquote>
+  <p>-d Remove untracked directories in addition to untracked files. If an untracked directory is managed by a different Git repository, it is
+  not removed by default. Use -f option twice if you really want to
+  remove such a directory.</p>
+  
+  <p>-f
+  --force If the Git configuration variable clean.requireForce is not set to false, git clean will refuse to run unless given -f, -n or -i.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>Another way to get rid of new files that is more specific than git clean -df (it will allow you to get rid of some files not necessarily all), is to add the new files to the index first, then stash, then drop the stash.</p>
+
+<p>This technique is useful when, for some reason, you can't easily delete all of the untracked files by some ordinary mechanism (like rm).</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>I had a weird situation where a file is always unstaged, this helps me to resolve.</p>
+
+<blockquote>
+  <p>git rm .gitattributes<br>
+  git add -A<br>
+  git reset --hard </p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>What follows is really only a solution if you are working with a fork of a repository where you regularly synchronize (e.g. pull request) with another repo. Short answer: delete fork and refork, but <strong>read the warnings on github</strong>.</p>
+
+<p>I had a similar problem, perhaps not identical, and I'm sad to say my solution is not ideal, but it is ultimately effective.</p>
+
+<p>I would often have git status messages like this (involving at least 2/4 files):</p>
+
+<pre><code>$ git status
+# Not currently on any branch.
+# Changes to be committed:
+#   (use "git reset HEAD &lt;file&gt;..." to unstage)
+#
+#       modified:   doc/PROJECT/MEDIUM/ATS-constraint/constraint_s2var.dats
+#       modified:   doc/PROJECT/MEDIUM/ATS-constraint/parsing/parsing_s2var.dats
+#
+# Changes not staged for commit:
+#   (use "git add &lt;file&gt;..." to update what will be committed)
+#   (use "git checkout -- &lt;file&gt;..." to discard changes in working directory)
+#
+#       modified:   doc/PROJECT/MEDIUM/ATS-constraint/constraint_s2Var.dats
+#       modified:   doc/PROJECT/MEDIUM/ATS-constraint/parsing/parsing_s2Var.dats
+</code></pre>
+
+<p>A keen eye will note that these files have dopplegangers that are a single letter in case off. Somehow, and I have no idea what led me down this path to start with (as I was not working with these files myself from the upstream repo), I had switched these files. Try the many solutions listed on this page (and other pages) did not seem to help. </p>
+
+<p><strong>I was able to fix the problem by deleting my forked repository and all local repositories, and reforking. This alone was not enough; upstream had to rename the files in question to new filenames.</strong> As long as you don't have any uncommited work, no wikis, and no issues that diverge from the upstream repository, you should be just fine. Upstream may not be very happy with you, to say the least. As for my problem, it is undoubtedly a user error as I'm not that proficient with git, but the fact that it is far from easy to fix points to an issue with git as well. </p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>You could create your own alias which describes how to do it in a descriptive way.</p>
+
+<p>I use the next alias to discard changes.</p>
+
+<hr>
+
+<h3>Discard changes in a (list of) file(s) in working tree</h3>
+
+<pre><code>discard = checkout --
+</code></pre>
+
+<p>Then you can use it as next to discard all changes:</p>
+
+<pre><code>discard .
+</code></pre>
+
+<p>Or just a file:</p>
+
+<pre><code>discard filename
+</code></pre>
+
+<hr>
+
+<p>Otherwise, if you want to discard all changes and also the untracked files, I use a mix of checkout and clean:</p>
+
+<h3>Clean and discard changes and untracked files in working tree</h3>
+
+<pre><code>cleanout = !git clean -df &amp;&amp; git checkout -- .
+</code></pre>
+
+<p>So the use is simple as next:</p>
+
+<pre><code>cleanout
+</code></pre>
+
+<hr>
+
+<p>Now is available in the next Github repo which contains a lot of aliases:</p>
+
+<ul>
+<li><a href="https://github.com/GitAlias/gitalias" rel="noreferrer">https://github.com/GitAlias/gitalias</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>If it's almost impossible to rule out modifications of the files, have you considered ignoring them? If this statement is right and you wouldn't touch those files during your development, this command may be useful: </p>
+
+<p><code>git update-index --assume-unchanged file_to_ignore</code></p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>When you want to transfer a stash to someone else:</p>
+
+<pre><code># add files
+git add .  
+# diff all the changes to a file
+git diff --staged &gt; ~/mijn-fix.diff
+# remove local changes 
+git reset &amp;&amp; git checkout .
+# (later you can re-apply the diff:)
+git apply ~/mijn-fix.diff
+</code></pre>
+
+<p>[edit] as commented, it ís possible to name stashes. Well, use this if you want to share your stash ;)</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>If you are in case of submodule and no other solutions work try:</p>
+
+<ul>
+<li><p>To check what is the problem (maybe a "dirty" case) use:</p>
+
+<p><code>git diff</code></p></li>
+<li><p>To remove stash</p>
+
+<p><code>git submodule update</code></p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>If all the staged files were actually committed, then the branch can simply be reset e.g. from your GUI with about three mouse clicks: <strong>Branch</strong>, <strong>Reset</strong>, <strong>Yes</strong>!</p>
+
+<p>So what I often do in practice to revert unwanted local changes is to commit all the good stuff, and then reset the branch.</p>
+
+<p>If the good stuff is committed in a single commit, then you can use "amend last commit" to bring it back to being staged or unstaged if you'd ultimately  like to commit it a little differently.</p>
+
+<p>This might not be the technical solution you are looking for to your problem, but I find it a very practical solution. It allows you to discard unstaged changes selectively, resetting the changes you don't like and keeping the ones you do.</p>
+
+<p>So in summary, I simply do <strong>commit</strong>, <strong>branch reset</strong>, and <strong>amend last commit</strong>.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>Just as a reminder, newer versions of git has the restore command, which also is a suggestion when typing git status when you have changed files:</p>
+<p>(use &quot;git add ...&quot; to update what will be committed)</p>
+<p>(use &quot;git restore ...&quot; to discard changes in working directory)</p>
+<p>So git 'restore' is the modern solution to this. It is always a good idea to read the suggestions from git after typing 'git status' :-)</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><pre><code>git checkout .
+</code></pre>
+<p>This will discard any uncommitted changes to the branch.  It won't reset it back if any changes were committed.  This is handy when you've done some changes and decide you don't want them for some reason and you have NOT committed those changes. It actually just checks out the branch again and discards any current uncommitted changes.</p>
+<p>( must be in the app's root or home dir for this to work )</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>None of the solutions work if you just changed the <em>permissions</em> of a file (this is on DOS/Windoze)</p>
+
+<pre>
+Mon 23/11/2015-15:16:34.80 C:\...\work\checkout\slf4j+> git status
+On branch SLF4J_1.5.3
+Changes not staged for commit:
+  (use "git add ..." to update what will be committed)
+  (use "git checkout -- ..." to discard changes in working directory)
+
+        modified:   .gitignore
+        modified:   LICENSE.txt
+        modified:   TODO.txt
+        modified:   codeStyle.xml
+        modified:   pom.xml
+        modified:   version.pl
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+Mon 23/11/2015-15:16:37.87 C:\...\work\checkout\slf4j+> git diff
+diff --git a/.gitignore b/.gitignore
+old mode 100644
+new mode 100755
+diff --git a/LICENSE.txt b/LICENSE.txt
+old mode 100644
+new mode 100755
+diff --git a/TODO.txt b/TODO.txt
+old mode 100644
+new mode 100755
+diff --git a/codeStyle.xml b/codeStyle.xml
+old mode 100644
+new mode 100755
+diff --git a/pom.xml b/pom.xml
+old mode 100644
+new mode 100755
+diff --git a/version.pl b/version.pl
+old mode 100644
+new mode 100755
+
+Mon 23/11/2015-15:16:45.22 C:\...\work\checkout\slf4j+> git reset --hard HEAD
+HEAD is now at 8fa8488 12133-CHIXMISSINGMESSAGES MALCOLMBOEKHOFF 20141223124940 Added .gitignore
+
+Mon 23/11/2015-15:16:47.42 C:\...\work\checkout\slf4j+> git clean -f
+
+Mon 23/11/2015-15:16:53.49 C:\...\work\checkout\slf4j+> git stash save -u
+Saved working directory and index state WIP on SLF4J_1.5.3: 8fa8488 12133-CHIXMISSINGMESSAGES MALCOLMBOEKHOFF 20141223124940 Added .gitignore
+HEAD is now at 8fa8488 12133-CHIXMISSINGMESSAGES MALCOLMBOEKHOFF 20141223124940 Added .gitignore
+
+Mon 23/11/2015-15:17:00.40 C:\...\work\checkout\slf4j+> git stash drop
+Dropped refs/stash@{0} (cb4966e9b1e9c9d8daa79ab94edc0c1442a294dd)
+
+Mon 23/11/2015-15:17:06.75 C:\...\work\checkout\slf4j+> git stash drop
+Dropped refs/stash@{0} (e6c49c470f433ce344e305c5b778e810625d0529)
+
+Mon 23/11/2015-15:17:08.90 C:\...\work\checkout\slf4j+> git stash drop
+No stash found.
+
+Mon 23/11/2015-15:17:15.21 C:\...\work\checkout\slf4j+> git checkout -- .
+
+Mon 23/11/2015-15:22:00.68 C:\...\work\checkout\slf4j+> git checkout -f -- .
+
+Mon 23/11/2015-15:22:04.53 C:\...\work\checkout\slf4j+> git status
+On branch SLF4J_1.5.3
+Changes not staged for commit:
+  (use "git add ..." to update what will be committed)
+  (use "git checkout -- ..." to discard changes in working directory)
+
+        modified:   .gitignore
+        modified:   LICENSE.txt
+        modified:   TODO.txt
+        modified:   codeStyle.xml
+        modified:   pom.xml
+        modified:   version.pl
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+Mon 23/11/2015-15:22:13.06 C:\...\work\checkout\slf4j+> git diff
+diff --git a/.gitignore b/.gitignore
+old mode 100644
+new mode 100755
+diff --git a/LICENSE.txt b/LICENSE.txt
+old mode 100644
+new mode 100755
+diff --git a/TODO.txt b/TODO.txt
+old mode 100644
+new mode 100755
+diff --git a/codeStyle.xml b/codeStyle.xml
+old mode 100644
+new mode 100755
+diff --git a/pom.xml b/pom.xml
+old mode 100644
+new mode 100755
+diff --git a/version.pl b/version.pl
+old mode 100644
+new mode 100755
+</pre>
+
+<p>The only way to fix this is to manually reset the permissions on the changed files:</p>
+
+<pre>
+Mon 23/11/2015-15:25:43.79 C:\...\work\checkout\slf4j+> git status -s | egrep "^ M" | cut -c4- | for /f "usebackq tokens=* delims=" %A in (`more`) do chmod 644 %~A
+
+Mon 23/11/2015-15:25:55.37 C:\...\work\checkout\slf4j+> git status
+On branch SLF4J_1.5.3
+nothing to commit, working directory clean
+
+Mon 23/11/2015-15:25:59.28 C:\...\work\checkout\slf4j+>
+
+Mon 23/11/2015-15:26:31.12 C:\...\work\checkout\slf4j+> git diff
+
+</pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>If you want to restore unstaged files use
+git restore --staged .</p>
+</div></body></html>

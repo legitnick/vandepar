@@ -1,0 +1,469 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to modify existing, unpushed commit messages?</p><div class="s-prose js-post-body"><p>I wrote the wrong thing in a commit message.</p>
+
+<p>How can I change the message? The commit has not been pushed yet.</p>
+</div><p class="this-has-helped">This answer has helped 18105 people.</p><div class="s-prose js-post-body"><h1>Amending the most recent commit message</h1>
+<pre class="lang-sh prettyprint-override"><code>git commit --amend
+</code></pre>
+<p>will open your editor, allowing you to change the commit message of the most recent commit. Additionally, you can set the commit message directly in the command line with:</p>
+<pre class="lang-sh prettyprint-override"><code>git commit --amend -m &quot;New commit message&quot;
+</code></pre>
+<p>…however, this can make multi-line commit messages or small corrections more cumbersome to enter.</p>
+<p>Make sure you don't have any working copy changes <em>staged</em> before doing this or they will get committed too. (<em>Unstaged</em> changes will not get committed.)</p>
+<h2>Changing the message of a commit that you've already pushed to your remote branch</h2>
+<p>If you've already pushed your commit up to your remote branch, then - after amending your commit locally (as described above) - you'll also <a href="https://stackoverflow.com/questions/41003071/why-must-i-force-push-after-changing-a-commit-message">need to force push the commit</a> with:</p>
+<pre class="lang-bash prettyprint-override"><code>git push &lt;remote&gt; &lt;branch&gt; --force
+# Or
+git push &lt;remote&gt; &lt;branch&gt; -f
+</code></pre>
+<p><strong>Warning: force-pushing will overwrite the remote branch with the state of your local one</strong>. If there are commits on the remote branch that you don't have in your local branch, you <em>will</em> lose those commits.</p>
+<p><strong>Warning: be cautious about amending commits that you have already shared with other people.</strong> Amending commits essentially <em>rewrites</em> them to have different <a href="https://en.wikipedia.org/wiki/SHA-1" rel="noreferrer">SHA</a> IDs, which poses a problem if other people have copies of the old commit that you've rewritten. Anyone who has a copy of the old commit will need to synchronize their work with your newly re-written commit, which can sometimes be difficult, so make sure you coordinate with others when attempting to rewrite shared commit history, or just avoid rewriting shared commits altogether.</p>
+<hr />
+<h3>Perform an interactive rebase</h3>
+<p>Another option is to use interactive rebase.
+This allows you to edit any message you want to update even if it's not the latest message.</p>
+<p>In order to do a Git squash, follow these steps:</p>
+<pre><code>// n is the number of commits up to the last commit you want to be able to edit
+git rebase -i HEAD~n
+</code></pre>
+<p>Once you squash your commits - choose the <code>e/r</code> for editing the message:</p>
+<p><a href="https://i.stack.imgur.com/LVcm9.png" rel="noreferrer"><img src="https://i.stack.imgur.com/LVcm9.png" alt="Screenshot of terminal while editing commit" /></a></p>
+<h3>Important note about interactive rebase</h3>
+<p>When you use <code>git rebase -i HEAD~n</code> there can be <strong>more</strong> than n commits. Git will &quot;collect&quot; all the commits in the last n commits, and if there was a merge somewhere in between that range you will see all the commits as well, so the outcome will be n + .</p>
+<h3>Good tip:</h3>
+<p>If you have to do it for more than a single branch and you might face conflicts when amending the content, set up <a href="https://stackoverflow.com/questions/35415925/is-it-possible-to-setup-git-merge-for-automatic-resolving-git-rerere/35417944#35417944"><code>git rerere</code></a> and let Git resolve those conflicts automatically for you.</p>
+<hr />
+<h2>Documentation</h2>
+<ul>
+<li><p><a href="https://www.kernel.org/pub/software/scm/git/docs/git-commit.html" rel="noreferrer">git-commit(1) Manual Page</a></p>
+</li>
+<li><p><a href="https://www.kernel.org/pub/software/scm/git/docs/git-rebase.html" rel="noreferrer">git-rebase(1) Manual Page</a></p>
+</li>
+<li><p><a href="https://www.kernel.org/pub/software/scm/git/docs/git-push.html" rel="noreferrer">git-push(1) Manual Page</a></p>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 2633 people.</p><div class="s-prose js-post-body"><pre class="lang-sh prettyprint-override"><code>git commit --amend -m "your new message"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 2470 people.</p><div class="s-prose js-post-body"><p>If the commit you want to fix isn’t the most recent one:</p>
+
+<ol>
+<li><p><code>git rebase --interactive $parent_of_flawed_commit</code></p>
+
+<p>If you want to fix several flawed commits, pass the parent of the oldest one of them.</p></li>
+<li><p>An editor will come up, with a list of all commits since the one you gave.</p>
+
+<ol>
+<li>Change <code>pick</code> to <code>reword</code> (or on old versions of Git, to <code>edit</code>) in front of any commits you want to fix.</li>
+<li>Once you save, Git will replay the listed commits. <br /> <br /></li>
+</ol></li>
+<li><p>For each commit you want to <em>reword</em>, Git will drop you back into your editor. For each commit you want to <em>edit</em>, Git drops you into the shell. If you’re in the shell:</p>
+
+<ol>
+<li>Change the commit in any way you like.</li>
+<li><code>git commit --amend</code></li>
+<li><code>git rebase --continue</code></li>
+</ol></li>
+</ol>
+
+<p>Most of this sequence will be explained to you by the output of the various commands as you go. It’s very easy; you don’t need to memorise it – just remember that <code>git rebase --interactive</code> lets you correct commits no matter how long ago they were.</p>
+
+<hr>
+
+<p>Note that you will not want to change commits that you have already pushed. Or maybe you do, but in that case you will have to take great care to communicate with everyone who may have pulled your commits and done work on top of them. <em><a href="https://stackoverflow.com/questions/4084868/how-do-i-recover-resynchronise-after-someone-pushes-a-rebase-or-a-reset-to-a-pub">How do I recover/resynchronise after someone pushes a rebase or a reset to a published branch?</a></em></p>
+</div><p class="this-has-helped">This answer has helped 816 people.</p><div class="s-prose js-post-body"><p>To amend the previous commit, make the changes you want and stage those changes, and then run</p>
+
+
+
+<pre class="lang-none prettyprint-override"><code>git commit --amend
+</code></pre>
+
+<p>This will open a file in your text editor representing your new commit message. It starts out populated with the text from your old commit message. Change the commit message as you want, then save the file and quit your editor to finish.</p>
+
+<p>To amend the previous commit and keep the same log message, run</p>
+
+<pre class="lang-none prettyprint-override"><code>git commit --amend -C HEAD
+</code></pre>
+
+<p>To fix the previous commit by removing it entirely, run</p>
+
+<pre class="lang-none prettyprint-override"><code>git reset --hard HEAD^
+</code></pre>
+
+<p>If you want to edit more than one commit message, run</p>
+
+<pre class="lang-none prettyprint-override"><code>git rebase -i HEAD~<b>commit_count</b></code></pre>
+
+<p>(Replace <b>commit_count</b> with number of commits that you want to edit.) This command launches your editor. Mark the first commit (the one that you want to change) as “edit” instead of “pick”, then save and exit your editor. Make the change you want to commit and then run</p>
+
+<pre class="lang-none prettyprint-override"><code>git commit --amend
+git rebase --continue
+</code></pre>
+
+<p>Note: You can also "Make the change you want" from the editor opened by <code>git commit --amend</code></p>
+</div><p class="this-has-helped">This answer has helped 410 people.</p><div class="s-prose js-post-body"><p>As already mentioned, <code>git commit --amend</code> is the way to overwrite the last commit. One note: if you would like to also <strong>overwrite the files</strong>, the command would be </p>
+
+<pre class="lang-c prettyprint-override"><code>git commit -a --amend -m "My new commit message"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 367 people.</p><div class="s-prose js-post-body"><p>You also can use <code>git filter-branch</code> for that.</p>
+
+<pre class="lang-c prettyprint-override"><code>git filter-branch -f --msg-filter "sed 's/errror/error/'" $flawed_commit..HEAD
+</code></pre>
+
+<p>It's not as easy as a trivial <code>git commit --amend</code>, but it's especially useful, if you already have some merges after your erroneous commit message.</p>
+
+<p>Note that this will try to rewrite <em>every</em> commit between <code>HEAD</code> and the flawed commit, so you should choose your <code>msg-filter</code> command very wisely ;-)</p>
+</div><p class="this-has-helped">This answer has helped 338 people.</p><div class="s-prose js-post-body"><p>I prefer this way:</p>
+
+<pre><code>git commit --amend -c &lt;commit ID&gt;
+</code></pre>
+
+<p>Otherwise, there will be a new commit with a new commit ID.</p>
+</div><p class="this-has-helped">This answer has helped 316 people.</p><div class="s-prose js-post-body"><p>If you are using the Git GUI tool, there is a button named <em>Amend last commit</em>. Click on that button and then it will display your last commit files and message. Just edit that message, and you can commit it with a new commit message.</p>
+
+<p>Or use this command from a console/terminal:</p>
+
+<pre><code>git commit -a --amend -m "My new commit message"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 290 people.</p><div class="s-prose js-post-body"><p>You can use <a href="http://git-scm.com/book/en/Git-Branching-Rebasing">Git rebasing</a>. For example, if you want to modify back to commit bbc643cd, run</p>
+
+<pre><code>$ git rebase bbc643cd^ --interactive
+</code></pre>
+
+<p>In the default editor, modify 'pick' to 'edit' in the line whose commit you want to modify. Make your changes and then stage them with</p>
+
+<pre><code>$ git add &lt;filepattern&gt;
+</code></pre>
+
+<p>Now you can use</p>
+
+<pre><code>$ git commit --amend
+</code></pre>
+
+<p>to modify the commit, and after that</p>
+
+<pre><code>$ git rebase --continue
+</code></pre>
+
+<p>to return back to the previous head commit.</p>
+</div><p class="this-has-helped">This answer has helped 282 people.</p><div class="s-prose js-post-body"><ol>
+<li><p>If you only want to modify your last commit message, then do:</p>
+
+<pre><code>git commit --amend
+</code></pre></li>
+</ol>
+
+<p>That will drop you into your text editor and let you change the last commit message.</p>
+
+<ol start="2">
+<li><p>If you want to change the last three commit messages, or any of the commit messages up to that point, supply <code>HEAD~3</code> to the <code>git rebase -i</code> command:</p>
+
+<pre><code>git rebase -i HEAD~3
+</code></pre></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 266 people.</p><div class="s-prose js-post-body"><p>If you have to change an old commit message over multiple branches (i.e., the commit with the erroneous message is present in multiple branches) you might want to use:</p>
+
+<pre class="lang-bash prettyprint-override"><code>git filter-branch -f --msg-filter \
+'sed "s/&lt;old message&gt;/&lt;new message&gt;/g"' -- --all
+</code></pre>
+
+<p>Git will create a temporary directory for rewriting and additionally backup old references in <code>refs/original/</code>.</p>
+
+<ul>
+<li><p><code>-f</code> will enforce the execution of the operation. This is necessary if the temporary directory is already present or if there are already references stored under <code>refs/original</code>. If that is not the case, you can drop this flag.</p></li>
+<li><p><code>--</code> separates filter-branch options from revision options.</p></li>
+<li><p><code>--all</code> will make sure that all <em>branches</em> and <em>tags</em> are rewritten.</p></li>
+</ul>
+
+<p>Due to the backup of your old references, you can easily go back to the state before executing the command.</p>
+
+<p>Say, you want to recover your master and access it in branch <code>old_master</code>:</p>
+
+<pre><code>git checkout -b old_master refs/original/refs/heads/master
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 252 people.</p><div class="s-prose js-post-body"><p>If it's your last commit, just <strong>amend</strong> the commit:</p>
+
+<pre><code>git commit --amend -o -m "New commit message"
+</code></pre>
+
+<p><em>(Using the <code>-o</code> (<code>--only</code>) flag to make sure you change only the commit message)</em></p>
+
+<p><br/></p>
+
+<p>If it's a buried commit, use the awesome <strong>interactive rebase</strong>:</p>
+
+<pre><code>git rebase -i @~9   # Show the last 9 commits in a text editor
+</code></pre>
+
+<p>Find the commit you want, change <code>pick</code> to <code>r</code> (<code>reword</code>), and save and close the file. Done!</p>
+
+<p><br></p>
+
+<hr>
+
+<p>Miniature Vim tutorial (or, how to rebase with only 8 keystrokes <kbd><code>3j</code></kbd><kbd><code>cw</code></kbd><code>r</code><kbd>Esc</kbd><kbd><code>ZZ</code></kbd>):</p>
+
+<ul>
+<li>Run <code>vimtutor</code> if you have time</li>
+<li><kbd><code>h</code></kbd><kbd><code>j</code></kbd><kbd><code>k</code></kbd><kbd><code>l</code></kbd> correspond to movement keys <kbd>←</kbd><kbd>↓</kbd><kbd>↑</kbd><kbd>→</kbd></li>
+<li>All commands can be prefixed with a "range", e.g. <kbd><code>3j</code></kbd> moves down three lines</li>
+<li><kbd><code>i</code></kbd> to enter insert mode — text you type will appear in the file</li>
+<li><kbd>Esc</kbd> or <kbd>Ctrl</kbd><kbd><code>c</code></kbd> to exit insert mode and return to "normal" mode</li>
+<li><kbd><code>u</code></kbd> to undo</li>
+<li><kbd>Ctrl</kbd><kbd><code>r</code></kbd> to redo</li>
+<li><kbd><code>dd</code></kbd>, <kbd><code>dw</code></kbd>, <kbd><code>dl</code></kbd> to delete a line, word, or letter, respectively</li>
+<li><kbd><code>cc</code></kbd>, <kbd><code>cw</code></kbd>, <kbd><code>cl</code></kbd> to change a line, word, or letter, respectively (same as <kbd><code>dd</code></kbd><kbd><code>i</code></kbd>)</li>
+<li><kbd><code>yy</code></kbd>, <kbd><code>yw</code></kbd>, <kbd><code>yl</code></kbd> to copy ("yank") a line, word, or letter, respectively</li>
+<li><kbd><code>p</code></kbd> or <kbd><code>P</code></kbd> to paste after, or before current position, respectively</li>
+<li><kbd><code>:w</code></kbd><kbd>Enter</kbd> to save (write) a file</li>
+<li><kbd><code>:q!</code></kbd><kbd>Enter</kbd> to quit without saving</li>
+<li><kbd><code>:wq</code></kbd><kbd>Enter</kbd> or <kbd><code>ZZ</code></kbd> to save and quit</li>
+</ul>
+
+<p>If you edit text a lot, then switch to the <a href="https://en.wikipedia.org/wiki/Dvorak_keyboard_layout" rel="noreferrer">Dvorak keyboard layout</a>, learn to touch-type, and learn Vim. <a href="https://stackoverflow.com/questions/597077/is-learning-vim-worth-the-effort">Is it worth the effort?</a> Yes.</p>
+
+<p><br/></p>
+
+<hr>
+
+<p>ProTip™: Don't be afraid to experiment with "dangerous" commands that rewrite history* — Git doesn't delete your commits for 90 days by default; you can find them in the reflog:</p>
+
+<pre><code>$ git reset @~3   # Go back three commits
+$ git reflog
+c4f708b HEAD@{0}: reset: moving to @~3
+2c52489 HEAD@{1}: commit: more changes
+4a5246d HEAD@{2}: commit: make important changes
+e8571e4 HEAD@{3}: commit: make some changes
+... earlier commits ...
+$ git reset 2c52489
+... and you're back where you started
+</code></pre>
+
+<p>* <em>Watch out for options like <code>--hard</code> and <code>--force</code> though — they can discard data.</em>
+*  <em>Also, don't rewrite history on any branches you're collaborating on.</em></p>
+</div><p class="this-has-helped">This answer has helped 229 people.</p><div class="s-prose js-post-body"><p>Use</p>
+
+<pre><code>git commit --amend
+</code></pre>
+
+<p>To understand it in detail, an excellent post is <em><a href="https://www.atlassian.com/git/tutorials/rewriting-history#git-commit--amend" rel="noreferrer">4. Rewriting Git History</a></em>. It also talks about <strong>when not to use</strong> <code>git commit --amend</code>.</p>
+</div><p class="this-has-helped">This answer has helped 201 people.</p><div class="s-prose js-post-body"><h3>Amend</h3>
+
+<p>You have a couple of options here. You can do</p>
+
+<pre><code>git commit --amend
+</code></pre>
+
+<p>as long as it's your last commit.</p>
+
+<h3>Interactive rebase</h3>
+
+<p>Otherwise, if it's not your last commit, you can do an interactive rebase,</p>
+
+<pre><code>git rebase -i [branched_from] [hash before commit]
+</code></pre>
+
+<p>Then inside the interactive rebase you simply add edit to that commit. When it comes up, do a <code>git commit --amend</code> and modify the commit message. If you want to roll back before that commit point, you could also use <code>git reflog</code> and just delete that commit. Then you just do a <code>git commit</code> again.</p>
+</div><p class="this-has-helped">This answer has helped 186 people.</p><div class="s-prose js-post-body"><p>If you are using the Git GUI, you can amend the last commit which hasn't been pushed with:  </p>
+
+<pre><code>Commit/Amend Last Commit
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 169 people.</p><div class="s-prose js-post-body"><p>I use the <a href="http://git-scm.com/docs/git-gui">Git GUI</a> as much as I can, and that gives you the option to amend the last commit:</p>
+
+<p><img src="https://i.stack.imgur.com/qXMzu.png" alt="Tick that box" title="Check that box &quot;Amend Last Commit&quot;!"></p>
+
+<p>Also, <code>git rebase -i origin/master</code>is a nice mantra that will always present you with the commits you have done on top of master, and give you the option to amend, delete, reorder or squash. No need to get hold of that hash first.</p>
+</div><p class="this-has-helped">This answer has helped 147 people.</p><div class="s-prose js-post-body"><p>For anyone looking for a Windows/Mac GUI to help with editing older messages (i.e. not just the latest message), I'd recommend <a href="http://www.sourcetreeapp.com" rel="noreferrer">Sourcetree</a>. The steps to follow are below the image.</p>
+<p><img src="https://i.stack.imgur.com/CcA2P.png" alt="Sourcetree interactive rebase" /></p>
+<p><strong>For commits that haven't been pushed to a remote yet:</strong></p>
+<ol>
+<li>Make sure you've committed or stashed all current changes (i.e., so there are no files listed in the &quot;File Status&quot; tab) - it won't work otherwise.</li>
+<li>In the &quot;Log / History&quot; tab, right click on the entry with an adjoining line in the graph <strong>one below</strong> the commit(s) you wish to edit and select &quot;Rebase children of <em>&lt;commit ref&gt;</em> interactively...&quot;</li>
+<li>Select the whole row for a commit message you wish to change <em>(click on the &quot;Message&quot; column)</em>.</li>
+<li>Click the &quot;Edit Message&quot; button.</li>
+<li>Edit the message as desired in the dialog that comes up and then click <kbd>OK</kbd>.</li>
+<li>Repeat steps 3-4 if there are other commit messages to change.</li>
+<li>Click <kbd>OK</kbd>: Rebasing will commence. If all is well, the output will end &quot;Completed successfully&quot;. <em><strong>NOTE:</strong> I've sometimes seen this fail with <code>Unable to create 'project_path/.git/index.lock': File exists.</code> when trying to modify multiple commit messages at the same time. Not sure exactly what the issue is, or whether it will be fixed in a future version of Sourcetree, but if this happens would recommend rebasing them one at a time (slower but seems more reliable).</em></li>
+</ol>
+<p><strong>...Or... for commits that have already been pushed:</strong></p>
+<p>Follow the steps in <a href="https://stackoverflow.com/questions/17604232#23239109">this answer</a>, which are similar to above, but require a further command to be run from the command line (<code>git push origin &lt;branch&gt; -f</code>) to force-push the branch. I'd recommend reading it all and applying the necessary caution!</p>
+</div><p class="this-has-helped">This answer has helped 141 people.</p><div class="s-prose js-post-body"><p>Wow, so there are a lot of ways to do this.</p>
+
+<p>Yet another way to do this is to delete the last commit, but keep its changes so that you won't lose your work. You can then do another commit with the corrected message. This would look something like this:</p>
+
+<pre class="lang-bash prettyprint-override"><code>git reset --soft HEAD~1
+git commit -m 'New and corrected commit message'
+</code></pre>
+
+<p>I always do this if I forget to add a file or do a change.</p>
+
+<p><strong>Remember</strong> to specify <code>--soft</code> instead of <code>--hard</code>, otherwise you lose that commit entirely.</p>
+</div><p class="this-has-helped">This answer has helped 130 people.</p><div class="s-prose js-post-body"><p>If you just want to edit the latest commit, use:</p>
+
+<pre><code>git commit --amend
+</code></pre>
+
+<p>or</p>
+
+<pre class="lang-bash prettyprint-override"><code>git commit --amend -m 'one line message'
+</code></pre>
+
+<p>But if you want to edit several commits in a row, you should use rebasing instead:</p>
+
+<pre><code>git rebase -i &lt;hash of one commit before the wrong commit&gt;
+</code></pre>
+
+<p><img src="https://i.stack.imgur.com/jRTRr.png" alt="Git rebase editing"></p>
+
+<p>In a file, like the one above, write <code>edit/e</code> or one of the other options, and hit save and exit.</p>
+
+<p>Now you'll be at the first wrong commit. Make changes in the files, and they'll be automatically staged for you. Type</p>
+
+<pre><code>git commit --amend
+</code></pre>
+
+<p>Save and exit that and type</p>
+
+<pre><code>git rebase --continue
+</code></pre>
+
+<p>to move to next selection until finished with all your selections.</p>
+
+<p>Note that these things change all your SHA hashes after that particular commit.</p>
+</div><p class="this-has-helped">This answer has helped 129 people.</p><div class="s-prose js-post-body"><p>If you only want to change your last message you should use the <code>--only</code> flag or its shortcut <code>-o</code> with <code>commit --amend</code>:</p>
+
+<pre class="lang-bash prettyprint-override"><code>git commit --amend -o -m "New commit message"
+</code></pre>
+
+<p>This ensures that you don't accidentally enhance your commit with staged stuff. Of course it's best to have a proper <code>$EDITOR</code> configuration. Then you can leave the <code>-m</code> option out, and Git will pre-fill the commit message with the old one. In this way it can be easily edited.</p>
+</div><p class="this-has-helped">This answer has helped 106 people.</p><div class="s-prose js-post-body"><p>Update your last wrong commit message with the new commit message in one line:</p>
+
+<pre class="lang-bash prettyprint-override"><code>git commit --amend -m "your new commit message"
+</code></pre>
+
+<p>Or, try Git reset like below:</p>
+
+<pre class="lang-bash prettyprint-override"><code># You can reset your head to n number of commit
+# NOT a good idea for changing last commit message,
+# but you can get an idea to split commit into multiple commits
+git reset --soft HEAD^
+
+# It will reset you last commit. Now, you
+# can re-commit it with new commit message.
+</code></pre>
+
+<h3>Using reset to split commits into smaller commits</h3>
+
+<p><code>git reset</code> can help you to break one commit into multiple commits too:</p>
+
+<pre class="lang-bash prettyprint-override"><code># Reset your head. I am resetting to last commits:
+git reset --soft HEAD^
+# (You can reset multiple commit by doing HEAD~2(no. of commits)
+
+# Now, reset your head for splitting it to multiple commits
+git reset HEAD
+
+# Add and commit your files separately to make multiple commits: e.g
+git add app/
+git commit -m "add all files in app directory"
+
+git add config/
+git commit -m "add all files in config directory"
+</code></pre>
+
+<p>Here you have successfully broken your last commit into two commits.</p>
+</div><p class="this-has-helped">This answer has helped 91 people.</p><div class="s-prose js-post-body"><p>On this question there are a lot of answers, but none of them explains in super detail how to change older commit messages using <a href="http://en.wikipedia.org/wiki/Vim_%28text_editor%29" rel="noreferrer">Vim</a>. I was stuck trying to do this myself, so here I'll write down in detail how I did this especially for people who have no experience in Vim!</p>
+
+<p>I wanted to change my five latest commits that I already pushed to the server. This is quite 'dangerous' because if someone else already pulled from this, you can mess things up by changing the commit messages. However, when you’re working on your own little branch and are sure no one pulled it you can change it like this:</p>
+
+<p>Let's say you want to change your five latest commits, and then you type this in the terminal:</p>
+
+<pre><code>git rebase -i HEAD~5
+</code></pre>
+
+<p>*Where 5 is the number of commit messages you want to change (so if you want to change the 10th to last commit, you type in 10).</p>
+
+<p>This command will get you into Vim there you can ‘edit’ your commit history. You’ll see your last five commits at the top like this:</p>
+
+<pre><code>pick &lt;commit hash&gt; commit message
+</code></pre>
+
+<p>Instead of <code>pick</code> you need to write <code>reword</code>. You can do this in Vim by typing in <code>i</code>. That makes you go in to <em>insert</em> mode. (You see that you’re in insert mode by the word <em>INSERT</em> at the bottom.) For the commits you want to change, type in <code>reword</code> instead of <code>pick</code>.</p>
+
+<p>Then you need to save and quit this screen. You do that by first going in to ‘command-mode’ by pressing the <kbd>Esc</kbd>button (you can check that you’re in command-mode if the word <em>INSERT</em> at the bottom has disappeared). Then you can type in a command by typing <code>:</code>. The command to save and quit is <code>wq</code>. So if you type in <code>:wq</code> you’re on the right track.</p>
+
+<p>Then Vim will go over every commit message you want to reword, and here you can actually change the commit messages. You’ll do this by going into insert mode, changing the commit message, going into the command-mode, and save and quit. Do this five times and you’re out of Vim!</p>
+
+<p>Then, if you already pushed your wrong commits, you need to <code>git push --force</code> to overwrite them. Remember that <code>git push --force</code> is quite a dangerous thing to do, so make sure that no one pulled from the server since you pushed your wrong commits!</p>
+
+<p>Now you have changed your commit messages!</p>
+
+<p>(As you see, I'm not that experienced in Vim, so if I used the wrong 'lingo' to explain what's happening, feel free to correct me!)</p>
+</div><p class="this-has-helped">This answer has helped 81 people.</p><div class="s-prose js-post-body"><p>I have added the aliases <code>reci</code> and <code>recm</code> for <code>recommit (amend)</code> it. Now I can do it with <code>git recm</code> or <code>git recm -m</code>:</p>
+
+<pre><code>$ vim ~/.gitconfig
+
+[alias]
+
+    ......
+    cm = commit
+    reci = commit --amend
+    recm = commit --amend
+    ......
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 81 people.</p><div class="s-prose js-post-body"><p>You can use <a href="https://github.com/albfan/git-rebase-reword">git-rebase-reword</a></p>
+
+<p>It is designed to edit any commit (not just last) same way as <code>commit --amend</code></p>
+
+<pre><code>$ git rebase-reword &lt;commit-or-refname&gt;
+</code></pre>
+
+<p>It is named after the action on rebase interactive to amend a commit: "reword". See <a href="https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history">this post</a> and <a href="http://git-scm.com/docs/git-rebase">man</a> -section interactive mode-</p>
+
+<p>Examples:</p>
+
+<pre><code>$ git rebase-reword b68f560
+$ git rebase-reword HEAD^
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 58 people.</p><div class="s-prose js-post-body"><p>I realised that I had pushed a commit with a typo in it. In order to undo, I did the following:</p>
+
+<pre class="lang-bash prettyprint-override"><code>git commit --amend -m "T-1000, advanced prototype"
+git push --force
+</code></pre>
+
+<p><strong>Warning:</strong> force pushing your changes will overwrite the remote branch with your local one. Make sure that you aren't going to be overwriting anything that you want to keep. Also be cautious about force pushing an amended (rewritten) commit if anyone else shares the branch with you, because they'll need to rewrite their own history if they have the old copy of the commit that you've just rewritten.</p>
+</div><p class="this-has-helped">This answer has helped 53 people.</p><div class="s-prose js-post-body"><p>I like to use the following:</p>
+
+<ol>
+<li><code>git status</code></li>
+<li><code>git add --all</code></li>
+<li><code>git commit -am "message goes here about the change"</code></li>
+<li><code>git pull &lt;origin master&gt;</code></li>
+<li><code>git push &lt;origin master&gt;</code></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>If you have not pushed the code to your remote branch (<a href="http://en.wikipedia.org/wiki/GitHub">GitHub</a>/<a href="http://en.wikipedia.org/wiki/Bitbucket">Bitbucket</a>) you can change the commit message on the command line as below.</p>
+
+<pre><code> git commit --amend -m "Your new message"
+</code></pre>
+
+<p>If you're working on a specific branch do this:</p>
+
+<pre><code>git commit --amend -m "BRANCH-NAME: new message"
+</code></pre>
+
+<p>If you've already pushed the code with the wrong message, and you need to be careful when changing the message. That is, after you change the commit message and try pushing it again, you end up with having issues. To make it smooth, follow these steps.</p>
+
+<p><strong>Please read my entire answer before doing it.</strong></p>
+
+<pre><code>git commit --amend -m "BRANCH-NAME : your new message"
+
+git push -f origin BRANCH-NAME                # Not a best practice. Read below why?
+</code></pre>
+
+<p><strong>Important note:</strong> When you use the force push directly you might end up with code issues that other developers are working on the same branch. So to avoid those conflicts, you need to pull the code from your branch before making the <strong>force push</strong>:</p>
+
+<pre><code> git commit --amend -m "BRANCH-NAME : your new message"
+ git pull origin BRANCH-NAME
+ git push -f origin BRANCH-NAME
+</code></pre>
+
+<p>This is the best practice when changing the commit message, if it was already pushed.</p>
+</div></body></html>

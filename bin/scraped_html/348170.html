@@ -1,0 +1,577 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I undo &#39;git add&#39; before commit?</p><div class="s-prose js-post-body"><p>I mistakenly added files to Git using the command:</p>
+<pre><code>git add myfile.txt
+</code></pre>
+<p>I have not yet run <code>git commit</code>. How do I undo this so that these changes will not be included in the commit?</p>
+</div><p class="this-has-helped">This answer has helped 12953 people.</p><div class="s-prose js-post-body"><p>Undo <code>git add</code> for uncommitted changes with:</p>
+<pre><code>git reset &lt;file&gt;
+</code></pre>
+<p>That will remove the file from the current index (the &quot;about to be committed&quot; list) without changing anything else.</p>
+<hr />
+<p>To unstage all changes for all files:</p>
+<pre><code>git reset
+</code></pre>
+<hr />
+<p>In old versions of Git, the above commands are equivalent to <code>git reset HEAD &lt;file&gt;</code> and <code>git reset HEAD</code> respectively, and will fail if <code>HEAD</code> is undefined (because you haven't yet made any commits in your repository) or ambiguous (because you created a branch called <code>HEAD</code>, which is a stupid thing that you shouldn't do). This <a href="https://git.kernel.org/cgit/git/git.git/tree/Documentation/RelNotes/1.8.2.txt#n179" rel="noreferrer">was changed in Git 1.8.2</a>, though, so in modern versions of Git you can use the commands above even prior to making your first commit:</p>
+<blockquote>
+<p>&quot;git reset&quot; (without options or parameters) used to error out when
+you do not have any commits in your history, but it now gives you
+an empty index (to match non-existent commit you are not even on).</p>
+</blockquote>
+<p>Documentation: <a href="https://git-scm.com/docs/git-reset" rel="noreferrer"><strong>git reset</strong></a></p>
+</div><p class="this-has-helped">This answer has helped 2401 people.</p><div class="s-prose js-post-body"><p>You want:</p>
+
+<pre><code>git rm --cached &lt;added_file_to_undo&gt;
+</code></pre>
+
+<p>Reasoning:</p>
+
+<p>When I was new to this, I first tried</p>
+
+<pre><code>git reset .
+</code></pre>
+
+<p>(to undo my entire initial add), only to get this (not so) helpful message:</p>
+
+<pre><code>fatal: Failed to resolve 'HEAD' as a valid ref.
+</code></pre>
+
+<p>It turns out that this is because the HEAD ref (branch?) doesn't exist until after the first commit. That is, you'll run into the same beginner's problem as me if your workflow, like mine, was something like:</p>
+
+<ol>
+<li>cd to my great new project directory to try out Git, the new hotness</li>
+<li><code>git init</code></li>
+<li><code>git add .</code></li>
+<li><p><code>git status</code></p>
+
+<p>... lots of crap scrolls by ...</p>
+
+<p>=> Damn, I didn't want to add all of that.</p></li>
+<li><p>google "undo git add"</p>
+
+<p>=> find Stack Overflow - yay</p></li>
+<li><p><code>git reset .</code></p>
+
+<p>=>    fatal: Failed to resolve 'HEAD' as a valid ref.</p></li>
+</ol>
+
+<p>It further turns out that there's <a href="http://kerneltrap.org/mailarchive/git/2008/2/13/846664/thread" rel="noreferrer">a bug logged</a> against the unhelpfulness of this in the mailing list.</p>
+
+<p>And that the correct solution was right there in the Git status output (which, yes, I glossed over as 'crap)</p>
+
+<blockquote>
+<pre><code>...
+# Changes to be committed:
+#   (use "git rm --cached &lt;file&gt;..." to unstage)
+...
+</code></pre>
+</blockquote>
+
+<p>And the solution indeed is to use <code>git rm --cached FILE</code>.</p>
+
+<p>Note the warnings elsewhere here - <code>git rm</code> deletes your local working copy of the file, but <em>not</em> if you use <strong>--cached</strong>.  Here's the result of <code>git help rm</code>:</p>
+
+<blockquote>
+  <p>--cached
+      Use this option to unstage and remove paths only from the index.
+      Working tree files, whether modified or not, will be left.</p>
+</blockquote>
+
+<p>I proceed to use</p>
+
+<pre><code>git rm --cached .
+</code></pre>
+
+<p>to remove everything and start again. Didn't work though, because while <code>add .</code> is recursive, turns out <code>rm</code> needs <code>-r</code> to recurse. Sigh.</p>
+
+<pre><code>git rm -r --cached .
+</code></pre>
+
+<p>Okay, now I'm back to where I started. Next time I'm going to use <code>-n</code> to do a dry run and see what will be added:</p>
+
+<pre><code>git add -n .
+</code></pre>
+
+<p>I zipped up everything to a safe place before trusting <code>git help rm</code> about the <code>--cached</code> not destroying anything (and what if I misspelled it).</p>
+</div><p class="this-has-helped">This answer has helped 617 people.</p><div class="s-prose js-post-body"><p>If you type:</p>
+
+<pre><code>git status
+</code></pre>
+
+<p>Git will tell you what is staged, etc., including instructions on how to unstage:</p>
+
+<pre><code>use "git reset HEAD &lt;file&gt;..." to unstage
+</code></pre>
+
+<p>I find Git does a pretty good job of nudging me to do the right thing in situations like this.</p>
+
+<p><strong>Note: Recent Git versions (1.8.4.x) have changed this message:</strong></p>
+
+<pre><code>(use "git rm --cached &lt;file&gt;..." to unstage)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 298 people.</p><div class="s-prose js-post-body"><p>To clarify: <code>git add</code> moves changes from the current working directory to the <em>staging area</em> (index).</p>
+
+<p>This process is called <em>staging</em>. So the most natural command to <em>stage</em> the changes (changed files) is the obvious one:</p>
+
+<pre><code>git stage
+</code></pre>
+
+<p><code>git add</code> is just an easier-to-type alias for <code>git stage</code></p>
+
+<p>Pity there is no <code>git unstage</code> nor <code>git unadd</code> commands. The relevant one is harder to guess or remember, but it is pretty obvious:</p>
+
+<pre><code>git reset HEAD --
+</code></pre>
+
+<p>We can easily create an alias for this:</p>
+
+<pre><code>git config --global alias.unadd 'reset HEAD --'
+git config --global alias.unstage 'reset HEAD --'
+</code></pre>
+
+<p>And finally, we have new commands:</p>
+
+<pre><code>git add file1
+git stage file2
+git unadd file2
+git unstage file1
+</code></pre>
+
+<p>Personally I use even shorter aliases:</p>
+
+<pre><code>git a # For staging
+git u # For unstaging
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 209 people.</p><div class="s-prose js-post-body"><p>An addition to the accepted answer, if your mistakenly-added file was huge, you'll probably notice that, even after removing it from the index with '<code>git reset</code>', it still seems to occupy space in the <code>.git</code> directory.</p>
+
+<p>This is nothing to be worried about; the file is indeed still in the repository, but only as a "loose object". It will not be copied to other repositories (via clone, push), and the space will be eventually reclaimed - though perhaps not very soon. If you are anxious, you can run:</p>
+
+<pre><code>git gc --prune=now
+</code></pre>
+
+<hr>
+
+<p><em>Update</em> (what follows is my attempt to clear some confusion that can arise from the most upvoted answers):</p>
+
+<p>So, which is the real <strong>undo</strong> of <code>git add</code>?</p>
+
+<p><code>git reset HEAD &lt;file&gt;</code> ?</p>
+
+<p>or</p>
+
+<p><code>git rm --cached &lt;file&gt;</code>?</p>
+
+<p>Strictly speaking, and if I'm not mistaken: <strong>none</strong>.</p>
+
+<p><code>git add</code> <strong>cannot be undone</strong> - safely, in general.</p>
+
+<p>Let's recall first what <code>git add &lt;file&gt;</code> actually does:</p>
+
+<ol>
+<li><p>If <code>&lt;file&gt;</code> was <strong>not previously tracked</strong>, <code>git add</code>  <strong>adds it to the cache</strong>, with its current content.</p></li>
+<li><p>If <code>&lt;file&gt;</code> was <strong>already tracked</strong>, <code>git add</code>  <strong>saves the current content</strong> (snapshot, version) to the cache. In Git, this action is still called <strong>add</strong>, (not mere <em>update</em> it), because two different versions (snapshots) of a file are regarded as two different items: hence, we are indeed adding a new item to the cache, to be eventually committed later.</p></li>
+</ol>
+
+<p>In light of this, the question is slightly ambiguous:</p>
+
+<blockquote>
+  <p>I mistakenly added files using the command...</p>
+</blockquote>
+
+<p>The OP's scenario seems to be the first one (untracked file),  we want the "undo" to remove the file (not just the current contents) from the tracked items. <strong>If</strong> this is the case, then it's ok to run  <code>git rm --cached &lt;file&gt;</code>.</p>
+
+<p>And we could also run <code>git reset HEAD &lt;file&gt;</code>. This is in general preferable, because it works in both scenarios: it also does the undo when we wrongly added a version of an already tracked item.</p>
+
+<p>But there are two caveats.</p>
+
+<p>First: There is (as pointed out in the answer) only one scenario in which <code>git reset HEAD</code> doesn't work, but <code>git rm --cached</code> does: a new repository (no commits). But, really, this a practically irrelevant case.</p>
+
+<p>Second: Be aware that <code>git reset HEAD</code>  can't magically recover the previously cached file contents, it just resynchronises it from the HEAD. If our misguided <code>git add</code> overwrote a previous staged uncommitted version, we can't recover it. That's why, strictly speaking, we cannot undo [*].</p>
+
+<p>Example:</p>
+
+<pre><code>$ git init
+$ echo "version 1" &gt; file.txt
+$ git add file.txt   # First add of file.txt
+$ git commit -m 'first commit'
+$ echo "version 2" &gt; file.txt
+$ git add  file.txt   # Stage (don't commit) "version 2" of file.txt
+$ git diff --cached file.txt
+-version 1
++version 2
+$ echo "version 3" &gt; file.txt
+$ git diff  file.txt
+-version 2
++version 3
+$ git add  file.txt    # Oops we didn't mean this
+$ git reset HEAD file.txt  # Undo?
+$ git diff --cached file.txt  # No dif, of course. stage == HEAD
+$ git diff file.txt   # We have irrevocably lost "version 2"
+-version 1
++version 3
+</code></pre>
+
+<p>Of course, this is not very critical if we just follow the usual lazy workflow of doing 'git add' only for adding new files (case 1), and we update new contents via the commit, <code>git commit -a</code> command.</p>
+
+<hr>
+
+<p><sup>
+* (Edit: the above is practically correct, but still there can be some slightly hackish/convoluted ways for recovering changes that were staged, but not committed and then overwritten - see the comments by Johannes Matokic and iolsmit)
+</sup></p>
+</div><p class="this-has-helped">This answer has helped 178 people.</p><div class="s-prose js-post-body"><p><strong>Undo</strong> a file which has already been added is quite easy using Git. For resetting <code>myfile.txt</code>, which have already been added, use:</p>
+
+<pre><code>git reset HEAD myfile.txt
+</code></pre>
+
+<p><strong>Explanation:</strong></p>
+
+<p>After you staged unwanted file(s), to undo, you can do <code>git reset</code>. <code>Head</code> is head of your file in the local and the last parameter is the name of your file.</p>
+
+<p>I have created the steps in the image below in more details for you, including all steps which may happen in these cases:</p>
+
+<p><a href="https://i.stack.imgur.com/9JgGD.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/9JgGD.jpg" alt="git reset HEAD file"></a></p>
+</div><p class="this-has-helped">This answer has helped 115 people.</p><div class="s-prose js-post-body"><pre><code>git rm --cached . -r
+</code></pre>
+
+<p>will "un-add" everything you've added from your current directory recursively </p>
+</div><p class="this-has-helped">This answer has helped 115 people.</p><div class="s-prose js-post-body"><p>Git has commands for every action imaginable, but it needs extensive knowledge to get things right and because of that it is counter-intuitive at best...</p>
+<p><strong>What you did before:</strong></p>
+<ul>
+<li>Changed a file and used <code>git add .</code>, or <code>git add &lt;file&gt;</code>.</li>
+</ul>
+<p><strong>What you want:</strong></p>
+<ul>
+<li><p>Remove the file from the index, but keep it versioned and left with uncommitted changes in working copy:</p>
+<pre><code> git reset HEAD &lt;file&gt;
+</code></pre>
+</li>
+<li><p>Reset the file to the last state from HEAD, undoing changes and removing them from the index:</p>
+ <pre class="lang-bash prettyprint-override"><code> # Think `svn revert &lt;file&gt;` IIRC.
+ git reset HEAD &lt;file&gt;
+ git checkout &lt;file&gt;
+
+ # If you have a `&lt;branch&gt;` named like `&lt;file&gt;`, use:
+ git checkout -- &lt;file&gt;
+</code></pre>
+<p>This is needed since <code>git reset --hard HEAD</code> won't work with single files.</p>
+</li>
+<li><p>Remove <code>&lt;file&gt;</code> from index and versioning, keeping the un-versioned file with changes in working copy:</p>
+<pre><code> git rm --cached &lt;file&gt;
+</code></pre>
+</li>
+<li><p>Remove <code>&lt;file&gt;</code> from working copy and versioning completely:</p>
+<pre><code> git rm &lt;file&gt;
+</code></pre>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 104 people.</p><div class="s-prose js-post-body"><p>Run</p>
+
+<pre><code>git gui
+</code></pre>
+
+<p>and remove all the files manually or by selecting all of them and clicking on the <em>unstage from commit</em> button.</p>
+</div><p class="this-has-helped">This answer has helped 102 people.</p><div class="s-prose js-post-body"><p>The question is not clearly posed. The reason is that <code>git add</code> has two meanings:</p>
+
+<ol>
+<li>adding a <strong>new file</strong> to the staging area, then undo with <code>git rm --cached file</code>.</li>
+<li>adding a <strong>modified</strong> file to the staging area, then undo with <code>git reset HEAD file</code>.</li>
+</ol>
+
+<p><strong>If in doubt, use</strong></p>
+
+<pre><code>git reset HEAD file
+</code></pre>
+
+<p>Because it does the expected thing in both cases.</p>
+
+<p><strong>Warning:</strong> if you do <code>git rm --cached file</code> on a file that was <strong>modified</strong> (a file that existed before in the repository), then the file will be removed on <code>git commit</code>! It will still exist in your file system, but if anybody else pulls your commit, the file will be deleted from their work tree.</p>
+
+<p><code>git status</code> will tell you if the file was a <strong>new file</strong> or <strong>modified</strong>:</p>
+
+<pre><code>On branch master
+Changes to be committed:
+  (use "git reset HEAD &lt;file&gt;..." to unstage)
+
+    new file:   my_new_file.txt
+    modified:   my_modified_file.txt
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 91 people.</p><div class="s-prose js-post-body"><p>As per many of the other answers, you can use <code>git reset</code></p>
+<p><strong>BUT:</strong></p>
+<p>I found this great little post that actually adds the Git command (well, an alias) for <code>git unadd</code>: see <em><a href="https://tanzu.vmware.com/content/blog/git-unadd" rel="noreferrer">git unadd</a></em> for details or..</p>
+<p>Simply,</p>
+<pre><code>git config --global alias.unadd &quot;reset HEAD&quot;
+</code></pre>
+<p>Now you can</p>
+<pre><code>git unadd foo.txt bar.txt
+</code></pre>
+<p>Alternatively / directly:</p>
+<pre><code>git reset HEAD foo.txt bar.txt
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><pre><code>git reset filename.txt
+</code></pre>
+<p>will remove a file named <code>filename.txt</code> from the current index (also called the “staging area”, which is where changes “about to be committed” are saved), without changing anything else (the working directory is not overwritten).</p>
+</div><p class="this-has-helped">This answer has helped 73 people.</p><div class="s-prose js-post-body"><p>If you're on your initial commit and you can't use <code>git reset</code>, just declare "Git bankruptcy" and delete the <code>.git</code> folder and start over</p>
+</div><p class="this-has-helped">This answer has helped 62 people.</p><div class="s-prose js-post-body"><h3>2019 update</h3>
+<p>As pointed out by others in related questions (see <a href="https://stackoverflow.com/a/58003889/9210961">here</a>, <a href="https://stackoverflow.com/a/60928923/9210961">here</a>, <a href="https://stackoverflow.com/a/61725470/9210961">here</a>, <a href="https://stackoverflow.com/a/16044987/9210961">here</a>, <a href="https://stackoverflow.com/a/6919257/9210961">here</a>, <a href="https://stackoverflow.com/a/58610415/9210961">here</a>, and <a href="https://stackoverflow.com/a/58830990/9210961">here</a>), you can now <strong>unstage a single file</strong> with:</p>
+<pre class="lang-sh prettyprint-override"><code>git restore --staged &lt;file&gt;
+</code></pre>
+<p>and <strong>unstage all files</strong> (from the root of the repo) with:</p>
+<pre class="lang-sh prettyprint-override"><code>git restore --staged .
+</code></pre>
+<h3>Notes</h3>
+<p><code>git restore</code> was introduced in <a href="https://github.com/git/git/commit/f496b064fc1135e0dded7f93d85d72eb0b302c22" rel="noreferrer">July 2019</a> and released in version 2.23.<br />
+With the <code>--staged</code> flag, it restores the content of the index (what is asked here).</p>
+<p>When running <code>git status</code> with staged uncommitted file(s), this is now what Git suggests to use to unstage file(s) (instead of <code>git reset HEAD &lt;file&gt;</code> as it used to prior to v2.23).</p>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><p>Use <code>git add -i</code> to remove just-added files from your upcoming commit.  Example:</p>
+
+<p>Adding the file you didn't want:</p>
+
+<pre><code>$ git add foo
+$ git status
+# On branch master
+# Changes to be committed:
+#   (use "git reset HEAD &lt;file&gt;..." to unstage)
+#
+#       new file:   foo
+#
+# Untracked files:
+#   (use "git add &lt;file&gt;..." to include in what will be committed)
+# [...]#
+</code></pre>
+
+<p>Going into interactive add to undo your add (the commands typed at git here are "r" (revert), "1" (first entry in the list revert shows), 'return' to drop out of revert mode, and "q" (quit):</p>
+
+<pre><code>$ git add -i
+           staged     unstaged path
+  1:        +1/-0      nothing foo
+
+*** Commands ***
+  1: [s]tatus     2: [u]pdate     3: [r]evert     4: [a]dd untracked
+  5: [p]atch      6: [d]iff       7: [q]uit       8: [h]elp
+What now&gt; r
+           staged     unstaged path
+  1:        +1/-0      nothing [f]oo
+Revert&gt;&gt; 1
+           staged     unstaged path
+* 1:        +1/-0      nothing [f]oo
+Revert&gt;&gt; 
+note: foo is untracked now.
+reverted one path
+
+*** Commands ***
+  1: [s]tatus     2: [u]pdate     3: [r]evert     4: [a]dd untracked
+  5: [p]atch      6: [d]iff       7: [q]uit       8: [h]elp
+What now&gt; q
+Bye.
+$
+</code></pre>
+
+<p>That's it!  Here's your proof, showing that "foo" is back on the untracked list:</p>
+
+<pre><code>$ git status
+# On branch master
+# Untracked files:
+#   (use "git add &lt;file&gt;..." to include in what will be committed)
+# [...]
+#       foo
+nothing added to commit but untracked files present (use "git add" to track)
+$
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 46 people.</p><div class="s-prose js-post-body"><p>Here's a way to avoid this vexing problem when you start a new project:</p>
+
+<ul>
+<li>Create the main directory for your new project.</li>
+<li>Run <code>git init</code>.</li>
+<li>Now create a .gitignore file (even if it's empty).</li>
+<li>Commit your .gitignore file.</li>
+</ul>
+
+<p>Git makes it really hard to do <code>git reset</code> if you don't have any commits.  If you create a tiny initial commit just for the sake of having one, after that you can <code>git add -A</code> and <code>git reset</code> as many times as you want in order to get everything right.</p>
+
+<p>Another advantage of this method is that if you run into line-ending troubles later and need to refresh all your files, it's easy:</p>
+
+<ul>
+<li>Check out that initial commit.  This will remove all your files.</li>
+<li>Then check out your most recent commit again.  This will retrieve fresh copies of your files, using your current line-ending settings.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p>Maybe Git has evolved since you posted your question.</p>
+
+<pre><code>$&gt; git --version
+git version 1.6.2.1
+</code></pre>
+
+<p>Now, you can try:</p>
+
+<pre><code>git reset HEAD .
+</code></pre>
+
+<p>This should be what you are looking for.</p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p>Note that if you fail to specify a revision then you have to include a separator. Example from my console:</p>
+
+<pre><code>git reset &lt;path_to_file&gt;
+fatal: ambiguous argument '&lt;path_to_file&gt;': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions
+
+git reset -- &lt;path_to_file&gt;
+Unstaged changes after reset:
+M    &lt;path_to_file&gt;
+</code></pre>
+
+<p>(Git version 1.7.5.4)</p>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>To remove new files from the staging area (and only in case of a new file), as suggested above:</p>
+
+<pre><code>git rm --cached FILE
+</code></pre>
+
+<p>Use rm --cached only for new files accidentally added.</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>You can unstage or undo using the <em>git</em> command or GUI Git.</p>
+<p>Single file</p>
+<pre><code>git reset File.txt
+</code></pre>
+<p>Multiple files</p>
+<pre><code>git reset File1.txt File2.txt File3.txt
+</code></pre>
+<h3>Example</h3>
+<p>Suppose you have added <strong>Home.js</strong>, <strong>ListItem.js</strong>, <strong>Update.js</strong> by mistake,</p>
+<p><a href="https://i.stack.imgur.com/jIpsc.png" rel="noreferrer"><img src="https://i.stack.imgur.com/jIpsc.png" alt="Enter image description here" /></a></p>
+<p>and want to undo/reset =&gt;</p>
+<pre><code>git reset src/components/home/Home.js src/components/listItem/ListItem.js src/components/update/Update.js
+</code></pre>
+<p><a href="https://i.stack.imgur.com/8PQ8Y.png" rel="noreferrer"><img src="https://i.stack.imgur.com/8PQ8Y.png" alt="Enter image description here" /></a></p>
+<p>The same example using <strong>Git GUI</strong></p>
+<pre><code>git gui
+</code></pre>
+<p>Opens a window. Uncheck your files from <strong>Staged changes (will commit)</strong></p>
+<p><a href="https://i.stack.imgur.com/cE4gI.png" rel="noreferrer"><img src="https://i.stack.imgur.com/cE4gI.png" alt="Enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><p>To reset every file in a particular folder (and its subfolders), you can use the following command:</p>
+
+<pre><code>git reset *
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>Use the <code>*</code> command to handle multiple files at a time:</p>
+
+<pre><code>git reset HEAD *.prj
+git reset HEAD *.bmp
+git reset HEAD *gdb*
+</code></pre>
+
+<p>etc.</p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>Just type <code>git reset</code> it will revert back and it is like you never typed <code>git add .</code> since your last commit. Make sure you have committed before. </p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>Suppose I create a new file, <code>newFile.txt</code>:</p>
+
+<p><a href="https://i.stack.imgur.com/nxRgO.png" rel="noreferrer"><img src="https://i.stack.imgur.com/nxRgO.png" alt="Enter image description here"></a></p>
+
+<p>Suppose I add the file accidentally, <code>git add newFile.txt</code>:</p>
+
+<p><a href="https://i.stack.imgur.com/P6fpa.png" rel="noreferrer"><img src="https://i.stack.imgur.com/P6fpa.png" alt="Enter image description here"></a></p>
+
+<p>Now I want to undo this add, before commit, <code>git reset newFile.txt</code>:</p>
+
+<p><a href="https://i.stack.imgur.com/pbbZ8.png" rel="noreferrer"><img src="https://i.stack.imgur.com/pbbZ8.png" alt="Enter image description here"></a></p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p><strong>For a specific file:</strong></p>
+
+<blockquote>
+  <ul>
+  <li>git reset my_file.txt</li>
+  <li>git checkout my_file.txt</li>
+  </ul>
+</blockquote>
+
+<p><strong>For all added files:</strong></p>
+
+<blockquote>
+  <ul>
+  <li>git reset .</li>
+  <li>git checkout .</li>
+  </ul>
+</blockquote>
+
+<p>Note: <strong>checkout</strong> changes the code in the files and moves to the last updated (committed) state. <strong>reset</strong> doesn't change the codes; it just resets the header.</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>To undo <code>git add</code>, use:</p>
+
+<pre><code>git reset filename
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>There is also interactive mode:</p>
+
+<pre><code>git add -i
+</code></pre>
+
+<p>Choose option 3 to un add files. In my case I often want to add more than one file, and with interactive mode you can use numbers like this to add files. This will take all but 4: 1, 2, 3, and 5</p>
+
+<p>To choose a sequence, just type 1-5 to take all from 1 to 5.</p>
+
+<p><a href="https://git-scm.com/book/en/v2/Git-Tools-Interactive-Staging" rel="nofollow noreferrer">Git staging files</a></p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>This command will unstash your changes:</p>
+
+<pre><code>git reset HEAD filename.txt
+</code></pre>
+
+<p>You can also use </p>
+
+<pre><code>git add -p 
+</code></pre>
+
+<p>to add parts of files.</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p><code>git add myfile.txt</code> # This will add your file into the to-be-committed list</p>
+
+<p>Quite opposite to this command is,</p>
+
+<pre><code>git reset HEAD myfile.txt  # This will undo it.
+</code></pre>
+
+<p>so, you will be in the previous state. Specified will be again in untracked list (previous state).</p>
+
+<p>It will reset your head with that specified file. so, if your head doesn't have it means, it will simply reset it.</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><pre><code>git reset filename.txt  
+</code></pre>
+
+<blockquote>
+  <p>Will remove a file named filename.txt from the current index, the "about to be committed" area, without changing anything else.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>In Sourcetree you can do this easily via the GUI.
+You can check which command Sourcetree uses to unstage a file.</p>
+
+<p>I created a new file and added it to Git. Then I unstaged it using the Sourcetree GUI.
+This is the result:</p>
+
+<blockquote>
+  <p>Unstaging files [08/12/15 10:43]
+  git -c diff.mnemonicprefix=false -c core.quotepath=false -c credential.helper=sourcetree reset -q -- path/to/file/filename.java</p>
+</blockquote>
+
+<p>Sourcetree uses <code>reset</code> to unstage new files.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>If you want to revert the last commit but still want to keep the changes locally that were made in the commit, use this command:</p>
+<pre><code>git reset HEAD~1 --mixed
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>One of the most intuitive solutions is using <a href="https://www.sourcetreeapp.com/" rel="nofollow noreferrer">Sourcetree</a>. </p>
+
+<p>You can just drag and drop files from staged and unstaged</p>
+
+<p><a href="https://i.stack.imgur.com/yaw4O.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/yaw4O.png" alt="Enter image description here"></a></p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><pre><code>git add -A
+</code></pre>
+<p>is used to add all files to your commit (stage).</p>
+<pre><code>git reset
+</code></pre>
+<p>is the opposite of 'git add -A' command. It removes all the files that are staged(means ready) to be committed.</p>
+<p>Likewise, to add a specific file to commit we use <code>git add &lt;filename&gt;</code>
+Same way, to unstage(or reset) a specific file that we added using <code>git add</code> we use <code>git reset &lt;filename&gt;</code> .</p>
+<p>git reset is the exact opposite of git add.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>The <code>git reset</code> command helps you to modify either the staging area or the staging area and working tree. Git's ability to craft commits exactly like you want means that you sometimes need to undo changes to the changes you staged with <code>git add</code>.</p>
+
+<p>You can do that by calling <code>git reset HEAD &lt;file to change&gt;</code>. You have two options to get rid of changes completely. <code>git checkout HEAD &lt;file(s) or path(s)&gt;</code> is a quick way to undo changes to your staging area and working tree.</p>
+
+<p>Be careful with this command, however, because it removes all changes to your working tree. Git doesn't know about those changes since they've never been committed. There's no way to get those changes back once you run this command.</p>
+
+<p>Another command at your disposal is <code>git reset --hard</code>. It is equally destructive to your working tree - any uncommitted changes or staged changes are lost after running it. Running <code>git reset -hard HEAD</code> does the same thing as <code>git checkout HEAD</code>. It just does not require a file or path to work.</p>
+
+<p>You can use <code>--soft</code> with <code>git reset</code>. It resets the repository to the commit you specify and stages all of those changes. Any changes you have already staged are not affected, nor are the changes in your working tree.</p>
+
+<p>Finally, you can use <code>--mixed</code> to reset the working tree without staging any changes. This also unstages any changes that are staged.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>You can using this command after git version 2.23 :</p>
+<pre><code>git restore --staged &lt;filename&gt;
+</code></pre>
+<p>Or, you can using this command:</p>
+<pre><code>git reset HEAD &lt;filename&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>I would use <code>git restore --staged .</code> or <code>git restore --staged &lt;filename&gt;</code></p>
+<p>You can also use <code>git rm --cached</code>, however, the <code>git rm</code> command should be ideally used for already tracked files.</p>
+</div></body></html>

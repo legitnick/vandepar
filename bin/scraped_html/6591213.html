@@ -1,0 +1,437 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I rename a local Git branch?</p><div class="s-prose js-post-body"><p>How do I rename a local branch which has not yet been pushed to a remote repository?</p>
+<p>Related:</p>
+<ul>
+<li><a href="https://stackoverflow.com/questions/1526794/rename-master-branch-for-both-local-and-remote-git-repositories?answertab=votes#tab-top">Rename master branch for both local and remote Git repositories</a></li>
+<li><a href="https://stackoverflow.com/questions/30590083/how-to-rename-a-remote-git-branch-name/30590238#30590238">How do I rename both a Git local and remote branch name?</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 18128 people.</p><div class="s-prose js-post-body"><p>To rename the current branch:</p>
+<pre><code>git branch -m &lt;newname&gt;
+</code></pre>
+<p>To rename a branch while pointed to any branch:</p>
+<pre><code>git branch -m &lt;oldname&gt; &lt;newname&gt;
+</code></pre>
+<p><code>-m</code> is short for <code>--move</code>.</p>
+<hr />
+<p>To push the  local branch and reset the upstream branch:</p>
+<pre><code>git push origin -u &lt;newname&gt;
+</code></pre>
+<p>To delete the  remote branch:</p>
+<pre><code>git push origin --delete &lt;oldname&gt;
+</code></pre>
+<hr />
+<p>To create a <code>git rename</code> alias:</p>
+<pre><code>git config --global alias.rename 'branch -m'
+</code></pre>
+<hr />
+<p>On Windows or another case-insensitive filesystem, use <code>-M</code> if there are only capitalization changes in the name. Otherwise, Git will throw a <em>&quot;branch already exists&quot;</em> error.</p>
+<pre><code>git branch -M &lt;newname&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 580 people.</p><div class="s-prose js-post-body"><pre><code>git branch -m old_branch_name new_branch_name
+</code></pre>
+
+<p>The above command will change your branch name, but you have to be very careful using the renamed branch, because it will still refer to the old upstream branch associated with it, if any.</p>
+
+<p>If you want to push some changes into master after your local branch is renamed into new_branch_name (example name):</p>
+
+<p><code>git push origin new_branch_name:master</code> (now changes will go to master branch but your local branch name is new_branch_name)</p>
+
+<p>For more details, see "<a href="http://madhan-tech-updates.blogspot.in/2013/01/how-to-rename-your-local-branch-name-in.html">How to rename your local branch name in Git</a>."</p>
+</div><p class="this-has-helped">This answer has helped 447 people.</p><div class="s-prose js-post-body"><p>To rename your current branch:</p>
+
+<pre><code>git branch -m &lt;newname&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 388 people.</p><div class="s-prose js-post-body"><p>Here are the steps to rename the branch:</p>
+
+<ol>
+<li>Switch to the branch which needs to be renamed</li>
+<li><code>git branch -m &lt;new_name&gt;</code></li>
+<li><code>git push origin :&lt;old_name&gt;</code></li>
+<li><code>git push origin &lt;new_name&gt;:refs/heads/&lt;new_name&gt;</code></li>
+</ol>
+
+<p><strong>EDIT (12/01/2017):</strong> Make sure you run command <code>git status</code> and check that the newly created branch is pointing to its own ref and not the older one. If you find the reference to the older branch, you need to unset the upstream using:</p>
+
+<pre><code>git branch --unset-upstream
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 292 people.</p><div class="s-prose js-post-body"><p>Rename the branch will be useful once your branch is finished. Then new stuff is coming, and you want to develop in the same branch instead of deleting it and create the new one.</p>
+
+<p>From my experience, to rename a local and remote branch in Git you should do the following steps.</p>
+
+<blockquote>
+  <p>Quoting from <a href="https://multiplestates.wordpress.com/2015/02/05/rename-a-local-and-remote-branch-in-git/" rel="noreferrer">Multiple States - Rename a local and remote branch in
+  git</a></p>
+</blockquote>
+
+<h3>1. Rename your local branch</h3>
+
+<p>If you are on the branch you want to rename:</p>
+
+<pre><code>git branch -m new-name
+</code></pre>
+
+<p>If you are on a different branch:</p>
+
+<pre><code>git branch -m old-name new-name
+</code></pre>
+
+<h3>2. Delete the old-name remote branch and push the new-name local branch</h3>
+
+<pre><code>git push origin :old-name new-name
+</code></pre>
+
+<h3>3. Reset the upstream branch for the new-name local branch</h3>
+
+<pre><code>git push origin -u new-name
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 137 people.</p><div class="s-prose js-post-body"><p>The answers so far have been correct, but here is some additional information:</p>
+
+<p>One can safely rename a branch with '-m' (move), but one has to be careful with '-M', because it forces the rename, even if there is an existing branch with the same name already. Here is the excerpt from the 'git-branch' man page:</p>
+
+<blockquote>
+  <p>With a -m or -M option, <code>&lt;oldbranch&gt;</code> will be renamed to <code>&lt;newbranch&gt;</code>. If <code>&lt;oldbranch&gt;</code> had a corresponding reflog, it is renamed to match <code>&lt;newbranch&gt;</code>, and a reflog entry is created to remember the branch renaming. If <code>&lt;newbranch&gt;</code> exists, -M must be used to force the rename to happen.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 113 people.</p><div class="s-prose js-post-body"><h3>1. Rename</h3>
+
+<p><strong>If it is your current branch, just do</strong></p>
+
+<pre><code>git branch -m new_name
+</code></pre>
+
+<p><strong>If it is another branch you want to rename</strong></p>
+
+<pre><code>git branch -m old_name new_name
+</code></pre>
+
+<hr>
+
+<h3>2. Track a new remote branch</h3>
+
+<p><strong>- If your branch was pushed, then after renaming you need to delete it from the remote Git repository and ask your new local to track a new remote branch:</strong></p>
+
+<pre><code>git push origin :old_name
+git push --set-upstream origin new_name
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 88 people.</p><div class="s-prose js-post-body"><p>I foolishly named a branch starting with a hyphen, and then checked out master.  I didn't want to <strong>delete</strong> my branch, I had work in it.</p>
+
+<p>Neither of these worked:</p>
+
+<p><code>git checkout -dumb-name</code></p>
+
+<p><code>git checkout -- -dumb-name</code></p>
+
+<p><code>"</code>s, <code>'</code>s and <code>\</code>s didn't help either.  <code>git branch -m</code> doesn't work.</p>
+
+<p>Here's how I finally fixed it. Go into your working copy's .git/refs/heads, find the filename "-dumb-name", get the hash of the branch.  Then this will check it out, make a new branch with a sane name, and delete the old one.</p>
+
+<pre><code>git checkout {hash}
+git checkout -b brilliant-name
+git branch -d -- -dumb-name
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 83 people.</p><div class="s-prose js-post-body"><p>Just three steps to replicate change in name on <code>remote</code> as well as on GitHub:</p>
+
+<p>Step 1 <code>git branch -m old_branchname new_branchname</code></p>
+
+<p>Step 2 <code>git push origin :old_branchname new_branchname</code></p>
+
+<p>Step 3 <code>git push --set-upstream origin new_branchname</code></p>
+</div><p class="this-has-helped">This answer has helped 80 people.</p><div class="s-prose js-post-body"><p>To rename a branch locally:</p>
+
+<pre><code>git branch -m [old-branch] [new-branch]
+</code></pre>
+
+<p>Now you'll have to propagate these changes on your remote server as well.</p>
+
+<p>To push changes of the deleted old branch:</p>
+
+<pre><code>git push origin :[old-branch]
+</code></pre>
+
+<p>To push changes of creation of new branch:</p>
+
+<pre><code>git push origin [new-branch]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 69 people.</p><div class="s-prose js-post-body"><p>Trying to answer specifically the question (at least the title).</p>
+<p>You can also rename the <em>local</em> branch, but keep tracking the old name on the remote.</p>
+<pre><code>git branch -m old_branch new_branch
+git push --set-upstream origin new_branch:old_branch
+</code></pre>
+<p>Now, when you run <code>git push</code>, the remote <code>old_branch</code> ref is updated with your local <code>new_branch</code>.</p>
+<p><strong>You have to know and remember</strong> this configuration. But it can be useful if you don't have the choice for the remote branch name, but you don't like it (oh, I mean, you've got a <em>very good</em> reason not to like it !) and prefer a clearer name for your local branch.</p>
+<p>Playing with the fetch configuration, you can even rename the local remote-reference. i.e, having a <code>refs/remote/origin/new_branch</code> ref pointer to the branch, that is in fact the <code>old_branch</code> on <code>origin</code>. However, I highly discourage this, for the safety of your mind.</p>
+</div><p class="this-has-helped">This answer has helped 68 people.</p><div class="s-prose js-post-body"><p><em><strong>Update 2023</strong></em></p>
+<p>Before we begin, make sure you’ve selected the branch you want to rename:</p>
+<pre><code>git checkout old-name
+</code></pre>
+<p>If you want to see all of your local branches, use the following command:</p>
+<pre><code>git branch --list
+</code></pre>
+<p>When you’re all clear, follow these steps:</p>
+<ol>
+<li><p>Using the Git rename branch command will require you to add an <strong>-m</strong> option to your command:</p>
+<pre><code>git branch -m new-name
+</code></pre>
+</li>
+<li><p>You can also rename a local branch from another branch by using the following two commands:</p>
+<pre><code>git checkout master
+
+git branch -m old-name new-name
+</code></pre>
+</li>
+<li><p>Lastly, this command will list all — both local and remote — branches to verify that it has been renamed:</p>
+<pre><code>git branch -a
+</code></pre>
+</li>
+</ol>
+<p>Although it isn’t possible to rename a remote branch directly, the process of renaming one involves these two easy steps:</p>
+<ol>
+<li><p>To start, you need to rename a local branch by following the previous steps.
+2.Then <strong>delete</strong> the <strong>old</strong> branch and <strong>push</strong> the <strong>new</strong> one. You can do this easily with the following command:</p>
+<pre><code> git push origin :old-name new-name
+</code></pre>
+</li>
+<li><p>Reset the upstream branch for your new local branch, and you will be all set:</p>
+<pre><code>git push origin -u new-name
+</code></pre>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p>Rename the branch using this command:</p>
+
+<pre><code>git branch -m [old_branch_name] [new_branch_name]
+</code></pre>
+
+<p><code>-m</code>: It renames/moves the branch. If there is already a branch, you will get an error.</p>
+
+<p>If there is already a branch and you want to rename with that branch, use:</p>
+
+<pre><code> git rename -M [old_branch_name] [new_branch_name]
+</code></pre>
+
+<p>For more information about help, use this command in the terminal:</p>
+
+<pre><code>git branch --help
+</code></pre>
+
+<p>or</p>
+
+<pre><code>man git branch
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 44 people.</p><div class="s-prose js-post-body"><p>Advanced Git users can rename manually using:</p>
+
+<pre><code>Rename the old branch under .git/refs/heads to the new name
+
+Rename the old branch under .git/logs/refs/heads to the new name
+
+Update the .git/HEAD to point to yout new branch name
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 41 people.</p><div class="s-prose js-post-body"><ol>
+<li>Rename your local branch.</li>
+</ol>
+
+<p>If you are on the branch you want to rename:</p>
+
+<pre><code>git branch -m new-name
+</code></pre>
+
+<p>If you are on a different branch:</p>
+
+<pre><code>git branch -m old-name new-name
+</code></pre>
+
+<ol start="2">
+<li>Delete the old-name remote branch and push the new-name local branch.</li>
+</ol>
+
+<p><code>git push origin :old-name new-name</code></p>
+
+<ol start="3">
+<li>Reset the upstream branch for the new-name local branch.
+Switch to the branch and then:</li>
+</ol>
+
+<p><code>git push origin -u new-name</code></p>
+
+<p>Or for a fast way to do that, you can use these 3 steps:</p>
+
+<p><strong># Rename branch locally</strong>  </p>
+
+<pre><code>git branch -m old_branch new_branch  
+</code></pre>
+
+<p><strong># Delete the old remote branch</strong>   </p>
+
+<pre><code>git push origin :old_branch  
+</code></pre>
+
+<p><strong># Push the new branch, set local branch to track the new remote</strong></p>
+
+<pre><code>git push --set-upstream origin new_branch   
+</code></pre>
+
+<p>Referance: <a href="https://www.w3docs.com/snippets/git/how-to-rename-git-local-and-remote-branches.html" rel="noreferrer">https://www.w3docs.com/snippets/git/how-to-rename-git-local-and-remote-branches.html</a></p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><h2>To rename your current  branch to a new branch name : </h2>
+<pre><code>git branch -m &lt;new_name&gt;
+</code></pre>
+<blockquote>
+<p>This will set the new name for the current branch you are working with.</p>
+</blockquote>
+<hr />
+<h2> To re-name another branch : </h2>
+<pre><code>git branch -m &lt;old_name&gt; &lt;new_name&gt;
+</code></pre>
+<blockquote>
+<p>Here you have to provide the old branch name and the new branch name.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>Here are three steps: A command that you can call inside your terminal and change branch name.</p>
+
+<pre><code>git branch -m old_branch new_branch         # Rename branch locally
+git push origin :old_branch                 # Delete the old branch
+git push --set-upstream origin new_branch   # Push the new branch, set local branch to track the new remote
+</code></pre>
+
+<p>If you need more: step-by-step, <em><a href="http://www.w3docs.com/snippets/git/how-to-rename-git-local-and-remote-branches.html" rel="noreferrer">How To Change Git Branch Name</a></em> is a good article about that.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>Probably as mentioned by others, this will be a case mismatch in branch naming.</p>
+
+<p>If you have such a situation, I can guess that you're on Windows which will also lead you to:</p>
+
+<pre><code>$ git branch -m CaseSensitive casesensitive
+fatal: A branch named 'casesensitive' already exists.
+</code></pre>
+
+<p>Then you have to do an intermediate step:</p>
+
+<pre><code>$ git branch -m temporary
+$ git branch -m casesensitive
+</code></pre>
+
+<p>Nothing more.</p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>Changing the branch <strong>locally</strong> is quite easy...</p>
+
+<p>If you are on the branch you want to change the name for, simply do this:</p>
+
+<pre><code>git branch -m my_new_branch
+</code></pre>
+
+<p>Otherwise, if you are on <code>master</code> or <strong>any other branch</strong> other than the one you'd like to change the name, simply do:</p>
+
+<pre><code>git branch -m my_old_branch my_new_branch
+</code></pre>
+
+<p>Also, I create the image below to show this in action on a <strong>command line</strong>. In this case, you are on <code>master</code> branch, for example:</p>
+
+<p><a href="https://i.stack.imgur.com/9ARzs.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/9ARzs.jpg" alt="Change branch name locally"></a></p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>To rename the current branch (except for detached HEAD state) you can also use this alias:</p>
+
+<pre><code>[alias]
+    mvh = !sh -c 'git branch -m `git rev-parse --abbrev-ref HEAD` $1'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>Since you do not want to push the branch to a remote server, this example will be useful:</p>
+<p>Let's say you have an existing branch called &quot;my-hot-feature,&quot; and you want to rename it to &quot;feature-15.&quot;</p>
+<p>First, you want to change your local branch. This couldn't be easier:</p>
+<pre><code>git branch -m my-hot-feature feature-15
+</code></pre>
+<p>For more information, you can visit <em><a href="https://web.archive.org/web/20190912231829/http://www.benjaminlhaas.com/blog/locally-and-remotely-renaming-branch-git" rel="noreferrer">Locally and Remotely Renaming a Branch in Git</a></em>.</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>If you are willing to use <a href="https://www.sourcetreeapp.com/" rel="noreferrer">SourceTree</a> (which I strongly recommend), you can right click your branch and chose 'Rename'.</p>
+
+<p><a href="https://i.stack.imgur.com/6GuAJ.png" rel="noreferrer"><img src="https://i.stack.imgur.com/6GuAJ.png" alt="enter image description here"></a></p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>Another option is not to use the command line at all. Git GUI clients such as <a href="http://www.sourcetreeapp.com/" rel="noreferrer">SourceTree</a> take away much of the syntactical learning curve / pain that causes questions such as this one to be amongst the most viewed on Stack Overflow.</p>
+
+<p>In SourceTree, right click on any local branch in the "Branches" pane on the left and select "Rename ...".</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>A simple way to do it:</p>
+
+<pre><code>git branch -m old_branch new_branch         # Rename branch locally
+git push origin :old_branch                 # Delete the old branch
+git push --set-upstream origin new_branch   # Push the new branch, set local branch to track the new remote
+</code></pre>
+
+<p>For more, see <a href="https://gist.github.com/lttlrck/9628955" rel="noreferrer">this</a>.</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p><strong>Git version 2.9.2</strong></p>
+
+<p>If you want to change the name of the local branch you are on:</p>
+
+<pre><code>git branch -m new_name
+</code></pre>
+
+<p>If you want to change the name of a different branch:</p>
+
+<pre><code>git branch -m old_name new_name
+</code></pre>
+
+<p>If you want to change the name of a different branch to a name that already exists:</p>
+
+<pre><code>git branch -M old_name new_name_that_already_exists
+</code></pre>
+
+<p><strong>Note: The last command is destructive and will rename your branch, but you will lose the old branch with that name and those commits because branch names must be unique.</strong></p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>If you want to change the name of the current branch, run:</p>
+
+<pre><code>git branch -m [old_branch] [new_branch]
+</code></pre>
+
+<p>If you want to delete the old remote branch, run:</p>
+
+<pre><code>git push origin :[old_branch]
+</code></pre>
+
+<p>If you want to delete the old remote branch and create a new remote branch, run:</p>
+
+<pre><code>git push origin :old_branch new_branch
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>Actually you have three steps because the local branch has a duplicate on the server so we have one step for local on two steps on the server:</p>
+<ol>
+<li><strong>Rename local:</strong> just use the following command to rename your current branch, even you checked it out:
+<pre><code>git branch -m &lt;old-branch-name&gt; &lt;new-branch-name&gt;
+</code></pre>
+</li>
+<li><strong>Delete the server one:</strong> use the following command to delete the old name branch on the server:
+<pre><code>git push &lt;remote-name[origin by default]&gt; :&lt;old-branch-name&gt;
+</code></pre>
+</li>
+<li><strong>Push the new one:</strong> now it's time to push the new branch named on the server:
+<pre><code>git push -u &lt;new-branch-name&gt;
+</code></pre>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Git branch rename can be done by using:</p>
+
+<ol>
+<li><p><code>git branch -m oldBranch newBranch</code></p></li>
+<li><p><code>git branch -M oldBranch ExistingBranch</code></p></li>
+</ol>
+
+<p>The difference between <strong>-m</strong> and <strong>-M</strong>:</p>
+
+<p><strong>-m:</strong> if you're trying to rename your branch with an existing branch name using <strong>-m</strong>.
+It will raise an error saying that the branch already exists. You need to give unique name.</p>
+
+<p>But,</p>
+
+<p><strong>-M:</strong> this will help you to force rename with a given name, even it is exists. So an existing branch will overwrite entirely with it...</p>
+
+<p>Here is a <strong>Git terminal example,</strong></p>
+
+<pre><code>mohideen@dev:~/project/myapp/sunithamakeup$ git branch
+  master
+  master0
+  new_master
+  test
+* test1
+mohideen@dev:~/project/myapp/sunithamakeup$ git branch -m test1 test
+fatal: A branch named 'test' already exists.
+mohideen@dev:~/project/myapp/sunithamakeup$ git branch -M test1 test
+mohideen@dev:~/project/myapp/sunithamakeup$ git branch
+  master
+  master0
+  new_master
+* test
+mohideen@dev:~/project/myapp/sunithamakeup$
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>All of the previous answers are talking about <code>git branch -m</code>. Of course, it's easy to operate, but for me, it may be a little hard to remember another Git command. So I tried to get the work done by the command I was familiar with. Yeah, you may guessed it.</p>
+
+<p>I use <code>git branch -b &lt;new_branch_name&gt;</code>. And if you don't want to save the old branch now you can execute <code>git branch -D &lt;old_branch_name&gt;</code> to remove it.</p>
+
+<p>I know it may be a little tedious, but it's easier to understand and remember. I hope it‘s helpful for you.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>For Git GUI users it couldn't be much simpler.
+In Git GUI, choose the branch name from the drop down list in the "Rename Branch" dialog box created from the menu item Branch:Rename, type a New Name, and click "Rename". I have highlighted where to find the drop down list.</p>
+
+<p><a href="https://i.stack.imgur.com/tpmgB.png" rel="noreferrer"><img src="https://i.stack.imgur.com/tpmgB.png" alt="Rename a local Git branch"></a></p>
+</div></body></html>

@@ -1,0 +1,335 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the maximum length of a URL in different browsers?</p><div class="s-prose js-post-body"><p><strong>Question 1:</strong> What is the maximum length of a URL for each browser?</p>
+<p><strong>Question 2:</strong> Is a maximum URL length part of the HTTP specification?</p>
+</div><p class="this-has-helped">This answer has helped 5789 people.</p><div class="s-prose js-post-body"><h2>Short answer - de facto limit of 2000 characters</h2>
+<p>If you keep URLs under 2000 characters, they'll work in virtually any combination of client and server software.</p>
+<p>If you are targeting particular browsers, see below for more details on specific limits.</p>
+<h2>Longer answer - first, the standards...</h2>
+<p><a href="http://www.faqs.org/rfcs/rfc2616.html" rel="noreferrer">RFC 2616</a> (Hypertext Transfer Protocol HTTP/1.1) section 3.2.1 says</p>
+<blockquote>
+<p>The HTTP protocol does not place
+any a priori limit on the length of
+a URI. Servers MUST be able to handle
+the URI of any resource they    serve,
+and SHOULD be able to handle URIs of
+unbounded length if they    provide
+GET-based forms that could generate
+such URIs. A server    SHOULD return
+414 (Request-URI Too Long) status if a
+URI is longer    than the server can
+handle (see section 10.4.15).</p>
+</blockquote>
+<p>That RFC has been obsoleted by <a href="https://www.rfc-editor.org/rfc/rfc7230#section-3.1.1" rel="noreferrer">RFC7230</a> which is a refresh of the HTTP/1.1 specification. It contains similar language, but also goes on to suggest this:</p>
+<blockquote>
+<p>Various ad hoc limitations on request-line length are found in
+practice. It is RECOMMENDED that all HTTP senders and recipients
+support, at a minimum, request-line lengths of 8000 octets.</p>
+</blockquote>
+<h2>...and the reality</h2>
+<p>That's what the <em>standards</em> say. For the <em>reality</em>, there was an article on <a href="https://web.archive.org/web/20190902193246/https://boutell.com/newfaq/misc/urllength.html" rel="noreferrer">boutell.com</a> (link goes to Internet Archive backup) that discussed what individual browser and server implementations will support. The executive summary is:</p>
+<blockquote>
+<p>Extremely long URLs are usually a
+mistake. <strong>URLs over 2,000 characters
+will not work in the most popular web
+browsers.</strong> Don't use them if you intend
+your site to work for the majority of
+Internet users.</p>
+</blockquote>
+<p>(Note: this is a quote from an article written in <em>2006</em>, but in 2015 IE's declining usage means that longer URLs <em>do</em> work for the majority. However, IE still has the limitation...)</p>
+<h2>Internet Explorer's limitations...</h2>
+<p><a href="https://support.microsoft.com/en-us/kb/208427" rel="noreferrer">IE8's maximum URL length is 2083 chars</a>, and it seems <a href="https://stackoverflow.com/questions/3721034/how-long-an-url-can-internet-explorer-9-take">IE9 has a similar limit</a>.</p>
+<p>I've tested IE10 and the address bar will only accept 2083 chars. You can <em>click</em> a URL which is longer than this, but the address bar will still only show 2083 characters of this link.</p>
+<p>There's a <a href="https://blogs.msdn.microsoft.com/ieinternals/2014/08/13/url-length-limits/" rel="noreferrer">nice writeup on the IE Internals blog</a> which goes into some of the background to this.</p>
+<p>There are mixed reports IE11 supports longer URLs - see comments below. Given some people report issues, the general advice still stands.</p>
+<h2>Search engines like URLs &lt; 2048 chars...</h2>
+<p>Be aware that the <a href="http://www.sitemaps.org/protocol.html" rel="noreferrer">sitemaps protocol</a>, which allows a site to inform search engines about available pages, has a limit of 2048 characters in a URL. If you intend to use sitemaps, a limit has been decided for you! (see <a href="https://stackoverflow.com/a/7056886/6521">Calin-Andrei Burloiu's answer</a> below)</p>
+<p>There's also some research from 2010 into the <a href="https://web.archive.org/web/20111110004006/http://www.seomofo.com/experiments/title-and-h1-of-this-post-but-for-the-sake-of-keyword-prominence-stuffing-im-going-to-mention-it-again-using-various-synonyms-stemmed-variations-and-of-coursea-big-fat-prominent-font-size-heres-the-stumper-that-stumped-me-what-is-the-max-number-of-chars-in-a-url-that-google-is-willing-to-crawl-and-index-for-whatever-reason-i-thought-i-had-read-somewhere-that-googles-limit-on-urls-was-255-characters-but-that-turned-out-to-be-wrong-so-maybe-i-just-made-that-number-up-the-best-answer-i-could-find-was-this-quote-from-googles-webmaster-trends-analyst-john-mueller-we-can-certainly-crawl-and-index-urls-over-1000-characters-long-but-that-doesnt-mean-that-its-a-good-practice-the-setup-for-this-experiment-is-going-to-be-pretty-simple-im-going-to-edit-the-permalink-of-this-post-to-be-really-really-long-then-im-going-to-see-if-google-indexes-it-i-might-even-see-if-yahoo-and-bing-index-iteven-though-no-one-really-cares-what-those-assholes-are-doing-url-character-limits-unrelated-to-google-the-question-now-is-how-many-characters-should-i-make-the-url-of-this-post-there-are-a-couple-of-sources-ill-reference-to-help-me-make-this-decision-the-first-is-this-quote-from-the-microsoft-support-pages-microsoft-internet-explorer-has-a-maximum-uniform-resource-locator-url-length-of-2083-characters-internet-explorer-also-has-a-maximum-path-length-of-2048-characters-this-limit-applies-to-both-post-request-and-get-request-urls-the-second-source-ill-cite-is-the-http-11-protocol-which-says-the-http-protocol-does-not-place-any-a-priori-limit-on-the-length-of-a-uri-servers-must-be-able-to-handle-the-uri-of-any-resource-they-serve-and-should-be-able-to-handle-uris-of-unbounded-length-if-they-provide-get-based-forms-that-could-generate-such-uris-a-server-should-return-414-request-uri-too-long-status-if-a-uri-is-longer.html" rel="noreferrer">maximum URL length that search engines will crawl and index</a>. They found the limit was 2047 chars, which appears allied to the sitemap protocol spec. However, they also found the Google <a href="http://en.wikipedia.org/wiki/Search_engine_results_page" rel="noreferrer">SERP</a> tool wouldn't cope with URLs longer than 1855 chars.</p>
+<h2>CDNs have limits</h2>
+<p>CDNs also impose limits on URI length, and will return a <code>414 Too long request</code> when these limits are reached, for example:</p>
+<ul>
+<li><a href="https://docs.fastly.com/en/guides/resource-limits#request-and-header-limits" rel="noreferrer">Fastly</a> 8Kb</li>
+<li><a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-general" rel="noreferrer">CloudFront</a> 8Kb</li>
+<li><a href="https://support.cloudflare.com/hc/en-us/articles/115003014512-4xx-Client-Error#code_414" rel="noreferrer">CloudFlare</a> 16Kb</li>
+</ul>
+<p>(credit to timrs2998 for providing that info in the comments)</p>
+<h2>Additional browser roundup</h2>
+<p>I tested the following against an Apache 2.4 server configured with a very large <a href="https://httpd.apache.org/docs/current/mod/core.html#limitrequestline" rel="noreferrer">LimitRequestLine</a> and <a href="https://httpd.apache.org/docs/current/mod/core.html#limitrequestfieldsize" rel="noreferrer">LimitRequestFieldSize</a>.</p>
+<pre><code>Browser     Address bar   document.location
+                          or anchor tag
+------------------------------------------
+Chrome          32779           &gt;64k
+Android          8192           &gt;64k
+Firefox          &gt;64k           &gt;64k
+Safari           &gt;64k           &gt;64k
+IE11             2047           5120
+Edge 16          2047          10240
+</code></pre>
+<p>See also <a href="https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/31250734#31250734">this answer</a> from Matas Vaitkevicius below.</p>
+<h2>Is this information up to date?</h2>
+<p>This is a popular question, and as the original research is ~14 years old I'll try to keep it up to date: As of <strong>Jan 2021</strong>, the advice still stands. Even though IE11 may possibly accept longer URLs, the ubiquity of older IE installations plus the search engine limitations mean staying under 2000 chars is the best general policy.</p>
+</div><p class="this-has-helped">This answer has helped 211 people.</p><div class="s-prose js-post-body"><p>The longest URLs I came across are <a href="http://en.wikipedia.org/wiki/Data_URI_scheme" rel="noreferrer">data URLs</a></p>
+
+<p>Example image URL from Google image results (11747 characters)</p>
+
+<pre><code>data:image/jpeg;base64,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
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 205 people.</p><div class="s-prose js-post-body"><p>I wrote this test that keeps on adding <code>'a'</code> to parameter until the browser fails</p>
+
+<p><strong>C# part:</strong></p>
+
+<pre class="lang-cs prettyprint-override"><code>[AcceptVerbs(HttpVerbs.Get)]
+public ActionResult ParamTest(string x)
+{
+    ViewBag.TestLength = 0;
+    if (!string.IsNullOrEmpty(x))
+    {
+        System.IO.File.WriteAllLines("c:/result.txt",
+                       new[] {Request.UserAgent, x.Length.ToString()});
+        ViewBag.TestLength = x.Length + 1;
+    }
+
+    return View();
+}
+</code></pre>
+
+<p><strong>View:</strong></p>
+
+<pre class="lang-xml prettyprint-override"><code>&lt;script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"&gt;&lt;/script&gt;
+
+&lt;script type="text/javascript"&gt;
+    $(function() {
+        var text = "a";
+        for (var i = 0; i &lt; parseInt(@ViewBag.TestLength)-1; i++) {
+            text += "a";
+        }
+
+        document.location.href = "http://localhost:50766/Home/ParamTest?x=" + text;
+    });
+&lt;/script&gt;
+</code></pre>
+
+<p><strong>PART 1</strong></p>
+
+<p>On Chrome I got:</p>
+
+<pre><code>Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36
+2046
+</code></pre>
+
+<p>It then blew up with:</p>
+
+<blockquote>
+  <p>HTTP Error 404.15 - Not Found The request filtering module is
+  configured to deny a request where the query string is too long.</p>
+</blockquote>
+
+<p>Same on Internet&nbsp;Explorer&nbsp;8 and Firefox</p>
+
+<pre><code>Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C; .NET4.0E)
+2046
+
+Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0
+2046
+</code></pre>
+
+<p><strong>PART 2</strong></p>
+
+<p>I went easy mode and <a href="https://stackoverflow.com/questions/11636386/how-to-configure-the-web-config-to-allow-requests-of-any-length">added additional limits to IISExpress</a> <code>applicationhost.config</code> and <code>web.config</code> setting <code>maxQueryStringLength="32768"</code>.</p>
+
+<pre><code>Chrome failed with message 'Bad Request - Request Too Long
+
+HTTP Error 400. The size of the request headers is too long.
+</code></pre>
+
+<p>after 7744 characters.</p>
+
+<pre><code>Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36
+7744
+</code></pre>
+
+<p><strong>PART 3</strong></p>
+
+<p><a href="http://www.iis.net/configreference/system.webserver/security/requestfiltering/requestlimits/headerlimits" rel="noreferrer">Added</a></p>
+
+<pre class="lang-xml prettyprint-override"><code>&lt;headerLimits&gt;
+    &lt;add header="Content-type" sizeLimit="32768" /&gt;
+&lt;/headerLimits&gt;
+</code></pre>
+
+<p>which didn't help at all. I finally decided to use fiddler to remove the referrer from header.</p>
+
+<pre><code>static function OnBeforeRequest(oSession: Session) {
+    if (oSession.url.Contains("localhost:50766")) {
+        oSession.RequestHeaders.Remove("Referer");
+    }
+</code></pre>
+
+<p>Which did nicely.</p>
+
+<p><strong><em>Chrome:</em></strong> got to 15613 characters. (I guess it's a 16K limit for IIS)</p>
+
+<p>And it failed again with:</p>
+
+<pre><code>&lt;BODY&gt;&lt;h2&gt;Bad Request - Request Too Long&lt;/h2&gt;
+&lt;hr&gt;&lt;p&gt;HTTP Error 400. The size of the request headers is too long.&lt;/p&gt;
+
+
+Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.130 Safari/537.36
+15613
+</code></pre>
+
+<p><strong><em>Firefox:</em></strong></p>
+
+<pre><code>Mozilla/5.0 (Windows NT 6.1; WOW64; rv:38.0) Gecko/20100101 Firefox/38.0
+15708
+</code></pre>
+
+<p><strong><em>Internet Explorer 8</em></strong> failed with iexplore.exe crashing.</p>
+
+<p><img src="https://i.stack.imgur.com/nF4av.png" alt="Enter image description here"></p>
+
+<p>After 2505</p>
+
+<pre><code>Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1; WOW64; Trident/4.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; .NET4.0C; .NET4.0E)
+2505
+</code></pre>
+
+<p><strong><em>Android Emulator</em></strong></p>
+
+<pre><code>Mozilla/5.0 (Linux; Android 5.1; Android SDK built for x86 Build/LKY45) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/39.0.0.0 Mobile Safari/537.36
+7377
+</code></pre>
+
+<p><strong><em>Internet Explorer 11</em></strong></p>
+
+<pre><code>Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; Trident/7.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C)
+4043
+</code></pre>
+
+<p><strong><em>Internet Explorer 10</em></strong></p>
+
+<pre><code>Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; Trident/6.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; .NET4.0C)
+4043
+</code></pre>
+
+<p><strong><em>Internet Explorer 9</em></strong></p>
+
+<pre><code>Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)
+4043
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 175 people.</p><div class="s-prose js-post-body"><p><em><a href="https://web.archive.org/web/20180308145804/http://www.boutell.com/newfaq/misc/urllength.html" rel="noreferrer">WWW FAQs: What is the maximum length of a URL?</a></em> has its own answer based on empirical testing and research. The short answer is that going over 2048 characters makes Internet&nbsp;Explorer unhappy and thus this is the limit you should use. See the page for a long answer.</p>
+</div><p class="this-has-helped">This answer has helped 111 people.</p><div class="s-prose js-post-body"><p>On Apple platforms (iOS/macOS/tvOS/watchOS), the limit may be a <strong>2 GB</strong> long URL scheme, as seen by <a href="https://github.com/apple/swift-corelibs-foundation/blob/b23dc8e249987442811e9e0097c326d7083784ac/CoreFoundation/URL.subproj/CFURLComponents_URIParser.c#L708" rel="noreferrer">this comment in the source code of Swift</a>:</p>
+
+<blockquote>
+  <pre class="lang-c prettyprint-override"><code>// Make sure the URL string isn't too long.
+// We're limiting it to 2GB for backwards compatibility with 32-bit executables using NS/CFURL
+if ( (urlStringLength &gt; 0) &amp;&amp; (urlStringLength &lt;= INT_MAX) )
+{
+...
+</code></pre>
+</blockquote>
+
+<hr>
+
+<p>On iOS, I've tested and confirmed that even a 300+ MB long URL is accepted. You can try such a long URL like this in Objective-C:</p>
+
+<pre class="lang-c prettyprint-override"><code>NSString *path = [@"a:" stringByPaddingToLength:314572800 withString:@"a" startingAtIndex:0];
+NSString *js = [NSString stringWithFormat:@"window.location.href = \"%@\";", path];
+[self.webView stringByEvaluatingJavaScriptFromString:js];
+</code></pre>
+
+<p>And catch if it succeed with:</p>
+
+<pre class="lang-c prettyprint-override"><code>- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
+{
+    NSLog(@"length: %@", @(request.URL.absoluteString.length));
+    return YES;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 109 people.</p><div class="s-prose js-post-body"><p>There is really no universal maximum URL length. The max length is determined only by what the client browser chooses to support, which varies widely. The 2,083 limit is only present in Internet Explorer (all versions up to 7.0). The max length in Firefox and Safari seems to be unlimited, although instability occurs with URLs reaching around 65,000 characters.
+Opera seems to have no max URL length whatsoever, and doesn't suffer instability at extremely long lengths.</p>
+</div><p class="this-has-helped">This answer has helped 73 people.</p><div class="s-prose js-post-body"><p>The <a href="https://www.rfc-editor.org/rfc/rfc3986" rel="nofollow noreferrer">URI RFC</a> (of which URLs are a subset) doesn't define a maximum length, however, it does <em>recommend</em> that the hostname part of the URI (if applicable) not exceed 255 characters in length:</p>
+<blockquote>
+<p>URI producers should use names that
+conform to the DNS syntax, even when
+use of DNS is not immediately
+apparent, and should limit these names
+to no more than 255 characters in
+length.</p>
+</blockquote>
+<p>As noted in other posts though, some browsers have a practical limitation on the length of a URL.</p>
+</div><p class="this-has-helped">This answer has helped 57 people.</p><div class="s-prose js-post-body"><p>The <a href="http://www.ietf.org/rfc/rfc2616.txt" rel="noreferrer">HTTP 1.1 specification</a> says:</p>
+
+<blockquote>
+  <p>URIs in HTTP can be represented in
+  absolute form or relative to some<br>
+  known base URI [11], depending upon
+  the context of their use. The two<br>
+  forms are differentiated by the fact
+  that absolute URIs always begin<br>
+  with a scheme name followed by a
+  colon. For definitive information on<br>
+  URL syntax and semantics, see "Uniform
+  Resource Identifiers (URI):    Generic
+  Syntax and Semantics," RFC 2396 [42]
+  (which replaces RFCs    1738 [4] and
+  RFC 1808 [11]). This specification
+  adopts the    definitions of
+  "URI-reference", "absoluteURI",
+  "relativeURI", "port",<br>
+  "host","abs_path", "rel_path", and
+  "authority" from that<br>
+  specification.</p>
+  
+  <p><strong>The HTTP protocol does not place
+  any a priori limit on the length of<br>
+  a URI. Servers MUST be able to handle
+  the URI of any resource they    serve,
+  and SHOULD be able to handle URIs of
+  unbounded length if they    provide
+  GET-based forms that could generate
+  such URIs.*</strong> A server    SHOULD return
+  414 (Request-URI Too Long) status if a
+  URI is longer    than the server can
+  handle (see section 10.4.15).</p>
+  
+  <p>Note: Servers ought to be cautious about depending on URI
+  lengths
+        above 255 bytes, because some older client or proxy
+        implementations might not properly support these lengths.</p>
+</blockquote>
+
+<p>As mentioned by @Brian, the HTTP clients (e.g. browsers) may have their own limits, and HTTP servers will have different limits.</p>
+</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p><a href="http://support.microsoft.com/kb/208427/EN-US" rel="noreferrer">Microsoft Support</a> says "Maximum URL length is 2,083 characters in Internet Explorer".</p>
+
+<p>IE has problems with URLs longer than that. Firefox seems to work fine with >4k chars.</p>
+</div><p class="this-has-helped">This answer has helped 44 people.</p><div class="s-prose js-post-body"><p>In <a href="http://www.nngroup.com/articles/url-as-ui/" rel="noreferrer">URL as UI</a> Jakob Nielsen recommends:</p>
+
+<blockquote>
+  <p>the social interface to the Web relies on email when users want to recommend Web pages to each other, and email is the second-most common way users get to new sites (search engines being the most common): make sure that all URLs on your site are less than 78 characters long so that they will not wrap across a line feed.</p>
+</blockquote>
+
+<p>This is not the maximum but I'd consider this a practical maximum if you want your URL to be shared.</p>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p><a href="http://www.sitemaps.org/" rel="noreferrer">Sitemaps protocol</a>, which is a way for webmasters to inform search engines about pages on their sites (also used by Google in Webmaster Tools), supports URLs with less than 2048 characters. So if you are planning to use this feature for Search Engine Optimization, take this into account.</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>ASP.NET 2 and SQL Server reporting services 2005 have a limit of 2028. I found this out the hard way, where my dynamic URL generator would not pass over some parameters to a report beyond that point. This was under Internet&nbsp;Explorer&nbsp;8.</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>Why is the Internet&nbsp;Explorer limit only 2K while IIS has a limit of 16K? I don't think it makes sense.</p>
+
+<p>So I want to start an experiment about Ajax request URL size limits.</p>
+
+<p>I have set my Tomcat HTTP connector's maxHttpHeaderSize="1048576". And prepared a very long URL.</p>
+
+<p>Then I send a request with the long URL like the following:</p>
+
+<pre><code>var url="/ajax/url-length.jsp";
+jQuery.ajax(url,{data:{q:"0".repeat(1048000-url.length-4)}});
+</code></pre>
+
+<p>jQuery reports done. Tomcat reports the URL requested is 1048015 bytes. It was tested with Chrome 50 and Internet&nbsp;Explorer&nbsp;11.</p>
+
+<p>So web browsers won't truncate or limit your URL intentionally when sending Ajax requests.</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>Limit request line directive sets the maximum length of a URL. By default, it is set to 8190, which gives you a lot of room. However other servers and some browses, limit the length more.</p>
+
+<p>Because all parameters are passed on the URL line, items that were in password of hidden fields will also be displayed in the URL of course. Neither mobile should be used for real security measures and should be considered cosmetic security at best.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>It seems that Chrome at least has raised this limit. I pasted 20,000 characters into the bookmarklet and it took it.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>I have experience with SharePoint 2007, 2010 and there is a limit of the length URL you can create from the server side in this case SharePoint, so it depends mostly on, 1) the client (browser, version, and OS) and 2) the server technology, IIS, Apache, etc.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>According to the HTTP spec, there is no limit to a URL's length. Keep your URLs under 2048 characters; this will ensure the URLs work in all clients &amp; server configurations. Also, search engines like URLs to remain under approximately 2000 characters.</p>
+</div></body></html>

@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I check out a remote Git branch?</p><div class="s-prose js-post-body"><p>Somebody pushed a branch called <code>test</code> with <code>git push origin test</code> to a shared repository. I can see the branch with <code>git branch -r</code>. How do I check out the remote <code>test</code> branch? I've tried:</p>
+<ul>
+<li><code>git checkout test</code>, which does nothing</li>
+<li><code>git checkout origin/test</code> gives <code>* (no branch)</code></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 11192 people.</p><div class="s-prose js-post-body"><p>The answer has been split depending on whether there is one remote repository configured or multiple. The reason for this is that for the single remote case, some of the commands can be simplified as there is less ambiguity.</p>
+<p><strong>Updated for Git 2.23:</strong> For older versions, see the section at the end.</p>
+<h2>With One Remote</h2>
+<p>In both cases, start by fetching from the remote repository to make sure you have all the latest changes downloaded.</p>
+<pre><code>$ git fetch
+</code></pre>
+<p>This will fetch all of the remote branches for you. You can see the branches available for checkout with:</p>
+<pre><code>$ git branch -v -a
+
+...
+remotes/origin/test
+</code></pre>
+<p>The branches that start with <code>remotes/*</code> can be thought of as read only copies of the remote branches. To work on a branch you need to create a local branch from it. This is done with the Git command <code>switch</code> (since Git 2.23) by giving it the name of the remote branch (minus the remote name):</p>
+<pre><code>$ git switch test
+</code></pre>
+<p>In this case Git is guessing (can be disabled with <code>--no-guess</code>) that you are trying to checkout and track the remote branch with the same name.</p>
+<h2>With Multiple Remotes</h2>
+<p>In the case where multiple remote repositories exist, the remote repository needs to be explicitly named.</p>
+<p>As before, start by fetching the latest remote changes:</p>
+<pre><code>$ git fetch origin
+</code></pre>
+<p>This will fetch all of the remote branches for you. You can see the branches available for checkout with:</p>
+<pre><code>$ git branch -v -a
+</code></pre>
+<p>With the remote branches in hand, you now need to check out the branch you are interested in with <code>-c</code> to create a new local branch:</p>
+<pre><code>$ git switch -c test origin/test
+</code></pre>
+<p>For more information about using <code>git switch</code>:</p>
+<pre><code>$ man git-switch
+</code></pre>
+<p>I also created the image below for you to share the differences, look at how to fetch works, and also how it's different to pull:</p>
+<p><a href="https://i.stack.imgur.com/zBb51.png" rel="noreferrer"><img src="https://i.stack.imgur.com/zBb51.png" alt="enter image description here" /></a></p>
+<h2>Prior to Git 2.23</h2>
+<p><code>git switch</code> was added in Git 2.23, prior to this <code>git checkout</code> was used to switch branches.</p>
+<p>To checkout out with only a single remote repository:</p>
+<pre><code>git checkout test
+</code></pre>
+<p>if there there are multiple remote repositories configured it becomes a bit longer</p>
+<pre><code>git checkout -b test &lt;name of remote&gt;/test
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1485 people.</p><div class="s-prose js-post-body"><p><em><strong>Sidenote:</strong></em> With modern Git (&gt;= <a href="https://raw.github.com/git/git/master/Documentation/RelNotes/1.6.6.txt" rel="noreferrer">1.6.6</a>), you are able to use just</p>
+<pre><code>git checkout test
+</code></pre>
+<p>(note that it is 'test' not 'origin/test') to perform magical <a href="http://en.wikipedia.org/wiki/DWIM" rel="noreferrer" title="Do What I Mean">DWIM</a>-mery and create local branch 'test' for you, for which upstream would be remote-tracking branch 'origin/test'.</p>
+<hr />
+<p>The <code>* (no branch)</code> in <code>git branch</code> output means that you are on unnamed branch, in so called &quot;detached HEAD&quot; state (HEAD points directly to commit, and is not symbolic reference to some local branch).  If you made some commits on this unnamed branch, you can always create local branch off current commit:</p>
+<pre><code>git checkout -b test HEAD
+</code></pre>
+<hr />
+<p>A more modern approach as suggested in the comments:</p>
+<blockquote>
+<p>@Dennis: <code>git checkout &lt;non-branch&gt;</code>, for example <code>git checkout origin/test</code> results in detached HEAD / unnamed branch, while <code>git checkout test</code> or <code>git checkout -b test origin/test</code> results in local
+branch <code>test</code> (with remote-tracking branch <code>origin/test</code> as <em>upstream</em>) –
+Jakub Narębski Jan 9 '14 at 8:17</p>
+</blockquote>
+<p>emphasis on <code>git checkout origin/test</code></p>
+</div><p class="this-has-helped">This answer has helped 752 people.</p><div class="s-prose js-post-body"><p>In this case, you probably want to create a local <code>test</code> branch which is tracking the remote <code>test</code> branch:</p>
+<pre><code>$ git branch test origin/test
+</code></pre>
+<p>In earlier versions of <code>git</code>, you needed an explicit <code>--track</code> option, but that is the default now when you are branching off a remote branch.</p>
+<p>To create the local branch <strong>and</strong> switch to it, use:</p>
+<pre><code>$ git checkout -b test origin/test
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 554 people.</p><div class="s-prose js-post-body"><h2><a href="https://stackoverflow.com/a/1783426/456814">Accepted answer</a> not working for you?</h2>
+
+<p>While the first and selected answer is technically <em>correct</em>, there's the possibility you have not yet retrieved all objects and refs from the remote repository. If that is the case, you'll receive the following error:</p>
+
+<pre><code>$ git checkout -b remote_branch origin/remote_branch
+</code></pre>
+
+<blockquote>
+  <p>fatal: git checkout: updating paths is incompatible with switching branches.<br>
+  Did you intend to checkout 'origin/remote_branch' which can not be resolved as commit?</p>
+</blockquote>
+
+<h2>Solution</h2>
+
+<p>If you receive this message, you must first do a <code>git fetch origin</code> where <code>origin</code> is the name of the remote repository prior to running <code>git checkout remote_branch</code>. Here's a full example with responses:</p>
+
+<pre><code>$ git fetch origin
+remote: Counting objects: 140, done.
+remote: Compressing objects: 100% (30/30), done.
+remote: Total 69 (delta 36), reused 66 (delta 33)
+Unpacking objects: 100% (69/69), done.
+From https://github.com/githubuser/repo-name
+   e6ef1e0..5029161  develop    -&gt; origin/develop
+ * [new branch]      demo       -&gt; origin/demo
+   d80f8d7..359eab0  master     -&gt; origin/master
+
+$ git checkout demo
+Branch demo set up to track remote branch demo from origin.
+Switched to a new branch 'demo'
+</code></pre>
+
+<p>As you can see, running <code>git fetch origin</code> retrieved any remote branches we were not yet setup to track on our local machine. From there, since we now have a ref to the remote branch, we can simply run <code>git checkout remote_branch</code> and we'll gain the benefits of remote tracking.</p>
+</div><p class="this-has-helped">This answer has helped 378 people.</p><div class="s-prose js-post-body"><p>I tried the above solution, but it didn't work. Try this, it works:</p>
+
+<pre><code>git fetch origin 'remote_branch':'local_branch_name'
+</code></pre>
+
+<p>This will fetch the remote branch and create a new local branch (if not exists already) with name <code>local_branch_name</code> and track the remote one in it.</p>
+</div><p class="this-has-helped">This answer has helped 122 people.</p><div class="s-prose js-post-body"><p>This will <a href="https://en.wikipedia.org/wiki/DWIM">DWIM</a> for a remote not named origin (<a href="http://www.kernel.org/pub/software/scm/git/docs/git-checkout.html">documentation</a>):</p>
+
+<pre><code>$ git checkout -t remote_name/remote_branch
+</code></pre>
+
+<p>To add a new remote, you will need to do the following first:</p>
+
+<pre><code>$ git remote add remote_name location_of_remote
+$ git fetch remote_name
+</code></pre>
+
+<p>The first tells Git the remote exists, the second gets the commits.</p>
+</div><p class="this-has-helped">This answer has helped 121 people.</p><div class="s-prose js-post-body"><p>Use:</p>
+
+<pre><code>git checkout -b &lt;BRANCH-NAME&gt; &lt;REMOTE-NAME&gt;/&lt;BRANCH-NAME&gt;
+</code></pre>
+
+<p>Other answers do not work with modern Git in my benign case. You might need to pull first if the remote branch is new, but I haven't checked that case.</p>
+</div><p class="this-has-helped">This answer has helped 112 people.</p><div class="s-prose js-post-body"><p>You basically see the branch, but you don't have a local copy yet!...</p>
+<p>You need to <code>fetch</code> the branch...</p>
+<p>You can simply fetch and then checkout to the branch, use the one line command below to do that:</p>
+<pre><code>git fetch &amp;&amp; git checkout test
+</code></pre>
+<p>I also created the image below for you to share the differences, look at how <code>fetch</code> works and also how it's different to <code>pull</code>:</p>
+<p><a href="https://i.stack.imgur.com/ODFYa.png" rel="noreferrer"><img src="https://i.stack.imgur.com/ODFYa.png" alt="git fetch" /></a></p>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p>To clone a Git repository, do:</p>
+<pre><code>git clone &lt;either ssh url /http url&gt;
+</code></pre>
+<p>The above command checks out all of the branches, but only the <code>master</code> branch will be initialized. If you want to checkout the other branches, do:</p>
+<pre><code>git checkout -t origin/future_branch (for example)
+</code></pre>
+<p>This command checks out the remote branch, and your local branch name will be same as the remote branch.</p>
+<p>If you want to override your local branch name on checkout:</p>
+<pre><code>git checkout -t -b enhancement origin/future_branch
+</code></pre>
+<p>Now your local branch name is <code>enhancement</code>, but your remote branch name is <code>future_branch</code>.</p>
+</div><p class="this-has-helped">This answer has helped 55 people.</p><div class="s-prose js-post-body"><p>I always do:</p>
+<p><code>git fetch origin &amp;&amp; git checkout --track origin/branch_name</code></p>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>You can try</p>
+
+<pre><code>git fetch remote
+git checkout --track -b local_branch_name origin/branch_name
+</code></pre>
+
+<p>or</p>
+
+<pre><code>git fetch
+git checkout -b local_branch_name origin/branch_name
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>I was stuck in a situation seeing <code>error: pathspec 'desired-branch' did not match any file(s) known to git.</code> for all of the suggestions above. I'm on Git version 1.8.3.1.</p>
+<p>So this <strong>worked for me</strong>:</p>
+<pre><code>git fetch origin desired-branch
+git checkout -b desired-branch FETCH_HEAD
+</code></pre>
+<p>The explanation behind is that I've noticed that when fetching the remote branch, it was fetched to <em>FETCH_HEAD</em>:</p>
+<pre><code>git fetch origin desired-branch
+
+From github.com:MYTEAM/my-repo
+    * branch            desired-branch -&gt; FETCH_HEAD
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>First, you need to do:</p>
+
+<p><code>git fetch</code> # If you don't know about branch name</p>
+
+<pre><code>git fetch origin branch_name
+</code></pre>
+
+<p>Second, you can check out remote branch into your local by:</p>
+
+<pre><code>git checkout -b branch_name origin/branch_name
+</code></pre>
+
+<p><code>-b</code> will create new branch in specified name from your selected remote branch.</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>I use the following command:</p>
+
+<pre><code>git checkout --track origin/other_remote_branch
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><p>Commands</p>
+
+<pre><code>git fetch --all
+git checkout -b &lt;ur_new_local_branch_name&gt; origin/&lt;Remote_Branch_Name&gt;
+</code></pre>
+
+<p>are equal to</p>
+
+<pre><code> git fetch --all
+</code></pre>
+
+<p>and then</p>
+
+<pre><code> git checkout -b fixes_for_dev origin/development
+</code></pre>
+
+<p>Both will create a <code>latest fixes_for_dev</code> from <code>development</code></p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>Simply run <code>git checkout</code> with the name of the remote branch. Git will <a href="https://git-scm.com/book/id/v2/Git-Branching-Remote-Branches#_tracking_branches" rel="noreferrer">automatically create</a> a local branch that tracks the remote one:</p>
+
+<pre><code>git fetch
+git checkout test
+</code></pre>
+
+<p>However, if that branch name is found in more than one remote, this won't work as Git doesn't know which to use. In that case you can use either:</p>
+
+<pre><code>git checkout --track origin/test
+</code></pre>
+
+<p>or</p>
+
+<pre><code>git checkout -b test origin/test
+</code></pre>
+
+<p>In <a href="https://github.com/git/git/blob/master/Documentation/RelNotes/2.19.0.txt" rel="noreferrer">2.19</a>, Git learned the <a href="https://git-scm.com/docs/git-config#Documentation/git-config.txt-checkoutdefaultRemote" rel="noreferrer"><code>checkout.defaultRemote</code></a> configuration, which specifies a remote to default to when resolving such an ambiguity.</p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>The <code>git remote show &lt;origin name&gt;</code> command will list all branches (including un-tracked branches). Then you can find the remote branch name that you need to fetch.</p>
+<p>Example:</p>
+<pre><code>git remote show origin
+</code></pre>
+<p>Use these steps to fetch remote branches:</p>
+<pre><code>git fetch &lt;origin name&gt; &lt;remote branch name&gt;:&lt;local branch name&gt;
+git checkout &lt;local branch name &gt; (local branch name should the name that you given fetching)
+</code></pre>
+<p>Example:</p>
+<pre><code>git fetch origin test:test
+git checkout test
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>If the branch is on something other than the <code>origin</code> remote I like to do the following:</p>
+
+<pre><code>$ git fetch
+$ git checkout -b second/next upstream/next
+</code></pre>
+
+<p>This will checkout the <code>next</code> branch on the <code>upstream</code> remote in to a local branch called <code>second/next</code>. Which means if you already have a local branch named next it will not conflict.</p>
+
+<pre><code>$ git branch -a
+* second/next
+  remotes/origin/next
+  remotes/upstream/next
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>None of these answers worked for me. This worked:</p>
+<pre class="lang-none prettyprint-override"><code>git checkout -b feature/branch remotes/origin/feature/branch
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p><code>git fetch &amp;&amp; git checkout your-branch-name</code></p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p><code>git branch -r</code> says the object name is invalid, because that branch name isn't in Git's local branch list. Update your local branch list from origin with:</p>
+
+<pre><code>git remote update
+</code></pre>
+
+<p>And then try checking out your remote branch again.</p>
+
+<p>This worked for me.</p>
+
+<p>I believe <code>git fetch</code> pulls in <em>all</em> remote branches, which is not what the original poster wanted.</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>There are many alternatives, for example:</p>
+<ul>
+<li><p>Alternative 1:</p>
+<pre class="lang-none prettyprint-override"><code>git fetch &amp;&amp; git checkout test
+</code></pre>
+<p>It's the simplest way.</p>
+</li>
+<li><p>Alternative 2:</p>
+<pre class="lang-none prettyprint-override"><code>git fetch
+git checkout test
+</code></pre>
+<p>It's the same, but in two steps.</p>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>TL;DR</p>
+<p>Using <code>git switch</code> rather than <code>git checkout</code>. More details are <a href="https://stackoverflow.com/questions/24384951/confused-by-git-checkout/57066202#57066202">on this page</a>.</p>
+<p>I think the answer is obsolete. Git split some functions of <code>checkout</code> to <code>switch</code> and <code>restore</code> now.</p>
+<p>The following is my summary:</p>
+<p>If you want to update something for a remote branch, you should create a local branch to &quot;track&quot; the remote branch. You can update anything you want in local and finally push to remote. If you check out to the remote branch directly after cloning your repository, you may see the &quot;detached HEAD&quot; status and the following message from Git:</p>
+<pre class="lang-none prettyprint-override"><code>Note: switching to 'origin/asd'.
+
+You are in 'detached HEAD' state. You can look around, make experimental
+changes and commit them, and you can discard any commits you make in this
+state without impacting any branches by switching back to a branch.
+
+If you want to create a new branch to retain commits you create, you may
+do so (now or later) by using -c with the switch command. Example:
+
+  git switch -c &lt;new-branch-name&gt;
+
+Or undo this operation with:
+
+  git switch -
+
+Turn off this advice by setting config variable advice.detachedHead to false
+
+HEAD is now at d3e1083 Update a
+</code></pre>
+<p>So how can we create a local branch to track a remote branch?</p>
+<p>To create a local branch to track a remote branch, you can use <code>git checkout &lt;remote branch name&gt;</code> or <code>git switch &lt;remote branch name&gt;</code>. If you have a file or folder has same name as your remote branch name, <code>git checkout</code> would output some error message, but <code>git switch</code> can work normally!</p>
+<p>Example:</p>
+<ol>
+<li><p>See all branches, and we want to create a local branch to track the remote branch <code>remotes/origin/asd</code>, and we also have the file name <code>asd</code>:</p>
+<pre class="lang-none prettyprint-override"><code>$ git branch -a
+* master
+  remotes/origin/HEAD -&gt; origin/master
+  remotes/origin/asd
+  remotes/origin/ereres
+  remotes/origin/master
+  remotes/origin/zxc
+$ ls
+a  asd
+</code></pre>
+</li>
+<li><p>The filename is same as remote branch, and Git should output some error messages if we are using the <code>git checkout</code> command to create a local branch to track a remote branch</p>
+<pre class="lang-none prettyprint-override"><code>$ git checkout asd
+fatal: 'asd' could be both a local file and a tracking branch.
+Please use -- (and optionally --no-guess) to disambiguate
+</code></pre>
+</li>
+<li><p>It works if we are using <code>git switch</code>!</p>
+<pre class="lang-none prettyprint-override"><code>$ git switch ereres
+Branch 'ereres' set up to track remote branch 'ereres' from 'origin'.
+Switched to a new branch 'ereres'
+
+$ git branch -vv
+* ereres 3895036 [origin/ereres] Update a
+  master f9e24a9 [origin/master] Merge branch 'master' of
+</code></pre>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>Fetch from the remote and checkout the branch.</p>
+
+<pre><code>git fetch &lt;remote_name&gt; &amp;&amp; git checkout &lt;branch_name&gt; 
+</code></pre>
+
+<p>E.g.:</p>
+
+<blockquote>
+  <p>git fetch origin &amp;&amp; git checkout feature/XYZ-1234-Add-alerts </p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Other guys and gals give the solutions, but maybe I can tell you why.</p>
+
+<blockquote>
+  <p>git checkout test which does nothing</p>
+</blockquote>
+
+<p><code>Does nothing</code> doesn't equal <code>doesn't work</code>, so I guess when you type 'git checkout test' in your terminal and press enter key, no message appears and no error occurs. Am I right?</p>
+
+<p>If the answer is 'yes', I can tell you the cause.</p>
+
+<p>The cause is that there is a file (or folder) named 'test' in your work tree.</p>
+
+<p>When <code>git checkout xxx</code> parsed,</p>
+
+<ol>
+<li>Git looks on <code>xxx</code> as a branch name at first, but there isn't any branch named test.</li>
+<li>Then Git thinks <code>xxx</code> is a path, and fortunately (or unfortunately), there is a file named test. So <code>git checkout xxx</code> means discard any modification in <code>xxx</code> file.</li>
+<li>If there isn't file named <code>xxx</code> either, then Git will try to create the <code>xxx</code> according to some rules. One of the rules is create a branch named <code>xxx</code> if <code>remotes/origin/xxx</code> exists.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p><strong>To get newly created branches</strong> </p>
+
+<pre><code>git fetch
+</code></pre>
+
+<p><strong>To switch into another branch</strong></p>
+
+<pre><code>git checkout BranchName
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p><strong>git checkout -b &quot;Branch_name&quot; [ B means Create local branch]</strong></p>
+<p>git branch --all</p>
+<p>git checkout -b &quot;Your Branch name&quot;</p>
+<p>git branch</p>
+<p>git pull origin &quot;Your Branch name&quot;</p>
+<p>successfully checkout from the master branch to dev branch</p>
+<p><a href="https://i.stack.imgur.com/0WQfH.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/0WQfH.png" alt="enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>For us, it seems the <code>remote.origin.fetch</code> configuration gave a problem. Therefore, we could not see any other remote branches than <code>master</code>, so <code>git fetch [--all]</code> did not help. Neither <code>git checkout mybranch</code> nor <code>git checkout -b mybranch --track origin/mybranch</code> did work, although it certainly was at remote.</p>
+<p>The previous configuration only allowed <code>master</code> to be fetched:</p>
+<pre><code>$ git config --list | grep fetch
+remote.origin.fetch=+refs/heads/master:refs/remotes/origin/master
+</code></pre>
+<p>Fix it by using <code>*</code> and fetch the new information from origin:</p>
+<pre><code>$ git config remote.origin.fetch '+refs/heads/*:refs/remotes/origin/*'
+
+$ git fetch
+...
+ * [new branch] ...
+...
+</code></pre>
+<p>Now we could <code>git checkout</code> the remote branch locally.</p>
+<p>I don't have any idea how this configuration ended up in our local repository.</p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>To get all remote branches, use this:</p>
+<pre><code>git fetch --all
+</code></pre>
+<p>Then check out to the branch:</p>
+<pre><code>git checkout test
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>I used that one:</p>
+<pre><code>git clean -fxd                         # removes untracked (new added plus ignored files)
+
+git fetch
+git checkout {branchname}
+
+git reset --hard origin/{branchname}   # removes staged and working directory changes
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>It seems to my that no one suggested the simplest way (or maybe I'm too dumb to think this is <em>&quot;a way&quot;</em>). But anyway, try this:</p>
+<pre><code>git pull origin remoteBranchName
+git switch remoteBranchName
+</code></pre>
+<p>This worked for me in the same case (a branch created on the remote after my last pull request).</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>You can start tracking all remote branches with the following Bash script:</p>
+
+<pre><code>#!/bin/bash
+git fetch --all
+for branch in `git branch -r --format="%(refname:short)" | sed 's/origin\///'`
+  do git branch -f --track "$branch" "origin/$branch"
+done
+</code></pre>
+
+<p>Here is also a single-line version:</p>
+
+<pre><code>git fetch --all; for branch in `git branch -r --format="%(refname:short)" | sed 's/origin\///'`; do git branch --track "$branch" "origin/$branch" ; done ;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>For some reason, I couldn't do:</p>
+<pre><code>git checkout -b branch-name origin/branch-name
+</code></pre>
+<p>It was throwing the error:</p>
+<blockquote>
+<p>fatal: 'origin/branch-name' is not a commit and a branch 'branch-name' cannot be created from it</p>
+</blockquote>
+<p>I had to do:</p>
+<pre><code>git checkout -b branch-name commit-sha
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>If the remote branch name begins with special characters you need to use single quotes around it in the checkout command, or else Git won't know which branch you are talking about.</p>
+<p>For example, I tried to checkout a remote branch named <code>#9773</code>, but the command didn't work properly, as shown in the picture below:</p>
+<p><a href="https://i.stack.imgur.com/yK8Rb.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/yK8Rb.png" alt="Enter image description here" /></a></p>
+<p>For some reason, I wondered if the sharp symbol (#) could have something to do with it, and then I tried surrounding the branch name with single quotes, like <code>'#9773'</code> rather than just <code>#9773</code>, and fortunately it worked fine.</p>
+<pre class="lang-none prettyprint-override"><code>git checkout -b '#9773' origin/'#9773'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>Just run these two commands and you should be good to go.</p>
+<pre><code>git checkout &lt;branch-name&gt;
+git pull &lt;remote&gt; &lt;branch-name&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p><code>git fetch --all</code></p>
+<p>would fetch all the remote branches to your local</p>
+<p><code>git checkout test</code></p>
+<p>would switch you to the test branch</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p><strong>Working Commands</strong></p>
+<ol>
+<li><p><code>git fetch origin 'remote_branch':'local_branch_name'</code></p>
+</li>
+<li><p><code>git switch 'local_branch_name'</code></p>
+</li>
+<li><p><code>git pull origin 'remote_branch':'local_branch_name'</code></p>
+</li>
+</ol>
+<p>The first one is for fetching the branch and creating a local branch from a remote branch.</p>
+<p>The second one is for switching to the local branch.</p>
+<p>The third is for pulling the latest changes of remote to the local branch.</p>
+</div></body></html>

@@ -1,0 +1,1027 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What does if __name__ == &quot;__main__&quot;: do?</p><div class="s-prose js-post-body"><p>What does this do, and why should one include the <code>if</code> statement?</p>
+<pre class="lang-py prettyprint-override"><code>if __name__ == &quot;__main__&quot;:
+    print(&quot;Hello, World!&quot;)
+</code></pre>
+<hr />
+<p><sub>If you are trying to close a question where someone should be using this idiom and isn't, consider closing as a duplicate of <a href="https://stackoverflow.com/questions/6523791">Why is Python running my module when I import it, and how do I stop it?</a> instead. For questions where someone simply hasn't called any functions, or incorrectly expects a function named <code>main</code> to be used as an entry point automatically, use <a href="https://stackoverflow.com/questions/17257631">Why doesn&#39;t the main() function run when I start a Python script? Where does the script start running?</a>.</sub></p>
+</div><p class="this-has-helped">This answer has helped 8591 people.</p><div class="s-prose js-post-body"><h1>Short Answer</h1>
+<p>It's boilerplate code that protects users from accidentally invoking the script when they didn't intend to. Here are some common problems when the guard is omitted from a script:</p>
+<ul>
+<li><p>If you import the guardless script in another script (e.g. <code>import my_script_without_a_name_eq_main_guard</code>), then the latter script will trigger the former to run <em>at import time</em> and <em>using the second script's command line arguments</em>. This is almost always a mistake.</p>
+</li>
+<li><p>If you have a custom class in the guardless script and save it to a pickle file, then unpickling it in another script will trigger an import of the guardless script, with the same problems outlined in the previous bullet.</p>
+</li>
+</ul>
+<h1>Long Answer</h1>
+<p>To better understand why and how this matters, we need to take a step back to understand how Python initializes scripts and how this interacts with its module import mechanism.</p>
+<p>Whenever the Python interpreter reads a source file, it does two things:</p>
+<ul>
+<li><p>it sets a few special variables like <code>__name__</code>, and then</p>
+</li>
+<li><p>it executes all of the code found in the file.</p>
+</li>
+</ul>
+<p>Let's see how this works and how it relates to your question about the <code>__name__</code> checks we always see in Python scripts.</p>
+<h2>Code Sample</h2>
+<p>Let's use a slightly different code sample to explore how imports and scripts work.  Suppose the following is in a file called <code>foo.py</code>.</p>
+<pre><code># Suppose this is foo.py.
+
+print(&quot;before import&quot;)
+import math
+
+print(&quot;before function_a&quot;)
+def function_a():
+    print(&quot;Function A&quot;)
+
+print(&quot;before function_b&quot;)
+def function_b():
+    print(&quot;Function B {}&quot;.format(math.sqrt(100)))
+
+print(&quot;before __name__ guard&quot;)
+if __name__ == '__main__':
+    function_a()
+    function_b()
+print(&quot;after __name__ guard&quot;)
+</code></pre>
+<h2>Special Variables</h2>
+<p>When the Python interpreter reads a source file, it first defines a few special variables. In this case, we care about the <code>__name__</code> variable.</p>
+<p><strong>When Your Module Is the Main Program</strong></p>
+<p>If you are running your module (the source file) as the main program, e.g.</p>
+<pre><code>python foo.py
+</code></pre>
+<p>the interpreter will assign the hard-coded string <code>&quot;__main__&quot;</code> to the <code>__name__</code> variable, i.e.</p>
+<pre><code># It's as if the interpreter inserts this at the top
+# of your module when run as the main program.
+__name__ = &quot;__main__&quot; 
+</code></pre>
+<p><strong>When Your Module Is Imported By Another</strong></p>
+<p>On the other hand, suppose some other module is the main program and it imports your module. This means there's a statement like this in the main program, or in some other module the main program imports:</p>
+<pre><code># Suppose this is in some other main program.
+import foo
+</code></pre>
+<p>The interpreter will search for your <code>foo.py</code> file (along with searching for a few other variants), and prior to executing that module, it will assign the name <code>&quot;foo&quot;</code> from the import statement to the <code>__name__</code> variable, i.e.</p>
+<pre><code># It's as if the interpreter inserts this at the top
+# of your module when it's imported from another module.
+__name__ = &quot;foo&quot;
+</code></pre>
+<h2>Executing the Module's Code</h2>
+<p>After the special variables are set up, the interpreter executes all the code in the module, one statement at a time. You may want to open another window on the side with the code sample so you can follow along with this explanation.</p>
+<p><strong>Always</strong></p>
+<ol>
+<li><p>It prints the string <code>&quot;before import&quot;</code> (without quotes).</p>
+</li>
+<li><p>It loads the <code>math</code> module and assigns it to a variable called <code>math</code>. This is equivalent to replacing <code>import math</code> with the following (note that <code>__import__</code> is a low-level function in Python that takes a string and triggers the actual import):</p>
+</li>
+</ol>
+<pre><code># Find and load a module given its string name, &quot;math&quot;,
+# then assign it to a local variable called math.
+math = __import__(&quot;math&quot;)
+</code></pre>
+<ol start="3">
+<li><p>It prints the string <code>&quot;before function_a&quot;</code>.</p>
+</li>
+<li><p>It executes the <code>def</code> block, creating a function object, then assigning that function object to a variable called <code>function_a</code>.</p>
+</li>
+<li><p>It prints the string <code>&quot;before function_b&quot;</code>.</p>
+</li>
+<li><p>It executes the second <code>def</code> block, creating another function object, then assigning it to a variable called <code>function_b</code>.</p>
+</li>
+<li><p>It prints the string <code>&quot;before __name__ guard&quot;</code>.</p>
+</li>
+</ol>
+<p><strong>Only When Your Module Is the Main Program</strong></p>
+<ol start="8">
+<li>If your module is the main program, then it will see that <code>__name__</code> was indeed set to <code>&quot;__main__&quot;</code> and it calls the two functions, printing the strings <code>&quot;Function A&quot;</code> and <code>&quot;Function B 10.0&quot;</code>.</li>
+</ol>
+<p><strong>Only When Your Module Is Imported by Another</strong></p>
+<ol start="8">
+<li>(<strong>instead</strong>) If your module is not the main program but was imported by another one, then <code>__name__</code> will be <code>&quot;foo&quot;</code>, not <code>&quot;__main__&quot;</code>, and it'll skip the body of the <code>if</code> statement.</li>
+</ol>
+<p><strong>Always</strong></p>
+<ol start="9">
+<li>It will print the string <code>&quot;after __name__ guard&quot;</code> in both situations.</li>
+</ol>
+<p><em><strong>Summary</strong></em></p>
+<p>In summary, here's what'd be printed in the two cases:</p>
+<pre class="lang-none prettyprint-override"><code># What gets printed if foo is the main program
+before import
+before function_a
+before function_b
+before __name__ guard
+Function A
+Function B 10.0
+after __name__ guard
+</code></pre>
+<pre class="lang-none prettyprint-override"><code># What gets printed if foo is imported as a regular module
+before import
+before function_a
+before function_b
+before __name__ guard
+after __name__ guard
+</code></pre>
+<h2>Why Does It Work This Way?</h2>
+<p>You might naturally wonder why anybody would want this.  Well, sometimes you want to write a <code>.py</code> file that can be both used by other programs and/or modules as a module, and can also be run as the main program itself.  Examples:</p>
+<ul>
+<li><p>Your module is a library, but you want to have a script mode where it runs some unit tests or a demo.</p>
+</li>
+<li><p>Your module is only used as a main program, but it has some unit tests, and the testing framework works by importing <code>.py</code> files like your script and running special test functions. You don't want it to try running the script just because it's importing the module.</p>
+</li>
+<li><p>Your module is mostly used as a main program, but it also provides a programmer-friendly API for advanced users.</p>
+</li>
+</ul>
+<p>Beyond those examples, it's elegant that running a script in Python is just setting up a few magic variables and importing the script. &quot;Running&quot; the script is a side effect of importing the script's module.</p>
+<h2>Food for Thought</h2>
+<ul>
+<li><p>Question: Can I have multiple <code>__name__</code> checking blocks?  Answer: it's strange to do so, but the language won't stop you.</p>
+</li>
+<li><p>Suppose the following is in <code>foo2.py</code>.  What happens if you say <code>python foo2.py</code> on the command-line? Why?</p>
+</li>
+</ul>
+<pre class="lang-py prettyprint-override"><code># Suppose this is foo2.py.
+import os, sys; sys.path.insert(0, os.path.dirname(__file__)) # needed for some interpreters
+
+def function_a():
+    print(&quot;a1&quot;)
+    from foo2 import function_b
+    print(&quot;a2&quot;)
+    function_b()
+    print(&quot;a3&quot;)
+
+def function_b():
+    print(&quot;b&quot;)
+
+print(&quot;t1&quot;)
+if __name__ == &quot;__main__&quot;:
+    print(&quot;m1&quot;)
+    function_a()
+    print(&quot;m2&quot;)
+print(&quot;t2&quot;)
+      
+</code></pre>
+<ul>
+<li>Now, figure out what will happen if you remove the <code>__name__</code> check in <code>foo3.py</code>:</li>
+</ul>
+<pre class="lang-py prettyprint-override"><code># Suppose this is foo3.py.
+import os, sys; sys.path.insert(0, os.path.dirname(__file__)) # needed for some interpreters
+
+def function_a():
+    print(&quot;a1&quot;)
+    from foo3 import function_b
+    print(&quot;a2&quot;)
+    function_b()
+    print(&quot;a3&quot;)
+
+def function_b():
+    print(&quot;b&quot;)
+
+print(&quot;t1&quot;)
+print(&quot;m1&quot;)
+function_a()
+print(&quot;m2&quot;)
+print(&quot;t2&quot;)
+</code></pre>
+<ul>
+<li>What will this do when used as a script?  When imported as a module?</li>
+</ul>
+<pre class="lang-py prettyprint-override"><code># Suppose this is in foo4.py
+__name__ = &quot;__main__&quot;
+
+def bar():
+    print(&quot;bar&quot;)
+    
+print(&quot;before __name__ guard&quot;)
+if __name__ == &quot;__main__&quot;:
+    bar()
+print(&quot;after __name__ guard&quot;)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 2139 people.</p><div class="s-prose js-post-body"><p>When your script is run by passing it as a command to the Python interpreter,</p>
+
+<pre><code>python myscript.py
+</code></pre>
+
+<p>all of the code that is at indentation level 0 gets executed.  Functions and classes that are defined are, well, defined, but none of their code gets run.  Unlike other languages, there's no <code>main()</code> function that gets run automatically - the <code>main()</code> function is implicitly all the code at the top level.</p>
+
+<p>In this case, the top-level code is an <code>if</code> block.  <code>__name__</code> is a built-in variable which evaluates to the name of the current module.  However, if a module is being run directly (as in <code>myscript.py</code> above), then <code>__name__</code> instead is set to the string <code>"__main__"</code>.  Thus, you can test whether your script is being run directly or being imported by something else by testing</p>
+
+<pre><code>if __name__ == "__main__":
+    ...
+</code></pre>
+
+<p>If your script is being imported into another module, its various function and class definitions will be imported and its top-level code will be executed, but the code in the then-body of the <code>if</code> clause above won't get run as the condition is not met. As a basic example, consider the following two scripts:</p>
+
+<pre><code># file one.py
+def func():
+    print("func() in one.py")
+
+print("top-level in one.py")
+
+if __name__ == "__main__":
+    print("one.py is being run directly")
+else:
+    print("one.py is being imported into another module")
+</code></pre>
+
+
+
+<pre><code># file two.py
+import one
+
+print("top-level in two.py")
+one.func()
+
+if __name__ == "__main__":
+    print("two.py is being run directly")
+else:
+    print("two.py is being imported into another module")
+</code></pre>
+
+<p>Now, if you invoke the interpreter as</p>
+
+<pre><code>python one.py
+</code></pre>
+
+<p>The output will be</p>
+
+<pre><code>top-level in one.py
+one.py is being run directly
+</code></pre>
+
+<p>If you run <code>two.py</code> instead:</p>
+
+<pre><code>python two.py
+</code></pre>
+
+<p>You get</p>
+
+<pre><code>top-level in one.py
+one.py is being imported into another module
+top-level in two.py
+func() in one.py
+two.py is being run directly
+</code></pre>
+
+<p>Thus, when module <code>one</code> gets loaded, its <code>__name__</code> equals <code>"one"</code> instead of <code>"__main__"</code>.</p>
+</div><p class="this-has-helped">This answer has helped 866 people.</p><div class="s-prose js-post-body"><p>Create the following two files:</p>
+<pre class="lang-py prettyprint-override"><code># a.py
+
+import b
+</code></pre>
+<pre class="lang-py prettyprint-override"><code># b.py
+
+print(&quot;__name__ equals &quot; + __name__)
+
+if __name__ == '__main__':
+    print(&quot;if-statement was executed&quot;)
+</code></pre>
+<p>Now run each file individually.</p>
+<hr />
+<p><strong>Running <code>python a.py</code>:</strong></p>
+<pre><code>$ python a.py
+__name__ equals b
+</code></pre>
+<p>When <code>a.py</code> is executed, it imports the module <code>b</code>. This causes all the code inside <code>b</code> to run. Python sets <code>globals()['__name__']</code> in the <code>b</code> module to the module's name, <code>b</code>.</p>
+  <br />
+<p><strong>Running <code>python b.py</code>:</strong></p>
+<pre><code>$ python b.py
+__name__ equals __main__
+if-statement was executed
+</code></pre>
+<p>When only the file <code>b.py</code> is executed, Python sets <code>globals()['__name__']</code> in this file to <code>&quot;__main__&quot;</code>. Therefore, the <code>if</code> statement evaluates to <code>True</code> this time.</p>
+</div><p class="this-has-helped">This answer has helped 605 people.</p><div class="s-prose js-post-body"><blockquote>
+  <h2>What does the <code>if __name__ == "__main__":</code> do?</h2>
+</blockquote>
+
+<p>To outline the basics:</p>
+
+<ul>
+<li><p>The global variable, <code>__name__</code>, in the module that is the entry point to your program, is <code>'__main__'</code>. Otherwise, it's the name you import the module by.</p></li>
+<li><p>So, code under the <code>if</code> block will only run if the module is the entry point to your program.</p></li>
+<li><p>It allows the code in the module to be importable by other modules, without executing the code block beneath on import.</p></li>
+</ul>
+
+<hr>
+
+<p>Why do we need this?</p>
+
+<h2>Developing and Testing Your Code</h2>
+
+<p>Say you're writing a Python script designed to be used as a module:</p>
+
+<pre><code>def do_important():
+    """This function does something very important"""
+</code></pre>
+
+<p>You <em>could</em> test the module by adding this call of the function to the bottom:</p>
+
+<pre><code>do_important()
+</code></pre>
+
+<p>and running it (on a command prompt) with something like:</p>
+
+<pre><code>~$ python important.py
+</code></pre>
+
+<h2>The Problem</h2>
+
+<p>However, if you want to import the module to another script:</p>
+
+<pre><code>import important
+</code></pre>
+
+<p>On import, the <code>do_important</code> function would be called, so you'd probably comment out your function call, <code>do_important()</code>, at the bottom. </p>
+
+<pre><code># do_important() # I must remember to uncomment to execute this!
+</code></pre>
+
+<p>And then you'll have to remember whether or not you've commented out your test function call. And this extra complexity would mean you're likely to forget, making your development process more troublesome.</p>
+
+<h2>A Better Way</h2>
+
+<p>The <code>__name__</code> variable points to the namespace wherever the Python interpreter happens to be at the moment. </p>
+
+<p>Inside an imported module, it's the name of that module. </p>
+
+<p>But inside the primary module (or an interactive Python session, i.e. the interpreter's Read, Eval, Print Loop, or REPL) you are running everything from its <code>"__main__"</code>.</p>
+
+<p>So if you check before executing:</p>
+
+<pre><code>if __name__ == "__main__":
+    do_important()
+</code></pre>
+
+<p>With the above, your code will only execute when you're running it as the primary module (or intentionally call it from another script). </p>
+
+<h2>An Even Better Way</h2>
+
+<p>There's a Pythonic way to improve on this, though. </p>
+
+<p>What if we want to run this business process from outside the module?</p>
+
+<p>If we put the code we want to exercise as we develop and test in a function like this and then do our check for <code>'__main__'</code> immediately after:</p>
+
+<pre><code>def main():
+    """business logic for when running this module as the primary one!"""
+    setup()
+    foo = do_important()
+    bar = do_even_more_important(foo)
+    for baz in bar:
+        do_super_important(baz)
+    teardown()
+
+# Here's our payoff idiom!
+if __name__ == '__main__':
+    main()
+</code></pre>
+
+<p>We now have a final function for the end of our module that will run if we run the module as the primary module. </p>
+
+<p>It will allow the module and its functions and classes to be imported into other scripts without running the <code>main</code> function, and will also allow the module (and its functions and classes) to be called when running from a different <code>'__main__'</code> module, i.e.</p>
+
+<pre><code>import important
+important.main()
+</code></pre>
+
+<p><a href="https://docs.python.org/2/library/__main__.html" rel="noreferrer">This idiom can also be found in the Python documentation in an explanation of the <code>__main__</code> module.</a> That text states:</p>
+
+<blockquote>
+  <p>This module represents the (otherwise anonymous) scope in which the
+  interpreter’s main program executes — commands read either from
+  standard input, from a script file, or from an interactive prompt. It
+  is this environment in which the idiomatic “conditional script” stanza
+  causes a script to run:</p>
+
+<pre><code>if __name__ == '__main__':
+    main()
+</code></pre>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 172 people.</p><div class="s-prose js-post-body"><p><code>if __name__ == "__main__"</code> is the part that runs when the script is run from (say) the command line using a command like <code>python myscript.py</code>.</p>
+</div><p class="this-has-helped">This answer has helped 112 people.</p><div class="s-prose js-post-body"><blockquote>
+<h2>What does <code>if __name__ == &quot;__main__&quot;:</code> do?</h2>
+</blockquote>
+<p><code>__name__</code> is a global variable (in Python, global actually means on the <a href="https://docs.python.org/tutorial/modules.html#modules" rel="noreferrer">module level</a>) that exists in all namespaces. It is typically the module's name (as a <code>str</code> type).</p>
+<p>As the only special case, however, in whatever Python process you run, as in mycode.py:</p>
+<pre><code>python mycode.py
+</code></pre>
+<p>the otherwise anonymous global namespace is assigned the value of <code>'__main__'</code> to its <code>__name__</code>.</p>
+<p>Thus, including <a href="https://docs.python.org/library/__main__.html" rel="noreferrer">the final lines</a></p>
+<pre><code>if __name__ == '__main__':
+    main()
+</code></pre>
+<ul>
+<li>at the end of your mycode.py script,</li>
+<li>when it is the primary, entry-point module that is run by a Python process,</li>
+</ul>
+<p>will cause your script's uniquely defined <code>main</code> function to run.</p>
+<p>Another benefit of using this construct: you can also import your code as a module in another script and then run the main function if and when your program decides:</p>
+<pre><code>import mycode
+# ... any amount of other code
+mycode.main()
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 95 people.</p><div class="s-prose js-post-body"><p>There are lots of different takes here on the mechanics of the code in question, the "How", but for me none of it made sense until I understood the "Why". This should be especially helpful for new programmers.</p>
+
+<p>Take file "ab.py":</p>
+
+<pre><code>def a():
+    print('A function in ab file');
+a()
+</code></pre>
+
+<p>And a second file "xy.py":</p>
+
+<pre><code>import ab
+def main():
+    print('main function: this is where the action is')
+def x():
+    print ('peripheral task: might be useful in other projects')
+x()
+if __name__ == "__main__":
+    main()
+</code></pre>
+
+<blockquote>
+  <p>What is this code actually doing?</p>
+</blockquote>
+
+<p>When you execute <code>xy.py</code>, you <code>import ab</code>. The import statement runs the module immediately on import, so <code>ab</code>'s operations get executed before the remainder of <code>xy</code>'s. Once finished with <code>ab</code>, it continues with <code>xy</code>.</p>
+
+<p>The interpreter keeps track of which scripts are running with <code>__name__</code>. When you run a script - no matter what you've named it - the interpreter calls it <code>"__main__"</code>, making it the master or 'home' script that gets returned to after running an external script.</p>
+
+<p>Any other script that's called from this <code>"__main__"</code> script is assigned its filename as its <code>__name__</code> (e.g., <code>__name__ == "ab.py"</code>). Hence, the line <code>if __name__ == "__main__":</code> is the interpreter's test to determine if it's interpreting/parsing the 'home' script that was initially executed, or if it's temporarily peeking into another (external) script. This gives the programmer flexibility to have the script behave differently if it's executed directly vs. called externally.</p>
+
+<p>Let's step through the above code to understand what's happening, focusing first on the unindented lines and the order they appear in the scripts. Remember that function - or <code>def</code> - blocks don't do anything by themselves until they're called. What the interpreter might say if mumbled to itself:</p>
+
+<ul>
+<li>Open xy.py as the 'home' file; call it <code>"__main__"</code> in the <code>__name__</code> variable.</li>
+<li>Import and open file with the <code>__name__ == "ab.py"</code>.</li>
+<li>Oh, a function. I'll remember that.</li>
+<li>Ok, function <code>a()</code>; I just learned that. Printing '<em>A function in ab file</em>'.</li>
+<li>End of file; back to <code>"__main__"</code>!</li>
+<li>Oh, a function. I'll remember that.</li>
+<li>Another one.</li>
+<li>Function <code>x()</code>; ok, printing '<em>peripheral task: might be useful in other projects</em>'.</li>
+<li>What's this? An <code>if</code> statement. Well, the condition has been met (the variable <code>__name__</code> has been set to <code>"__main__"</code>), so I'll enter the <code>main()</code> function and print '<em>main function: this is where the action is</em>'.</li>
+</ul>
+
+<p>The bottom two lines mean: "If this is the <code>"__main__"</code> or 'home' script, execute the function called <code>main()</code>". That's why you'll see a <code>def main():</code> block up top, which contains the main flow of the script's functionality.</p>
+
+<blockquote>
+  <p>Why implement this?</p>
+</blockquote>
+
+<p>Remember what I said earlier about import statements? When you import a module it doesn't just 'recognize' it and wait for further instructions - it actually runs all the executable operations contained within the script. So, putting the meat of your script into the <code>main()</code> function effectively quarantines it, putting it in isolation so that it won't immediately run when imported by another script.</p>
+
+<p>Again, there will be exceptions, but common practice is that <code>main()</code> doesn't usually get called externally. So you may be wondering one more thing: if we're not calling <code>main()</code>, why are we calling the script at all? It's because many people structure their scripts with standalone functions that are built to be run independent of the rest of the code in the file. They're then later called somewhere else in the body of the script. Which brings me to this:</p>
+
+<blockquote>
+  <p>But the code works without it</p>
+</blockquote>
+
+<p>Yes, that's right. These separate functions <strong>can</strong> be called from an in-line script that's not contained inside a <code>main()</code> function. If you're accustomed (as I am, in my early learning stages of programming) to building in-line scripts that do exactly what you need, and you'll try to figure it out again if you ever need that operation again ... well, you're not used to this kind of internal structure to your code, because it's more complicated to build and it's not as intuitive to read.</p>
+
+<p>But that's a script that probably can't have its functions called externally, because if it did it would immediately start calculating and assigning variables. And chances are if you're trying to re-use a function, your new script is related closely enough to the old one that there will be conflicting variables.</p>
+
+<p>In splitting out independent functions, you gain the ability to re-use your previous work by calling them into another script. For example, "example.py" might import "xy.py" and call <code>x()</code>, making use of the 'x' function from "xy.py". (Maybe it's capitalizing the third word of a given text string; creating a NumPy array from a list of numbers and squaring them; or detrending a 3D surface. The possibilities are limitless.)</p>
+
+<p>(As an aside, <a href="https://stackoverflow.com/questions/23000075/purpose-of-if-name-main">this question</a> contains an answer by @kindall that finally helped me to understand - the why, not the how. Unfortunately it's been marked as a duplicate of <a href="https://stackoverflow.com/questions/419163/what-does-if-name-main-do">this one</a>, which I think is a mistake.)</p>
+</div><p class="this-has-helped">This answer has helped 87 people.</p><div class="s-prose js-post-body"><p>The code under <code>if __name__ == '__main__':</code> will <em>only</em> be executed if the module is invoked as a script.</p>
+<p>As an example, consider the following module <code>my_test_module.py</code>:</p>
+<pre><code># my_test_module.py
+
+print('This is going to be printed out, no matter what')
+
+if __name__ == '__main__':
+    print('This is going to be printed out, only if user invokes the module as a script')
+</code></pre>
+<hr />
+<p><strong>First possibility: Import <code>my_test_module.py</code> in another module</strong></p>
+<pre><code># main.py
+
+import my_test_module
+
+if __name__ == '__main__':
+    print('Hello from main.py')
+</code></pre>
+<p>Now if you invoke <code>main.py</code>:</p>
+<pre><code>python main.py
+
+&gt;&gt; 'This is going to be printed out, no matter what'
+&gt;&gt; 'Hello from main.py'
+</code></pre>
+<p>Note that only the top-level <code>print()</code> statement in <code>my_test_module</code> is executed.</p>
+<hr />
+<p><strong>Second possibility: Invoke <code>my_test_module.py</code> as a script</strong></p>
+<p>Now if you run <code>my_test_module.py</code> as a Python script, both <code>print()</code> statements will be executed:</p>
+<pre><code>python my_test_module.py
+
+&gt;&gt;&gt; 'This is going to be printed out, no matter what'
+&gt;&gt;&gt; 'This is going to be printed out, only if user invokes the module as a script'
+</code></pre>
+<hr />
+<p>For a more comprehensive explanation, you can read <em><a href="https://towardsdatascience.com/python-main-b729fab7a8c3" rel="noreferrer">What does <code>if __name__ == '__main__'</code> do in Python</a></em>.</p>
+</div><p class="this-has-helped">This answer has helped 71 people.</p><div class="s-prose js-post-body"><p>When there are certain statements in our module (<code>M.py</code>) we want to be executed when it'll be running as main (not imported), we can place those statements (test-cases, print statements) under this <code>if</code> block.</p>
+
+<p>As by default (when module running as main, not imported) the <code>__name__</code> variable is set to <code>"__main__"</code>, and when it'll be imported the <code>__name__</code> variable will get a different value, most probably the name of the module (<code>'M'</code>).
+This is helpful in running different variants of a modules together, and separating their specific input &amp; output statements and also if there are any test-cases.</p>
+
+<p><strong>In short</strong>, use this '<code>if __name__ == "main"</code> ' block to prevent (certain) code from being run when the module is imported.</p>
+</div><p class="this-has-helped">This answer has helped 67 people.</p><div class="s-prose js-post-body"><p>Put simply, <code>__name__</code> is a variable defined for each script that defines whether the script is being run as the main module or it is being run as an imported module.</p>
+
+<p>So if we have two scripts;</p>
+
+<pre><code>#script1.py
+print "Script 1's name: {}".format(__name__)
+</code></pre>
+
+<p>and</p>
+
+<pre><code>#script2.py
+import script1
+print "Script 2's name: {}".format(__name__)
+</code></pre>
+
+<p>The output from executing script1 is</p>
+
+<pre><code>Script 1's name: __main__
+</code></pre>
+
+<p>And the output from executing script2 is:</p>
+
+<pre><code>Script1's name is script1
+Script 2's name: __main__
+</code></pre>
+
+<p>As you can see, <code>__name__</code> tells us which code is the 'main' module.
+This is great, because you can just write code and not have to worry about structural issues like in C/C++, where, if a file does not implement a 'main' function then it cannot be compiled as an executable and if it does, it cannot then be used as a library.</p>
+
+<p>Say you write a Python script that does something great and you implement a boatload of functions that are useful for other purposes. If I want to use them I can just import your script and use them without executing your program (given that your code only executes within the  <code>if __name__ == "__main__":</code> context). Whereas in C/C++ you would have to portion out those pieces into a separate module that then includes the file. Picture the situation below;</p>
+
+<p><a href="https://i.stack.imgur.com/hWLqr.png" rel="noreferrer"><img src="https://i.stack.imgur.com/hWLqr.png" alt="Complicated importing in C"></a></p>
+
+<p>The arrows are import links. For three modules each trying to include the previous modules code there are six files (nine, counting the implementation files) and five links. This makes it difficult to include other code into a C project unless it is compiled specifically as a library. Now picture it for Python:</p>
+
+<p><a href="https://i.stack.imgur.com/Eql0u.png" rel="noreferrer"><img src="https://i.stack.imgur.com/Eql0u.png" alt="Elegant importing in Python"></a></p>
+
+<p>You write a module, and if someone wants to use your code they just import it and the <code>__name__</code> variable can help to separate the executable portion of the program from the library part.</p>
+</div><p class="this-has-helped">This answer has helped 59 people.</p><div class="s-prose js-post-body"><p>To be short, you need to know several points:</p>
+<ol>
+<li><p><code>import a</code> action actually runs all that can be run in <code>a.py</code>, meaning each line in <code>a.py</code></p>
+</li>
+<li><p>Because of point 1, you may not want everything to be run in <code>a.py</code> when importing it</p>
+</li>
+<li><p>To solve the problem in point 2, Python allows you to use a condition check</p>
+</li>
+<li><p><code>__name__</code> is an implicit variable in all <code>.py</code> modules:</p>
+</li>
+</ol>
+<ul>
+<li>when <code>a.py</code> is <code>import</code>ed, the value of <code>__name__</code> of <code>a.py</code> module is set to its file name &quot;<code>a</code>&quot;</li>
+<li>when <code>a.py</code> is run directly using &quot;<code>python a.py</code>&quot;, the value of <code>__name__</code> is set to a string <code>__main__</code></li>
+</ul>
+<ol start="5">
+<li>Based on the mechanism how Python sets the variable <code>__name__</code> for each module, do you know how to achieve point 3? The answer is fairly easy, right? Use an <em>if</em> condition: <code>if __name__ == &quot;__main__&quot;: // do A</code></li>
+</ol>
+<ul>
+<li>then <code>python a.py</code> will run the part <code>// do A</code></li>
+<li>and <code>import a</code> will skip the part <code>// do A</code></li>
+</ul>
+<ol start="6">
+<li>You can even put if <code>__name__ == &quot;a&quot;</code> depending on your functional need, but rarely do</li>
+</ol>
+<p>The important thing that Python is special at is point 4! The rest is just basic logic.</p>
+<p><sub>I've been reading so much throughout the answers on this page. I would say, if you know the thing, for sure you will understand those answers, otherwise, you are still confused.</sub></p>
+</div><p class="this-has-helped">This answer has helped 58 people.</p><div class="s-prose js-post-body"><p>Let's look at the answer in a more abstract way:</p>
+
+<p>Suppose we have this code in <code>x.py</code>:</p>
+
+<pre><code>...
+&lt;Block A&gt;
+if __name__ == '__main__':
+    &lt;Block B&gt;
+...
+</code></pre>
+
+<p>Blocks A and B are run when we are running <code>x.py</code>.</p>
+
+<p>But just block A (and not B) is run when we are running another module, <code>y.py</code> for example, in which <code>x.py</code> is imported and the code is run from there (like when a function in <code>x.py</code> is called from <code>y.py</code>).</p>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>When you run Python interactively the local <code>__name__</code> variable is assigned a value of <code>__main__</code>. Likewise, when you execute a Python module from the command line, rather than importing it into another module, its <code>__name__</code> attribute is assigned a value of <code>__main__</code>, rather than the actual name of the module. In this way, modules can look at their own <code>__name__</code> value to determine for themselves how they are being used, whether as support for another program or as the main application executed from the command line. Thus, the following idiom is quite common in Python modules:</p>
+
+<pre><code>if __name__ == '__main__':
+    # Do something appropriate here, like calling a
+    # main() function defined elsewhere in this module.
+    main()
+else:
+    # Do nothing. This module has been imported by another
+    # module that wants to make use of the functions,
+    # classes and other useful bits it has defined.
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p>Consider:</p>
+<pre><code>if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>It checks if the <code>__name__</code> attribute of the Python script is <code>&quot;__main__&quot;</code>. In other words, if the program itself is executed, the attribute will be <code>__main__</code>, so the program will be executed (in this case the <code>main()</code> function).</p>
+<p>However, if your Python script is used by a module, any code outside of the <code>if</code> statement will be executed, so <code>if __name__ == &quot;__main__&quot;</code> is used just to check if the program is used as a module or not, and therefore decides whether to run the code.</p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p><em>Before explaining anything about <code>if __name__ == '__main__'</code> it is important to understand what <code>__name__</code> is and what it does.</em></p>
+<h2>What is <code>__name__</code>?</h2>
+<p><code>__name__</code> is a <a href="https://wiki.python.org/moin/DunderAlias" rel="noreferrer">DunderAlias</a> - can be thought of as a global variable (accessible from modules) and works in a similar way to <a href="https://stackoverflow.com/questions/13881395/in-python-what-is-a-global-statement"><code>global</code></a>.</p>
+<p>It is a string (global as mentioned above) as indicated by <code>type(__name__)</code> (yielding <code>&lt;class 'str'&gt;</code>), and is an inbuilt standard for both <a href="https://docs.python.org/3/library/__main__.html" rel="noreferrer">Python 3</a> and <a href="https://docs.python.org/2/library/__main__.html" rel="noreferrer">Python 2</a> versions.</p>
+<h2>Where</h2>
+<p>It can not only be used in scripts but can also be found in both the interpreter and modules/packages.</p>
+<h3>Interpreter:</h3>
+<pre><code>&gt;&gt;&gt; print(__name__)
+__main__
+&gt;&gt;&gt;
+</code></pre>
+<h3>Script:</h3>
+<p><em>test_file.py</em>:</p>
+<pre><code>print(__name__)
+</code></pre>
+<p>Resulting in <code>__main__</code></p>
+<h3>Module or package:</h3>
+<p><em>somefile.py:</em></p>
+<pre><code>def somefunction():
+    print(__name__)
+</code></pre>
+<p><em>test_file.py:</em></p>
+<pre><code>import somefile
+somefile.somefunction()
+</code></pre>
+<p>Resulting in <code>somefile</code></p>
+<p>Notice that when used in a package or module, <code>__name__</code> takes the name of the file.  The path of the actual module or package path is not given, but has its own DunderAlias <code>__file__</code>, that allows for this.</p>
+<p>You should see that, where <code>__name__</code>, where it is the main file (or program) will <em>always</em> return <code>__main__</code>, and if it is a module/package, or anything that is running off some other Python script, will return the name of the file where it has originated from.</p>
+<h2>Practice</h2>
+<p>Being a variable means that it's value <em>can</em> be overwritten (&quot;can&quot; does not mean &quot;should&quot;), overwriting the value of <code>__name__</code> will result in a lack of readability.  So do not do it, for any reason.  If you need a variable define a new variable.</p>
+<p>It is always assumed that the value of <code>__name__</code> to be <code>__main__</code> or the name of the file.  Once again changing this default value will cause more confusion that it will do good, causing problems further down the line.</p>
+<h3>Example:</h3>
+<pre><code>&gt;&gt;&gt; __name__ = 'Horrify' # Change default from __main__
+&gt;&gt;&gt; if __name__ == 'Horrify': print(__name__)
+...
+&gt;&gt;&gt; else: print('Not Horrify')
+...
+Horrify
+&gt;&gt;&gt;
+</code></pre>
+<p>It is considered good practice in general to include the <code>if __name__ == '__main__'</code> in scripts.</p>
+<h2>Now to answer <code>if __name__ == '__main__'</code>:</h2>
+<p><em>Now we know the behaviour of <code>__name__</code> things become clearer:</em></p>
+<p>An <a href="https://docs.python.org/3/tutorial/controlflow.html#if-statements" rel="noreferrer"><code>if</code></a> is a flow control statement that contains the block of code will execute if the value given is true. We have seen that <code>__name__</code> can take either
+<code>__main__</code> or the file name it has been imported from.</p>
+<p>This means that if <code>__name__</code> is equal to <code>__main__</code> then the file must be the main file and must actually be running (or it is the interpreter), not a module or package imported into the script.</p>
+<p>If indeed <code>__name__</code> does take the value of <code>__main__</code> then whatever is in that block of code will execute.</p>
+<p>This tells us that if the file running is the main file (or you are running from the interpreter directly) then that condition must execute.  If it is a package then it should not, and the value will not be <code>__main__</code>.</p>
+<h3>Modules</h3>
+<p><code>__name__</code> can also be used in modules to define the name of a module</p>
+<h3>Variants</h3>
+<p>It is also possible to do other, less common but useful things with <code>__name__</code>, some I will show here:</p>
+<h3>Executing only if the file is a module or package</h3>
+<pre><code>if __name__ != '__main__':
+    # Do some useful things 
+</code></pre>
+<h3>Running one condition if the file is the main one and another if it is not</h3>
+<pre><code>if __name__ == '__main__':
+    # Execute something
+else:
+    # Do some useful things
+</code></pre>
+<p>You can also use it to provide runnable help functions/utilities on packages and modules without the elaborate use of libraries.</p>
+<p>It also allows modules to be run from the command line as main scripts, which can be also very useful.</p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>It is a special for when a Python file is called from the command line. This is typically used to call a &quot;main()&quot; function or execute other appropriate startup code, like commandline arguments handling for instance.</p>
+<p>It could be written in several ways. Another is:</p>
+<pre><code>def some_function_for_instance_main():
+    dosomething()
+
+
+__name__ == '__main__' and some_function_for_instance_main()
+</code></pre>
+<p>I am not saying you should use this in production code, but it serves to illustrate that there is nothing &quot;magical&quot; about <code>if __name__ == '__main__'</code>.</p>
+<p>It just a convention for invoking a main function in Python files.</p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>I think it's best to break the answer in depth and in simple words:</p>
+
+<p><code>__name__</code>: Every module in Python has a special attribute called <code>__name__</code>.
+It is a built-in variable that returns the name of the module.</p>
+
+<p><code>__main__</code>: Like other programming languages, Python too has an execution entry point, i.e., main. <code>'__main__'</code> <em>is the name of the scope in which top-level code executes</em>. Basically you have two ways of using a Python module: Run it directly as a script, or import it. When a module is run as a script, its <code>__name__</code> is set to <code>__main__</code>.</p>
+
+<p>Thus, the value of the <code>__name__</code> attribute is set to <code>__main__</code> when the module is run as the main program. Otherwise the value of <code>__name__</code>  is set to contain the name of the module.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>There are a number of variables that the system (Python interpreter) provides for source files (modules).  You can get their values anytime you want, so, let us focus on the <strong>__name__</strong> variable/attribute:</p>
+
+<p>When Python loads a source code file, it executes all of the code found in it. (Note that it doesn't call all of the methods and functions defined in the file, but it does define them.)</p>
+
+<p>Before the interpreter executes the source code file though, it defines a few special variables for that file; <strong>__name__</strong> is one of those special variables that Python automatically defines for each source code file.</p>
+
+<p>If Python is loading this source code file as the main program (i.e. the file you run), then it sets the special <strong>__name__</strong> variable for this file to have a value <strong>"__main__"</strong>.</p>
+
+<p>If this is being imported from another module, <strong>__name__</strong> will be set to that module's name.</p>
+
+<p>So, in your example in part:</p>
+
+<pre><code>if __name__ == "__main__":
+   lock = thread.allocate_lock()
+   thread.start_new_thread(myfunction, ("Thread #: 1", 2, lock))
+   thread.start_new_thread(myfunction, ("Thread #: 2", 2, lock))
+</code></pre>
+
+<p>means that the code block:</p>
+
+<pre><code>lock = thread.allocate_lock()
+thread.start_new_thread(myfunction, ("Thread #: 1", 2, lock))
+thread.start_new_thread(myfunction, ("Thread #: 2", 2, lock))
+</code></pre>
+
+<p>will be executed only when you run the module directly; the code block will not execute if another module is calling/importing it because the value of <strong>__name__</strong> will not equal to "<strong>main</strong>" in that particular instance.</p>
+
+<p>Hope this helps out.</p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p><code>if __name__ == "__main__":</code> is basically the top-level script environment, and it specifies the interpreter that ('I have the highest priority to be executed first').</p>
+
+<p><code>'__main__'</code> is the name of the scope in which top-level code executes. A module’s <code>__name__</code> is set equal to <code>'__main__'</code> when read from standard input, a script, or from an interactive prompt.</p>
+
+<pre><code>if __name__ == "__main__":
+    # Execute only if run as a script
+    main()
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>Consider:</p>
+
+<pre><code>print __name__
+</code></pre>
+
+<p>The output for the above is <code>__main__</code>.</p>
+
+<pre><code>if __name__ == "__main__":
+  print "direct method"
+</code></pre>
+
+<p>The above statement is true and prints <em>"direct method"</em>. Suppose if they imported this class in another class it doesn't print <em>"direct method"</em> because, while importing, it will set <code>__name__ equal to "first model name"</code>.</p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>In simple words:</p>
+<p>The code you see under <code>if __name__ == &quot;__main__&quot;:</code> will only get called upon when your Python file is executed as <code>python example1.py</code></p>
+<p>However, if you wish to import your Python file <code>example1.py</code> as a module to work with another Python file, say <code>example2.py</code>, the code under <code>if __name__ == &quot;__main__&quot;:</code> will not run or take any effect.</p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><blockquote>
+  <p>You can make the file usable as a <strong>script</strong> as well as an <strong>importable module</strong>.</p>
+</blockquote>
+
+<p><strong>fibo.py (a module named <code>fibo</code>)</strong></p>
+
+<pre><code># Other modules can IMPORT this MODULE to use the function fib
+def fib(n):    # write Fibonacci series up to n
+    a, b = 0, 1
+    while b &lt; n:
+        print(b, end=' ')
+        a, b = b, a+b
+    print()
+
+# This allows the file to be used as a SCRIPT
+if __name__ == "__main__":
+    import sys
+    fib(int(sys.argv[1]))
+</code></pre>
+
+<p>Reference: <a href="https://docs.python.org/3.5/tutorial/modules.html" rel="noreferrer">https://docs.python.org/3.5/tutorial/modules.html</a></p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>The reason for</p>
+
+<pre><code>if __name__ == "__main__":
+    main()
+</code></pre>
+
+<p>is primarily to avoid the <a href="https://docs.python.org/2/library/threading.html#importing-in-threaded-code" rel="noreferrer">import lock</a> problems that would arise from <a href="https://stackoverflow.com/questions/46326059/">having code directly imported</a>. You want <code>main()</code> to run if your file was directly invoked (that's the <code>__name__ == "__main__"</code> case), but if your code was imported then the importer has to enter your code from the true main module to avoid import lock problems.</p>
+
+<p>A side-effect is that you automatically sign on to a methodology that supports multiple entry points. You can run your program using <code>main()</code> as the entry point, <em>but you don't have to</em>. While <code>setup.py</code> expects <code>main()</code>, other tools use alternate entry points. For example, to run your file as a <code>gunicorn</code> process, you define an <code>app()</code> function instead of a <code>main()</code>. Just as with <code>setup.py</code>, <code>gunicorn</code> imports your code so you don't want it do do anything while it's being imported (because of the import lock issue).</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>If you are a beginner, probably the only answer you need right now is that <em>this code is unnecessary</em> for a simple script. It is only useful if you want to be able to <code>import</code> your script (or <code>unpickle</code> etc; see the other answers here for some other non-beginner scenarios).</p>
+<p>In slightly different words, the <code>if __name__</code> guard is a mechanism for hiding code from other code. If you don't have a specific reason to hide something, don't: If you don't need to hide some code from <code>import</code>, don't put it behind this guard, and if you do, hide as little as possible.</p>
+<p>In slightly more detail, let's say you have a simple script <code>fib.py</code> (adapted from <a href="https://stackoverflow.com/a/42773985/874188">this answer</a>):</p>
+<pre class="lang-py prettyprint-override"><code># XXX FIXME: useless (see below)
+if __name__ == &quot;__main__&quot;:
+    n = int(input('Write a number: '))
+    a, b = 0, 1
+    while b &lt; n:
+        a, b = b, a+b
+    print('Fibonacci number %i: %i' % (n, b))
+</code></pre>
+<p>Now, if you simply run <code>python fib.py</code> it works fine. But <code>__name__</code> will always be <code>&quot;__main__&quot;</code> in this scenario, so the condition is actually unnecessary. The script could be simplified to just</p>
+<pre class="lang-py prettyprint-override"><code>n = int(input('Write a number: '))
+a, b = 0, 1
+while b &lt; n:
+    a, b = b, a+b
+print('Fibonacci number %i: %i' % (n, b))
+</code></pre>
+<p>Now, you can't <code>import fib</code> with the new version, but if you didn't plan to do that in the first place, this version is actually better, because it's simpler and clearer.</p>
+<p>If you <em>do</em> want to be able to <code>import fib</code>, the first version is useless, too, because the useful code is in a section which will not run when you <code>import</code> this file (in which case <code>__name__</code> will not be <code>&quot;__main__&quot;</code>). The proper design in that case would be to refactor the code so that the useful parts are in a function you can run when you want to after you have <code>import</code>ed it.</p>
+<pre class="lang-py prettyprint-override"><code>def main():
+    n = int(input('Write a number: '))
+    a, b = 0, 1
+    while b &lt; n:
+        a, b = b, a+b
+    print('Fibonacci number %i: %i' % (n, b))
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>Now, if you <code>import fib</code>, the call to <code>main()</code> will not be executed; but when you run <code>python fib.py</code>, it will.</p>
+<p>Actually, a better design still would be to isolate the reusable part (the actual calculation) from the user-visible input/output:</p>
+<pre class="lang-py prettyprint-override"><code>def fibn(n: int) -&gt; int:
+    a, b = 0, 1
+    while b &lt; n:
+        a, b = b, a+b
+    return b
+
+def main() -&gt; None:
+    n = int(input('Write a number: '))
+    print('Fibonacci number %i: %i' % (n, fibn(n)))
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>Now, you can <code>from fib import fibn</code> and call the <code>fibn()</code> function from the code which performs this <code>import</code>.</p>
+<p>(I called the function <code>fibn()</code> just to make it clearer what is what in this example. In real life, you might call it <code>fib()</code> and do <code>from fib import fib</code>.)</p>
+<p>Similarly, you could <code>import</code> and call the <code>main</code> function if you wanted to reuse it.</p>
+<p>Returning to the code in the question, I would similarly move the code from the <code>if</code> into a function as well, so that callers can invoke that function if they want to.</p>
+<pre class="lang-py prettyprint-override"><code>def main():
+    lock = thread.allocate_lock()
+    thread.start_new_thread(myfunction, (&quot;Thread #: 1&quot;, 2, lock))
+    thread.start_new_thread(myfunction, (&quot;Thread #: 2&quot;, 2, lock))
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p>This changes the scope of the <code>lock</code> variable; if the surrounding code needs access to it, you will need to make it <code>global</code> (or, perhaps, better, refactor <code>main</code> to <code>return lock</code>, and have the caller capture the value in a local variable of its own).</p>
+<p>(Unlike in languages like C, the name <code>main</code> has no specific meaning to Python; but it's a common convention to use it as the name of the thing which will be run. You still have to actually explicitly call it, like <code>main()</code>, unlike in C.)</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>Every module in Python has an attribute called <code>__name__</code>. The value of <code>__name__</code>  attribute is  <code>__main__</code> when the module is run directly, like <code>python my_module.py</code>. Otherwise (like when you say <code>import my_module</code>) the value of <code>__name__</code>  is the name of the module.</p>
+<p>Small example to explain in short.</p>
+<h3>Script <em>test.py</em></h3>
+<pre><code>apple = 42
+
+def hello_world():
+    print(&quot;I am inside hello_world&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    print(&quot;Value of __name__ is: &quot;, __name__)
+    print(&quot;Going to call hello_world&quot;)
+    hello_world()
+</code></pre>
+<p>We can execute this directly as</p>
+<pre class="lang-none prettyprint-override"><code>python test.py
+</code></pre>
+<p>Output</p>
+<pre class="lang-none prettyprint-override"><code>Value of __name__ is: __main__
+Going to call hello_world
+I am inside hello_world
+</code></pre>
+<p>Now suppose we call the above script from another script:</p>
+<h3>Script <em>external_calling.py</em></h3>
+<pre><code>import test
+
+print(test.apple)
+test.hello_world()
+
+print(test.__name__)
+</code></pre>
+<p>When you execute this,</p>
+<pre class="lang-none prettyprint-override"><code>python external_calling.py
+</code></pre>
+<p>Output</p>
+<pre class="lang-none prettyprint-override"><code>42
+I am inside hello_world
+test
+</code></pre>
+<p>So, the above is self-explanatory that when you call <em>test</em> from another script, if loop <code>__name__</code> in <code>test.py</code> will not execute.</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>This answer is for Java programmers learning Python.
+Every Java file typically contains one public class. You can use that class in two ways: </p>
+
+<ol>
+<li><p>Call the class from other files. You just have to import it in the calling program.</p></li>
+<li><p>Run the class stand alone, for testing purposes. </p></li>
+</ol>
+
+<p>For the latter case, the class should contain a public static void main() method. In Python this purpose is served by the globally defined label <code>'__main__'</code>.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>If this .py file are imported by other .py files, the code under the <code>if</code> statement will not be executed.</p>
+<p>If this .py are run by <code>python this_py.py</code> under shell, or double clicked in Windows. the code under the <code>if</code> statement will be executed.</p>
+<p>It is usually written for testing.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>We see if <code>__name__ == '__main__':</code> quite often.</p>
+<p>It checks if a module is being imported or not.</p>
+<p>In other words, the code within the <code>if</code> block will be executed only when the code runs directly. Here <code>directly</code> means <code>not imported</code>.</p>
+<p>Let's see what it does using a simple code that prints the name of the module:</p>
+<pre><code># test.py
+def test():
+   print('test module name=%s' %(__name__))
+
+if __name__ == '__main__':
+   print('call test()')
+   test()
+</code></pre>
+<p>If we run the code directly via <code>python test.py</code>, the module name is <code>__main__</code>:</p>
+<pre><code>call test()
+test module name=__main__
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>If the Python interpreter is running a particular module then the <code>__name__</code> global variable will have the value <code>&quot;__main__&quot;</code>:</p>
+<pre class="lang-py prettyprint-override"><code>def a():
+    print(&quot;a&quot;)
+
+def b():
+    print(&quot;b&quot;)
+
+if __name__ == &quot;__main__&quot;:
+
+        print (&quot;you can see me&quot;)
+        a()
+else:
+
+        print (&quot;You can't see me&quot;)
+        b()
+</code></pre>
+<p>When you run this script, it prints:</p>
+<pre><code>you can see me
+a
+</code></pre>
+<p>If you import this file, say <strong><code>A</code></strong> to file <strong><code>B</code></strong>, and execute the file <strong><code>B</code></strong> then <code>if __name__ == &quot;__main__&quot;</code> in file <strong><code>A</code></strong> becomes <em>False</em>, so it prints:</p>
+<pre><code>You can't see me
+b
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>All the answers have pretty much explained the functionality. But I will provide one example of its usage which might help clearing out the concept further.</p>
+<p>Assume that you have two Python files, a.py and b.py. Now, <code>a.py</code> imports <code>b.py</code>. We run the <code>a.py</code> file, where the <code>import b.py</code> code is executed first. Before the rest of the <code>a.py</code> code runs, the code in the file <code>b.py</code> must run completely.</p>
+<p>In the b.py code, there is some code that is exclusive to that file <code>b.py</code> and we don't want any other file (other than the <code>b.py</code> file), that has imported the b.py file, to run it.</p>
+<p>So that is what this line of code checks. If it is the main file (i.e., <code>b.py</code>) running the code, which in this case it is not (<code>a.py</code> is the main file running), then only the code gets executed.</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Every module in Python has a special attribute called <code>__name__</code>. The value of the <code>__name__</code>  attribute is set to <code>'__main__'</code> when the module is executed as the main program (e.g., running <code>python foo.py</code>).</p>
+<p>Otherwise, the value of <code>__name__</code> is set to the name of the module that it was called from.</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><h2>Only facts you need to know</h2>
+<p>The other answers to this question are way too long.  The actual mechanics are quite simple and there are only two essential facts:</p>
+<ol>
+<li><p>Pure Python modules are always created with the variable <code>__name__</code> set to the string <code>&quot;__main__&quot;</code>.</p>
+</li>
+<li><p>Importing a module has the side-effect of changing the <code>__name__</code> variable to the base filename without the <code>.py</code> extension.</p>
+</li>
+</ol>
+<h2>How this information is used</h2>
+<p>People write <code>__name__ == '__main__'</code> to test whether a module has been imported.</p>
+<p>It is common to have some code that shouldn't run when an import occurs: Test code, one-time use code, a command-line front-end, or a web server front-end.</p>
+<p>The idea is that person running a module directly wants these actions to happen, but a person importing the module just wants direct access to the functions, classes, and variables.</p>
+<p>As you can see from the other answers, people seem to be able to talk endlessly about this topic, but it really is a simple thing and is easily mastered.  The Python tutorial <a href="https://docs.python.org/3/tutorial/modules.html#executing-modules-as-scripts" rel="noreferrer">covers this</a> in about two minutes worth of reading.  Don't let the other answers drown you with overexplaining :-)</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>Create a file, <strong>a.py</strong>:</p>
+
+<pre><code>print(__name__) # It will print out __main__
+</code></pre>
+
+<p><code>__name__</code> is always equal to <code>__main__</code> whenever that file is <strong>run directly</strong> showing that this is the main file.</p>
+
+<p>Create another file, <strong>b.py</strong>, in the same directory:</p>
+
+<pre><code>import a  # Prints a
+</code></pre>
+
+<p>Run it. It will print <strong>a</strong>, i.e., the name of the file which <strong>is imported</strong>.</p>
+
+<p>So, to show <strong>two different behavior of the same file</strong>, this is a commonly used trick:</p>
+
+<pre><code># Code to be run when imported into another python file
+
+if __name__ == '__main__':
+    # Code to be run only when run directly
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>You can check up on the special variable <code>__name__</code> with this simple example:</p>
+<p>Create <em>file1.py</em></p>
+<pre><code>if __name__ == &quot;__main__&quot;:
+    print(&quot;file1 is being run directly&quot;)
+else:
+    print(&quot;file1 is being imported&quot;)
+</code></pre>
+<p>Create *file2.<em>py</em></p>
+<pre><code>import file1 as f1
+
+print(&quot;__name__ from file1: {}&quot;.format(f1.__name__))
+print(&quot;__name__ from file2: {}&quot;.format(__name__))
+
+if __name__ == &quot;__main__&quot;:
+    print(&quot;file2 is being run directly&quot;)
+else:
+    print(&quot;file2 is being imported&quot;)
+</code></pre>
+<p>Execute file2.py</p>
+<p><em>Output</em>:</p>
+<pre class="lang-none prettyprint-override"><code>file1 is being imported
+__name__ from file1: file1
+__name__ from file2: __main__
+file2 is being run directly
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>When a Python file is executed it creates many special variables such as <code>__name__</code>. The variable <code>__name__</code> holds the name of the file. And the answer to your question is that</p>
+<pre><code>if __name__ == &quot;__main__&quot;:
+       # Do something
+</code></pre>
+<p>This means that if the name of the file being executed is running as the source file and <strong>not a module</strong> then it will run the code inside it. This can be proved with a simple example. Create two Python files, <code>foo.py</code> and <code>second.py</code>. Then in the <code>foo.py</code>, type this:</p>
+<pre><code>if __name__ == &quot;__main__&quot;:
+       print(&quot;file is not imported&quot;)
+else:
+       print(&quot;file is imported&quot;)
+</code></pre>
+<p>And in the <code>second.py</code>, type this:</p>
+<pre><code>import foo
+
+if foo.__name__ == &quot;__main__&quot;:
+       print(&quot;file is not imported&quot;)
+else:
+       print(&quot;file is imported&quot;)
+</code></pre>
+<p>In addition to this, if you will do this <code>print(__name__)</code> then it will print <code>__main__</code>. Why?</p>
+<p>Because the file is running as the <strong>main</strong> source and if you'll do <code>print(foo.__name__)</code> it will print <em>foo</em> because the default value of the <code>__name__</code> variable is the name of the file and by default I mean you can change it too. To do this, just go to the <code>foo.py</code> file and do this: <code>__name__ = &quot;name&quot;</code>. Then when you'll run the file, for example,</p>
+<pre><code>__name__ = &quot;Hello, World!&quot;
+print(__name__)
+</code></pre>
+<p>then the output will be:</p>
+<pre><code>Hello, World!
+</code></pre>
+</div></body></html>

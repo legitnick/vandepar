@@ -1,0 +1,410 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Move the most recent commit(s) to a new branch with Git</p><div class="s-prose js-post-body"><p>How do I move my recent commits on master to a new branch, and reset master to before those commits were made? e.g. From this:</p>
+<pre><code>master A - B - C - D - E
+</code></pre>
+<p>To this:</p>
+<pre><code>newbranch     C - D - E
+             /
+master A - B 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8044 people.</p><div class="s-prose js-post-body"><h2>Moving to an existing branch</h2>
+<p>If you want to move your commits to an <strong>existing branch</strong>, it will look like this:</p>
+<pre><code>git checkout existingbranch
+git merge branchToMoveCommitFrom
+git checkout branchToMoveCommitFrom
+git reset --hard HEAD~3 # Go back 3 commits. You *will* lose uncommitted work.
+git checkout existingbranch
+</code></pre>
+<p>You can store uncommitted edits to your stash before doing this, using <code>git stash</code>. Once complete, you can retrieve the stashed uncommitted edits with <code>git stash pop</code></p>
+<h2>Moving to a new branch</h2>
+<p><strong>WARNING:</strong> This method works because you are creating a new branch with the first command: <code>git branch newbranch</code>. If you want to move commits to an <strong>existing branch</strong> you need to merge your changes into the existing branch before executing <code>git reset --hard HEAD~3</code> (see <em><strong>Moving to an existing branch</strong></em> above). <strong>If you don't merge your changes first, they will be lost.</strong></p>
+<p>Unless there are other circumstances involved, this can be easily done by branching and rolling back.</p>
+
+<pre class="lang-sh prettyprint-override"><code># Note: Any changes not committed will be lost.
+git branch newbranch      # Create a new branch, saving the desired commits
+git checkout master       # checkout master, this is the place you want to go back
+git reset --hard HEAD~3   # Move master back by 3 commits (Make sure you know how many commits you need to go back)
+git checkout newbranch    # Go to the new branch that still has the desired commits
+</code></pre>
+<p>But do make sure how many commits to go back. Alternatively, you can instead of <code>HEAD~3</code>, simply provide the hash of the commit (or the reference like <em>origin/master</em>) you want to &quot;revert back to&quot; on the <em>master</em> (/current) branch, e.g:</p>
+<pre class="lang-sh prettyprint-override"><code>git reset --hard a1b2c3d4
+</code></pre>
+<p>*1 You will <strong>only</strong> be &quot;losing&quot; commits from the master branch, but don't worry, you'll have those commits in newbranch!</p>
+<p>Lastly, <a href="https://stackoverflow.com/questions/1628563/move-the-most-recent-commits-to-a-new-branch-with-git#comment42808558_6796816">you may need</a> to force push your latest changes to main repo:</p>
+<pre class="lang-sh prettyprint-override"><code>git push origin master --force
+</code></pre>
+<p><strong>WARNING:</strong> With Git version 2.0 and later, if you later <code>git rebase</code> the new branch upon the original (<code>master</code>) branch, you may need an explicit <code>--no-fork-point</code> option during the rebase to avoid losing the carried-over commits.  Having <code>branch.autosetuprebase always</code> set makes this more likely.  See <a href="https://stackoverflow.com/a/36463546/1256452">John Mellor's answer</a> for details.</p>
+</div><p class="this-has-helped">This answer has helped 1220 people.</p><div class="s-prose js-post-body"><p>For those wondering why it works (as I was at first):</p>
+
+<p>You want to go back to C, and move D and E to the new branch.  Here's what it looks like at first:</p>
+
+<pre><code>A-B-C-D-E (HEAD)
+        ↑
+      master
+</code></pre>
+
+<p>After <code>git branch newBranch</code>:</p>
+
+<pre><code>    newBranch
+        ↓
+A-B-C-D-E (HEAD)
+        ↑
+      master
+</code></pre>
+
+<p>After <code>git reset --hard HEAD~2</code>:</p>
+
+<pre><code>    newBranch
+        ↓
+A-B-C-D-E (HEAD)
+    ↑
+  master
+</code></pre>
+
+<p>Since a branch is just a pointer, <em>master</em> pointed to the last commit.  When you made <em>newBranch</em>, you simply made a new pointer to the last commit.  Then using <code>git reset</code> you moved the <em>master</em> pointer back two commits.  But since you didn't move <em>newBranch</em>, it still points to the commit it originally did.</p>
+</div><p class="this-has-helped">This answer has helped 579 people.</p><div class="s-prose js-post-body"><h1>In General...</h1>
+
+<p>The method exposed by sykora is the best option in this case. But sometimes is not the easiest and it's not a general method. For a general method use <em>git cherry-pick</em>:</p>
+
+<p>To achieve what OP wants, its a 2-step process:</p>
+
+<h1>Step 1 - Note which commits from master you want on a <code>newbranch</code></h1>
+
+<p>Execute</p>
+
+<pre><code>git checkout master
+git log
+</code></pre>
+
+<p>Note the hashes of (say 3) commits you want on <code>newbranch</code>. Here I shall use:<br>
+C commit: <code>9aa1233</code><br>
+D commit: <code>453ac3d</code><br>
+E commit: <code>612ecb3</code>  </p>
+
+<blockquote>
+  <p><strong>Note:</strong> You can use the first seven characters or
+  the whole commit hash</p>
+</blockquote>
+
+<h1>Step 2 - Put them on the <code>newbranch</code></h1>
+
+<pre><code>git checkout newbranch
+git cherry-pick 612ecb3
+git cherry-pick 453ac3d
+git cherry-pick 9aa1233
+</code></pre>
+
+<h1>OR (on Git 1.7.2+, use ranges)</h1>
+
+<pre><code>git checkout newbranch
+git cherry-pick 612ecb3~1..9aa1233
+</code></pre>
+
+<p><em>git cherry-pick</em> applies those three commits to newbranch.</p>
+</div><p class="this-has-helped">This answer has helped 434 people.</p><div class="s-prose js-post-body"><h2>Most previous answers are dangerously wrong!</h2>
+
+<p>Do NOT do this:</p>
+
+<pre class="lang-sh prettyprint-override"><code>git branch -t newbranch
+git reset --hard HEAD~3
+git checkout newbranch
+</code></pre>
+
+<p>As the next time you run <code>git rebase</code> (or <code>git pull --rebase</code>) those 3 commits would be silently discarded from <code>newbranch</code>! (see explanation below)</p>
+
+<p><strong>Instead do this:</strong></p>
+
+<pre class="lang-sh prettyprint-override"><code>git reset --keep HEAD~3
+git checkout -t -b newbranch
+git cherry-pick ..HEAD@{2}
+</code></pre>
+
+<ul>
+<li>First it discards the 3 most recent commits (<code>--keep</code> is like <code>--hard</code>, but safer, as fails rather than throw away uncommitted changes).</li>
+<li>Then it forks off <code>newbranch</code>.</li>
+<li>Then it cherry-picks those 3 commits back onto <code>newbranch</code>. Since they're no longer referenced by a branch, it does that by using git's <a href="http://gitready.com/intermediate/2009/02/09/reflog-your-safety-net.html">reflog</a>: <code>HEAD@{2}</code> is the commit that <code>HEAD</code> used to refer to 2 operations ago, i.e. before we 1. checked out <code>newbranch</code> and 2. used <code>git reset</code> to discard the 3 commits.</li>
+</ul>
+
+<p><em>Warning: the reflog is enabled by default, but if you've manually disabled it (e.g. by using a "bare" git repository), you won't be able to get the 3 commits back after running <code>git reset --keep HEAD~3</code>.</em></p>
+
+<p>An alternative that doesn't rely on the reflog is:</p>
+
+<pre class="lang-sh prettyprint-override"><code># newbranch will omit the 3 most recent commits.
+git checkout -b newbranch HEAD~3
+git branch --set-upstream-to=oldbranch
+# Cherry-picks the extra commits from oldbranch.
+git cherry-pick ..oldbranch
+# Discards the 3 most recent commits from oldbranch.
+git branch --force oldbranch oldbranch~3
+</code></pre>
+
+<p>(if you prefer you can write <code>@{-1}</code> - the previously checked out branch - instead of <code>oldbranch</code>).</p>
+
+<hr>
+
+<h2>Technical explanation</h2>
+
+<p>Why would <code>git rebase</code> discard the 3 commits after the first example? It's because <code>git rebase</code> with no arguments enables the <code>--fork-point</code> option by default, which uses the local reflog to try to be robust against the upstream branch being force-pushed.</p>
+
+<p>Suppose you branched off origin/master when it contained commits M1, M2, M3, then made three commits yourself:</p>
+
+<pre><code>M1--M2--M3  &lt;-- origin/master
+         \
+          T1--T2--T3  &lt;-- topic
+</code></pre>
+
+<p>but then someone rewrites history by force-pushing origin/master to remove M2:</p>
+
+<pre><code>M1--M3'  &lt;-- origin/master
+ \
+  M2--M3--T1--T2--T3  &lt;-- topic
+</code></pre>
+
+<p>Using your local reflog, <code>git rebase</code> can see that you forked from an earlier incarnation of the origin/master branch, and hence that the M2 and M3 commits are not really part of your topic branch. Hence it reasonably assumes that since M2 was removed from the upstream branch, you no longer want it in your topic branch either once the topic branch is rebased:</p>
+
+<pre><code>M1--M3'  &lt;-- origin/master
+     \
+      T1'--T2'--T3'  &lt;-- topic (rebased)
+</code></pre>
+
+<p>This behavior makes sense, and is generally the right thing to do when rebasing.</p>
+
+<p>So the reason that the following commands fail:</p>
+
+<pre class="lang-sh prettyprint-override"><code>git branch -t newbranch
+git reset --hard HEAD~3
+git checkout newbranch
+</code></pre>
+
+<p>is because they leave the reflog in the wrong state. Git sees <code>newbranch</code> as having forked off the upstream branch at a revision that includes the 3 commits, then the <code>reset --hard</code> rewrites the upstream's history to remove the commits, and so next time you run <code>git rebase</code> it discards them like any other commit that has been removed from the upstream.</p>
+
+<p>But in this particular case we want those 3 commits to be considered as part of the topic branch. To achieve that, we need to fork off the upstream at the earlier revision that doesn't include the 3 commits. That's what my suggested solutions do, hence they both leave the reflog in the correct state.</p>
+
+<p>For more details, see the definition of <code>--fork-point</code> in the <a href="https://git-scm.com/docs/git-rebase">git rebase</a> and <a href="https://git-scm.com/docs/git-merge-base">git merge-base</a> docs.</p>
+</div><p class="this-has-helped">This answer has helped 391 people.</p><div class="s-prose js-post-body"><p>Yet another way to do this, using just 2 commands. Also keeps your current working tree intact.</p>
+
+<pre><code>git checkout -b newbranch # switch to a new branch
+git branch -f master HEAD~3 # make master point to some older commit
+</code></pre>
+
+<p><strong>Old version</strong> - before I learned about <code>git branch -f</code></p>
+
+<pre><code>git checkout -b newbranch # switch to a new branch
+git push . +HEAD~3:master # make master point to some older commit 
+</code></pre>
+
+<p>Being able to <code>push</code> to <code>.</code> is a nice trick to know.</p>
+</div><p class="this-has-helped">This answer has helped 256 people.</p><div class="s-prose js-post-body"><h1>Much simpler solution using git stash</h1>
+
+<p>Here's a far simpler solution for commits to the wrong branch. Starting on branch <code>master</code> that has three mistaken commits:</p>
+
+<pre><code>git reset HEAD~3
+git stash
+git checkout newbranch
+git stash pop
+</code></pre>
+
+<h2>When to use this?</h2>
+
+<ul>
+<li>If your primary purpose is to roll back <code>master</code> </li>
+<li>You want to keep file changes </li>
+<li>You don't care about the messages on the mistaken commits</li>
+<li>You haven't pushed yet</li>
+<li>You want this to be easy to memorize</li>
+<li>You don't want complications like temporary/new branches, finding and copying commit hashes, and other headaches</li>
+</ul>
+
+<h2>What this does, by line number</h2>
+
+<ol>
+<li>Undoes the last three commits (and their messages) to <code>master</code>, yet leaves all working files intact</li>
+<li>Stashes away all the working file changes, making the <code>master</code> working tree exactly equal to the HEAD~3 state</li>
+<li>Switches to an existing branch <code>newbranch</code></li>
+<li>Applies the stashed changes to your working directory and clears the stash</li>
+</ol>
+
+<p>You can now use <code>git add</code> and <code>git commit</code> as you normally would. All new commits will be added to <code>newbranch</code>. </p>
+
+<h2>What this doesn't do</h2>
+
+<ul>
+<li>It doesn't leave random temporary branches cluttering your tree</li>
+<li><strong>It doesn't preserve the mistaken commit messages,</strong> so you'll need to add a new commit message to this new commit</li>
+<li>Update! Use up-arrow to scroll through your command buffer to reapply the prior commit with its commit message (thanks @ARK)</li>
+</ul>
+
+<h3>Goals</h3>
+
+<p>The OP stated the goal was to "take master back to before those commits were made" without losing changes and this solution does that.</p>
+
+<p>I do this at least once a week when I accidentally make new commits to <code>master</code> instead of <code>develop</code>. Usually I have only one commit to rollback in which case using <code>git reset HEAD^</code> on line 1 is a simpler way to rollback just one commit. </p>
+
+<p><strong>Don't do this if you pushed master's changes upstream</strong></p>
+
+<p>Someone else may have pulled those changes. If you are only rewriting your local master there's no impact when it's pushed upstream, but pushing a rewritten history to collaborators can cause headaches. </p>
+</div><p class="this-has-helped">This answer has helped 33 people.</p><div class="s-prose js-post-body"><h1>Simplest way to do this:</h1>
+<p><strong>1.</strong> Rename <code>master</code> branch to your <code>newbranch</code> (assuming you are on <code>master</code> branch):</p>
+<pre><code>git branch -m newbranch
+</code></pre>
+<p><strong>2.</strong> Create <code>master</code> branch from the commit that you wish:</p>
+<pre><code>git checkout -b master &lt;seven_char_commit_id&gt;
+</code></pre>
+<blockquote>
+<p>e.g. git checkout -b master a34bc22</p>
+</blockquote>
+<p><strong>NOTE:</strong>
+The upstream for <code>newbranch</code> would be <code>origin/master</code>.</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>This doesn't "move" them in the technical sense but it has the same effect:</p>
+
+<pre><code>A--B--C  (branch-foo)
+ \    ^-- I wanted them here!
+  \
+   D--E--F--G  (branch-bar)
+      ^--^--^-- Opps wrong branch!
+
+While on branch-bar:
+$ git reset --hard D # remember the SHAs for E, F, G (or E and G for a range)
+
+A--B--C  (branch-foo)
+ \
+  \
+   D-(E--F--G) detached
+   ^-- (branch-bar)
+
+Switch to branch-foo
+$ git cherry-pick E..G
+
+A--B--C--E'--F'--G' (branch-foo)
+ \   E--F--G detached (This can be ignored)
+  \ /
+   D--H--I (branch-bar)
+
+Now you won't need to worry about the detached branch because it is basically
+like they are in the trash can waiting for the day it gets garbage collected.
+Eventually some time in the far future it will look like:
+
+A--B--C--E'--F'--G'--L--M--N--... (branch-foo)
+ \
+  \
+   D--H--I--J--K--.... (branch-bar)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>To do this without rewriting history (i.e. if you've already pushed the commits):</p>
+
+<pre><code>git checkout master
+git revert &lt;commitID(s)&gt;
+git checkout -b new-branch
+git cherry-pick &lt;commitID(s)&gt;
+</code></pre>
+
+<p>Both branches can then be pushed without force!</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>Had just this situation:</p>
+
+<pre><code>Branch one: A B C D E F     J   L M  
+                       \ (Merge)
+Branch two:             G I   K     N
+</code></pre>
+
+<p>I performed:</p>
+
+<pre><code>git branch newbranch 
+git reset --hard HEAD~8 
+git checkout newbranch
+</code></pre>
+
+<p>I expected that commit I would be the HEAD, but commit L is it now...</p>
+
+<p>To be sure to land on the right spot in the history its easier to work with the hash of the commit</p>
+
+<pre><code>git branch newbranch 
+git reset --hard #########
+git checkout newbranch
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>How can I go from this</p>
+
+<pre><code>A - B - C - D - E 
+                |
+                master
+</code></pre>
+
+<p>to this?</p>
+
+<pre><code>A - B - C - D - E 
+    |           |
+    master      newbranch
+</code></pre>
+
+<p>With two commands</p>
+
+<ul>
+<li><strong>git branch -m master newbranch</strong></li>
+</ul>
+
+<p>giving</p>
+
+<pre><code>A - B - C - D - E 
+                |
+                newbranch
+</code></pre>
+
+<p>and </p>
+
+<ul>
+<li><strong>git branch master B</strong></li>
+</ul>
+
+<p>giving</p>
+
+<pre><code>A - B - C - D - E
+    |           |
+    master      newbranch
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>If you just need to move all your <strong>unpushed</strong> commits to a <em>new branch</em>,
+then you just need to,</p>
+
+<ol>
+<li><p><strong>create</strong> a <em>new branch</em> from the current one :<code>git branch new-branch-name</code></p></li>
+<li><p><strong>push</strong> your <em>new branch</em>: <code>git push origin new-branch-name</code></p></li>
+<li><p><strong>revert</strong> your <em>old(current) branch</em> to the last pushed/stable state: <code>git reset --hard origin/old-branch-name</code></p></li>
+</ol>
+
+<p>Some people also have other <code>upstreams</code> rather than <code>origin</code>, 
+they should use appropriate <code>upstream</code></p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>TLDR</p>
+<pre class="lang-bash prettyprint-override"><code>git checkout branch_to_remove_commits
+git reset --hard ${hash_of_new_tip}
+git checkout -b branch_to_store_commits
+# Move commits (single hash, list of hashes or range ffaa..ffoo) 
+git cherry-pick ${commit_hash}
+git push --set-upstream origin branch_to_store_commits
+# Switch back to last branch
+git checkout -
+git push -f
+</code></pre>
+<p>For me</p>
+<pre><code>git log --pretty=oneline -n ${NUMBER}
+</code></pre>
+<p>works best to identify the commit hashes in question.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>You can do this is just 3  simple step that i used.  </p>
+
+<p>1) make new branch where you want to commit you recent update.  </p>
+
+<p><strong><code>git branch &lt;branch name&gt;</code></strong>  </p>
+
+<p>2)  Find  Recent Commit Id for commit on new branch. </p>
+
+<p><strong><code>git log</code></strong></p>
+
+<p>3)  Copy that commit id  note that Most Recent commit list take place on top. so you can find your commit. you also find this via message. </p>
+
+<p><strong><code>git cherry-pick d34bcef232f6c...</code></strong> </p>
+
+<p>you can also provide some rang of commit id.</p>
+
+<p><strong><code>git cherry-pick d34bcef...86d2aec</code></strong></p>
+
+<p>Now your job done. If you picked correct id and correct branch then you will success. So before do this be careful. else another problem can occur.  </p>
+
+<p>Now you can push your code </p>
+
+<p><strong><code>git push</code></strong></p>
+</div></body></html>

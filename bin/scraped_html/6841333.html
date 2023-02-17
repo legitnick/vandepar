@@ -1,0 +1,181 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Why is subtracting these two times (in 1927) giving a strange result?</p><div class="s-prose js-post-body"><p>If I run the following program, which parses two date strings referencing times 1 second apart and compares them:</p>
+<pre><code>public static void main(String[] args) throws ParseException {
+    SimpleDateFormat sf = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);  
+    String str3 = &quot;1927-12-31 23:54:07&quot;;  
+    String str4 = &quot;1927-12-31 23:54:08&quot;;  
+    Date sDt3 = sf.parse(str3);  
+    Date sDt4 = sf.parse(str4);  
+    long ld3 = sDt3.getTime() /1000;  
+    long ld4 = sDt4.getTime() /1000;
+    System.out.println(ld4-ld3);
+}
+</code></pre>
+<p><strong>The output is:</strong></p>
+<pre><code>353
+</code></pre>
+<p>Why is <code>ld4-ld3</code>, not <code>1</code> (as I would expect from the one-second difference in the times), but <code>353</code>?</p>
+<p>If I change the dates to times 1 second later:</p>
+<pre><code>String str3 = &quot;1927-12-31 23:54:08&quot;;  
+String str4 = &quot;1927-12-31 23:54:09&quot;;  
+</code></pre>
+<p>Then <code>ld4-ld3</code> will be <code>1</code>.</p>
+<hr />
+<p><strong>Java version:</strong></p>
+<pre class="lang-none prettyprint-override"><code>java version &quot;1.6.0_22&quot;
+Java(TM) SE Runtime Environment (build 1.6.0_22-b04)
+Dynamic Code Evolution Client VM (build 0.2-b02-internal, 19.0-b04-internal, mixed mode)
+</code></pre>
+<pre class="lang-java prettyprint-override"><code>Timezone(`TimeZone.getDefault()`):
+
+sun.util.calendar.ZoneInfo[id=&quot;Asia/Shanghai&quot;,
+offset=28800000,dstSavings=0,
+useDaylight=false,
+transitions=19,
+lastRule=null]
+
+Locale(Locale.getDefault()): zh_CN
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11754 people.</p><div class="s-prose js-post-body"><p>It's a time zone change on December 31st in Shanghai.</p>
+
+<p>See <a href="http://www.timeanddate.com/worldclock/clockchange.html?n=237&amp;year=1927" rel="noreferrer">this page</a> for details of 1927 in Shanghai. Basically at midnight at the end of 1927, the clocks went back 5 minutes and 52 seconds. So "1927-12-31 23:54:08" actually happened twice, and it looks like Java is parsing it as the <em>later</em> possible instant for that local date/time - hence the difference.</p>
+
+<p>Just another episode in the often weird and wonderful world of time zones.</p>
+
+<p><strong>EDIT:</strong> Stop press! History changes...</p>
+
+<p>The original question would no longer demonstrate quite the same behaviour, if rebuilt with version 2013a of <a href="https://github.com/nodatime/nodatime/blob/master/src/NodaTime.Demo/StackOverflowExamples.cs#L68" rel="noreferrer">TZDB</a>. In 2013a, the result would be 358 seconds, with a transition time of 23:54:03 instead of 23:54:08.</p>
+
+<p>I only noticed this because I'm collecting questions like this in Noda Time, in the form of <a href="https://github.com/nodatime/nodatime/blob/master/src/NodaTime.Demo/StackOverflowExamples.cs#L68" rel="noreferrer">unit tests</a>... The test has now been changed, but it just goes to show - not even historical data is safe.</p>
+
+<p><strong>EDIT:</strong> History has changed again...</p>
+
+<p>In TZDB 2014f, the time of the change has moved to 1900-12-31, and it's now a mere 343 second change (so the time between <code>t</code> and <code>t+1</code> is 344 seconds, if you see what I mean).</p>
+
+<p><strong>EDIT:</strong> To answer a question around a transition at 1900... it looks like the Java timezone implementation treats <em>all</em> time zones as simply being in their standard time for any instant before the start of 1900 UTC:</p>
+
+<pre><code>import java.util.TimeZone;
+
+public class Test {
+    public static void main(String[] args) throws Exception {
+        long startOf1900Utc = -2208988800000L;
+        for (String id : TimeZone.getAvailableIDs()) {
+            TimeZone zone = TimeZone.getTimeZone(id);
+            if (zone.getRawOffset() != zone.getOffset(startOf1900Utc - 1)) {
+                System.out.println(id);
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>The code above produces no output on my Windows machine. So any time zone which has any offset other than its standard one at the start of 1900 will count that as a transition. TZDB itself has some data going back earlier than that, and doesn't rely on any idea of a "fixed" standard time (which is what <code>getRawOffset</code> assumes to be a valid concept) so other libraries needn't introduce this artificial transition.</p>
+</div><p class="this-has-helped">This answer has helped 1722 people.</p><div class="s-prose js-post-body"><p>You've encountered a <a href="http://timeanddate.com/worldclock/clockchange.html?n=237&amp;year=1927" rel="noreferrer">local time discontinuity</a>:</p>
+
+<blockquote>
+  <p>When local standard time was about to reach Sunday, 1. January 1928,
+  00:00:00 clocks were turned backward 0:05:52 hours to Saturday, 31.
+  December 1927, 23:54:08 local standard time instead</p>
+</blockquote>
+
+<p>This is not particularly strange and has happened pretty much everywhere at one time or another as timezones were switched or changed due to political or administrative actions.</p>
+</div><p class="this-has-helped">This answer has helped 742 people.</p><div class="s-prose js-post-body"><p>The moral of this strangeness is:</p>
+
+<ul>
+<li>Use dates and times in UTC wherever possible.</li>
+<li>If you can not display a date or time in UTC, always indicate the time-zone.</li>
+<li>If you can not require an input date/time in UTC, require an explicitly indicated time-zone.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 411 people.</p><div class="s-prose js-post-body"><p>When incrementing time you should convert back to UTC and then add or subtract. Use the local time only for display.</p>
+<p>This way you will be able to walk through any periods where hours or minutes happen twice.</p>
+<p>If you converted to UTC, add each second, and convert to local time for display. You would go through 11:54:08 p.m. <a href="http://en.wikipedia.org/wiki/Local_mean_time" rel="noreferrer">LMT</a> - 11:59:59 p.m. LMT and then 11:54:08 p.m. <a href="https://en.wikipedia.org/wiki/China_Standard_Time" rel="noreferrer">CST</a> - 11:59:59 p.m. CST.</p>
+</div><p class="this-has-helped">This answer has helped 345 people.</p><div class="s-prose js-post-body"><p>Instead of converting each date, you can use the following code: </p>
+
+<pre><code>long difference = (sDt4.getTime() - sDt3.getTime()) / 1000;
+System.out.println(difference);
+</code></pre>
+
+<p>And then see that the result is:</p>
+
+<pre><code>1
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 258 people.</p><div class="s-prose js-post-body"><p>I'm sorry to say, but the time discontinuity has moved a bit in</p>
+
+<p><a href="https://en.wikipedia.org/wiki/Java_version_history#Java_SE_6_.28December_11.2C_2006.29" rel="noreferrer">JDK 6</a> two years ago, and in <a href="https://en.wikipedia.org/wiki/Java_version_history#Java_SE_7_.28July_28.2C_2011.29" rel="noreferrer">JDK 7</a> just recently in <a href="https://en.wikipedia.org/wiki/Java_version_history#cite_note-131" rel="noreferrer">update 25</a>.</p>
+
+<p>Lesson to learn: avoid non-UTC times at all costs, except maybe for display.</p>
+</div><p class="this-has-helped">This answer has helped 228 people.</p><div class="s-prose js-post-body"><p>As explained by others, there's a time discontinuity there. There are two possible timezone offsets for <code>1927-12-31 23:54:08</code> at <code>Asia/Shanghai</code>, but only one offset for <code>1927-12-31 23:54:07</code>. So, depending on which offset is used, there's either a one second difference or a 5 minutes and 53 seconds difference.</p>
+
+<p>This slight shift of offsets, instead of the usual one-hour daylight savings (summer time) we are used to, obscures the problem a bit.</p>
+
+<p>Note that the 2013a update of the timezone database moved this discontinuity a few seconds earlier, but the effect would still be observable.</p>
+
+<p>The new <code>java.time</code> package on Java 8 let use see this more clearly, and provide tools to handle it. Given:</p>
+
+<pre><code>DateTimeFormatterBuilder dtfb = new DateTimeFormatterBuilder();
+dtfb.append(DateTimeFormatter.ISO_LOCAL_DATE);
+dtfb.appendLiteral(' ');
+dtfb.append(DateTimeFormatter.ISO_LOCAL_TIME);
+DateTimeFormatter dtf = dtfb.toFormatter();
+ZoneId shanghai = ZoneId.of("Asia/Shanghai");
+
+String str3 = "1927-12-31 23:54:07";  
+String str4 = "1927-12-31 23:54:08";  
+
+ZonedDateTime zdt3 = LocalDateTime.parse(str3, dtf).atZone(shanghai);
+ZonedDateTime zdt4 = LocalDateTime.parse(str4, dtf).atZone(shanghai);
+
+Duration durationAtEarlierOffset = Duration.between(zdt3.withEarlierOffsetAtOverlap(), zdt4.withEarlierOffsetAtOverlap());
+
+Duration durationAtLaterOffset = Duration.between(zdt3.withLaterOffsetAtOverlap(), zdt4.withLaterOffsetAtOverlap());
+</code></pre>
+
+<p>Then <code>durationAtEarlierOffset</code> will be one second, while <code>durationAtLaterOffset</code> will be five minutes and 53 seconds.</p>
+
+<p>Also, these two offsets are the same:</p>
+
+<pre><code>// Both have offsets +08:05:52
+ZoneOffset zo3Earlier = zdt3.withEarlierOffsetAtOverlap().getOffset();
+ZoneOffset zo3Later = zdt3.withLaterOffsetAtOverlap().getOffset();
+</code></pre>
+
+<p>But these two are different:</p>
+
+<pre><code>// +08:05:52
+ZoneOffset zo4Earlier = zdt4.withEarlierOffsetAtOverlap().getOffset();
+
+// +08:00
+ZoneOffset zo4Later = zdt4.withLaterOffsetAtOverlap().getOffset();
+</code></pre>
+
+<p>You can see the same problem comparing <code>1927-12-31 23:59:59</code> with <code>1928-01-01 00:00:00</code>, though, in this case, it is the earlier offset that produces the longer divergence, and it is the earlier date that has two possible offsets.</p>
+
+<p>Another way to approach this is to check whether there's a transition going on. We can do this like this:</p>
+
+<pre><code>// Null
+ZoneOffsetTransition zot3 = shanghai.getRules().getTransition(ld3.toLocalDateTime);
+
+// An overlap transition
+ZoneOffsetTransition zot4 = shanghai.getRules().getTransition(ld3.toLocalDateTime);
+</code></pre>
+
+<p>You can check whether the transition is an overlap where there's more than one valid offset for that date/time or a gap where that date/time is not valid for that zone id - by using the <code>isOverlap()</code> and <code>isGap()</code> methods on <code>zot4</code>.</p>
+
+<p>I hope this helps people handle this sort of issue once Java 8 becomes widely available, or to those using Java 7 who adopt the JSR 310 backport.</p>
+</div><p class="this-has-helped">This answer has helped 190 people.</p><div class="s-prose js-post-body"><p><code>IMHO</code> the pervasive, <em>implicit</em> localization in Java is its single largest design flaw. It may be intended for user interfaces, but frankly, who really uses Java for user interfaces today except for some IDEs where you can basically ignore localization because programmers aren't exactly the target audience for it. You can fix it (especially on Linux servers) by:</p>
+<ul>
+<li>export <code>LC_ALL=C TZ=UTC</code></li>
+<li>set your system clock to UTC</li>
+<li>never use localized implementations unless absolutely necessary (ie for display only)</li>
+</ul>
+<p>To the <a href="https://www.jcp.org/" rel="noreferrer">Java Community Process</a> members I recommend:</p>
+<ul>
+<li>make localized methods, not the default, but require the user to explicitly request localization.</li>
+<li>use <code>UTF-8/UTC</code> as the <em>FIXED</em> default instead because that's simply the default today. There is no reason to do something else, except if you want to produce threads like this.</li>
+</ul>
+<p>I mean, come on, aren't global static variables an anti-OO pattern? Nothing else is those pervasive defaults given by some rudimentary environment variables.......</p>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>As others said, it's a time change in 1927 in Shanghai.</p>
+<p>It was <code>23:54:07</code> in Shanghai, in the local standard time, but then after 5 minutes and 52 seconds, it turned to the next day at <code>00:00:00</code>, and then local standard time changed back to <code>23:54:08</code>. So, that's why the difference between the two times is 343 seconds, not 1 second, as you would have expected.</p>
+<p>The time can also mess up in other places like the US. The US has Daylight Saving Time. When the Daylight Saving Time starts the time goes forward 1 hour. But after a while, the Daylight Saving Time ends, and it goes backward 1 hour back to the standard time zone. So sometimes when comparing times in the US the difference is about <code>3600</code> seconds not 1 second.</p>
+<p>But there is something different about these two-time changes. The latter changes continuously and the former was just a change. It didn't change back or change again by the same amount.</p>
+<p><strong>It's better to use UTC unless if needed to use non-UTC time like in display.</strong></p>
+</div></body></html>

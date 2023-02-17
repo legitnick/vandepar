@@ -1,0 +1,680 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I get the directory where a Bash script is located from within the script itself?</p><div class="s-prose js-post-body"><p>How do I get the path of the directory in which a <a href="http://en.wikipedia.org/wiki/Bash_%28Unix_shell%29" rel="noreferrer">Bash</a> script is located, <em>inside</em> that script?</p>
+<p>I want to use a Bash script as a launcher for another application. I want to change the working directory to the one where the Bash script is located, so I can operate on the files in that directory, like so:</p>
+<pre><code>$ ./application
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7824 people.</p><div class="s-prose js-post-body"><pre><code>#!/usr/bin/env bash
+
+SCRIPT_DIR=$( cd -- &quot;$( dirname -- &quot;${BASH_SOURCE[0]}&quot; )&quot; &amp;&gt; /dev/null &amp;&amp; pwd )
+</code></pre>
+<p>is a useful one-liner which will give you the full directory name of the script no matter where it is being called from.</p>
+<p>It will work as long as the last component of the path used to find the script is not a symlink (directory links are OK).  If you also want to resolve any links to the script itself, you need a multi-line solution:</p>
+<pre><code>#!/usr/bin/env bash
+
+SOURCE=${BASH_SOURCE[0]}
+while [ -L &quot;$SOURCE&quot; ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR=$( cd -P &quot;$( dirname &quot;$SOURCE&quot; )&quot; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; pwd )
+  SOURCE=$(readlink &quot;$SOURCE&quot;)
+  [[ $SOURCE != /* ]] &amp;&amp; SOURCE=$DIR/$SOURCE # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR=$( cd -P &quot;$( dirname &quot;$SOURCE&quot; )&quot; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; pwd )
+</code></pre>
+<p>This last one will work with any combination of aliases, <code>source</code>, <code>bash -c</code>, symlinks, etc.</p>
+<p><strong>Beware:</strong> if you <code>cd</code> to a different directory before running this snippet, the result may be incorrect!</p>
+<p>Also, watch out for <a href="http://bosker.wordpress.com/2012/02/12/bash-scripters-beware-of-the-cdpath/" rel="noreferrer"><code>$CDPATH</code> gotchas</a>, and stderr output side effects if the user has smartly overridden cd to redirect output to stderr instead (including escape sequences, such as when calling <code>update_terminal_cwd &gt;&amp;2</code> on Mac). Adding <code>&gt;/dev/null 2&gt;&amp;1</code> at the end of your <code>cd</code> command will take care of both possibilities.</p>
+<p>To understand how it works, try running this more verbose form:</p>
+<pre><code>#!/usr/bin/env bash
+
+SOURCE=${BASH_SOURCE[0]}
+while [ -L &quot;$SOURCE&quot; ]; do # resolve $SOURCE until the file is no longer a symlink
+  TARGET=$(readlink &quot;$SOURCE&quot;)
+  if [[ $TARGET == /* ]]; then
+    echo &quot;SOURCE '$SOURCE' is an absolute symlink to '$TARGET'&quot;
+    SOURCE=$TARGET
+  else
+    DIR=$( dirname &quot;$SOURCE&quot; )
+    echo &quot;SOURCE '$SOURCE' is a relative symlink to '$TARGET' (relative to '$DIR')&quot;
+    SOURCE=$DIR/$TARGET # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+  fi
+done
+echo &quot;SOURCE is '$SOURCE'&quot;
+RDIR=$( dirname &quot;$SOURCE&quot; )
+DIR=$( cd -P &quot;$( dirname &quot;$SOURCE&quot; )&quot; &gt;/dev/null 2&gt;&amp;1 &amp;&amp; pwd )
+if [ &quot;$DIR&quot; != &quot;$RDIR&quot; ]; then
+  echo &quot;DIR '$RDIR' resolves to '$DIR'&quot;
+fi
+echo &quot;DIR is '$DIR'&quot;
+</code></pre>
+<p>And it will print something like:</p>
+<pre class="lang-none prettyprint-override"><code>SOURCE './scriptdir.sh' is a relative symlink to 'sym2/scriptdir.sh' (relative to '.')
+SOURCE is './sym2/scriptdir.sh'
+DIR './sym2' resolves to '/home/ubuntu/dotfiles/fo fo/real/real1/real2'
+DIR is '/home/ubuntu/dotfiles/fo fo/real/real1/real2'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1156 people.</p><div class="s-prose js-post-body"><p>Use <code>dirname &quot;$0&quot;</code>:</p>
+<pre><code>#!/usr/bin/env bash
+
+echo &quot;The script you are running has basename $( basename -- &quot;$0&quot;; ), dirname $( dirname -- &quot;$0&quot;; )&quot;;
+echo &quot;The present working directory is $( pwd; )&quot;;
+</code></pre>
+<p>Using <code>pwd</code> alone will not work if you are not running the script from the directory it is contained in.</p>
+<pre><code>[matt@server1 ~]$ pwd
+/home/matt
+[matt@server1 ~]$ ./test2.sh
+The script you are running has basename test2.sh, dirname .
+The present working directory is /home/matt
+[matt@server1 ~]$ cd /tmp
+[matt@server1 tmp]$ ~/test2.sh
+The script you are running has basename test2.sh, dirname /home/matt
+The present working directory is /tmp
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 645 people.</p><div class="s-prose js-post-body"><p>The <a href="https://linux.die.net/man/1/dirname" rel="noreferrer"><code>dirname</code></a> command is the most basic, simply parsing the path up to the filename off of the <code>$0</code> (script name) variable:</p>
+<pre><code>dirname -- &quot;$0&quot;;
+</code></pre>
+<p>But, as <strong>matt b</strong> pointed out, the path returned is different depending on how the script is called. <code>pwd</code> doesn't do the job because that only tells you what the current directory is, not what directory the script resides in. Additionally, if a symbolic link to a script is executed, you're going to get a (probably relative) path to where the link resides, not the actual script.</p>
+<p>Some others have mentioned the <code>readlink</code> command, but at its simplest, you can use:</p>
+<pre><code>dirname -- &quot;$( readlink -f -- &quot;$0&quot;; )&quot;;
+</code></pre>
+<p><code>readlink</code> will resolve the script path to an absolute path from the root of the filesystem. So, any paths containing single or double dots, tildes and/or symbolic links will be resolved to a full path.</p>
+<p>Here's a script demonstrating each of these, <code>whatdir.sh</code>:</p>
+<pre><code>#!/usr/bin/env bash
+
+echo &quot;pwd: `pwd`&quot;
+echo &quot;\$0: $0&quot;
+echo &quot;basename: `basename -- &quot;$0&quot;`&quot;
+echo &quot;dirname: `dirname -- &quot;$0&quot;`&quot;
+echo &quot;dirname/readlink: $( dirname -- &quot;$( readlink -f -- &quot;$0&quot;; )&quot;; )&quot;
+</code></pre>
+<p>Running this script in my home dir, using a relative path:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt;$ ./whatdir.sh
+pwd: /Users/phatblat
+$0: ./whatdir.sh
+basename: whatdir.sh
+dirname: .
+dirname/readlink: /Users/phatblat
+</code></pre>
+<p>Again, but using the full path to the script:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt;$ /Users/phatblat/whatdir.sh
+pwd: /Users/phatblat
+$0: /Users/phatblat/whatdir.sh
+basename: whatdir.sh
+dirname: /Users/phatblat
+dirname/readlink: /Users/phatblat
+</code></pre>
+<p>Now changing directories:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt;$ cd /tmp
+&gt;&gt;&gt;$ ~/whatdir.sh
+pwd: /tmp
+$0: /Users/phatblat/whatdir.sh
+basename: whatdir.sh
+dirname: /Users/phatblat
+dirname/readlink: /Users/phatblat
+</code></pre>
+<p>And finally using a symbolic link to execute the script:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt;$ ln -s ~/whatdir.sh whatdirlink.sh
+&gt;&gt;&gt;$ ./whatdirlink.sh
+pwd: /tmp
+$0: ./whatdirlink.sh
+basename: whatdirlink.sh
+dirname: .
+dirname/readlink: /Users/phatblat
+</code></pre>
+<p>There is however one case where this doesn't work, when the script is sourced (instead of executed) in bash:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt;$ cd /tmp
+&gt;&gt;&gt;$ . ~/whatdir.sh  
+pwd: /tmp
+$0: bash
+basename: bash
+dirname: .
+dirname/readlink: /tmp
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 202 people.</p><div class="s-prose js-post-body"><pre><code>pushd . &gt; '/dev/null';
+SCRIPT_PATH=&quot;${BASH_SOURCE[0]:-$0}&quot;;
+
+while [ -h &quot;$SCRIPT_PATH&quot; ];
+do
+    cd &quot;$( dirname -- &quot;$SCRIPT_PATH&quot;; )&quot;;
+    SCRIPT_PATH=&quot;$( readlink -f -- &quot;$SCRIPT_PATH&quot;; )&quot;;
+done
+
+cd &quot;$( dirname -- &quot;$SCRIPT_PATH&quot;; )&quot; &gt; '/dev/null';
+SCRIPT_PATH=&quot;$( pwd; )&quot;;
+popd  &gt; '/dev/null';
+</code></pre>
+<p>It works for all versions, including</p>
+<ul>
+<li>when called via multiple depth soft link,</li>
+<li>when the file it</li>
+<li>when script called by command &quot;<code>source</code>&quot; aka <code>.</code> (dot) operator.</li>
+<li>when arg <code>$0</code> is modified from caller.</li>
+<li><code>&quot;./script&quot;</code></li>
+<li><code>&quot;/full/path/to/script&quot;</code></li>
+<li><code>&quot;/some/path/../../another/path/script&quot;</code></li>
+<li><code>&quot;./some/folder/script&quot;</code></li>
+</ul>
+<p>Alternatively, if the Bash script itself is a <strong>relative symlink</strong> you <em>want</em> to follow it and return the full path of the linked-to script:</p>
+<pre><code>pushd . &gt; '/dev/null';
+SCRIPT_PATH=&quot;${BASH_SOURCE[0]:-$0}&quot;;
+
+while [ -h &quot;$SCRIPT_PATH&quot; ];
+do
+    cd &quot;$( dirname -- &quot;$SCRIPT_PATH&quot;; )&quot;;
+    SCRIPT_PATH=&quot;$( readlink -f -- &quot;$SCRIPT_PATH&quot;; )&quot;;
+done
+
+cd &quot;$( dirname -- &quot;$SCRIPT_PATH&quot;; )&quot; &gt; '/dev/null';
+SCRIPT_PATH=&quot;$( pwd; )&quot;;
+popd  &gt; '/dev/null';
+</code></pre>
+<p><code>SCRIPT_PATH</code> is given in full path, no matter how it is called.</p>
+<p>Just make sure you locate this at start of the script.</p>
+</div><p class="this-has-helped">This answer has helped 137 people.</p><div class="s-prose js-post-body"><p>You can use <code>$BASH_SOURCE</code>:</p>
+<pre><code>#!/usr/bin/env bash
+
+scriptdir=&quot;$( dirname -- &quot;$BASH_SOURCE&quot;; )&quot;;
+</code></pre>
+<p>Note that you need to use <code>#!/bin/bash</code> and not <code>#!/bin/sh</code> since it's a Bash extension.</p>
+</div><p class="this-has-helped">This answer has helped 125 people.</p><div class="s-prose js-post-body"><p>Here is an easy-to-remember script:</p>
+<pre><code>DIR=&quot;$( dirname -- &quot;${BASH_SOURCE[0]}&quot;; )&quot;;   # Get the directory name
+DIR=&quot;$( realpath -e -- &quot;$DIR&quot;; )&quot;;    # Resolve its full path if need be
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 123 people.</p><div class="s-prose js-post-body"><p>Short answer:</p>
+<pre><code>&quot;`dirname -- &quot;$0&quot;;`&quot;
+</code></pre>
+<p>or (<a href="http://mywiki.wooledge.org/BashFAQ/082" rel="nofollow noreferrer">preferably</a>):</p>
+<pre><code>&quot;$( dirname -- &quot;$0&quot;; )&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 111 people.</p><div class="s-prose js-post-body"><p>This should do it:</p>
+<pre><code>DIR=&quot;$(dirname &quot;$(realpath &quot;$0&quot;)&quot;)&quot;
+</code></pre>
+<p>This works with symlinks and spaces in path.</p>
+<p>Please see the man pages for <code>dirname</code> and <code>realpath</code>.</p>
+<p>Please add a comment on how to support MacOS. I'm sorry I can verify it.</p>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p><code>pwd</code> can be used to find the current working directory, and <code>dirname</code> to find the directory of a particular file (command that was run, is <code>$0</code>, so <code>dirname $0</code> should give you the directory of the current script).</p>
+<p>However, <code>dirname</code> gives precisely the directory portion of the filename, which more likely than not is going to be relative to the current working directory. If your script needs to change directory for some reason, then the output from <code>dirname</code> becomes meaningless.</p>
+<p>I suggest the following:</p>
+<pre><code>#!/usr/bin/env bash
+
+reldir=&quot;$( dirname -- &quot;$0&quot;; )&quot;;
+cd &quot;$reldir&quot;;
+directory=&quot;$( pwd; )&quot;;
+
+echo &quot;Directory is ${directory}&quot;;
+</code></pre>
+<p>This way, you get an absolute, rather than a relative directory.</p>
+<p>Since the script will be run in a separate Bash instance, there isn't any need to restore the working directory afterwards, but if you do want to change back in your script for some reason, you can easily assign the value of <code>pwd</code> to a variable before you change directory, for future use.</p>
+<p>Although just</p>
+<pre><code>cd &quot;$( dirname -- &quot;$0&quot;; )&quot;;
+</code></pre>
+<p>solves the specific scenario in the question, I find having the absolute path to more more useful generally.</p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><pre><code>SCRIPT_DIR=$( cd ${0%/*} &amp;&amp; pwd -P )
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 41 people.</p><div class="s-prose js-post-body"><p>I don't think this is as easy as others have made it out to be.  <code>pwd</code> doesn't work, as the current directory is not necessarily the directory with the script.  <code>$0</code> doesn't always have the information either.  Consider the following three ways to invoke a script:</p>
+
+<pre><code>./script
+
+/usr/bin/script
+
+script
+</code></pre>
+
+<p>In the first and third ways <code>$0</code> doesn't have the full path information.  In the second and third, <code>pwd</code> does not work.  The only way to get the directory in the third way would be to run through the path and find the file with the correct match.  Basically the code would have to redo what the OS does.</p>
+
+<p>One way to do what you are asking would be to just hardcode the data in the <code>/usr/share</code> directory, and reference it by its full path.  Data shoudn't be in the <code>/usr/bin</code> directory anyway, so this is probably the thing to do.</p>
+</div><p class="this-has-helped">This answer has helped 41 people.</p><div class="s-prose js-post-body"><p>This gets the current working directory on <a href="https://en.wikipedia.org/wiki/Mac_OS_X_Snow_Leopard" rel="noreferrer">Mac OS X v10.6.6</a> (Snow Leopard):</p>
+<pre><code>DIR=$(cd &quot;$(dirname &quot;$0&quot;)&quot;; pwd)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><pre><code>$(dirname "$(readlink -f "$BASH_SOURCE")")
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 29 people.</p><div class="s-prose js-post-body"><p>This is Linux specific, but you could use:</p>
+
+<pre><code>SELF=$(readlink /proc/$$/fd/255)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p>Here is a POSIX compliant one-liner:</p>
+
+<pre><code>SCRIPT_PATH=`dirname "$0"`; SCRIPT_PATH=`eval "cd \"$SCRIPT_PATH\" &amp;&amp; pwd"`
+
+# test
+echo $SCRIPT_PATH
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p>The shortest and most elegant way to do this is:</p>
+
+<pre class="lang-sh prettyprint-override"><code>#!/bin/bash
+DIRECTORY=$(cd `dirname $0` &amp;&amp; pwd)
+echo $DIRECTORY
+</code></pre>
+
+<p>This would work on all platforms and is super clean.</p>
+
+<p>More details can be found in "<a href="https://www.electrictoolbox.com/bash-script-directory/" rel="noreferrer">Which directory is that bash script in?</a>". </p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><h2>Summary:</h2>
+<pre class="lang-sh prettyprint-override"><code>FULL_PATH_TO_SCRIPT=&quot;$(realpath &quot;${BASH_SOURCE[-1]}&quot;)&quot;
+
+# OR, if you do NOT need it to work for **sourced** scripts too:
+# FULL_PATH_TO_SCRIPT=&quot;$(realpath &quot;$0&quot;)&quot;
+
+# OR, depending on which path you want, in case of nested `source` calls
+# FULL_PATH_TO_SCRIPT=&quot;$(realpath &quot;${BASH_SOURCE[0]}&quot;)&quot;
+
+# OR, add `-s` to NOT expand symlinks in the path:
+# FULL_PATH_TO_SCRIPT=&quot;$(realpath -s &quot;${BASH_SOURCE[-1]}&quot;)&quot;
+
+SCRIPT_DIRECTORY=&quot;$(dirname &quot;$FULL_PATH_TO_SCRIPT&quot;)&quot;
+SCRIPT_FILENAME=&quot;$(basename &quot;$FULL_PATH_TO_SCRIPT&quot;)&quot;
+</code></pre>
+<h2>Details:</h2>
+<h2>How to obtain the <em>full file path</em>, <em>full directory</em>, and <em>base filename</em> of any script being <em>run</em> OR <em>sourced</em>...</h2>
+<p>...even when the called script is called from within another bash function or script, or when nested sourcing is being used!</p>
+<p>For many cases, all you need to acquire is the full path to the script you just called. This can be easily accomplished using <code>realpath</code>. Note that <code>realpath</code> is part of <strong>GNU coreutils</strong>. If you don't have it already installed (it comes default on Ubuntu), you can install it with <code>sudo apt update &amp;&amp; sudo apt install coreutils</code>.</p>
+<p><strong>get_script_path.sh</strong> (for the latest version of this script, see <a href="https://github.com/ElectricRCAircraftGuy/eRCaGuy_hello_world/blob/master/bash/get_script_path.sh" rel="noreferrer">get_script_path.sh</a> in my <a href="https://github.com/ElectricRCAircraftGuy/eRCaGuy_hello_world" rel="noreferrer">eRCaGuy_hello_world</a> repo):</p>
+<pre class="lang-sh prettyprint-override"><code>#!/bin/bash
+
+# A. Obtain the full path, and expand (walk down) symbolic links
+# A.1. `&quot;$0&quot;` works only if the file is **run**, but NOT if it is **sourced**.
+# FULL_PATH_TO_SCRIPT=&quot;$(realpath &quot;$0&quot;)&quot;
+# A.2. `&quot;${BASH_SOURCE[-1]}&quot;` works whether the file is sourced OR run, and even
+# if the script is called from within another bash function!
+# NB: if `&quot;${BASH_SOURCE[-1]}&quot;` doesn't give you quite what you want, use
+# `&quot;${BASH_SOURCE[0]}&quot;` instead in order to get the first element from the array.
+FULL_PATH_TO_SCRIPT=&quot;$(realpath &quot;${BASH_SOURCE[-1]}&quot;)&quot;
+# B.1. `&quot;$0&quot;` works only if the file is **run**, but NOT if it is **sourced**.
+# FULL_PATH_TO_SCRIPT_KEEP_SYMLINKS=&quot;$(realpath -s &quot;$0&quot;)&quot;
+# B.2. `&quot;${BASH_SOURCE[-1]}&quot;` works whether the file is sourced OR run, and even
+# if the script is called from within another bash function!
+# NB: if `&quot;${BASH_SOURCE[-1]}&quot;` doesn't give you quite what you want, use
+# `&quot;${BASH_SOURCE[0]}&quot;` instead in order to get the first element from the array.
+FULL_PATH_TO_SCRIPT_KEEP_SYMLINKS=&quot;$(realpath -s &quot;${BASH_SOURCE[-1]}&quot;)&quot;
+
+# You can then also get the full path to the directory, and the base
+# filename, like this:
+SCRIPT_DIRECTORY=&quot;$(dirname &quot;$FULL_PATH_TO_SCRIPT&quot;)&quot;
+SCRIPT_FILENAME=&quot;$(basename &quot;$FULL_PATH_TO_SCRIPT&quot;)&quot;
+
+# Now print it all out
+echo &quot;FULL_PATH_TO_SCRIPT = \&quot;$FULL_PATH_TO_SCRIPT\&quot;&quot;
+echo &quot;SCRIPT_DIRECTORY    = \&quot;$SCRIPT_DIRECTORY\&quot;&quot;
+echo &quot;SCRIPT_FILENAME     = \&quot;$SCRIPT_FILENAME\&quot;&quot;
+</code></pre>
+<p><strong>IMPORTANT note on <em>nested <code>source</code> calls</em>:</strong> if <code>&quot;${BASH_SOURCE[-1]}&quot;</code> above doesn't give you quite what you want, try using <code>&quot;${BASH_SOURCE[0]}&quot;</code> instead. The first (<code>0</code>) index gives you the first entry in the array, and the last (<code>-1</code>) index gives you the last last entry in the array. Depending on what it is you're after, you may actually want the first entry. I discovered this to be the case when I sourced <code>~/.bashrc</code> with <code>. ~/.bashrc</code>, which sourced <code>~/.bash_aliases</code> with <code>. ~/.bash_aliases</code>, and I wanted the <code>realpath</code> (with expanded symlinks) to the <code>~/.bash_aliases</code> file, NOT to the <code>~/.bashrc</code> file. Since these are <em>nested</em> <code>source</code> calls, using <code>&quot;${BASH_SOURCE[0]}&quot;</code> gave me what I wanted: the expanded path to <code>~/.bash_aliases</code>! Using <code>&quot;${BASH_SOURCE[-1]}&quot;</code>, however, gave me what I did <em>not</em> want: the expanded path to <code>~/.bashrc</code>.</p>
+<p><strong>Example command and output:</strong></p>
+<ol>
+<li><em>Running</em> the script:
+<pre class="lang-sh prettyprint-override"><code>~/GS/dev/eRCaGuy_hello_world/bash$ ./get_script_path.sh 
+FULL_PATH_TO_SCRIPT = &quot;/home/gabriel/GS/dev/eRCaGuy_hello_world/bash/get_script_path.sh&quot;
+SCRIPT_DIRECTORY    = &quot;/home/gabriel/GS/dev/eRCaGuy_hello_world/bash&quot;
+SCRIPT_FILENAME     = &quot;get_script_path.sh&quot;
+</code></pre>
+</li>
+<li><em>Sourcing</em> the script with <code>. get_script_path.sh</code> or <code>source get_script_path.sh</code> (the result is the exact same as above because I used <code>&quot;${BASH_SOURCE[-1]}&quot;</code> in the script instead of <code>&quot;$0&quot;</code>):
+<pre class="lang-sh prettyprint-override"><code>~/GS/dev/eRCaGuy_hello_world/bash$ . get_script_path.sh 
+FULL_PATH_TO_SCRIPT = &quot;/home/gabriel/GS/dev/eRCaGuy_hello_world/bash/get_script_path.sh&quot;
+SCRIPT_DIRECTORY    = &quot;/home/gabriel/GS/dev/eRCaGuy_hello_world/bash&quot;
+SCRIPT_FILENAME     = &quot;get_script_path.sh&quot;
+</code></pre>
+</li>
+</ol>
+<p>If you use <code>&quot;$0&quot;</code> in the script instead of <code>&quot;${BASH_SOURCE[-1]}&quot;</code>, you'll get the same output as above when <em>running</em> the script, but this <em>undesired</em> output instead when <em>sourcing</em> the script:</p>
+<pre class="lang-sh prettyprint-override"><code>~/GS/dev/eRCaGuy_hello_world/bash$ . get_script_path.sh 
+FULL_PATH_TO_SCRIPT               = &quot;/bin/bash&quot;
+SCRIPT_DIRECTORY                  = &quot;/bin&quot;
+SCRIPT_FILENAME                   = &quot;bash&quot;
+</code></pre>
+<p>And, apparently if you use <code>&quot;$BASH_SOURCE&quot;</code> instead of <code>&quot;${BASH_SOURCE[-1]}&quot;</code>, it will <em>not</em> work if the script is called from within another bash function. So, using <code>&quot;${BASH_SOURCE[-1]}&quot;</code> is therefore the best way to do it, as it solves both of these problems! See the references below.</p>
+<p><strong>Difference between <code>realpath</code> and <code>realpath -s</code>:</strong></p>
+<p>Note that <code>realpath</code> also successfully walks down symbolic links to determine and point to their targets rather than pointing to the symbolic link. If you do NOT want this behavior (sometimes I don't), then add <code>-s</code> to the <code>realpath</code> command above, making that line look like this instead:</p>
+<pre class="lang-sh prettyprint-override"><code># Obtain the full path, but do NOT expand (walk down) symbolic links; in
+# other words: **keep** the symlinks as part of the path!
+FULL_PATH_TO_SCRIPT=&quot;$(realpath -s &quot;${BASH_SOURCE[-1]}&quot;)&quot;
+</code></pre>
+<p>This way, symbolic links are NOT expanded. Rather, they are left as-is, as symbolic links in the full path.</p>
+<p>The code above is now part of my <a href="https://github.com/ElectricRCAircraftGuy/eRCaGuy_hello_world" rel="noreferrer">eRCaGuy_hello_world</a> repo in this file here: <a href="https://github.com/ElectricRCAircraftGuy/eRCaGuy_hello_world/blob/master/bash/get_script_path.sh" rel="noreferrer">bash/get_script_path.sh</a>. Reference and run this file for full examples both with and withOUT symlinks in the paths. See the bottom of the file for example output in both cases.</p>
+<h2>References:</h2>
+<ol>
+<li><a href="https://stackoverflow.com/a/14892459/4561887">How to retrieve absolute path given relative</a></li>
+<li>taught me about the <code>BASH_SOURCE</code> variable: <a href="https://unix.stackexchange.com/a/4653/114401">Unix &amp; Linux: determining path to sourced shell script</a></li>
+<li>taught me that <code>BASH_SOURCE</code> is actually an array, and we want the last element from it for it to work as expected inside a function (hence why I used <code>&quot;${BASH_SOURCE[-1]}&quot;</code> in my code here): <a href="https://unix.stackexchange.com/a/153061/114401">Unix &amp; Linux: determining path to sourced shell script</a></li>
+<li><code>man bash</code> --&gt; search for <code>BASH_SOURCE</code>:
+<blockquote>
+<p><strong><code>BASH_SOURCE</code></strong></p>
+<p>An array variable whose members are the source filenames where the corresponding shell function names in the <code>FUNCNAME</code> array variable are defined. The shell function <code>${FUNCNAME[$i]}</code> is defined in the file <code>${BASH_SOURCE[$i]}</code> and called from <code>${BASH_SOURCE[$i+1]}</code>.</p>
+</blockquote>
+</li>
+</ol>
+<h2>See also:</h2>
+<ol>
+<li>[my answer] <a href="https://unix.stackexchange.com/a/692485/114401">Unix &amp; Linux: determining path to sourced shell script</a></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><pre><code>#!/bin/sh
+PRG="$0"
+
+# need this for relative symlinks
+while [ -h "$PRG" ] ; do
+   PRG=`readlink "$PRG"`
+done
+
+scriptdir=`dirname "$PRG"`
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I tried all of these and none worked. One was very close, but it had a tiny bug that broke it badly; they forgot to wrap the path in quotation marks.</p>
+<p>Also a lot of people assume you're running the script from a shell, so they forget when you open a new script it defaults to your home.</p>
+<p>Try this directory on for size:</p>
+<pre><code>/var/No one/Thought/About Spaces Being/In a Directory/Name/And Here's your file.text
+</code></pre>
+<p>This gets it right regardless how or where you run it:</p>
+<pre><code>#!/bin/bash
+echo &quot;pwd: `pwd`&quot;
+echo &quot;\$0: $0&quot;
+echo &quot;basename: `basename &quot;$0&quot;`&quot;
+echo &quot;dirname: `dirname &quot;$0&quot;`&quot;
+</code></pre>
+<p>So to make it actually useful, here's how to change to the directory of the running script:</p>
+<pre><code>cd &quot;`dirname &quot;$0&quot;`&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>Here is the simple, correct way:</p>
+
+<pre><code>actual_path=$(readlink -f "${BASH_SOURCE[0]}")
+script_dir=$(dirname "$actual_path")
+</code></pre>
+
+<p>Explanation:</p>
+
+<ul>
+<li><p><strong><code>${BASH_SOURCE[0]}</code></strong> - the full path to the script. The value of this will be correct even when the script is being sourced, e.g. <code>source &lt;(echo 'echo $0')</code> prints <strong>bash</strong>, while replacing it with <code>${BASH_SOURCE[0]}</code> will print the full path of the script. (Of course, this assumes you're OK taking a dependency on Bash.)</p></li>
+<li><p><strong><code>readlink -f</code></strong> - Recursively resolves any symlinks in the specified path. This is a GNU extension, and not available on (for example) BSD systems. If you're running a Mac, you can use Homebrew to install GNU <code>coreutils</code> and supplant this with <strong><code>greadlink -f</code></strong>.</p></li>
+<li><p>And of course <strong><code>dirname</code></strong> gets the parent directory of the path.</p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>This is a slight revision to the solution e-satis and 3bcdnlklvc04a pointed out in <a href="https://stackoverflow.com/questions/59895/can-a-bash-script-tell-what-directory-its-in/179231#179231" title="their answer">their answer</a>:</p>
+<pre><code>SCRIPT_DIR=''
+pushd &quot;$(dirname &quot;$(readlink -f &quot;$BASH_SOURCE&quot;)&quot;)&quot; &gt; /dev/null &amp;&amp; {
+    SCRIPT_DIR=&quot;$PWD&quot;
+    popd &gt; /dev/null
+}
+</code></pre>
+<p>This should still work in all the cases they listed.</p>
+<p>This will prevent <code>popd</code> after a failed <code>pushd</code>. Thanks to konsolebox.</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>Try using:</p>
+<pre><code>real=$(realpath &quot;$(dirname &quot;$0&quot;)&quot;)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>I would use something like this:</p>
+<pre><code># Retrieve the full pathname of the called script
+scriptPath=$(which $0)
+
+# Check whether the path is a link or not
+if [ -L $scriptPath ]; then
+
+    # It is a link then retrieve the target path and get the directory name
+    sourceDir=$(dirname $(readlink -f $scriptPath))
+
+else
+
+    # Otherwise just get the directory name of the script path
+    sourceDir=$(dirname $scriptPath)
+
+fi
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>For systems having GNU coreutils <code>readlink</code> (for example, Linux):</p>
+<pre><code>$(readlink -f &quot;$(dirname &quot;$0&quot;)&quot;)
+</code></pre>
+<p>There's no need to use <code>BASH_SOURCE</code> when <code>$0</code> contains the script filename.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p><a href="http://www.gnu.org/s/bash/manual/bash.html#Environment" rel="nofollow noreferrer"><code>$_</code></a> is worth mentioning as an alternative to <code>$0</code>.  If you're running a script from Bash, the accepted answer can be shortened to:</p>
+
+<pre><code>DIR="$( dirname "$_" )"
+</code></pre>
+
+<p>Note that this has to be the first statement in your script.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>This works in Bash 3.2:</p>
+<pre><code>path=&quot;$( dirname &quot;$( which &quot;$0&quot; )&quot; )&quot;
+</code></pre>
+<p>If you have a <code>~/bin</code> directory in your <code>$PATH</code>, you have  <code>A</code> inside this directory. It sources the script <code>~/bin/lib/B</code>. You know where the included script is relative to the original one, in the <code>lib</code> subdirectory, but not where it is relative to the user's current directory.</p>
+<p>This is solved by the following (inside <code>A</code>):</p>
+<pre><code>source &quot;$( dirname &quot;$( which &quot;$0&quot; )&quot; )/lib/B&quot;
+</code></pre>
+<p>It doesn't matter where the user is or how he/she calls the script. This will always work.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>These are short ways to get script information:</p>
+
+<p>Folders and files:</p>
+
+<pre><code>    Script: "/tmp/src dir/test.sh"
+    Calling folder: "/tmp/src dir/other"
+</code></pre>
+
+<p>Using these commands:</p>
+
+<pre><code>    echo Script-Dir : `dirname "$(realpath $0)"`
+    echo Script-Dir : $( cd ${0%/*} &amp;&amp; pwd -P )
+    echo Script-Dir : $(dirname "$(readlink -f "$0")")
+    echo
+    echo Script-Name : `basename "$(realpath $0)"`
+    echo Script-Name : `basename $0`
+    echo
+    echo Script-Dir-Relative : `dirname "$BASH_SOURCE"`
+    echo Script-Dir-Relative : `dirname $0`
+    echo
+    echo Calling-Dir : `pwd`
+</code></pre>
+
+<p>And I got this output:</p>
+
+<pre><code>     Script-Dir : /tmp/src dir
+     Script-Dir : /tmp/src dir
+     Script-Dir : /tmp/src dir
+
+     Script-Name : test.sh
+     Script-Name : test.sh
+
+     Script-Dir-Relative : ..
+     Script-Dir-Relative : ..
+
+     Calling-Dir : /tmp/src dir/other
+</code></pre>
+
+<p>Also see: <a href="https://pastebin.com/J8KjxrPF" rel="noreferrer">https://pastebin.com/J8KjxrPF</a></p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>I've compared many of the answers given, and came up with some more compact solutions. These seem to handle all of the crazy edge cases that arise from your favorite combination of:</p>
+<ul>
+<li>Absolute paths or relative paths</li>
+<li>File and directory soft links</li>
+<li>Invocation as <code>script</code>, <code>bash script</code>, <code>bash -c script</code>, <code>source script</code>, or <code>. script</code></li>
+<li>Spaces, tabs, newlines, Unicode, etc. in directories and/or filename</li>
+<li>Filenames beginning with a hyphen</li>
+</ul>
+<p>If you're running from Linux, it seems that using the <code>proc</code> handle is the best solution to locate the fully resolved source of the currently running script (in an interactive session, the link points to the respective <code>/dev/pts/X</code>):</p>
+<pre><code>resolved=&quot;$(readlink /proc/$$/fd/255 &amp;&amp; echo X)&quot; &amp;&amp; resolved=&quot;${resolved%$'\nX'}&quot;
+</code></pre>
+<p>This has a small bit of ugliness to it, but the fix is compact and easy to understand. We aren't using bash primitives only, but I'm okay with that because <a href="https://linux.die.net/man/1/readlink" rel="nofollow noreferrer"><code>readlink</code></a> simplifies the task considerably. The <code>echo X</code> adds an <code>X</code> to the end of the variable string so that any trailing whitespace in the filename doesn't get eaten, and the parameter substitution <code>${VAR%X}</code> at the end of the line gets rid of the <code>X</code>. Because <code>readlink</code> adds a newline of its own (which would normally be eaten in the command substitution if not for our previous trickery), we have to get rid of that, too. This is most easily accomplished using the <code>$''</code> quoting scheme, which lets us use escape sequences such as <code>\n</code> to represent newlines (this is also how you can easily make deviously named directories and files).</p>
+<p>The above should cover your needs for locating the currently running script on Linux, but if you don't have the <code>proc</code> filesystem at your disposal, or if you're trying to locate the fully resolved path of some other file, then maybe you'll find the below code helpful. It's only a slight modification from the above one-liner. If you're playing around with strange directory/filenames, checking the output with both <code>ls</code> and <code>readlink</code> is informative, as <code>ls</code> will output &quot;simplified&quot; paths, substituting <code>?</code> for things like newlines.</p>
+<pre><code>absolute_path=$(readlink -e -- &quot;${BASH_SOURCE[0]}&quot; &amp;&amp; echo x) &amp;&amp; absolute_path=${absolute_path%?x}
+dir=$(dirname -- &quot;$absolute_path&quot; &amp;&amp; echo x) &amp;&amp; dir=${dir%?x}
+file=$(basename -- &quot;$absolute_path&quot; &amp;&amp; echo x) &amp;&amp; file=${file%?x}
+
+ls -l -- &quot;$dir/$file&quot;
+printf '$absolute_path: &quot;%s&quot;\n' &quot;$absolute_path&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Try the following cross-compatible solution:</p>
+<pre><code>CWD=&quot;$(cd -P -- &quot;$(dirname -- &quot;${BASH_SOURCE[0]}&quot;)&quot; &amp;&amp; pwd -P)&quot;
+</code></pre>
+<p>As the commands such as <code>realpath</code> or <code>readlink</code> could be not available (depending on the operating system).</p>
+<p>Note: In Bash, it's recommended to use <code>${BASH_SOURCE[0]}</code> instead of <code>$0</code>, otherwise path can break when sourcing the file (<code>source</code>/<code>.</code>).</p>
+<p>Alternatively you can try the following function in Bash:</p>
+<pre><code>realpath () {
+  [[ $1 = /* ]] &amp;&amp; echo &quot;$1&quot; || echo &quot;$PWD/${1#./}&quot;
+}
+</code></pre>
+<p>This function takes one argument. If argument has already absolute path, print it as it is, otherwise print <code>$PWD</code> variable + filename argument (without <code>./</code> prefix).</p>
+<p>Related:</p>
+<ul>
+<li><em><a href="https://stackoverflow.com/questions/3349105/how-to-set-current-working-directory-to-the-directory-of-the-script">How can I set the current working directory to the directory of the script in Bash?</a></em></li>
+<li><em><a href="https://stackoverflow.com/questions/3572030/bash-script-absolute-path-with-osx">Bash script absolute path with OS X</a></em></li>
+<li><em><a href="https://stackoverflow.com/questions/4774054/reliable-way-for-a-bash-script-to-get-the-full-path-to-itself/20265654#20265654">Reliable way for a Bash script to get the full path to itself</a></em></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>I believe I've got this one. I'm late to the party, but I think some will appreciate it being here if they come across this thread. The comments should explain:</p>
+
+<pre><code>#!/bin/sh # dash bash ksh # !zsh (issues). G. Nixon, 12/2013. Public domain.
+
+## 'linkread' or 'fullpath' or (you choose) is a little tool to recursively
+## dereference symbolic links (ala 'readlink') until the originating file
+## is found. This is effectively the same function provided in stdlib.h as
+## 'realpath' and on the command line in GNU 'readlink -f'.
+
+## Neither of these tools, however, are particularly accessible on the many
+## systems that do not have the GNU implementation of readlink, nor ship
+## with a system compiler (not to mention the requisite knowledge of C).
+
+## This script is written with portability and (to the extent possible, speed)
+## in mind, hence the use of printf for echo and case statements where they
+## can be substituded for test, though I've had to scale back a bit on that.
+
+## It is (to the best of my knowledge) written in standard POSIX shell, and
+## has been tested with bash-as-bin-sh, dash, and ksh93. zsh seems to have
+## issues with it, though I'm not sure why; so probably best to avoid for now.
+
+## Particularly useful (in fact, the reason I wrote this) is the fact that
+## it can be used within a shell script to find the path of the script itself.
+## (I am sure the shell knows this already; but most likely for the sake of
+## security it is not made readily available. The implementation of "$0"
+## specificies that the $0 must be the location of **last** symbolic link in
+## a chain, or wherever it resides in the path.) This can be used for some
+## ...interesting things, like self-duplicating and self-modifiying scripts.
+
+## Currently supported are three errors: whether the file specified exists
+## (ala ENOENT), whether its target exists/is accessible; and the special
+## case of when a sybolic link references itself "foo -&gt; foo": a common error
+## for beginners, since 'ln' does not produce an error if the order of link
+## and target are reversed on the command line. (See POSIX signal ELOOP.)
+
+## It would probably be rather simple to write to use this as a basis for
+## a pure shell implementation of the 'symlinks' util included with Linux.
+
+## As an aside, the amount of code below **completely** belies the amount
+## effort it took to get this right -- but I guess that's coding for you.
+
+##===-------------------------------------------------------------------===##
+
+for argv; do :; done # Last parameter on command line, for options parsing.
+
+## Error messages. Use functions so that we can sub in when the error occurs.
+
+recurses(){ printf "Self-referential:\n\t$argv -&gt;\n\t$argv\n" ;}
+dangling(){ printf "Broken symlink:\n\t$argv -&gt;\n\t"$(readlink "$argv")"\n" ;}
+errnoent(){ printf "No such file: "$@"\n" ;} # Borrow a horrible signal name.
+
+# Probably best not to install as 'pathfull', if you can avoid it.
+
+pathfull(){ cd "$(dirname "$@")"; link="$(readlink "$(basename "$@")")"
+
+## 'test and 'ls' report different status for bad symlinks, so we use this.
+
+ if [ ! -e "$@" ]; then if $(ls -d "$@" 2&gt;/dev/null) 2&gt;/dev/null;  then
+    errnoent 1&gt;&amp;2; exit 1; elif [ ! -e "$@" -a "$link" = "$@" ];   then
+    recurses 1&gt;&amp;2; exit 1; elif [ ! -e "$@" ] &amp;&amp; [ ! -z "$link" ]; then
+    dangling 1&gt;&amp;2; exit 1; fi
+ fi
+
+## Not a link, but there might be one in the path, so 'cd' and 'pwd'.
+
+ if [ -z "$link" ]; then if [ "$(dirname "$@" | cut -c1)" = '/' ]; then
+   printf "$@\n"; exit 0; else printf "$(pwd)/$(basename "$@")\n"; fi; exit 0
+ fi
+
+## Walk the symlinks back to the origin. Calls itself recursivly as needed.
+
+ while [ "$link" ]; do
+   cd "$(dirname "$link")"; newlink="$(readlink "$(basename "$link")")"
+   case "$newlink" in
+    "$link") dangling 1&gt;&amp;2 &amp;&amp; exit 1                                       ;;
+         '') printf "$(pwd)/$(basename "$link")\n"; exit 0                 ;;
+          *) link="$newlink" &amp;&amp; pathfull "$link"                           ;;
+   esac
+ done
+ printf "$(pwd)/$(basename "$newlink")\n"
+}
+
+## Demo. Install somewhere deep in the filesystem, then symlink somewhere 
+## else, symlink again (maybe with a different name) elsewhere, and link
+## back into the directory you started in (or something.) The absolute path
+## of the script will always be reported in the usage, along with "$0".
+
+if [ -z "$argv" ]; then scriptname="$(pathfull "$0")"
+
+# Yay ANSI l33t codes! Fancy.
+ printf "\n\033[3mfrom/as: \033[4m$0\033[0m\n\n\033[1mUSAGE:\033[0m   "
+ printf "\033[4m$scriptname\033[24m [ link | file | dir ]\n\n         "
+ printf "Recursive readlink for the authoritative file, symlink after "
+ printf "symlink.\n\n\n         \033[4m$scriptname\033[24m\n\n        "
+ printf " From within an invocation of a script, locate the script's "
+ printf "own file\n         (no matter where it has been linked or "
+ printf "from where it is being called).\n\n"
+
+else pathfull "$@"
+fi
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>Hmm, if in the path, <a href="https://linux.die.net/man/1/basename" rel="nofollow noreferrer"><code>basename</code></a> and <a href="https://linux.die.net/man/1/dirname" rel="nofollow noreferrer"><code>dirname</code></a> are just not going to cut it and walking the path is hard (what if the parent didn't export PATH?!).</p>
+<p>However, the shell has to have an open handle to its script, and in Bash the handle is #255.</p>
+<pre><code>SELF=`readlink /proc/$$/fd/255`
+</code></pre>
+<p>works for me.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>The best compact solution in my view would be:</p>
+<pre><code>&quot;$( cd &quot;$( echo &quot;${BASH_SOURCE[0]%/*}&quot; )&quot;; pwd )&quot;
+</code></pre>
+<p>There is no reliance on anything other than Bash.  The use of <a href="https://linux.die.net/man/1/dirname" rel="nofollow noreferrer"><code>dirname</code></a>, <a href="https://linux.die.net/man/1/readlink" rel="nofollow noreferrer"><code>readlink</code></a> and <a href="https://linux.die.net/man/1/basename" rel="nofollow noreferrer"><code>basename</code></a> will eventually lead to compatibility issues, so they are best avoided if at all possible.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>You can do that just combining the script name (<code>$0</code>) with <a href="https://linux.die.net/man/1/realpath" rel="nofollow noreferrer"><code>realpath</code></a> and/or <a href="https://linux.die.net/man/1/dirname" rel="nofollow noreferrer"><code>dirname</code></a>. It works for Bash and Shell.</p>
+<pre class="lang-sh prettyprint-override"><code>#!/usr/bin/env bash
+
+RELATIVE_PATH=&quot;${0}&quot;
+RELATIVE_DIR_PATH=&quot;$(dirname &quot;${0}&quot;)&quot;
+FULL_DIR_PATH=&quot;$(realpath &quot;${0}&quot; | xargs dirname)&quot;
+FULL_PATH=&quot;$(realpath &quot;${0}&quot;)&quot;
+
+echo &quot;RELATIVE_PATH-&gt;${RELATIVE_PATH}&lt;-&quot;
+echo &quot;RELATIVE_DIR_PATH-&gt;${RELATIVE_DIR_PATH}&lt;-&quot;
+echo &quot;FULL_DIR_PATH-&gt;${FULL_DIR_PATH}&lt;-&quot;
+echo &quot;FULL_PATH-&gt;${FULL_PATH}&lt;-&quot;
+</code></pre>
+<p>The output will be something like this:</p>
+<pre><code># RELATIVE_PATH-&gt;./bin/startup.sh&lt;-
+# RELATIVE_DIR_PATH-&gt;./bin&lt;-
+# FULL_DIR_PATH-&gt;/opt/my_app/bin&lt;-
+# FULL_PATH-&gt;/opt/my_app/bin/startup.sh&lt;-
+</code></pre>
+<blockquote>
+<p>$0 is the name of the script itself</p>
+</blockquote>
+<p><em><a href="https://www.tldp.org/LDP/abs/html/othertypesv.html" rel="nofollow noreferrer">4.4. Special Variable Types</a></em></p>
+<p>An example: <em><a href="https://gist.github.com/LozanoMatheus/da96b4e44b89b13ad4af10ac4602ad99" rel="nofollow noreferrer">LozanoMatheus/get_script_paths.sh</a></em></p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>This is, annoyingly, the only one-liner I've found that works on both Linux and macOS when the executable script is a symlink:</p>
+<pre><code>SCRIPT_DIR=$(python -c &quot;import os; print(os.path.dirname(os.path.realpath('${BASH_SOURCE[0]}')))&quot;)
+</code></pre>
+<p>or, similarly, using python3 pathlib module:</p>
+<pre><code>SCRIPT_DIR=$(python3 -c &quot;from pathlib import Path; print(Path('${BASH_SOURCE[0]}').resolve().parent)&quot;)
+</code></pre>
+<p>Tested on Linux and macOS and compared to other solutions in this gist: <a href="https://gist.github.com/ptc-mrucci/61772387878ed53a6c717d51a21d9371" rel="nofollow noreferrer">https://gist.github.com/ptc-mrucci/61772387878ed53a6c717d51a21d9371</a></p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>None of these other answers worked for a Bash script launched by <a href="https://en.wikipedia.org/wiki/Finder_(software)" rel="nofollow noreferrer">Finder</a> in <a href="https://en.wikipedia.org/wiki/Mac_OS_X" rel="nofollow noreferrer">OS X</a>. I ended up using:</p>
+<pre><code>SCRIPT_LOC=&quot;`ps -p $$ | sed /PID/d | sed s:.*/Network/:/Network/: |
+sed s:.*/Volumes/:/Volumes/:`&quot;
+</code></pre>
+<p>It is not pretty, but it gets the job done.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>Use a combination of <a href="https://linux.die.net/man/1/readlink" rel="nofollow noreferrer">readlink</a> to canonicalize the name (with a bonus of following it back to its source if it is a symlink) and <a href="https://linux.die.net/man/1/dirname" rel="nofollow noreferrer">dirname</a> to extract the directory name:</p>
+<pre><code>script=&quot;`readlink -f &quot;${BASH_SOURCE[0]}&quot;`&quot;
+dir=&quot;`dirname &quot;$script&quot;`&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>This worked for me when the other answers here did not:</p>
+
+<pre><code>thisScriptPath=`realpath $0`
+thisDirPath=`dirname $thisScriptPath`
+echo $thisDirPath
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>The top response does not work in all cases...</p>
+<p>As I had problems with the BASH_SOURCE with the included 'cd' approach on some very fresh and also on less fresh installed <a href="https://en.wikipedia.org/wiki/Ubuntu_version_history#Ubuntu_16.04_LTS_.28Xenial_Xerus.29" rel="nofollow noreferrer">Ubuntu 16.04</a> (Xenial Xerus) systems when invoking the shell script by means of &quot;sh my_script.sh&quot;, I tried out something different that as of now seems to run quite smoothly for my purposes. The approach is a bit more compact in the script and is further much lesser cryptic feeling.</p>
+<p>This alternate approach uses the external applications '<a href="https://linux.die.net/man/1/realpath" rel="nofollow noreferrer">realpath</a>' and '<a href="https://linux.die.net/man/1/dirname" rel="nofollow noreferrer">dirname</a>' from the coreutils package. (Okay, not anyone likes the overhead of invoking secondary processes - but when seeing the multi-line scripting for resolving the true object it won't be that bad either having it solve in a single binary usage.)</p>
+<p>So let’s see one example of those alternate solution for the described task of querying the true absolute path to a certain file:</p>
+<pre><code>PATH_TO_SCRIPT=`realpath -s $0`
+PATH_TO_SCRIPT_DIR=`dirname $PATH_TO_SCRIPT`
+</code></pre>
+<p>But preferably you should use this evolved version to also support the use of paths with spaces (or maybe even some other special characters):</p>
+<pre><code>PATH_TO_SCRIPT=`realpath -s &quot;$0&quot;`
+PATH_TO_SCRIPT_DIR=`dirname &quot;$PATH_TO_SCRIPT&quot;`
+</code></pre>
+<p>Indeed, if you don’t need the value of the SCRIPT variable then you might be able to merge this two-liner into even a single line. But why really shall you spend the effort for this?</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>None of the current solutions work if there are any newlines at the end of the directory name - They will be stripped by the command substitution. To work around this you can append a non-newline character inside the command substitution and then strip just that character off:</p>
+<pre class="lang-sh prettyprint-override"><code>dir=&quot;$(cd &quot;$(dirname &quot;${BASH_SOURCE[0]}&quot;)&quot; &amp;&amp; pwd &amp;&amp; echo x)&quot;
+dir=&quot;${dir%x}&quot;
+</code></pre>
+<p>This protects against two very common situations: Accidents and sabotage. A script shouldn't fail in unpredictable ways just because someone, somewhere, did a <code>mkdir $'\n'</code>.</p>
+</div></body></html>

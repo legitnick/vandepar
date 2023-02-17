@@ -1,0 +1,664 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I revert a Git repository to a previous commit?</p><div class="s-prose js-post-body"><p>How do I revert from my current state to a snapshot made on a certain commit?</p>
+
+<p>If I do <code>git log</code>, then I get the following output:</p>
+
+<pre><code>$ git log
+commit a867b4af366350be2e7c21b8de9cc6504678a61b`
+Author: Me &lt;me@me.com&gt;
+Date:   Thu Nov 4 18:59:41 2010 -0400
+
+blah blah blah...
+
+commit 25eee4caef46ae64aa08e8ab3f988bc917ee1ce4
+Author: Me &lt;me@me.com&gt;
+Date:   Thu Nov 4 05:13:39 2010 -0400
+
+more blah blah blah...
+
+commit 0766c053c0ea2035e90f504928f8df3c9363b8bd
+Author: Me &lt;me@me.com&gt;
+Date:   Thu Nov 4 00:55:06 2010 -0400
+
+And yet more blah blah...
+
+commit 0d1d7fc32e5a947fbd92ee598033d85bfc445a50
+Author: Me &lt;me@me.com&gt;
+Date:   Wed Nov 3 23:56:08 2010 -0400
+
+Yep, more blah blah.
+</code></pre>
+
+<p>How do I revert to the commit from November 3, i.e. commit <code>0d1d7fc</code>?</p>
+</div><p class="this-has-helped">This answer has helped 11855 people.</p><div class="s-prose js-post-body"><p>This depends a lot on what you mean by &quot;revert&quot;.</p>
+<h2>Temporarily switch to a different commit</h2>
+<p>If you want to temporarily go back to it, fool around, then come back to where you are, all you have to do is check out the desired commit:</p>
+<pre class="lang-sh prettyprint-override"><code># This will detach your HEAD, that is, leave you with no branch checked out:
+git checkout 0d1d7fc32
+</code></pre>
+<p>Or if you want to make commits while you're there, go ahead and make a new branch while you're at it:</p>
+<pre><code>git checkout -b old-state 0d1d7fc32
+</code></pre>
+<p>To go back to where you were, just check out the branch you were on again. (If you've made changes, as always when switching branches, you'll have to deal with them as appropriate. You could reset to throw them away; you could stash, checkout, stash pop to take them with you; you could commit them to a branch there if you want a branch there.)</p>
+<h2>Hard delete unpublished commits</h2>
+<p>If, on the other hand, you want to really get rid of everything you've done since then, there are two possibilities. One, if you haven't published any of these commits, simply reset:</p>
+<pre class="lang-sh prettyprint-override"><code># This will destroy any local modifications.
+# Don't do it if you have uncommitted work you want to keep.
+git reset --hard 0d1d7fc32
+
+# Alternatively, if there's work to keep:
+git stash
+git reset --hard 0d1d7fc32
+git stash pop
+# This saves the modifications, then reapplies that patch after resetting.
+# You could get merge conflicts, if you've modified things which were
+# changed since the commit you reset to.
+</code></pre>
+<p>If you mess up, you've already thrown away your local changes, but you can at least get back to where you were before by resetting again.</p>
+<h2>Undo published commits with new commits</h2>
+<p>On the other hand, if you've published the work, you probably don't want to reset the branch, since that's effectively rewriting history. In that case, you could indeed revert the commits. With Git, revert has a very specific meaning: create a commit with the reverse patch to cancel it out. This way you don't rewrite any history.</p>
+<pre class="lang-sh prettyprint-override"><code># This will create three separate revert commits:
+git revert a867b4af 25eee4ca 0766c053
+
+# It also takes ranges. This will revert the last two commits:
+git revert HEAD~2..HEAD
+
+#Similarly, you can revert a range of commits using commit hashes (non inclusive of first hash):
+git revert 0d1d7fc..a867b4a
+
+# Reverting a merge commit
+git revert -m 1 &lt;merge_commit_sha&gt;
+
+# To get just one, you could use `rebase -i` to squash them afterwards
+# Or, you could do it manually (be sure to do this at top level of the repo)
+# get your index and work tree into the desired state, without changing HEAD:
+git checkout 0d1d7fc32 .
+
+# Then commit. Be sure and write a good message describing what you just did
+git commit
+</code></pre>
+<p>The <a href="https://git-scm.com/docs/git-revert" rel="noreferrer"><code>git-revert</code> manpage</a> actually covers a lot of this in its description. Another useful link is <a href="https://git-scm.com/book/en/v2/Git-Tools-Advanced-Merging#_undoing_merges" rel="noreferrer">this git-scm.com section discussing git-revert</a>.</p>
+<p>If you decide you didn't want to revert after all, you can revert the revert (as described here) or reset back to before the revert (see the previous section).</p>
+<p>You may also find this answer helpful in this case:<br />
+<a href="https://stackoverflow.com/questions/34519665/how-to-move-head-forward-checkout-revet-reflog-reset/34519716#34519716">How can I move HEAD back to a previous location? (Detached head) &amp; Undo commits</a></p>
+</div><p class="this-has-helped">This answer has helped 3275 people.</p><div class="s-prose js-post-body"><p>Lots of complicated and dangerous answers here, but it's actually easy:</p>
+
+<pre><code>git revert --no-commit 0766c053..HEAD
+git commit
+</code></pre>
+
+<p>This will revert everything from the HEAD back to the commit hash, meaning it will recreate that commit state in the working tree <em>as if</em> every commit after <code>0766c053</code> had been walked back. You can then commit the current tree, and it will create a brand new commit essentially equivalent to the commit you "reverted" to.  </p>
+
+<p>(The <code>--no-commit</code> flag lets git revert all the commits at once- otherwise you'll be prompted for a message for each commit in the range, littering your history with unnecessary new commits.)</p>
+
+<p>This is a <strong>safe and easy way to rollback to a previous state</strong>. No history is destroyed, so it can be used for commits that have already been made public.</p>
+</div><p class="this-has-helped">This answer has helped 2006 people.</p><div class="s-prose js-post-body"><h2>Rogue Coder?</h2>
+<p>Working on your own and just want it to work? Follow these instructions below, they’ve worked reliably for me and many others for years.</p>
+<p>Working with others? Git is complicated. Read the comments below this answer, consider other answers, and discuss with your team before you do something rash.</p>
+<h3>Reverting Working Copy to Most Recent Commit</h3>
+<p>To revert to the previous commit, ignoring any changes:</p>
+<pre><code>git reset --hard HEAD
+</code></pre>
+<p>where HEAD is the last commit in your current branch</p>
+<h3>Reverting The Working Copy to an Older Commit</h3>
+<p>To revert to a commit that's older than the most recent commit:</p>
+<pre class="lang-bash prettyprint-override"><code># Resets index to former commit; replace '56e05fced' with your commit code
+git reset 56e05fced 
+
+# Moves pointer back to previous HEAD
+git reset --soft HEAD@{1}
+
+git commit -m &quot;Revert to 56e05fced&quot;
+
+# Updates working copy to reflect the new commit
+git reset --hard
+
+# Push your changes to respective branch
+git push -f
+</code></pre>
+<p>Credits go to a similar Stack Overflow question, <em><a href="https://stackoverflow.com/questions/1895059/git-revert-to-a-commit-by-sha-hash">Revert to a commit by a SHA hash in Git?</a></em>.</p>
+</div><p class="this-has-helped">This answer has helped 299 people.</p><div class="s-prose js-post-body"><p>The best option for me and probably others is the Git reset option:</p>
+<pre><code>git reset --hard &lt;commitId&gt; &amp;&amp; git clean -f
+</code></pre>
+<p>This has been the best option for me! It is simple, fast and effective!</p>
+<hr />
+<blockquote>
+<p>** Note:** As mentioned in comments don't do this if you're sharing your branch with other people who have copies of the old commits</p>
+</blockquote>
+<p>Also from the comments, if you wanted a less 'ballzy' method you could use</p>
+<pre><code>git clean -i
+</code></pre>
+<p><strong>NOTE : <em>This is getting a lot of attention. It's super important you do not do this if you're working on a branch which other people working from, also (depending on time frame) not one remote which has been merged with master.
+You will run into git hell.</em></strong></p>
+</div><p class="this-has-helped">This answer has helped 288 people.</p><div class="s-prose js-post-body"><p>Before answering let's add some background, explaining what this <code>HEAD</code> is.</p>
+<h1><em><strong>First of all what is HEAD?</strong></em></h1>
+<p><code>HEAD</code> is simply a reference to the current commit (latest) on the current branch. There can only be a single <code>HEAD</code> at any given time (excluding <code>git worktree</code>).</p>
+<p>The content of <code>HEAD</code> is stored inside <code>.git/HEAD</code>, and it contains the 40-bytes SHA-1 hash of the current commit.</p>
+<hr />
+<h1><em><strong><code>detached HEAD</code></strong></em></h1>
+<p>If you are not on the latest commit - meaning that <code>HEAD</code> is pointing to a prior commit in history it's called <em><strong><code>detached HEAD</code></strong></em>.</p>
+<p><a href="https://i.stack.imgur.com/OlavO.png" rel="noreferrer"><img src="https://i.stack.imgur.com/OlavO.png" alt="Diagram illustrating the concept of detached HEAD" /></a></p>
+<p>On the command-line it will look like this - SHA-1 hash instead of the branch name since the <code>HEAD</code> is not pointing to the the tip of the current branch:</p>
+<p><a href="https://i.stack.imgur.com/U0l3s.png" rel="noreferrer"><img src="https://i.stack.imgur.com/U0l3s.png" alt="Running git checkout HEAD^0 in a terminal" /></a></p>
+<hr />
+<h3>A few options on how to recover from a detached HEAD:</h3>
+<hr />
+<h3><a href="https://git-scm.com/docs/git-checkout" rel="noreferrer"><code>git checkout</code></a></h3>
+<pre><code>git checkout &lt;commit_id&gt;
+git checkout -b &lt;new branch&gt; &lt;commit_id&gt;
+git checkout HEAD~X // x is the number of commits t go back
+</code></pre>
+<p>This will checkout new branch pointing to the desired commit. This command will checkout to a given commit.</p>
+<p>At this point you can create a branch and start to work from this point on:</p>
+<pre><code># Checkout a given commit.
+# Doing so will result in a `detached HEAD` which mean that the `HEAD`
+# is not pointing to the latest so you will need to checkout branch
+# in order to be able to update the code.
+git checkout &lt;commit-id&gt;
+
+# Create a new branch forked to the given commit
+git checkout -b &lt;branch name&gt;
+</code></pre>
+<hr />
+<h3><a href="https://git-scm.com/docs/git-reflog" rel="noreferrer"><code>git reflog</code></a></h3>
+<p>You can always use the <code>reflog</code> as well. <code>git reflog </code> will display any change which updated the <code>HEAD</code> and checking out the desired reflog entry will set the <code>HEAD</code> back to this commit.</p>
+<p><strong>Every time the HEAD is modified there will be a new entry in the <code>reflog</code></strong></p>
+<pre><code>git reflog
+git checkout HEAD@{...}
+</code></pre>
+<p>This will get you back to your desired commit.</p>
+<p><a href="https://i.stack.imgur.com/atW9w.png" rel="noreferrer"><img src="https://i.stack.imgur.com/atW9w.png" alt="Running git reflog in a terminal" /></a></p>
+<hr />
+<h3><em><strong><a href="https://git-scm.com/docs/git-reset" rel="noreferrer"><code>git reset HEAD --hard &lt;commit_id&gt;</code></a></strong></em></h3>
+<p>&quot;Move&quot; your <code>HEAD</code> back to the desired commit.</p>
+<pre class="lang-sh prettyprint-override"><code># This will destroy any local modifications.
+# Don't do it if you have uncommitted work you want to keep.
+git reset --hard 0d1d7fc32
+
+# Alternatively, if there's work to keep:
+git stash
+git reset --hard 0d1d7fc32
+git stash pop
+# This saves the modifications, then reapplies that patch after resetting.
+# You could get merge conflicts, if you've modified things which were
+# changed since the commit you reset to.
+</code></pre>
+<ul>
+<li>Note: (<a href="https://github.com/git/git/blob/master/Documentation/RelNotes/2.7.0.txt" rel="noreferrer">Since Git 2.7</a>) you can also use the <code>git rebase --no-autostash</code> as well.</li>
+</ul>
+<hr />
+<p>This schema illustrates which command does what. As you can see there <code>reset &amp;&amp; checkout</code> modify the <code>HEAD</code>.</p>
+<p><a href="https://i.stack.imgur.com/NuThL.png" rel="noreferrer"><img src="https://i.stack.imgur.com/NuThL.png" alt="Diagram illustrating staging area and checking out HEAD" /></a></p>
+</div><p class="this-has-helped">This answer has helped 209 people.</p><div class="s-prose js-post-body"><p>You can do this by the following two commands:</p>
+
+<pre><code>git reset --hard [previous Commit SHA id here]
+git push origin [branch Name] -f
+</code></pre>
+
+<p>It will remove your previous Git commit.</p>
+
+<p>If you want to keep your changes, you can also use:</p>
+
+<pre><code>git reset --soft [previous Commit SHA id here]
+</code></pre>
+
+<p>Then it will save your changes.</p>
+</div><p class="this-has-helped">This answer has helped 206 people.</p><div class="s-prose js-post-body"><p>If you want to "uncommit", erase the last commit message, and put the modified files back in staging, you would use the command:</p>
+
+<pre><code>git reset --soft HEAD~1
+</code></pre>
+
+<ul>
+<li><code>--soft</code> indicates that the uncommitted files should be retained as working files opposed to <code>--hard</code> which would discard them.</li>
+<li><code>HEAD~1</code> is the last commit.  If you want to rollback 3 commits you could use <code>HEAD~3</code>.  If you want to rollback to a specific revision number, you could also do that using its SHA hash.</li>
+</ul>
+
+<p>This is an extremely useful command in situations where you committed the wrong thing and you want to undo that last commit.</p>
+
+<p>Source: <a href="http://nakkaya.com/2009/09/24/git-delete-last-commit/">http://nakkaya.com/2009/09/24/git-delete-last-commit/</a></p>
+</div><p class="this-has-helped">This answer has helped 148 people.</p><div class="s-prose js-post-body"><p>The best way is:</p>
+<pre><code>git reset --hard &lt;commidId&gt; &amp;&amp; git push --force
+</code></pre>
+<p>This will reset the branch to the specific commit and then will upload the remote server with the same commits as you have in local.</p>
+<p>Be careful with the <code>--force</code> flag as it removes all the subsequent commits after the selected commit without the option to recover them.</p>
+</div><p class="this-has-helped">This answer has helped 126 people.</p><div class="s-prose js-post-body"><p>I have tried a lot of ways to revert local changes in Git, and it seems that this works the best if you just want to revert to the latest commit state. </p>
+
+<pre><code>git add . &amp;&amp; git checkout master -f
+</code></pre>
+
+<p>Short description: </p>
+
+<ul>
+<li>It will NOT create any commits as <code>git revert</code> does.</li>
+<li>It will NOT detach your HEAD like <code>git checkout &lt;commithashcode&gt;</code> does.</li>
+<li>It WILL override all your local changes and DELETE all added files since the last commit in the branch.</li>
+<li>It works only with branches names, so you can revert only to latest commit in the branch this way.</li>
+</ul>
+
+<p>I found a much more convenient and simple way to achieve the results above: </p>
+
+<pre><code>git add . &amp;&amp; git reset --hard HEAD
+</code></pre>
+
+<p>where HEAD points to the latest commit at you current branch.</p>
+
+<p>It is the same code code as boulder_ruby suggested, but I have added <code>git add .</code> before  <code>git reset --hard HEAD</code> to erase all new files created since the last commit since this is what most people expect I believe when reverting to the latest commit.</p>
+</div><p class="this-has-helped">This answer has helped 116 people.</p><div class="s-prose js-post-body"><p><strong>OK,</strong> going back to a previous commit in Git is quite easy...</p>
+
+<p>Revert back <strong>without keeping</strong> the changes:</p>
+
+<pre><code>git reset --hard &lt;commit&gt;
+</code></pre>
+
+<p>Revert back <strong>with keeping</strong> the changes:</p>
+
+<pre><code>git reset --soft &lt;commit&gt;
+</code></pre>
+
+<p><strong>Explanation:</strong> using <code>git reset</code>, you can reset to a specific state. It's common using it with a commit hash as you see above.</p>
+
+<p>But as you see the difference is using the two flags <code>--soft</code> and <code>--hard</code>, by default <code>git reset</code> using <code>--soft</code> flag, but it's a good practice always using the flag, I explain each flag:</p>
+
+<hr/>
+
+<h2>--soft</h2>
+
+<p>The default flag as explained, not need to provide it, does not change the working tree, but it adds all changed files ready to commit, so you go back to the commit status which changes to files get unstaged.</p>
+
+<hr/>
+
+<h2>--hard</h2>
+
+<p>Be careful with this flag. It resets the working tree and all changes to tracked files and all will be gone!</p>
+
+<hr/>
+
+<p>I also created the image below that may happen in a real life working with Git:</p>
+
+<p><a href="https://i.stack.imgur.com/y6Xgj.png" rel="noreferrer"><img src="https://i.stack.imgur.com/y6Xgj.png" alt="Git reset to a commit"></a></p>
+</div><p class="this-has-helped">This answer has helped 85 people.</p><div class="s-prose js-post-body"><p>Assuming you're talking about master and on that respective branch (that said, this could be any working branch you're concerned with):</p>
+
+<pre><code># Reset local master branch to November 3rd commit ID
+git reset --hard 0d1d7fc32e5a947fbd92ee598033d85bfc445a50
+
+# Reset remote master branch to November 3rd commit ID
+git push -f origin 0d1d7fc32e5a947fbd92ee598033d85bfc445a50:master
+</code></pre>
+
+<p>I found the answer from in a blog post (now no longer exists)</p>
+
+<p>Note that this is Resetting and Forcing the change to the remote, so that if others on your team have already git pulled, you will cause problems for them. You are destroying the change history, which is an important reason why people use git in the first place.</p>
+
+<p>Better to use revert (see other answers) than reset. 
+If you're a one man team then it probably doesn't matter.</p>
+</div><p class="this-has-helped">This answer has helped 73 people.</p><div class="s-prose js-post-body"><h2>Extra Alternatives to Jefromi's Solutions</h2>
+
+<p><a href="https://stackoverflow.com/a/4114122/456814">Jefromi's solutions</a> are definitely the best ones, and you should definitely use them. However, for the sake of completeness, I also wanted to show these other alternative solutions that can also be used to revert a commit (in the sense that you <strong>create a new commit that undoes changes in previous commit</strong>, just like what <code>git revert</code> does).</p>
+
+<p>To be clear, these alternatives <strong><em>are not the best way to revert commits</em></strong>, <a href="https://stackoverflow.com/a/4114122/456814">Jefromi's solutions are</a>, but I just want to point out that you can also use these other methods to achieve the same thing as <code>git revert</code>.</p>
+
+<h2>Alternative 1: Hard and Soft Resets</h2>
+
+<p>This is a very slightly modified version of Charles Bailey's solution to <a href="https://stackoverflow.com/questions/1895059/revert-to-a-commit-by-sha-hash-in-git/1895095#1895095">Revert to a commit by a SHA hash in Git?</a>:</p>
+
+<pre class="lang-bash prettyprint-override"><code># Reset the index to the desired commit
+git reset --hard &lt;commit&gt;
+
+# Move the branch pointer back to the previous HEAD
+git reset --soft HEAD@{1}
+
+# Commit the changes
+git commit -m "Revert to &lt;commit&gt;"
+</code></pre>
+
+<p>This basically works by using the fact that soft resets will leave the state of the previous commit staged in the index/staging-area, which you can then commit.</p>
+
+<h2>Alternative 2: Delete the Current Tree and Replace with the New One</h2>
+
+<p>This solution comes from svick's solution to <a href="https://stackoverflow.com/questions/3380805/checkout-old-commit-and-make-it-a-new-commit/3382249#3382249">Checkout old commit and make it a new commit</a>:</p>
+
+<pre><code>git rm -r .
+git checkout &lt;commit&gt; .
+git commit
+</code></pre>
+
+<p>Similarly to alternative #1, this reproduces the state of <code>&lt;commit&gt;</code> in the current working copy. It is necessary to do <code>git rm</code> first because <code>git checkout</code> won't remove files that have been added since <code>&lt;commit&gt;</code>.</p>
+</div><p class="this-has-helped">This answer has helped 69 people.</p><div class="s-prose js-post-body"><p>Say you have the following commits in a text file named <code>~/commits-to-revert.txt</code> (I used <code>git log --pretty=oneline</code> to get them)</p>
+
+<pre><code>fe60adeba6436ed8f4cc5f5c0b20df7ac9d93219
+0c27ecfdab3cbb08a448659aa61764ad80533a1b
+f85007f35a23a7f29fa14b3b47c8b2ef3803d542
+e9ec660ba9c06317888f901e3a5ad833d4963283
+6a80768d44ccc2107ce410c4e28c7147b382cd8f
+9cf6c21f5adfac3732c76c1194bbe6a330fb83e3
+fff2336bf8690fbfb2b4890a96549dc58bf548a5
+1f7082f3f52880cb49bc37c40531fc478823b4f5
+e9b317d36a9d1db88bd34831a32de327244df36a
+f6ea0e7208cf22fba17952fb162a01afb26de806
+137a681351037a2204f088a8d8f0db6e1f9179ca
+</code></pre>
+
+<p>Create a <a href="http://en.wikipedia.org/wiki/Bash_%28Unix_shell%29" rel="noreferrer">Bash</a> shell script to revert each of them:</p>
+
+<pre class="lang-bash prettyprint-override"><code>#!/bin/bash
+cd /path/to/working/copy
+for i in `cat ~/commits-to-revert.txt`
+do
+    git revert $i --no-commit
+done
+</code></pre>
+
+<p>This reverts everything back to the previous state, including file and directory creations, and deletions, commit it to your branch and you retain the history, but you have it reverted back to the same file structure. Why Git doesn't have a <code>git revert --to &lt;hash&gt;</code> is beyond me.</p>
+</div><p class="this-has-helped">This answer has helped 63 people.</p><div class="s-prose js-post-body"><p>Here is a <strong>much simpler</strong> way to go back to a previous commit (and have it in an uncommited state, to do with it whatever you like):</p>
+
+<pre><code>git reset HEAD~1
+</code></pre>
+
+<p>So, no need for commit ids and so on :)</p>
+</div><p class="this-has-helped">This answer has helped 61 people.</p><div class="s-prose js-post-body"><blockquote>
+<p><strong>Caution!</strong> This command can cause losing commit history, if user put the wrong commit mistakenly. Always have en extra backup of your git some
+where else just in case if you do mistakes, than you are a bit safer.
+:)</p>
+</blockquote>
+<p>I have had a similar issue and wanted to revert back to an earlier commit. In my case I was not interested to keep the newer commit, hence I used <code>Hard</code>.</p>
+<p>This is how I did it:</p>
+<pre><code>git reset --hard CommitId &amp;&amp; git clean -f
+</code></pre>
+<p>This will revert on the local repository, and here after using <code>git push -f</code> will update the remote repository.</p>
+<pre><code>git push -f
+</code></pre>
+<hr />
+<p>For instance, if you want to completely ignore the commit with the name <code>enforce non-group manage policies</code> from the next image</p>
+<p><a href="https://i.stack.imgur.com/JyrDu.png" rel="noreferrer"><img src="https://i.stack.imgur.com/JyrDu.png" alt="enter image description here" /></a></p>
+<p>you'd run</p>
+<pre><code>git reset --hard dd52eb9 &amp;&amp; git clean -f
+</code></pre>
+<p>followed by</p>
+<pre><code>git push -f
+</code></pre>
+<p>After, you won't see that commit (<code>enforce non-group manage policies</code>) there</p>
+<p><a href="https://i.stack.imgur.com/Dkljl.png" rel="noreferrer"><img src="https://i.stack.imgur.com/Dkljl.png" alt="enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 60 people.</p><div class="s-prose js-post-body"><p>You can complete all these initial steps yourself and push back to the Git repository.</p>
+<ol>
+<li><p>Pull the latest version of your repository from Bitbucket using the <code>git pull --all</code> command.</p>
+</li>
+<li><p>Run the Git log command with <code>-n 4</code> from your terminal. The number after the <code>-n</code> determines the number of commits in the log starting from the most recent commit in your local history.</p>
+<pre><code>$ git log -n 4
+</code></pre>
+</li>
+<li><p>Reset the head of your repository's history using the <code>git reset --hard HEAD~N</code> where N is the number of commits you want to take the head back. In the following example the head would be set back one commit, to the last commit in the repository history:</p>
+</li>
+<li><p>Push the change to Git repository using <code>git push --force</code> to force push the change.</p>
+</li>
+</ol>
+<p>If you want the Git repository to a previous commit:-</p>
+<pre><code>git pull --all
+git reset --hard HEAD~1
+git push --force
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p>Revert is the command to rollback the commits.</p>
+<pre><code>git revert &lt;commit1&gt; &lt;commit2&gt; 
+</code></pre>
+<p><em>Sample:</em></p>
+<pre><code>git revert 2h3h23233
+</code></pre>
+<p>It is capable of taking range from the HEAD like below. Here 1 says &quot;revert last commit.&quot;</p>
+<pre><code>git revert HEAD~1..HEAD
+</code></pre>
+<p>And then do:</p>
+<pre><code>git push
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>After all the changes, when you push all these commands, you might have to use:</p>
+
+<pre><code>git push -f ...
+</code></pre>
+
+<p>And not only <code>git push</code>.</p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p>There is a command (not a part of core Git, but it is in the <a href="https://github.com/visionmedia/git-extras" rel="noreferrer">git-extras</a> package) specifically for reverting and staging old commits:</p>
+<pre><code>git undo
+</code></pre>
+<p>Per the <a href="https://en.wikipedia.org/wiki/Man_page" rel="noreferrer">man page</a>, it can also be used as such:</p>
+<pre><code># Remove the latest three commits
+git undo 3
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>If the situation is an <strong>urgent one</strong>, and you just want to do what the questioner asked in a <strong>quick and dirty</strong> way, assuming your project is under a directory called, for example, &quot;my project&quot;:</p>
+<hr />
+<p><strong>QUICK AND DIRTY</strong>: depending on the circumstances, quick and dirty may in fact be very GOOD. What my solution here does is <strong>NOT</strong> replace irreversibly the files you have in your working directory with files hauled up/extracted from the depths of the git repository lurking beneath your .git/ directory using fiendishly clever and diabolically powerful git commands, of which there are many. <strong>YOU DO NOT HAVE TO DO SUCH DEEP-SEA DIVING TO RECOVER what may appear to be a disastrous situation, and attempting to do so without sufficient expertise may prove fatal</strong>.</p>
+<hr />
+<ol>
+<li><p>Copy the whole directory and call it something else, like &quot;my project - copy&quot;. Assuming your git repository (&quot;repo&quot;) files are under the &quot;my project&quot; directory (the default place for them, under a directory called &quot;.git&quot;), you will now have copied both your work files and your repo files.</p>
+</li>
+<li><p>Do this in the directory &quot;my project&quot;:</p>
+<pre><code> .../my project $ git reset --hard [first-4-letters&amp;numbers-of-commit's-SHA]
+</code></pre>
+</li>
+</ol>
+<p>This will return the state of the repo under &quot;my project&quot; to what it was when you made that commit (a &quot;commit&quot; means a snapshot of your working files). All commits since the &quot;<code>reset</code>ted&quot; commit will be lost forever under &quot;my project&quot;, BUT... <strong>they will still be present</strong> in the repo under &quot;my project - copy&quot; since you copied <em>all</em> those files - including the ones in the repo, under .../.git/.</p>
+<p>You then have two versions on your system... you can examine or copy or modify files of interest, or whatever, from the previous commit. You can completely discard the files under &quot;my project - copy&quot;, if you have decided the new work since the restored commit was going nowhere...</p>
+<p>The obvious thing if you want to carry on with the state of the project without actually discarding the work since this retrieved commit is to rename your directory again: Delete the project containing the retrieved commit (or give it a temporary name) and rename your &quot;my project - copy&quot; directory back to &quot;my project&quot;. Then maybe try to understand some of the other answers here, and probably do another commit fairly soon.</p>
+<p>Git is a brilliant creation but absolutely no-one is able to just &quot;pick it up on the fly&quot;: also people who try to explain it <strong>far too often</strong> assume prior knowledge of other VCS [Version Control Systems] and delve far too deep far too soon, and commit other terrible crimes, like using interchangeable terms for &quot;checking out&quot; - in ways which sometimes appear almost calculated to confuse a beginner.</p>
+<p>To save yourself much stress, learn from my scars. You have to pretty much have to read a book on Git - I'd recommend reading THE BOOK, <em>Pro Git 2nd edition</em>: available for free download etc. <a href="https://git-scm.com/book/en/v2" rel="noreferrer">from git central</a>. Published 2014 but, as at early 2022, still the best. Do it sooner rather than later: Git is destined to be part of your life from now on. If you do, bear in mind that much of the complexity of Git comes from branching and then remerging: the <em>Pro Git</em> book actually introduces this central aspect very gently, but you can skip those parts in any book on your first read. From your question there's <strong>no reason why people should be blinding you with science</strong>.</p>
+<p>Especially if, for example, this is a desperate situation and you're a newbie with Git!</p>
+<p>PS: (slight <strong>caution</strong>) One other thought: It is (now) actually quite simple to keep the Git repo in a directory other than the one with the working files. This would mean you would not copy the entire Git repository using the above quick &amp; dirty solution. See the answer by Fryer using <code>--separate-git-dir</code> <a href="https://stackoverflow.com/questions/505467/can-i-store-the-git-folder-outside-the-files-i-want-tracked">here</a>. Bearing that in mind, <strong>be warned</strong>: If you have a &quot;separate-directory&quot; repository which you don't copy, and you do a hard reset, all versions subsequent to the reset commit really will be lost <em>forever</em> forever, unless you have, as you absolutely should, regularly backed up your repository, preferably to the Cloud (e.g. <a href="https://en.wikipedia.org/wiki/Google_Drive" rel="noreferrer">Google Drive</a>) among other places.</p>
+<p>On this subject of &quot;backing up to the Cloud&quot;, the next step is to open an account (free of course) with GitHub or (better in my view) <a href="https://gitlab.com" rel="noreferrer">GitLab</a>. You can then regularly do a <code>git push</code> command to make your Cloud repo up-to-date &quot;properly&quot;. But again, talking about this may be too much too soon: <code>git push</code> has to be configured, can fail to work for a totally baffling technical reason, involves learning about remote repos (&quot;origin&quot;, etc). So a quick-and-dirty Cloud-based backup approach may be preferable until you become knowledgeable. Again, the <em>Pro Git</em> book introduces how remote repositories work, and relate to your local repo, very gently and rationally.</p>
+</div><p class="this-has-helped">This answer has helped 35 people.</p><div class="s-prose js-post-body"><p>Try resetting to the desired commit:</p>
+<pre><code>git reset &lt;COMMIT_ID&gt;
+</code></pre>
+<p>To check <code>COMMIT_ID</code> use:</p>
+<pre><code>git log
+</code></pre>
+<p>This will reset all changed files to un-added state.</p>
+<p>Now you can <code>checkout</code> all un-added files by</p>
+<pre><code>git checkout .
+</code></pre>
+<p>To verify your changes use:</p>
+<pre><code>git log
+</code></pre>
+<p><strong>UPDATE</strong></p>
+<p>If you have <strong>one and only</strong> commit in your repo, try</p>
+<pre><code>git update-ref -d HEAD
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>Select your required commit, and check it by</p>
+
+<pre><code>git show HEAD
+git show HEAD~1
+git show HEAD~2 
+</code></pre>
+
+<p>till you get the required commit. To make the HEAD point to that, do</p>
+
+<pre><code>git reset --hard HEAD~1
+</code></pre>
+
+<p>or <code>git reset --hard HEAD~2</code> or whatever.</p>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><p>Revert to <em>most recent</em> commit and ignoring all local changes:</p>
+
+<pre><code>git reset --hard HEAD
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p><strong>Idea:</strong> You basically want to replace the current working tree state with the one from a previous commit and then create a commit out of it. Ignored files should best be not changed. Here is how:</p>
+<ol>
+<li><p>Emtpy the working tree *.</p>
+<pre><code> git rm -r --cached . &amp;&amp; git clean -f -d
+</code></pre>
+</li>
+<li><p>Bring the working tree in the state we want **.</p>
+<pre><code> git checkout 0d1d7fc3 .
+</code></pre>
+</li>
+<li><p>Create the revert commit.</p>
+<pre><code> git add --all &amp;&amp; git commit -m &quot;revert to 0d1d7fc3&quot;
+</code></pre>
+</li>
+</ol>
+<hr />
+<p>At first I thought that <a href="https://stackoverflow.com/a/21718540/1788806">Yarins answer</a> would be the best, but it doesn't work for merge commits. This solution does.</p>
+<p>Additionally it does not delete anything (pushed or upushed) from the history. It produces one clean commit which represents the state we want to revert back to.</p>
+<hr />
+<p><sub>* by removing untracked but not ignored files (the ones specified in <em>.gitignore</em>) from working tree. The working tree is empty except for the ignored files which we wanted to keep (if not specifiy <code>-x</code> option for <code>clean</code>)</sub></p>
+<p><sub>** When a path is specified (here: <code>.</code>), checkout leaves HEAD alone.</sub></p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><h2>This is one more way to directly reset to a recent commit</h2>
+
+<pre><code>git stash
+git stash clear
+</code></pre>
+
+<p>It directly clears all the changes that you have been making since the last commit.</p>
+
+<p>PS: It has a little problem; it also deletes all you recently stored stash changes. Which I guess in most cases should not matter.</p>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>To completely clean a coder's directory up from some accidental changes, we used:</p>
+
+<pre><code>git add -A .
+git reset --hard HEAD
+</code></pre>
+
+<p>Just <code>git reset --hard HEAD</code> will get rid of modifications, but it won't get rid of "new" files. In their case they'd accidentally dragged an important folder somewhere random, and all those files were being treated as new by Git, so a <code>reset --hard</code> didn't fix it. By running the <code>git add -A .</code> beforehand, it explicitly tracked them all with git, to be wiped out by the reset.</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>I believe some people may come to this question wanting to know how to rollback committed changes they've made in their master - ie throw everything away and go back to origin/master, in which case, do this:</p>
+
+<pre><code>git reset --hard origin/master
+</code></pre>
+
+<p><a href="https://superuser.com/questions/273172/how-to-reset-master-to-origin-master">https://superuser.com/questions/273172/how-to-reset-master-to-origin-master</a></p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>To keep the changes from the previous commit to HEAD and move to the previous commit, do:</p>
+
+<pre><code>git reset &lt;SHA&gt;
+</code></pre>
+
+<p>If changes are not required from the previous commit to HEAD and just discard all changes, do:</p>
+
+<pre><code>git reset --hard &lt;SHA&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>As your commits are pushed remotely, you need to remove them. Let me assume your branch is <em>develop</em> and it is pushed over <em>origin</em>.</p>
+
+<p>You first need to remove <em>develop</em> from <em>origin</em>:</p>
+
+<pre><code>git push origin :develop (note the colon)
+</code></pre>
+
+<p>Then you need to get develop to the status you want, let me assume the commit hash is EFGHIJK:</p>
+
+<pre><code>git reset --hard EFGHIJK
+</code></pre>
+
+<p>Lastly, push <em>develop</em> again:</p>
+
+<pre><code>git push origin develop
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>If you want to correct some error in the last commit a good alternative would be using <strong>git commit --amend</strong> command. If the last commit is not pointed by any reference, this will do the trick, as it create a commit with the same parent as the last commit. If there is no reference to the last commit, it will simply be discarded and this commit will be the last commit. This is a good way of correcting commits without reverting commits. However it has its own limitations. </p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>For rollback (or to revert):</p>
+
+<pre><code>1. git revert --no-commit "commit-code-to-remove" HEAD
+(e.g. git revert --no-commit d57a39d HEAD)
+2. git commit
+3. git push
+</code></pre>
+
+<p>Try the above two steps, and if you find this is what you want then <code>git push</code>.</p>
+
+<p>If you find something wrong, do:</p>
+
+<pre><code>git revert --abort
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>First, get the string that identifies the commit in some date, doing:</p>
+
+<pre><code>git rev-list -n 1 --before="2009-07-27 13:37" origin/master
+</code></pre>
+
+<p>It prints the commit identifier, takes the string (for instance XXXX) and does:</p>
+
+<pre><code>git checkout XXXX
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>In <a href="https://en.wikipedia.org/wiki/Axosoft" rel="nofollow noreferrer">GitKraken</a> you can do this:</p>
+
+<ol>
+<li><p>Right click on the commit that you want to reset, choose: <em>Reset to this commit/Hard</em>:</p>
+
+<p><a href="https://i.stack.imgur.com/05Jss.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/05Jss.png" alt="Enter image description here"></a></p></li>
+<li><p>Right click on the commit again, choose: <em>Current branch name/Push</em>:</p>
+
+<p><a href="https://i.stack.imgur.com/g9dCU.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/g9dCU.png" alt="Enter image description here"></a></p></li>
+<li><p>Click on the <em>Force Push</em>:</p>
+
+<p><a href="https://i.stack.imgur.com/1qKuv.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/1qKuv.png" alt="Enter image description here"></a></p></li>
+</ol>
+
+<p><strong>Obs.</strong>: You need to be careful, because all the commit history after the hard reset are lost and this action is irreversible. You need to be sure what you doing.</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Yet another simplest solution; you have to change branch to do this, but afterwards you can just run:</p>
+
+<pre><code>git branch -f &lt;&lt;branchname&gt;&gt; 0d1d7fc32e5a947fbd92ee598033d85bfc445a50
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>I couldn't revert mine manually for some reason so here is how I ended up doing it.</p>
+
+<ol>
+<li>Checked out the branch I wanted to have, copied it.</li>
+<li>Checked out the latest branch.</li>
+<li>Copied the contents from the branch I wanted to the latest branch's directory overwriting the changes and committing that.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><pre><code>git reflog
+</code></pre>
+
+<p>Choose the number of the HEAD(s) of git reflog, where you want revert to and do (for this example I choose the 12):</p>
+
+<pre><code>git reset HEAD@{12} --hard
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>It can be done much easier with <a href="https://www.sourcetreeapp.com/" rel="nofollow noreferrer">Sourcetree</a>. Just right click commit you are looking for and chose 'Checkout' from menu.</p>
+
+<p><a href="https://i.stack.imgur.com/N3kBD.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/N3kBD.png" alt="Enter image description here"></a></p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>If you want to temporarily revert changes because</p>
+
+<ul>
+<li>someone committed code that is breaking the build or breaking the functionality you're working on</li>
+</ul>
+
+<p>You can search for the last working commit using <code>git log</code> and then run:</p>
+
+<pre><code>git rebase --onto &lt;commitId&gt;
+</code></pre>
+
+<p>When the remote branch is working again, you can</p>
+
+<pre><code>git pull --rebase
+</code></pre>
+
+<p>This method is better than <code>git checkout</code> for temporary changes, because you're not in a detached state.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>The least complicated way I have found to revert a branch to any particular commit, where you can't change the history, is to:</p>
+
+<ol>
+<li>Check out the commit or branch your wish to revert from.</li>
+<li>Edit .git/HEAD and change the ref to the branch you which to revert to.</li>
+</ol>
+
+<p>Such as:</p>
+
+<pre><code>echo 'ref: refs/heads/example' &gt; .git/HEAD
+</code></pre>
+
+<p>If you then do <code>git status</code>, you should see all the changes between the branch you're on and the one you wish to revert to.</p>
+
+<p>If everything looks good, you can commit. You can also use <code>git diff revert</code>..example to ensure that it's the same.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p><strong>Resetting Staged Changes and Commits</strong></p>
+
+<p>The <code>git reset</code> command lets you change the HEAD- the latest commit your working tree points to - of your repository. It modifies either the staging area or the staging area and working tree.</p>
+
+<p>Git's ability to craft commits exactly like you want means that you sometimes need to undo changes to the changes you staged with <code>git add</code>. You can do that by calling <code>git reset HEAD &lt;file to change&gt;</code>.</p>
+
+<p>You have two options to get rid of changes completely. <code>git checkout HEAD &lt;file(s) or path(s)&gt;</code> is a quick way to undo changes to your staging area and working tree. Be careful with this command, however, because it removes all changes to your working tree.</p>
+
+<p>Git doesn't know about those changes since they've never been committed. There's no way to get those changes back once you run this command.</p>
+
+<p>Another command at your disposal is <code>git reset --hard</code>. It is equally destructive to your working tree - any uncommitted changes or staged changes are lost after running it. Running <code>git reset -hard</code> HEAD does the same thing as <code>git checkout HEAD</code>. It just doesn't require a file or path to work.</p>
+
+<p>You can use <code>--soft</code> with <code>git reset</code>. It resets the repository to the commit you specify and stages all of those changes. Any changes you have already staged are not affected, nor are the changes in your working tree.</p>
+
+<p>Finally, you can use <code>--mixed</code>  to reset the working tree without staging any changes. This also unstages any changes that are staged.</p>
+
+<p><strong>Reverting Commits</strong></p>
+
+<p>Sometimes we make mistakes. A commit that wasn't supposed to be shared gets pushed to a public repository, a commit has a bug that can't be fixed and needs to be undone, or maybe you just don't need that code any longer.</p>
+
+<p>These cases all call for <code>git revert</code>. The <code>git revert</code> command does just what you might expect. It reverts a single commit by applying a reverse commit to the history.</p>
+
+<p>Sometimes you need to revert several commits to completely undo a change. You can use <code>-no-commit</code>, or you can use <code>-n</code> to tell Git to perform the revert, but stop short of committing the change.</p>
+
+<p>This lets you combine all the revert commits into one commit, which is useful if you need to revert a feature that spans several commits. Make sure that you revert commits in reverse order-the newest commit first. </p>
+
+<p>Otherwise, you might confuse Git by trying to revert code that doesn't exist yet.</p>
+</div></body></html>

@@ -19,14 +19,14 @@ let video_dir = "./bin/video/";
 let html_to_dir = "./bin/scraped_html/";
 
 //void (void)
-async function ensureAllDirs (){
+function ensureAllDirs (){
     console.log("ensured");
-    await ensureDir("./bin/");
+    ensureDir("./bin/");
     ensureDir(html_from_dir);
     ensureDir(video_dir);
 }
 
-await ensureAllDirs();
+ensureAllDirs();
 //ensure for these 2 readdirSync functions later
 const html_arr_used = ()=> fs.readdirSync(video_dir);
 console.log(html_arr_used());

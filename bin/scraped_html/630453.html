@@ -1,0 +1,679 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the difference between POST and PUT in HTTP?</p><div class="s-prose js-post-body"><p><strong>Background Information Analysis:</strong></p>
+<p>According to <a href="https://www.rfc-editor.org/rfc/rfc2616#section-9.5" rel="noreferrer">RFC 2616, § 9.5</a>, <code>POST</code> is used to <em>create</em> a resource:</p>
+<blockquote>
+<p>The POST method is used to request that the origin server accept the entity enclosed in the request as a new subordinate of the resource identified by the Request-URI in the Request-Line.</p>
+</blockquote>
+<p>According to <a href="https://www.rfc-editor.org/rfc/rfc2616#section-9.6" rel="noreferrer">RFC 2616, § 9.6</a>, <code>PUT</code> is used to <em>create or replace</em> a resource:</p>
+<blockquote>
+<p>The PUT method requests that the enclosed entity be stored under the supplied Request-URI. If the Request-URI refers to an already existing resource, the enclosed entity SHOULD be considered as a modified version of the one residing on the origin server. If the Request-URI does not point to an existing resource, and that URI is capable of being defined as a new resource by the requesting user agent, the origin server can create the resource with that URI.</p>
+</blockquote>
+<p><strong>My Question:</strong></p>
+<p>So, which HTTP method should be used to create a resource? Or should both be supported?</p>
+</div><p class="this-has-helped">This answer has helped 4774 people.</p><div class="s-prose js-post-body"><p><strong>Overall:</strong></p>
+<p>Both PUT and POST can be used for creating.</p>
+<p>You have to ask, &quot;what are you performing the action upon?&quot;, to distinguish what you should be using. Let's assume you're designing an API for asking questions.  If you want to use POST, then you would do that to a list of questions. If you want to use PUT, then you would do that to a particular question.</p>
+<p><strong>Great, both can be used, so which one should I use in my RESTful design:</strong></p>
+<p>You do not need to support both PUT and POST.</p>
+<p>Which you use is up to you.  But just remember to use the right one depending on what object you are referencing in the request.</p>
+<p>Some considerations:</p>
+<ul>
+<li>Do you name the URL objects you create explicitly, or let the server decide? If you name them then use PUT.  If you let the server decide then use POST.</li>
+<li>PUT is defined to assume idempotency, so if you PUT an object twice, it should have no additional effect.  This is a nice property, so I would use PUT when possible. Just make sure that the PUT-idempotency actually is implemented correctly in the server.</li>
+<li>You can update or create a resource with PUT with the same object URL</li>
+<li>With POST you can have 2 requests coming in at the same time making modifications to a URL, and they may update different parts of the object.</li>
+</ul>
+<p><strong>An example:</strong></p>
+<p>I wrote the following as part of <a href="https://stackoverflow.com/questions/256349/what-are-the-best-common-restful-url-verbs-and-actions/256359#256359">another answer on SO regarding this</a>:</p>
+<blockquote>
+<p><strong>POST:</strong></p>
+<p>Used to modify and update a resource</p>
+<pre><code>POST /questions/&lt;existing_question&gt; HTTP/1.1
+Host: www.example.com/
+</code></pre>
+<p>Note that the following is an error:</p>
+<pre><code>POST /questions/&lt;new_question&gt; HTTP/1.1
+Host: www.example.com/
+</code></pre>
+<p>If the URL is not yet created, you
+should not be using POST to create it
+while specifying the name.  This should
+result in a 'resource not found' error
+because <code>&lt;new_question&gt;</code> does not exist
+yet.  You should PUT the <code>&lt;new_question&gt;</code>
+resource on the server first.</p>
+<p>You could though do something like
+this to create a resources using POST:</p>
+<pre><code>POST /questions HTTP/1.1
+Host: www.example.com/
+</code></pre>
+<p>Note that in this case the resource
+name is not specified, the new objects
+URL path would be returned to you.</p>
+<p><strong>PUT:</strong></p>
+<p>Used to create a resource, or
+overwrite it.  While you specify the
+resources new URL.</p>
+<p>For a new resource:</p>
+<pre><code>PUT /questions/&lt;new_question&gt; HTTP/1.1
+Host: www.example.com/
+</code></pre>
+<p>To overwrite an existing resource:</p>
+<pre><code>PUT /questions/&lt;existing_question&gt; HTTP/1.1
+Host: www.example.com/
+</code></pre>
+</blockquote>
+<p>Additionally, and a bit more concisely, <a href="https://www.rfc-editor.org/rfc/rfc7231#section-4.3.4" rel="noreferrer">RFC 7231 Section 4.3.4 PUT</a> states (emphasis added),</p>
+<blockquote>
+<p><strong>4.3.4.  PUT</strong></p>
+<p>The PUT method requests that the state of the target resource be
+<code>created</code> or <code>replaced</code> with the state defined by the representation
+enclosed in the request message payload.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 2489 people.</p><div class="s-prose js-post-body"><p>You can find assertions on the web that say</p>
+
+<ul>
+<li><a href="http://java.sun.com/developer/technicalArticles/WebServices/restful/" rel="noreferrer"><strong>POST</strong> should be used to create a resource, and <strong>PUT</strong> should be used to modify one</a></li>
+<li><a href="http://awsmedia.s3.amazonaws.com/pdf/RESTandS3.pdf" rel="noreferrer"><strong>PUT</strong> should be used to create a resource, and <strong>POST</strong> should be used to modify one</a></li>
+</ul>
+
+<p>Neither is quite right. </p>
+
+<hr>
+
+<p>Better is to choose between PUT and POST based on <a href="http://en.wikipedia.org/wiki/Idempotent" rel="noreferrer">idempotence</a> of the action. </p>
+
+<p><strong>PUT</strong> implies putting a resource - completely replacing whatever is available at the given URL with a different thing.  By definition, a PUT is idempotent.  Do it as many times as you like, and the result is the same. <code>x=5</code> is idempotent.  You can PUT a resource whether it previously exists, or not (eg, to Create, or to Update)! </p>
+
+<p><strong>POST</strong> updates a resource, adds a subsidiary resource, or causes a change.  A POST is not idempotent, in the way that <code>x++</code> is not idempotent. </p>
+
+<hr>
+
+<p>By this argument, PUT is for creating when you know the URL of the thing you will create. POST can be used to create when you know the URL of the "factory" or manager for the category of things you want to create. </p>
+
+<p>so: </p>
+
+<pre><code>POST /expense-report
+</code></pre>
+
+<p>or:</p>
+
+<pre><code>PUT  /expense-report/10929
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 823 people.</p><div class="s-prose js-post-body"><ul>
+<li><strong>POST</strong> to a URL <strong>creates a child resource</strong> at a <em>server defined</em> URL.</li>
+<li><strong>PUT</strong> to a URL <strong>creates/replaces the resource</strong> in its entirety at the <em>client defined</em> URL.</li>
+<li><strong>PATCH</strong> to a URL <strong>updates <em>part</em> of the resource</strong> at that client defined URL.</li>
+</ul>
+<p>The relevant specification for PUT and POST is <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.5" rel="noreferrer">RFC 2616 §9.5ff.</a></p>
+<p><strong>POST creates a child resource</strong>, so POST to <code>/items</code> creates a resources that lives under the <code>/items</code> resource.
+Eg. <code>/items/1</code>. Sending the same post packet twice will create two resources.</p>
+<p><strong>PUT</strong> is for creating or replacing a resource at a <strong>URL known by the client</strong>.</p>
+<p>Therefore: <strong>PUT</strong> is only a candidate for CREATE where the client already knows the url before the resource is created. Eg. <code>/blogs/nigel/entry/when_to_use_post_vs_put</code> as the title is used as the resource key</p>
+<p><strong>PUT</strong> replaces the resource at the known url if it already exists, so sending the same request twice has no effect. In other words, <strong>calls to PUT are idempotent</strong>.</p>
+<p>The RFC reads like this:</p>
+<blockquote>
+<p>The fundamental difference between the POST and PUT requests is reflected in the different meaning of the Request-URI. The URI in a POST request identifies the resource that will handle the enclosed entity. That resource might be a data-accepting process, a gateway to some other protocol, or a separate entity that accepts annotations. In contrast, the URI in a PUT request identifies the entity enclosed with the request -- the user agent knows what URI is intended and the server MUST NOT attempt to apply the request to some other resource. If the server desires that the request be applied to a different URI,</p>
+</blockquote>
+<p><strong>Note:</strong> PUT has mostly been used to update resources (by replacing them in their entireties), but recently there is movement towards using PATCH for updating existing resources, as PUT specifies that it replaces the whole resource. <a href="https://www.rfc-editor.org/rfc/rfc5789" rel="noreferrer">RFC 5789.</a></p>
+<p><strong>Update 2018</strong>: There is a case that can be made to avoid PUT. See <a href="https://www.thoughtworks.com/radar/techniques/rest-without-put" rel="noreferrer">&quot;REST without PUT&quot;</a></p>
+<blockquote>
+<p>With “REST without PUT” technique, the idea is that consumers are
+forced to post new 'nounified' request resources. As discussed
+earlier, changing a customer’s mailing address is a POST to a new
+“ChangeOfAddress” resource, not a PUT of a “Customer” resource with a
+different mailing address field value.</p>
+</blockquote>
+<p>taken from <a href="https://www.thoughtworks.com/insights/blog/rest-api-design-resource-modeling" rel="noreferrer">REST API Design - Resource Modeling by Prakash Subramaniam of Thoughtworks</a></p>
+<p>This forces the API to avoid state transition problems with multiple clients updating a single resource, and matches more nicely with event sourcing and CQRS. When the work is done asynchronously, POSTing the transformation and waiting for it to be applied seems appropriate.</p>
+</div><p class="this-has-helped">This answer has helped 320 people.</p><div class="s-prose js-post-body"><p><code>POST</code> means "create new" as in "Here is the input for creating a user, create it for me".</p>
+
+<p><code>PUT</code> means "insert, replace if already exists" as in "Here is the data for user 5".</p>
+
+<p>You <code>POST</code> to example.com/users since you don't know the <code>URL</code> of the user yet, you want the server to create it. </p>
+
+<p>You <code>PUT</code> to example.com/users/id since you want to replace/create a <em>specific</em> user.</p>
+
+<p>POSTing twice with the same data means create two identical users with different ids. PUTing twice with the same data creates the user the first and updates him to the same state the second time (no changes). Since you end up with the same state after a <code>PUT</code> no matter how many times you perform it, it is said to be "equally potent" every time - idempotent. This is useful for automatically retrying requests. No more 'are you sure you want to resend' when you push the back button on the browser.</p>
+
+<p>A general advice is to use <code>POST</code> when you need the server to be in control of <code>URL</code> generation of your resources. Use <code>PUT</code> otherwise.  Prefer <code>PUT</code>  over <code>POST</code>.  </p>
+</div><p class="this-has-helped">This answer has helped 280 people.</p><div class="s-prose js-post-body"><h1>Summary:</h1>
+<h2>Create:</h2>
+<p>Can be performed with both PUT or POST in the following way:</p>
+<blockquote>
+<h3>PUT</h3>
+<p>Creates <strong>THE</strong> new resource with <strong>newResourceId</strong> as the identifier, under the /resources URI, or <strong>collection</strong>.</p>
+<pre><code>PUT /resources/&lt;newResourceId&gt; HTTP/1.1
+</code></pre>
+<h3>POST</h3>
+<p>Creates <strong>A</strong> new resource under the /resources URI, or <strong>collection</strong>. Usually the identifier is returned by the server.</p>
+<pre><code>POST /resources HTTP/1.1
+</code></pre>
+</blockquote>
+<h2>Update:</h2>
+<p>Can <strong>only</strong> be performed with PUT in the following way:</p>
+<blockquote>
+<h3>PUT</h3>
+<p>Updates the resource with <strong>existingResourceId</strong> as the identifier, under the /resources URI, or <strong>collection</strong>.</p>
+<pre><code>PUT /resources/&lt;existingResourceId&gt; HTTP/1.1
+</code></pre>
+</blockquote>
+<h1>Explanation:</h1>
+<p>When dealing with REST and URI as general, you have <strong>generic</strong> on the <em>left</em> and <strong>specific</strong> on the <em>right</em>. The <strong>generics</strong> are usually called <strong>collections</strong> and the more <strong>specific</strong> items can be called <strong>resource</strong>. Note that a <strong>resource</strong> can contain a <strong>collection</strong>.</p>
+<blockquote>
+<h2>Examples:</h2>
+<p><strong>&lt;-- generic -- specific --&gt;</strong></p>
+<pre><code>URI: website.example/users/john
+website.example  - whole site
+users        - collection of users
+john         - item of the collection, or a resource
+
+URI:website.example/users/john/posts/23
+website.example  - whole site
+users        - collection of users
+john         - item of the collection, or a resource
+posts        - collection of posts from john
+23           - post from john with identifier 23, also a resource
+</code></pre>
+</blockquote>
+<p>When you use POST you are <strong>always</strong> refering to a <strong>collection</strong>, so whenever you say:</p>
+<pre><code>POST /users HTTP/1.1
+</code></pre>
+<p>you are posting a new user to the <em>users</em> <strong>collection</strong>.</p>
+<p>If you go on and try something like this:</p>
+<pre><code>POST /users/john HTTP/1.1
+</code></pre>
+<p>it will work, but semantically you are saying that you want to add a resource to the <em>john</em> <strong>collection</strong> under the <em>users</em> <strong>collection</strong>.</p>
+<p>Once you are using PUT you are refering to a <strong>resource</strong> or single item, possibly inside a <strong>collection</strong>. So when you say:</p>
+<pre><code>PUT /users/john HTTP/1.1
+</code></pre>
+<p>you are telling to the server update, or create if it doesn't exist, the <em>john</em> <strong>resource</strong> under the <em>users</em> <strong>collection</strong>.</p>
+<h2>Spec:</h2>
+<p>Let me highlight some important parts of the spec:</p>
+<h3>POST</h3>
+<blockquote>
+<p>The <strong>POST</strong> method is used to request that the origin server <strong>accept</strong> the entity enclosed in the request as a <strong><em>new</em> subordinate</strong> of the resource identified by the Request-URI in the Request-Line</p>
+</blockquote>
+<p>Hence, creates a new <strong>resource</strong> on a <strong>collection</strong>.</p>
+<h3>PUT</h3>
+<blockquote>
+<p>The <strong>PUT</strong> method requests that the enclosed entity be <strong>stored</strong> under the supplied Request-URI. If the Request-URI refers to an <strong>already existing</strong> resource, the enclosed entity SHOULD be considered as a <strong>modified version</strong> of the one residing on the origin server. If the Request-URI does <strong>not point to an existing</strong> resource, and that URI is <strong>capable</strong> of being defined as a <strong><em>new</em> resource</strong> by the requesting user agent, the origin server can <strong>create</strong> the resource with that URI.&quot;</p>
+</blockquote>
+<p>Hence, create or update based on existence of the <strong>resource</strong>.</p>
+<h1>Reference:</h1>
+<ul>
+<li><a href="https://www.rfc-editor.org/rfc/rfc7231#section-4.3.3" rel="noreferrer">HTTP/1.1 Spec</a></li>
+<li><a href="http://en.wikipedia.org/wiki/Representational_state_transfer" rel="noreferrer">Wikipedia - REST</a></li>
+<li><a href="http://www.ietf.org/rfc/rfc2396.txt" rel="noreferrer">Uniform Resource Identifiers (URI): Generic Syntax and Semantics</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 192 people.</p><div class="s-prose js-post-body"><p>I'd like to add my &quot;pragmatic&quot; advice. Use PUT when you know the &quot;id&quot; by which the object you are saving can be retrieved. Using PUT won't work too well if you need, say, a database generated id to be returned for you to do future lookups or updates.</p>
+<p>So: To save an existing user, or one where the client generates the id and it's been verified that the id is unique:</p>
+<pre><code>PUT /user/12345 HTTP/1.1  &lt;-- create the user providing the id 12345
+Host: mydomain.example
+
+GET /user/12345 HTTP/1.1  &lt;-- return that user
+Host: mydomain.example
+</code></pre>
+<p>Otherwise, use POST to initially create the object, and PUT to update the object:</p>
+<pre><code>POST /user HTTP/1.1   &lt;--- create the user, server returns 12345
+Host: mydomain.example
+
+PUT /user/12345 HTTP/1.1  &lt;--- update the user
+Host: mydomain.example
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 171 people.</p><div class="s-prose js-post-body"><p>Both are used for data transmission between client to server, but there are subtle differences between them, which are:</p>
+<div class="s-table-container">
+<table class="s-table">
+<thead>
+<tr>
+<th>PUT</th>
+<th>POST</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Replacing existing resource or creating if resource is not exist.               <code>www.example.com/com/customer/{customerId} www.example.com/com/customer/123/order/{orderId}</code> Identifier is chosen by the client.</td>
+<td>Creating new resources and subordinate resources, e.g. a file is subordinate to a directory containing it or a row is subordinate to a database table. <code>www.example.com/com/customer/ www.example.com/com/customer/123/order/</code> identifier is returned by server</td>
+</tr>
+<tr>
+<td>Idempotent i.e. if you <code>PUT</code> a resource twice, it has no effect. Example: Do it as many times as you want, the result will be same. <code>x=1;</code></td>
+<td><code>POST</code> is neither safe nor idempotent. Example: <code>x++;</code></td>
+</tr>
+<tr>
+<td>Works as specific</td>
+<td>Works as abstractive</td>
+</tr>
+<tr>
+<td>If you create or update a resource using <code>PUT</code> and then make that same call again, the resource is still there and still has the same state as it did with the first call.</td>
+<td>Making two identical <code>POST</code> requests will most likely result in two resources containing the same information.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Analogy:</p>
+<ul>
+<li>PUT i.e. take and <strong>put</strong> where it was.</li>
+<li>POST as send mail in <strong>post</strong> office.</li>
+</ul>
+<p><a href="https://i.stack.imgur.com/AQKrz.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/AQKrz.jpg" alt="enter image description here" /></a></p>
+<p>Social Media/Network Analogy:</p>
+<ul>
+<li><strong>Post</strong> on social media: when we post message, it creates new post.</li>
+<li><strong>Put</strong>(i.e. edit) for the message we already Posted.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 151 people.</p><div class="s-prose js-post-body"><p>Use POST to create, and PUT to update. That's how Ruby on Rails is doing it, anyway.</p>
+
+<pre><code>PUT    /items/1      #=&gt; update
+POST   /items        #=&gt; create
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p>REST is a <em>very</em> high-level concept. In fact, it doesn't even mention HTTP at all!</p>
+<p>If you have any doubts about how to implement REST in HTTP, you can always take a look at the <a href="https://www.ietf.org/rfc/rfc5023.txt" rel="noreferrer">Atom Publication Protocol (AtomPub)</a> specification. AtomPub is a standard for writing RESTful webservices with HTTP that was developed by many HTTP and REST luminaries, with some input from Roy Fielding, the inventor of REST and (co-)inventor of HTTP himself.</p>
+<p>In fact, you might even be able to use AtomPub directly. While it came out of the blogging community, it is in no way restricted to blogging: it is a generic protocol for RESTfully interacting with arbitrary (nested) collections of arbitrary resources via HTTP. If you can represent your application as a nested collection of resources, then you can just use AtomPub and not worry about whether to use PUT or POST, what HTTP Status Codes to return and all those details.</p>
+<p>This is what AtomPub has to say about resource creation (section 9.2):</p>
+<blockquote>
+<p>To add members to a Collection, clients send POST requests to the URI of the Collection.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 71 people.</p><div class="s-prose js-post-body"><p><strong>The decision of whether to use PUT or POST to create a resource on a server with an HTTP + REST API is based on who owns the URL structure.</strong> Having the client know, or participate in defining, the URL struct is an unnecessary coupling akin to the undesirable couplings that arose from SOA. Escaping types of couplings is the reason REST is so popular. Therefore, <strong>the proper method to use is POST.</strong> There are exceptions to this rule and they occur when the client wishes to retain control over the location structure of the resources it deploys. This is rare and likely means something else is wrong.</p>
+<p>At this point some people will argue that if <em>RESTful-URL's</em> are used, the client does knows the URL of the resource and therefore a PUT is acceptable. After all, this is why canonical, normalized, Ruby on Rails, Django URLs are important, look at the Twitter API … blah blah blah. Those people need to understand <strong>there is no such thing as a Restful-URL</strong> and that <strong>Roy Fielding himself states that</strong>:</p>
+<blockquote>
+<p>A REST API must not define fixed resource names or hierarchies (an
+obvious coupling of client and server). Servers must have the freedom
+to control their own namespace. Instead, allow servers to instruct
+clients on how to construct appropriate URIs, such as is done in HTML
+forms and URI templates, by defining those instructions within media
+types and link relations. [Failure here implies that clients are
+assuming a resource structure due to out-of band information, such as
+a domain-specific standard, which is the data-oriented equivalent to
+RPC's functional coupling].</p>
+<p><a href="http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven" rel="nofollow noreferrer">http://roy.gbiv.com/untangled/2008/rest-apis-must-be-hypertext-driven</a></p>
+</blockquote>
+<p>The idea of a <em>RESTful-URL</em> is actually a violation of REST as the server is in charge of the URL structure and should be free to decide how to use it to avoid coupling. If this confuses you read about the significance of self discovery on API design.</p>
+<p><strong>Using POST to create resources comes with a design consideration because POST is not idempotent.</strong> This means that repeating a POST several times does not guarantee the same behavior each time. <strong>This scares people into using PUT to create resources when they should not.</strong> They know it's wrong (POST is for CREATE) but they do it anyway because they don't know how to solve this problem.  This concern is demonstrated in the following situation:</p>
+<ol>
+<li>The client POST a new resource to the server.</li>
+<li>The server processes the request and sends a response.</li>
+<li>The client never receives the response.</li>
+<li>The server is unaware the client has not received the response.</li>
+<li>The client does not have a URL for the resource (therefore PUT is not an option) and repeats the POST.</li>
+<li>POST is not idempotent and the server …</li>
+</ol>
+<p>Step 6 is where people commonly get confused about what to do. However, there is no reason to create a kludge to solve this issue. Instead, HTTP can be used as specified in <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html#sec10.4.10" rel="nofollow noreferrer" title="RFC 2616 409 Conflict">RFC 2616</a> and the server replies:</p>
+<blockquote>
+<p>10.4.10 409 Conflict</p>
+<p>The request could not be completed due to a conflict with the current
+state of the resource. This code is only allowed in situations where
+it is expected that the user might be able to resolve the conflict and
+resubmit the request. The response body SHOULD include enough</p>
+<p>information for the user to recognize the source of the conflict.
+Ideally, the response entity would include enough information for the
+user or user agent to fix the problem; however, that might not be
+possible and is not required.</p>
+<p>Conflicts are most likely to occur in response to a PUT request. For
+example, if versioning were being used and the entity being PUT
+included changes to a resource which conflict with those made by an
+earlier (third-party) request, the server might use the 409 response
+to indicate that it can’t complete the request. In this case, the
+response entity would likely contain a list of the differences between
+the two versions in a format defined by the response Content-Type.</p>
+</blockquote>
+<p><strong>Replying with a status code of 409 Conflict is the correct recourse because</strong>:</p>
+<ul>
+<li>Performing a POST of data which has an ID which matches a resource already in the system is “a conflict with the current state of the resource.”</li>
+<li>Since the important part is for the client to understand the server has the resource and to take appropriate action. This is a “situation(s) where it is expected that the user might be able to resolve the conflict and resubmit the request.”</li>
+<li>A response which contains the URL of the resource with the conflicting ID and the appropriate preconditions for the resource would provide “enough information for the user or user agent to fix the problem” which is the ideal case per RFC 2616.</li>
+</ul>
+<p><strong>Update based on release of RFC 7231 to Replace 2616</strong></p>
+<p><a href="https://www.rfc-editor.org/rfc/rfc7231" rel="nofollow noreferrer">RFC 7231</a> is designed to replace 2616 and in <a href="https://www.rfc-editor.org/rfc/rfc7231#section-4.3.3" rel="nofollow noreferrer" title="RFC 7231 - Section 4.3.3">Section 4.3.3</a> describes the follow possible response for a POST</p>
+<blockquote>
+<p>If the result of processing a POST would be equivalent to a
+representation of an existing resource, an origin server MAY redirect
+the user agent to that resource by sending a 303 (See Other) response
+with the existing resource's identifier in the Location field.  This
+has the benefits of providing the user agent a resource identifier
+and transferring the representation via a method more amenable to
+shared caching, though at the cost of an extra request if the user
+agent does not already have the representation cached.</p>
+</blockquote>
+<p>It now may be tempting to simply return a 303 in the event that a POST is repeated. However, the opposite is true. Returning a 303 would only make sense if multiple create requests (creating different resources) return the same content. An example would be a &quot;thank you for submitting your request message&quot; that the client need not re-download each time. RFC 7231 still maintains in section 4.2.2 that POST is not to be idempotent and continues to maintain that POST should be used for create.</p>
+<p>For more information about this, read this <a href="http://articles.joshcodes.com/?p=5" rel="nofollow noreferrer" title="POST to PUT to REST how to properly create resources on a server">article</a>.</p>
+</div><p class="this-has-helped">This answer has helped 57 people.</p><div class="s-prose js-post-body"><p>I like this advice, from <a href="http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html">RFC 2616's definition of PUT</a>:</p>
+
+<blockquote>
+  <p>The fundamental difference between the POST and PUT requests is reflected in the different meaning of the Request-URI. The URI in a POST request identifies the resource that will handle the enclosed entity. That resource might be a data-accepting process, a gateway to some other protocol, or a separate entity that accepts annotations. In contrast, the URI in a PUT request identifies the entity enclosed with the request -- the user agent knows what URI is intended and the server MUST NOT attempt to apply the request to some other resource.</p>
+</blockquote>
+
+<p>This jibes with the other advice here, that PUT is best applied to resources that already have a name, and POST is good for creating a new object under an existing resource (and letting the server name it).</p>
+
+<p>I interpret this, and the idempotency requirements on PUT, to mean that:</p>
+
+<ul>
+<li>POST is good for creating new objects under a collection (and create does not need to be idempotent)</li>
+<li>PUT is good for updating existing objects (and update needs to be idempotent)</li>
+<li>POST can also be used for non-idempotent updates to existing objects (especially, changing part of an object without specifying the whole thing -- if you think about it, creating a new member of a collection is actually a special case of this kind of update, from the collection's perspective)</li>
+<li>PUT can also be used for create if and only if you allow the client to name the resource. But since REST clients aren't supposed to make assumptions about URL structure, this is less in the intended spirit of things.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 55 people.</p><div class="s-prose js-post-body"><p>In short:</p>
+<p><strong>PUT</strong> is idempotent, where the resource state will be the same if the same operation is executed one time or multiple times.</p>
+<p><strong>POST</strong> is non-idempotent, where the resource state may become different if the operation is executed multiple times as compared to executing a single time.</p>
+<h3>Analogy with database query</h3>
+<p><strong>PUT</strong> You can think of similar to &quot;UPDATE STUDENT SET address = &quot;abc&quot; where id=&quot;123&quot;;</p>
+<p><strong>POST</strong> You can think of something like &quot;INSERT INTO STUDENT(name, address) VALUES (&quot;abc&quot;, &quot;xyzzz&quot;);</p>
+<p>Student Id is auto generated.</p>
+<p>With PUT, if the same query is executed multiple times or one time, the STUDENT table state remains the same.</p>
+<p>In case of POST, if the same query is executed multiple times then multiple Student records get created in the database and the database state changes on each execution of an &quot;INSERT&quot; query.</p>
+<p><strong>NOTE:</strong> PUT needs a resource location (already-resource) on which update needs to happen, whereas POST doesn't require that. Therefore intuitively POST is meant for creation of a new resource, whereas PUT is needed for updating the already existing resource.</p>
+<p><em>Some may come up with that updates can be performed with POST. There is no hard rule which one to use for updates or which one to use for create. Again these are conventions, and intuitively I'm inclined with the above mentioned reasoning and follow it.</em></p>
+</div><p class="this-has-helped">This answer has helped 53 people.</p><div class="s-prose js-post-body"><p>POST is like posting a letter to a mailbox or posting an email to an email queue.
+PUT is like when you put an object in a cubby hole or a place on a shelf (it has a known address).</p>
+
+<p>With POST, you're posting to the address of the QUEUE or COLLECTION. With PUT, you're putting to the address of the ITEM.</p>
+
+<p>PUT is idempotent. You can send the request 100 times and it will not matter. POST is not idempotent. If you send the request 100 times, you'll get 100 emails or 100 letters in your postal box.</p>
+
+<p>A general rule: if you know the id or name of the item, use PUT. If you want the id or name of the item to be assigned by the receiving party, use POST. </p>
+
+<p><img src="https://i.stack.imgur.com/ugbjx.png" alt="POST versus PUT"></p>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><p><strong>Short Answer:</strong></p>
+
+<p>Simple rule of thumb: Use POST to create, use PUT to update.</p>
+
+<p><strong>Long Answer:</strong></p>
+
+<p>POST:</p>
+
+<ul>
+<li>POST is used to send data to server.</li>
+<li>Useful when the resource's URL is
+unknown</li>
+</ul>
+
+<p>PUT:</p>
+
+<ul>
+<li>PUT is used to transfer state to the server</li>
+<li>Useful when a resource's URL is known</li>
+</ul>
+
+<p><strong>Longer Answer:</strong></p>
+
+<p>To understand it we need to question why PUT was required, what were the problems PUT was trying to solve that POST couldn't.</p>
+
+<p>From a REST architecture's point of view there is none that matters. We could have lived without PUT as well. But from a client developer's point of view it made his/her life a lot simpler.</p>
+
+<p>Prior to PUT, clients couldn't directly know the URL that the server generated or if all it had generated any or whether the data to be sent to the server is already updated or not. PUT relieved the developer of all these headaches. PUT is idempotent, PUT handles race conditions, and PUT lets the client choose the URL.</p>
+</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p><strong>New answer (now that I understand REST better):</strong></p>
+
+<p>PUT is merely a statement of what content the service should, from now on, use to render representations of the resource identified by the client; POST is a statement of what content the service should, from now on, contain (possibly duplicated) but it's up to the server how to identify that content.</p>
+
+<p><code>PUT x</code> (if <code>x</code> identifies a <a href="http://www.ics.uci.edu/~fielding/pubs/dissertation/rest_arch_style.htm#sec_5_2_1_1" rel="noreferrer">resource</a>): "Replace the content of the resource identified by <code>x</code> with my content."</p>
+
+<p><code>PUT x</code> (if <code>x</code> does not identify a resource): "Create a new resource containing my content and use <code>x</code> to identify it."</p>
+
+<p><code>POST x</code>: "Store my content and give me an identifier that I can use to identify a resource (old or new) containing said content (possibly mixed with other content). Said resource should be identical or subordinate to that which <code>x</code> identifies." "<em>y</em>'s resource is subordinate to <em>x</em>'s resource" is typically but not necessarily implemented by making <em>y</em> a subpath of <em>x</em> (e.g. <em>x</em> = <code>/foo</code> and <em>y</em> = <code>/foo/bar</code>) and modifying the representation(s) of <em>x</em>'s resource to reflect the existence of a new resource, e.g. with a hyperlink to <em>y</em>'s resource and some metadata. Only the latter is really essential to good design, as URLs are opaque in REST -- you're supposed to <a href="https://stackoverflow.com/a/9194942/972499">use hypermedia</a> instead of client-side URL construction to traverse the service anyways.</p>
+
+<p>In REST, there's no such thing as a resource containing "content". I refer as "content" to data that the service uses to render representations consistently. It typically consists of some related rows in a database or a file (e.g. an image file). It's up to the service to convert the user's content into something the service can use, e.g. converting a JSON payload into SQL statements.</p>
+
+<p><strong>Original answer (might be easier to read)</strong>:</p>
+
+<p><code>PUT /something</code> (if <code>/something</code> already exists): "Take whatever you have at <code>/something</code> and replace it with what I give you."</p>
+
+<p><code>PUT /something</code> (if <code>/something</code> does not already exist): "Take what I give you and put it at <code>/something</code>."</p>
+
+<p><code>POST /something</code>: "Take what I give you and put it anywhere you want under <code>/something</code> as long as you give me its URL when you're done."</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>Ruby on Rails 4.0 will use the 'PATCH' method instead of PUT to do partial updates.</p>
+
+<p>RFC 5789 says about PATCH (since 1995):</p>
+
+<blockquote>
+  <p>A new method is necessary to improve interoperability and prevent
+     errors.  The PUT method is already defined to overwrite a resource
+     with a complete new body, and cannot be reused to do partial changes.
+     Otherwise, proxies and caches, and even clients and servers, may get
+     confused as to the result of the operation.  POST is already used but
+     without broad interoperability (for one, there is no standard way to
+     discover patch format support).  PATCH was mentioned in earlier HTTP
+     specifications, but not completely defined.</p>
+</blockquote>
+
+<p>"<a href="http://weblog.rubyonrails.org/2012/2/26/edge-rails-patch-is-the-new-primary-http-method-for-updates/" rel="noreferrer">Edge Rails: PATCH is the new primary HTTP method for updates</a>" explains it.</p>
+</div><p class="this-has-helped">This answer has helped 33 people.</p><div class="s-prose js-post-body"><p>In addition to differences suggested by others, I want to add one more.</p>
+
+<p>In <strong>POST</strong> method you can send body params in <code>form-data</code></p>
+
+<p>In <strong>PUT</strong> method you have to send body params in <code>x-www-form-urlencoded</code></p>
+
+<p>Header <code>Content-Type:application/x-www-form-urlencoded</code></p>
+
+<p>According to this, you cannot send files or multipart data in the <strong>PUT</strong> method</p>
+
+<p><strong>EDIT</strong></p>
+
+<blockquote>
+  <p>The content type "application/x-www-form-urlencoded" is inefficient
+  for sending large quantities of binary data or text containing
+  non-ASCII characters. The content type "multipart/form-data" should be
+  used for submitting forms that contain files, non-ASCII data, and
+  binary data.</p>
+</blockquote>
+
+<p>Which means if you have to submit </p>
+
+<blockquote>
+  <p>files, non-ASCII data, and binary data</p>
+</blockquote>
+
+<p>you should use <strong>POST</strong> method</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>At the risk of restating what has already been said, it seems important to remember that <strong>PUT</strong> implies that the client controls what the <em>URL</em> is going to end up being, when creating a resource. So part of the choice between <strong>PUT</strong> and <strong>POST</strong> is going to be about how much you can trust the client to provide correct, normalized <em>URL</em> that are coherent with whatever your URL scheme is. </p>
+
+<p>When you can't fully trust the client to do the right thing, it would be 
+more appropriate to use <strong>POST</strong> to create a new item and then send the URL back to the client in the response.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>In a very simple way I'm taking the example of the Facebook timeline.</p>
+
+<p>Case 1: When you post something on your timeline, it's a fresh new entry. So in this case they use the POST method because the POST method is non-idempotent.</p>
+
+<p>Case 2: If your friend comment on your post the first time, that also will create a new entry in the database so the POST method used.</p>
+
+<p>Case 3: If your friend edits his comment, in this case, they had a comment id, so they will update an existing comment instead of creating a new entry in the database. Therefore for this type of operation use the PUT method because it is idempotent.*</p>
+
+<p>In a single line, use <strong>POST</strong> to add <strong>a new entry</strong> in the database and <strong>PUT</strong> to <strong>update</strong> something in the database.</p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>The most important consideration is <em>reliability</em>. If a POST message gets lost the state of the system is undefined. Automatic recovery is impossible. For PUT messages, the state is undefined only until the first successful retry.</p>
+
+<p>For instance, it may not be a good idea to create credit card transactions with POST. </p>
+
+<p>If you happen to have auto generated  URI's on your resource you can still use PUT by passing a generated URI (pointing to an empty resource) to the client.</p>
+
+<p>Some other considerations:</p>
+
+<ul>
+<li>POST invalidates cached copies of the entire containing resource (better consistency)</li>
+<li>PUT responses are not cacheable while POST ones are (Require Content-Location and expiration)</li>
+<li>PUT is less supported by e.g. Java ME, older browsers, firewalls</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>Readers new to this topic will be struck by the endless discussion about what you <em>should</em> do, and the relative absence of lessons from experience. The fact that REST is "preferred" over SOAP is, I suppose, a high-level learning from experience, but goodness we must have progressed from there? It's 2016. Roy's dissertation was in 2000. What have we developed? Was it fun? Was it easy to integrate with? To support? Will it handle the rise of smartphones and flaky mobile connections?</p>
+
+<p>According to ME, real-life networks are unreliable. Requests timeout. Connections are reset. Networks go down for hours or days at a time. Trains go into tunnels with mobile users aboard. For any given request (as occasionally acknowledged in all this discussion) the request can fall in the water on its way, or the response can fall in the water on its way back. <strong>In these conditions, issuing PUT, POST and DELETE requests directly against substantive resources has always struck me as a little brutal and naive.</strong></p>
+
+<p>HTTP does nothing to ensure reliable completion of the request-response, and that's just fine because this is properly the job of network-aware applications. Developing such an application, you can jump through hoops to use PUT instead of POST, then more hoops to give a certain kind of error on the server if you detect duplicate requests. Back at the client, you then have to jump through hoops to interpret these errors, refetch, revalidate and repost.</p>
+
+<p><strong>Or you can do this</strong>: consider your unsafe requests as ephemeral single-user resources (let's call them actions). Clients request a new "action" on a substantive resource with an empty POST to the resource. POST will be used only for this. Once safely in possession of the URI of the freshly minted action, the client PUTs the unsafe request to the action URI, <em>not the target resource</em>. Resolving the action and updating the "real" resource is properly the job of your API, and is here decoupled from the unreliable network.</p>
+
+<p>The server does the business, returns the response <em>and stores it against the agreed action URI</em>. If anything goes wrong, the client repeats the request (natural behaviour!), and if the server has already seen it, it repeats the stored response <em>and does nothing else</em>.</p>
+
+<p>You will quickly spot the similarity with promises: we create and return the placeholder for the result before doing anything. Also like a promise, an action can succeed or fail one time, but its result can be fetched repeatedly.</p>
+
+<p>Best of all, we give sending and receiving applications a chance to link the uniquely identified action to uniqueness in their respective environments. And we can start to demand, and enforce!, responsible behaviour from clients: repeat your requests as much as you like, but don't go generating a new action until you're in possession of a definitive result from the existing one.</p>
+
+<p>As such, numerous thorny problems go away. Repeated insert requests won't create duplicates, and we don't create the real resource until we're in possession of the data. (database columns can stay not-nullable). Repeated update requests won't hit incompatible states and won't overwrite subsequent changes. Clients can (re)fetch and seamlessy process the original confirmation for whatever reason (client crashed, response went missing, etc.).</p>
+
+<p>Successive delete requests can see and process the original confirmation, without hitting a 404 error. If things take longer than expected, we can respond provisionally, and we have a place where the client can check back for the definitive result. The nicest part of this pattern is its Kung-Fu (Panda) property. We take a weakness, the propensity for clients to repeat a request any time they don't understand the response, and turn it into <em>a strength</em> :-)</p>
+
+<p>Before telling me this is not RESTful, please consider the numerous ways in which REST principles are respected. Clients don't construct URLs. The API stays discoverable, albeit with a little change in semantics. HTTP verbs are used appropriately. If you think this is a huge change to implement, I can tell you from experience that it's not.</p>
+
+<p>If you think you'll have huge amounts of data to store, let's talk volumes: a typical update confirmation is a fraction of a kilobyte. HTTP currently gives you a minute or two to respond definitively. Even if you only store actions for a week, clients have ample chance to catch up. If you have very high volumes, you may want a dedicated acid-compliant key value store, or an in-memory solution. </p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>There seems to always be some confusion as to when to use the HTTP POST versus the HTTP PUT method for REST services. Most developers will try to associate CRUD operations directly to HTTP methods. I will argue that this is not correct and one can not simply associate the CRUD concepts to the HTTP methods. That is:</p>
+
+<pre><code>Create =&gt; HTTP PUT
+Retrieve =&gt; HTTP GET
+Update =&gt; HTTP POST
+Delete =&gt; HTTP DELETE
+</code></pre>
+
+<p>It is true that the R(etrieve) and D(elete) of the CRUD operations can be mapped directly to the HTTP methods GET and DELETE respectively. However, the confusion lies in the C(reate) and U(update) operations. In some cases, one can use the PUT for a create while in other cases a POST will be required. The ambiguity lies in the definition of an HTTP PUT method versus an HTTP POST method.</p>
+
+<p>According to the HTTP 1.1 specifications the GET, HEAD, DELETE, and PUT methods must be idempotent, and the POST method is not idempotent. That is to say that an operation is idempotent if it can be performed on a resource once or many times and always return the same state of that resource. Whereas a non idempotent operation can return a modified state of the resource from one request to another. Hence, in a non idempotent operation, there is no guarantee that one will receive the same state of a resource.</p>
+
+<p>Based on the above idempotent definition, my take on using the HTTP PUT method versus using the HTTP POST method for REST services is:
+Use the HTTP PUT method when:</p>
+
+<pre><code>The client includes all aspect of the resource including the unique identifier to uniquely identify the resource. Example: creating a new employee.
+The client provides all the information for a resource to be able to modify that resource.This implies that the server side does not update any aspect of the resource (such as an update date).
+</code></pre>
+
+<p>In both cases, these operations can be performed multiple times with the same results. That is the resource will not be changed by requesting the operation more than once. Hence, a true idempotent operation.
+Use the HTTP POST method when:</p>
+
+<pre><code>The server will provide some information concerning the newly created resource. For example, take a logging system. A new entry in the log will most likely have a numbering scheme which is determined on the server side. Upon creating a new log entry, the new sequence number will be determined by the server and not by the client.
+On a modification of a resource, the server will provide such information as a resource state or an update date. Again in this case not all information was provided by the client and the resource will be changing from one modification request to the next. Hence a non idempotent operation.
+</code></pre>
+
+<p>Conclusion</p>
+
+<p>Do not directly correlate and map CRUD operations to HTTP methods for REST services. The use of an HTTP PUT method versus an HTTP POST method should be based on the idempotent aspect of that operation. That is, if the operation is idempotent, then use the HTTP PUT method. If the operation is non idempotent, then use the HTTP POST method.</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><blockquote>
+  <p>the origin server can create the resource with that URI</p>
+</blockquote>
+
+<p>So you use POST and probably, but not necessary PUT for resource creation. You don't have to support both. For me POST is perfectly enough. So it is a design decision.</p>
+
+<p>As your quote mentioned, you use PUT for creation of there is no resource assigned to an IRI, and you want to create a resource anyway. For example, <code>PUT /users/123/password</code> usually replaces the old password with a new one, but you can use it to create a password if it does not exist already (for example, by freshly registered users or by restoring banned users).</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>I'm going to land with the following:</p>
+
+<p>PUT refers to a resource, identified by the URI. In this case, you are updating it. It is the part of the three verbs referring to resources -- delete and get being the other two.</p>
+
+<p>POST is basically a free form message, with its meaning being defined 'out of band'. If the message can be interpreted as adding a resource to a directory, that would be OK, but basically you need to understand the message you are sending (posting) to know what will happen with the resource.</p>
+
+<hr>
+
+<p>Because PUT and GET and DELETE refer to a resource, they are also by definition idempotent.</p>
+
+<p>POST can perform the other three functions, but then the semantics of the request will be lost on the intermediaries such as caches and proxies. This also applies to providing security on the resource, since a post's URI doesn't necessarily indicate the resource it is applying to (it can though).</p>
+
+<p>A PUT doesn't need to be a create; the service could error if the resource isn't already created, but otherwise update it. Or vice versa -- it may create the resource, but not allow updates. The only thing required about PUT is that it points to a specific resource, and its payload is the representation of that resource. A successful PUT means (barring interference) that a GET would retrieve the same resource.</p>
+
+<hr>
+
+<p>Edit: One more thing -- a PUT can create, but if it does then the ID has to be a natural ID -- AKA an email address. That way when you PUT twice, the second put is an update of the first. This makes it <em>idempotent</em>.</p>
+
+<p>If the ID is generated (a new employee ID, for example), then the second PUT with the same URL would create a new record, which violates the idempotent rule. In this case the verb would be POST, and the message (not resource) would be to create a resource using the values defined in this message.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Here's a simple rule:</p>
+
+<p><strong>PUT</strong> to a URL should be used to update or create the resource that can be located at that URL.</p>
+
+<p><strong>POST</strong> to a URL should be used to update or create a resource which is located at some other ("subordinate") URL, or is not locatable via HTTP.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>The semantics are supposed be different, in that "PUT", like "GET" is supposed to be idempotent -- meaning, you can the same exact PUT request multiple times and the result will be as if you executed it only once. </p>
+
+<p>I will describe the conventions which I think are most widely used and are most useful:</p>
+
+<p>When you PUT a resource at a particular URL what happens is that it should get saved at that URL, or something along those lines.</p>
+
+<p>When you POST to a resource at a particular URL, often you are posting a related piece of information to that URL. This implies that the resource at the URL already exists.</p>
+
+<p>For example, when you want to create a new stream, you can PUT it to some URL. But when you want to POST a message to an existing stream, you POST to its URL.</p>
+
+<p>As for modifying the properties of the stream, you can do that with either PUT or POST. Basically, only use "PUT" when the operation is idempotent - otherwise use POST.</p>
+
+<p>Note, however, that not all modern browsers support HTTP verbs other than GET or POST.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>Most of the time, you will use them like this:</p>
+
+<ul>
+<li><strong>POST</strong> a resource into a collection</li>
+<li><strong>PUT</strong> a resource identified by collection/:id</li>
+</ul>
+
+<p>For example:</p>
+
+<ul>
+<li><strong>POST</strong> /items</li>
+<li><strong>PUT</strong>  /items/1234</li>
+</ul>
+
+<p>In both cases, the request body contains the data for the resource to be created or updated. It should be obvious from the route names that POST is not idempotent (if you call it 3 times it will create 3 objects), but PUT is idempotent (if you call it 3 times the result is the same). PUT is often used for "upsert" operation (create or update), but you can always return a 404 error if you only want to use it to modify.</p>
+
+<p>Note that POST "creates" a new element in the collection, and PUT "replaces" an element at a given URL, but it is a very common practice to use PUT for partial modifications, that is, use it only to update existing resources and only modify the included fields in the body (ignoring the other fields). This is technically incorrect, if you want to be REST-purist, PUT should replace the whole resource and you should use PATCH for the partial update. I personally don't care much as far as the behavior is clear and consistent across all your API endpoints.</p>
+
+<p>Remember, REST is a set of conventions and guidelines to keep your API simple. If you end up with a complicated work-around just to check the "RESTfull" box then you are defeating the purpose ;)</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>To me, the key of understanding the difference was to understand <strong>who defines the ID</strong> of the resource:</p>
+<p>Example (with some address service)</p>
+<pre><code>POST (sever creates new resource)
+
+client               server/addresses      // NOTE: no ID in the request
+  |                                 |
+  | --{POST address data}--&gt;        |
+  |                                 |
+  | &lt;--{201, created addresses/321} |      // NOTE: resource ID in the reply
+  |                                 |
+</code></pre>
+<pre><code>PUT (sever sets data of resource, creating it if necessary)
+
+client               server/addresses/321      // NOTE: *you* put the ID here!
+  |                                 |
+  | --{PUT address data (to 321)}--&gt;|
+  |                                 |
+  | &lt;--{201, created }              |          // NOTE: resource ID not required here
+  |                                 |
+</code></pre>
+<p>There are many great answers with great details below, but that helped me to get to the point.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>While there is probably an agnostic way to describe these, it does seem to be conflicting with various statements from answers to websites.</p>
+
+<p>Let's be very clear and direct here. If you are a .NET developer working with Web API, the facts are (from the Microsoft API documentation),
+<a href="http://www.asp.net/web-api/overview/creating-web-apis/creating-a-web-api-that-supports-crud-operations" rel="nofollow noreferrer">http://www.asp.net/web-api/overview/creating-web-apis/creating-a-web-api-that-supports-crud-operations</a>:</p>
+
+<pre><code>1. PUT = UPDATE (/api/products/id)
+2. MCSD Exams 2014 -  UPDATE = PUT, there are **NO** multiple answers for that question period.
+</code></pre>
+
+<p>Sure you "can" use "POST" to update, but just follow the conventions laid out for you with your given framework. In my case it is .NET / Web API, so <strong>PUT is for UPDATE</strong> there is no debate.</p>
+
+<p>I hope this helps any Microsoft developers that read all comments with Amazon and Sun/Java website links.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>If you are familiar with database operations,
+there are</p>
+
+<ol>
+<li>Select</li>
+<li>Insert</li>
+<li>Update</li>
+<li>Delete</li>
+<li>Merge (Update if already existing, else insert)</li>
+</ol>
+
+<p>I use <code>PUT</code> for Merge and update like operations and use <code>POST</code> for Insertions.</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><h2>Summary</h2>
+<ul>
+<li>Use <code>PUT</code> to create or replace the state of the <em>target</em> resource with the state defined by the representation enclosed in the request. That <em>standardized</em> intended effect is <em>idempotent</em> so it informs intermediaries that they can repeat a request in case of communication failure.</li>
+<li>Use <code>POST</code> otherwise (including to create or replace the state of a resource other than the target resource). Its intended effect is <em>not standardized</em> so intermediaries cannot rely on any universal property.</li>
+</ul>
+<h2>References</h2>
+<p>The latest authoritative description of the semantic difference between the <code>POST</code> and <code>PUT</code> request methods is given in <a href="https://datatracker.ietf.org/doc/html/rfc7231" rel="noreferrer">RFC 7231</a> (Roy Fielding, Julian Reschke, 2014):</p>
+<blockquote>
+<p>The fundamental difference between the <code>POST</code> and <code>PUT</code> methods is highlighted by the different intent for the enclosed representation. The target resource in a <code>POST</code> request is intended to handle the enclosed representation according to the resource's own semantics, whereas the enclosed representation in a <code>PUT</code> request is defined as replacing the state of the target resource. Hence, the intent of <code>PUT</code> is idempotent and visible to intermediaries, even though the exact effect is only known by the origin server.</p>
+</blockquote>
+<p>In other words, the intended effect of <code>PUT</code> is <em>standardized</em> (create or replace the state of the <em>target</em> resource with the state defined by the representation enclosed in the request) and so is common to all target resources, while the intended effect of <code>POST</code> is <em>not standardized</em> and so is specific to each target resource. Thus <code>POST</code> can be used for anything, including for achieving the intended effects of <code>PUT</code> and other request methods (<code>GET</code>, <code>HEAD</code>, <code>DELETE</code>, <code>CONNECT</code>, <code>OPTIONS</code>, and <code>TRACE</code>).</p>
+<p>But it is recommended to always use the more specialized request method rather than <code>POST</code> when applicable because it provides more information to intermediaries for automating information retrieval (since <code>GET</code>, <code>HEAD</code>, <code>OPTIONS</code>, and <code>TRACE</code> are defined as <em>safe</em>), handling communication failure (since <code>GET</code>, <code>HEAD</code>, <code>PUT</code>, <code>DELETE</code>, <code>OPTIONS</code>, and <code>TRACE</code> are defined as <em>idempotent</em>), and optimizing cache performance (since <code>GET</code> and <code>HEAD</code> are defined as <em>cacheable</em>), as explained in <a href="https://roy.gbiv.com/untangled/2009/it-is-okay-to-use-post" rel="noreferrer"><em>It Is Okay to Use POST</em></a> (Roy Fielding, 2009):</p>
+<blockquote>
+<p><code>POST</code> only becomes an issue when it is used in a situation for which some other method is ideally suited: e.g., retrieval of information that should be a representation of some resource (<code>GET</code>), complete replacement of a representation (<code>PUT</code>), or any of the other standardized methods that tell intermediaries something more valuable than “this may change something.” The other methods are more valuable to intermediaries because they say something about how failures can be automatically handled and how intermediate caches can optimize their behavior. <code>POST</code> does not have those characteristics, but that doesn’t mean we can live without it. <code>POST</code> serves many useful purposes in HTTP, including the general purpose of “this action isn’t worth standardizing.”</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p><code>POST</code> is used to send data to a server.<br />
+<code>PUT</code>  is used to deposit data into a resource on the server (e.g., a file).</p>
+<p>I saw this in a footnote (page 55) from the book <em><a href="https://www.oreilly.com/library/view/http-the-definitive/1565925092/" rel="noreferrer">HTTP: The Definitive Guide</a></em>.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>In practice, POST works well for creating resources. The URL of the newly created resource should be returned in the Location response header. PUT should be used for updating a resource completely. Please understand that these are the best practices when designing a RESTful API. HTTP specification as such does not restrict using PUT/POST with a few restrictions for creating/updating resources. Take a look at <a href="http://techoctave.com/c7/posts/71-twitter-rest-api-dissected" rel="noreferrer">http://techoctave.com/c7/posts/71-twitter-rest-api-dissected</a> that summarizes the best practices.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p><strong>POST:</strong> Use it for creating new resources. It's like INSERT (SQL statement) with an auto-incremented ID. In the response part it contains a new generated Id.</p>
+
+<blockquote>
+  <p>POST is also used for updating a record.</p>
+</blockquote>
+
+<p><strong>PUT:</strong> Use it for creating a new resource, but here I know the identity key. It's like INSERT (SQL statement) where I know in advance the identity key. In the response part it sends nothing.</p>
+
+<blockquote>
+  <p>PUT is also used for updating a resource</p>
+</blockquote>
+</div></body></html>

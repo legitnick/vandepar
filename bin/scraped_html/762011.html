@@ -1,0 +1,1285 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the difference between &quot;let&quot; and &quot;var&quot;?</p><div class="s-prose js-post-body"><p>ECMAScript 6 introduced <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let" rel="noreferrer">the <code>let</code> statement</a>.</p>
+<p>I've heard that it's described as a local variable, but I'm still not quite sure how it behaves differently than the var keyword.</p>
+<p>What are the differences? When should <code>let</code> be used instead of <code>var</code>?</p>
+</div><p class="this-has-helped">This answer has helped 7979 people.</p><div class="s-prose js-post-body"><h1>Scoping rules</h1>
+<p>The main difference is scoping rules. Variables declared by <code>var</code> keyword are scoped to the immediate function body (hence the function scope) while <code>let</code> variables are scoped to the immediate <em>enclosing</em> block denoted by <code>{ }</code> (hence the block scope).</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function run() {
+  var foo = "Foo";
+  let bar = "Bar";
+
+  console.log(foo, bar); // Foo Bar
+
+  {
+    var moo = "Mooo"
+    let baz = "Bazz";
+    console.log(moo, baz); // Mooo Bazz
+  }
+
+  console.log(moo); // Mooo
+  console.log(baz); // ReferenceError
+}
+
+run();</code></pre>
+</div>
+</div>
+</p>
+<p>The reason why <code>let</code> keyword was introduced to the language was function scope is confusing and was one of the main sources of bugs in JavaScript.</p>
+<p>Take a look at this example from <a href="https://stackoverflow.com/questions/750486/javascript-closure-inside-loops-simple-practical-example">another Stack Overflow question</a>:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var funcs = [];
+// let's create 3 functions
+for (var i = 0; i &lt; 3; i++) {
+  // and store them in funcs
+  funcs[i] = function() {
+    // each should log its value.
+    console.log("My value: " + i);
+  };
+}
+for (var j = 0; j &lt; 3; j++) {
+  // and now let's run each one to see
+  funcs[j]();
+}</code></pre>
+</div>
+</div>
+</p>
+<p><code>My value: 3</code> was output to console each time <code>funcs[j]();</code> was invoked since anonymous functions were bound to the same variable.</p>
+<p>People had to create immediately invoked functions to capture correct values from the loops but that was also hairy.</p>
+<h1>Hoisting</h1>
+<p>While variables declared with <code>var</code> keyword are <a href="https://dev.to/godcrampy/the-secret-of-hoisting-in-javascript-egi" rel="noreferrer">hoisted</a> (initialized with <code>undefined</code> before the code is run) which means they are accessible in their enclosing scope even before they are declared:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function run() {
+  console.log(foo); // undefined
+  var foo = "Foo";
+  console.log(foo); // Foo
+}
+
+run();</code></pre>
+</div>
+</div>
+</p>
+<p><code>let</code> variables are not initialized until their definition is evaluated. Accessing them before the initialization results in a <code>ReferenceError</code>. The variable is said to be in &quot;temporal dead zone&quot; from the start of the block until the initialization is processed.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function checkHoisting() {
+  console.log(foo); // ReferenceError
+  let foo = "Foo";
+  console.log(foo); // Foo
+}
+
+checkHoisting();</code></pre>
+</div>
+</div>
+</p>
+<h1>Creating global object property</h1>
+<p>At the top level, <code>let</code>, unlike <code>var</code>, does not create a property on the global object:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var foo = "Foo";  // globally scoped
+let bar = "Bar"; // not allowed to be globally scoped
+
+console.log(window.foo); // Foo
+console.log(window.bar); // undefined</code></pre>
+</div>
+</div>
+</p>
+<h1>Redeclaration</h1>
+<p>In strict mode, <code>var</code> will let you re-declare the same variable in the same scope while <code>let</code> raises a SyntaxError.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>'use strict';
+var foo = "foo1";
+var foo = "foo2"; // No problem, 'foo1' is replaced with 'foo2'.
+
+let bar = "bar1"; 
+let bar = "bar2"; // SyntaxError: Identifier 'bar' has already been declared</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 812 people.</p><div class="s-prose js-post-body"><p><code>let</code> can also be used to avoid problems with closures. It binds fresh value rather than keeping an old reference as shown in examples below.</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>for(var i=1; i&lt;6; i++) {
+  $("#div" + i).click(function () { console.log(i); });
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"&gt;&lt;/script&gt;
+&lt;p&gt;Clicking on each number will log to console:&lt;/p&gt; 
+&lt;div id="div1"&gt;1&lt;/div&gt;
+&lt;div id="div2"&gt;2&lt;/div&gt;
+&lt;div id="div3"&gt;3&lt;/div&gt;
+&lt;div id="div4"&gt;4&lt;/div&gt;
+&lt;div id="div5"&gt;5&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>Code above demonstrates a classic JavaScript closure problem. Reference to the <code>i</code> variable is being stored in the click handler closure, rather than the actual value of <code>i</code>.</p>
+
+<p>Every single click handler will refer to the same object because there’s only one counter object which holds 6 so you get six on each click.</p>
+
+<p>A general workaround is to wrap this in an anonymous function and pass <code>i</code> as an argument. Such issues can also be avoided now by using <code>let</code> instead <code>var</code> as shown in the code below.</p>
+
+<p><sub>(Tested in Chrome and Firefox 50)</sub></p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>for(let i=1; i&lt;6; i++) {
+  $("#div" + i).click(function () { console.log(i); });
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"&gt;&lt;/script&gt;
+&lt;p&gt;Clicking on each number will log to console:&lt;/p&gt; 
+&lt;div id="div1"&gt;1&lt;/div&gt;
+&lt;div id="div2"&gt;2&lt;/div&gt;
+&lt;div id="div3"&gt;3&lt;/div&gt;
+&lt;div id="div4"&gt;4&lt;/div&gt;
+&lt;div id="div5"&gt;5&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 327 people.</p><div class="s-prose js-post-body"><h3>What's the difference between <code>let</code> and <code>var</code>?</h3>
+<ul>
+<li>A variable defined using a <code>var</code> statement is known throughout <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/function" rel="noreferrer"><strong>the function</strong></a> it is defined in, from the start of the function. <em>(*)</em></li>
+<li>A variable defined using a <code>let</code> statement is only known in <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/block" rel="noreferrer"><strong>the block</strong></a> it is defined in, from the moment it is defined onward. <em>(**)</em></li>
+</ul>
+<p>To understand the difference, consider the following code:</p>
+<pre><code>// i IS NOT known here
+// j IS NOT known here
+// k IS known here, but undefined
+// l IS NOT known here
+
+function loop(arr) {
+    // i IS known here, but undefined
+    // j IS NOT known here
+    // k IS known here, but has a value only the second time loop is called
+    // l IS NOT known here
+
+    for( var i = 0; i &lt; arr.length; i++ ) {
+        // i IS known here, and has a value
+        // j IS NOT known here
+        // k IS known here, but has a value only the second time loop is called
+        // l IS NOT known here
+    };
+
+    // i IS known here, and has a value
+    // j IS NOT known here
+    // k IS known here, but has a value only the second time loop is called
+    // l IS NOT known here
+
+    for( let j = 0; j &lt; arr.length; j++ ) {
+        // i IS known here, and has a value
+        // j IS known here, and has a value
+        // k IS known here, but has a value only the second time loop is called
+        // l IS NOT known here
+    };
+
+    // i IS known here, and has a value
+    // j IS NOT known here
+    // k IS known here, but has a value only the second time loop is called
+    // l IS NOT known here
+}
+
+loop([1,2,3,4]);
+
+for( var k = 0; k &lt; arr.length; k++ ) {
+    // i IS NOT known here
+    // j IS NOT known here
+    // k IS known here, and has a value
+    // l IS NOT known here
+};
+
+for( let l = 0; l &lt; arr.length; l++ ) {
+    // i IS NOT known here
+    // j IS NOT known here
+    // k IS known here, and has a value
+    // l IS known here, and has a value
+};
+
+loop([1,2,3,4]);
+
+// i IS NOT known here
+// j IS NOT known here
+// k IS known here, and has a value
+// l IS NOT known here
+</code></pre>
+<p>Here, we can see that our variable <code>j</code> is only known in the first for loop, but not before and after. Yet, our variable <code>i</code> is known in the entire function.</p>
+<p>Also, consider that block scoped variables are not known before they are declared because they are not hoisted. You're also not allowed to redeclare the same block scoped variable within the same block. This makes block scoped variables less error prone than globally or functionally scoped variables, which are hoisted and which do not produce any errors in case of multiple declarations.</p>
+<hr />
+<h3>Is it safe to use <code>let</code> today?</h3>
+<p>Some people would argue that in the future we'll ONLY use let statements and that var statements will become obsolete. JavaScript guru <a href="https://twitter.com/getify" rel="noreferrer"><strong>Kyle Simpson</strong></a> wrote <a href="https://davidwalsh.name/for-and-against-let" rel="noreferrer"><strong>a very elaborate article on why he believes that won't be the case</strong></a>.</p>
+<p>Today, however, that is definitely not the case. In fact, we need actually to ask ourselves whether it's safe to use the <code>let</code> statement. The answer to that question depends on your environment:</p>
+<ul>
+<li><p>If you're writing server-side JavaScript code (<a href="https://nodejs.org/en/" rel="noreferrer"><strong>Node.js</strong></a>), you can safely use the <code>let</code> statement.</p>
+</li>
+<li><p>If you're writing client-side JavaScript code and use a browser based transpiler (like <a href="https://github.com/google/traceur-compiler" rel="noreferrer"><strong>Traceur</strong></a> or <a href="https://github.com/babel/babel-standalone" rel="noreferrer"><strong>babel-standalone</strong></a>), you can safely use the <code>let</code> statement, however your code is likely to be anything but optimal with respect to performance.</p>
+</li>
+<li><p>If you're writing client-side JavaScript code and use a Node based transpiler (like the <a href="https://github.com/google/traceur-compiler/wiki/Compiling-Offline" rel="noreferrer"><strong>traceur shell script</strong></a> or <a href="https://babeljs.io/" rel="noreferrer"><strong>Babel</strong></a>), you can safely use the <code>let</code> statement. And, because your browser will only know about the transpiled code, performance drawbacks should be limited.</p>
+</li>
+<li><p>If you're writing client-side JavaScript code and don't use a transpiler, you need to consider browser support.</p>
+<p>There are still some browsers that don't support <code>let</code> at all :</p>
+</li>
+</ul>
+<p><a href="https://i.stack.imgur.com/J9kEC.png" rel="noreferrer"><img src="https://i.stack.imgur.com/J9kEC.png" alt="enter image description here" /></a></p>
+<hr />
+<h3>How to keep track of browser support</h3>
+<p>For an up-to-date overview of which browsers support the <code>let</code> statement at the time of your reading this answer, see <a href="http://caniuse.com/#search=let" rel="noreferrer"><strong>this <code>Can I Use</code> page</strong></a>.</p>
+<hr />
+<p><em>(*) Globally and functionally scoped variables can be initialized and used before they are declared because JavaScript variables are <a href="https://developer.mozilla.org/en-US/docs/Glossary/Hoisting" rel="noreferrer"><strong>hoisted</strong></a>.</em> This means that declarations are always moved to the top of the scope.</p>
+<p><em>(**) Block scoped variables are not hoisted</em></p>
+</div><p class="this-has-helped">This answer has helped 182 people.</p><div class="s-prose js-post-body"><p>Here's an <a href="https://developer.mozilla.org/en/New_in_JavaScript_1.7#Block_scope_with_let" rel="noreferrer">explanation of the <code>let</code> keyword</a> with some examples.</p>
+
+<blockquote>
+  <p><code>let</code> works very much like <code>var</code>. The main difference is that the scope of a <code>var</code> variable is the entire enclosing function</p>
+</blockquote>
+
+<p><a href="http://en.wikipedia.org/wiki/JavaScript#Version_history" rel="noreferrer">This table</a> on Wikipedia shows which browsers support Javascript 1.7.</p>
+
+<p>Note that only Mozilla and Chrome browsers support it. IE, Safari, and potentially others don't.</p>
+</div><p class="this-has-helped">This answer has helped 148 people.</p><div class="s-prose js-post-body"><h1><code>let</code></h1>
+<h2>Block scope</h2>
+<p>Variables declared using the <code>let</code> keyword are block-scoped, which means that they are available only in the <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/block" rel="noreferrer">block</a> in which they were declared.</p>
+<h3>At the top level (outside of a function)</h3>
+<p>At the top level, variables declared using <code>let</code> don't create properties on the global object.</p>
+<pre><code>var globalVariable = 42;
+let blockScopedVariable = 43;
+
+console.log(globalVariable); // 42
+console.log(blockScopedVariable); // 43
+
+console.log(this.globalVariable); // 42
+console.log(this.blockScopedVariable); // undefined
+</code></pre>
+<h3>Inside a function</h3>
+<p>Inside a function (but outside of a block), <code>let</code> has the same scope as <code>var</code>.</p>
+<pre><code>(() =&gt; {
+  var functionScopedVariable = 42;
+  let blockScopedVariable = 43;
+
+  console.log(functionScopedVariable); // 42
+  console.log(blockScopedVariable); // 43
+})();
+
+console.log(functionScopedVariable); // ReferenceError: functionScopedVariable is not defined
+console.log(blockScopedVariable); // ReferenceError: blockScopedVariable is not defined
+</code></pre>
+<h3>Inside a block</h3>
+<p>Variables declared using <code>let</code> inside a block can't be accessed outside that block.</p>
+<pre><code>{
+  var globalVariable = 42;
+  let blockScopedVariable = 43;
+  console.log(globalVariable); // 42
+  console.log(blockScopedVariable); // 43
+}
+
+console.log(globalVariable); // 42
+console.log(blockScopedVariable); // ReferenceError: blockScopedVariable is not defined
+</code></pre>
+<h3>Inside a loop</h3>
+<p>Variables declared with <code>let</code> in loops can be referenced only inside that loop.</p>
+<pre><code>for (var i = 0; i &lt; 3; i++) {
+  var j = i * 2;
+}
+console.log(i); // 3
+console.log(j); // 4
+
+for (let k = 0; k &lt; 3; k++) {
+  let l = k * 2;
+}
+console.log(typeof k); // undefined
+console.log(typeof l); // undefined
+// Trying to do console.log(k) or console.log(l) here would throw a ReferenceError.
+</code></pre>
+<h3>Loops with closures</h3>
+<p>If you use <code>let</code> instead of <code>var</code> in a loop, with each iteration you get a new variable. That means that you can safely use a closure inside a loop.</p>
+<pre><code>// Logs 3 thrice, not what we meant.
+for (var i = 0; i &lt; 3; i++) {
+  setTimeout(() =&gt; console.log(i), 0);
+}
+
+// Logs 0, 1 and 2, as expected.
+for (let j = 0; j &lt; 3; j++) {
+  setTimeout(() =&gt; console.log(j), 0);
+}
+</code></pre>
+<h2>Temporal dead zone</h2>
+<p>Because of <a href="https://stackoverflow.com/q/33198849/3853934">the temporal dead zone</a>, variables declared using <code>let</code> can't be accessed before they are declared. Attempting to do so throws an error.</p>
+<pre><code>console.log(noTDZ); // undefined
+var noTDZ = 43;
+console.log(hasTDZ); // ReferenceError: hasTDZ is not defined
+let hasTDZ = 42;
+</code></pre>
+<h2>No re-declaring</h2>
+<p>You can't declare the same variable multiple times using <code>let</code>. You also can't declare a variable using <code>let</code> with the same identifier as another variable which was declared using <code>var</code>.</p>
+<pre><code>var a;
+var a; // Works fine.
+
+let b;
+let b; // SyntaxError: Identifier 'b' has already been declared
+
+var c;
+let c; // SyntaxError: Identifier 'c' has already been declared
+</code></pre>
+<h1><code>const</code></h1>
+<p><code>const</code> is quite similar to <code>let</code>—it's block-scoped and has TDZ. There are, however, two things which are different.</p>
+<h2>No re-assigning</h2>
+<p>Variable declared using <code>const</code> can't be re-assigned.</p>
+<pre><code>const a = 42;
+a = 43; // TypeError: Assignment to constant variable.
+</code></pre>
+<p>Note that it doesn't mean that the value is immutable. Its properties still can be changed.</p>
+<pre><code>const obj = {};
+obj.a = 42;
+console.log(obj.a); // 42
+</code></pre>
+<p>If you want to have an immutable object, you should use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/freeze" rel="noreferrer"><code>Object.freeze()</code></a>.</p>
+<pre><code>const obj = Object.freeze({a: 40});
+obj.a = 42;
+console.log(obj.a); // 40
+console.log(obj.b); // undefined
+</code></pre>
+<h2>Initializer is required</h2>
+<p>You always must specify a value when declaring a variable using <code>const</code>.</p>
+<pre><code>const a; // SyntaxError: Missing initializer in const declaration
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 143 people.</p><div class="s-prose js-post-body"><p>The accepted answer is missing a point:</p>
+
+<pre><code>{
+  let a = 123;
+};
+
+console.log(a); // ReferenceError: a is not defined
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 108 people.</p><div class="s-prose js-post-body"><h2>In most basic terms,</h2>
+
+<pre><code>for (let i = 0; i &lt; 5; i++) {
+  // i accessible ✔️
+}
+// i not accessible ❌
+</code></pre>
+
+<hr>
+
+<pre><code>for (var i = 0; i &lt; 5; i++) {
+  // i accessible ✔️
+}
+// i accessible ✔️
+</code></pre>
+
+<hr>
+
+<p>⚡️ Sandbox to play around &darr;</p>
+
+<p><a href="https://codesandbox.io/s/let-vs-var-emzh5?fontsize=14&amp;hidenavigation=1&amp;theme=dark" rel="noreferrer"><img src="https://codesandbox.io/static/img/play-codesandbox.svg" alt="Edit let vs var"></a></p>
+</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><p>The main difference is the <strong>scope</strong> difference, while <strong>let</strong> can be only available inside the <strong>scope</strong> it's declared, like in for loop, <strong>var</strong> can be accessed outside the loop for example. From the documentation in <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/let" rel="noreferrer">MDN</a> (examples also from MDN):</p>
+
+<blockquote>
+  <p><strong>let</strong> allows you to declare variables that are limited in scope to the block, statement, or expression on which it is used. This is unlike the <strong>var</strong> keyword, which defines a variable globally, or locally to an entire function regardless of block scope.</p>
+  
+  <p>Variables declared by <strong>let</strong> have as their scope the block in which they are defined, as well as in any contained sub-blocks. In this way, <strong>let</strong> works very much like <strong>var</strong>. The main difference is that the scope of a <strong>var</strong> variable is the entire enclosing function:</p>
+</blockquote>
+
+<pre><code>function varTest() {
+  var x = 1;
+  if (true) {
+    var x = 2;  // same variable!
+    console.log(x);  // 2
+  }
+  console.log(x);  // 2
+}
+
+function letTest() {
+  let x = 1;
+  if (true) {
+    let x = 2;  // different variable
+    console.log(x);  // 2
+  }
+  console.log(x);  // 1
+}`
+</code></pre>
+
+<blockquote>
+  <p>At the top level of programs and functions, <strong>let</strong>, unlike <strong>var</strong>, does not create a property on the global object. For example:</p>
+</blockquote>
+
+<pre><code>var x = 'global';
+let y = 'global';
+console.log(this.x); // "global"
+console.log(this.y); // undefined
+</code></pre>
+
+<blockquote>
+  <p>When used inside a block, let limits the variable's scope to that block. Note the difference between <strong>var</strong> whose scope is inside the function where it is declared.</p>
+</blockquote>
+
+<pre><code>var a = 1;
+var b = 2;
+
+if (a === 1) {
+  var a = 11; // the scope is global
+  let b = 22; // the scope is inside the if-block
+
+  console.log(a);  // 11
+  console.log(b);  // 22
+} 
+
+console.log(a); // 11
+console.log(b); // 2
+</code></pre>
+
+<p>Also don't forget it's ECMA6 feature, so it's not fully supported yet, so it's better always transpiles it to ECMA5 using Babel etc... for more info about visit <a href="https://babeljs.io" rel="noreferrer">babel website</a></p>
+</div><p class="this-has-helped">This answer has helped 65 people.</p><div class="s-prose js-post-body"><p>Here is an example of the difference between the two:<br />
+<img src="https://i.stack.imgur.com/dqNYW.png" alt="enter image description here" /></p>
+<p>As you can see, the <code>var j</code> variable still has a value outside the for loop scope (Block Scope), but the <code>let i</code> variable is undefined outside of the for loop scope.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>"use strict";
+console.log("var:");
+for (var j = 0; j &lt; 2; j++) {
+  console.log(j);
+}
+
+console.log(j);
+
+console.log("let:");
+for (let i = 0; i &lt; 2; i++) {
+  console.log(i);
+}
+
+console.log(i);</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 63 people.</p><div class="s-prose js-post-body"><p>There are some subtle differences &mdash; <code>let</code> scoping behaves more like variable scoping does in more or less any other languages. </p>
+
+<p>e.g. It scopes to the enclosing block, They don't exist before they're declared, etc.</p>
+
+<p>However it's worth noting that <code>let</code> is only a part of newer Javascript implementations and has varying degrees of <a href="http://caniuse.com/#search=let" rel="noreferrer">browser support</a>.</p>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><ul>
+<li><p><del><strong>Variable Not Hoisting</strong></del></p>
+
+<p><del><code>let</code> will <strong>not hoist</strong> to the entire scope of the block they appear in. By contrast, <code>var</code> could hoist as below.</del></p>
+
+<pre><code>{
+   console.log(cc); // undefined. Caused by hoisting
+   var cc = 23;
+}
+
+{
+   console.log(bb); // ReferenceError: bb is not defined
+   let bb = 23;
+}
+</code></pre>
+
+<p>Actually, Per @Bergi, <a href="https://stackoverflow.com/questions/31219420/are-variables-declared-with-let-or-const-not-hoisted-in-es6">Both <code>var</code> and <code>let</code> are hoisted</a>.</p></li>
+<li><p><strong>Garbage Collection</strong></p>
+
+<p>Block scope of <code>let</code> is useful relates to closures and garbage collection to reclaim memory. Consider,</p>
+
+<pre><code>function process(data) {
+    //...
+}
+
+var hugeData = { .. };
+
+process(hugeData);
+
+var btn = document.getElementById("mybutton");
+btn.addEventListener( "click", function click(evt){
+    //....
+});
+</code></pre>
+
+<p>The <code>click</code> handler callback does not need the <code>hugeData</code> variable at all. Theoretically, after <code>process(..)</code> runs, the huge data structure <code>hugeData</code> could be garbage collected. However, it's possible that some JS engine will still have to keep this huge structure, since the <code>click</code> function has a closure over the entire scope.</p>
+
+<p>However, the block scope can make this huge data structure to garbage collected.</p>
+
+<pre><code>function process(data) {
+    //...
+}
+
+{ // anything declared inside this block can be garbage collected
+    let hugeData = { .. };
+    process(hugeData);
+}
+
+var btn = document.getElementById("mybutton");
+btn.addEventListener( "click", function click(evt){
+    //....
+});
+</code></pre></li>
+<li><p><strong><code>let</code> loops</strong></p>
+
+<p><code>let</code> in the loop can <strong>re-binds it</strong> to each iteration of the loop, making sure to re-assign it the value from the end of the previous loop iteration. Consider,</p>
+
+<pre><code>// print '5' 5 times
+for (var i = 0; i &lt; 5; ++i) {
+    setTimeout(function () {
+        console.log(i);
+    }, 1000);  
+}
+</code></pre>
+
+<p>However, replace <code>var</code> with <code>let</code></p>
+
+<pre><code>// print 1, 2, 3, 4, 5. now
+for (let i = 0; i &lt; 5; ++i) {
+    setTimeout(function () {
+        console.log(i);
+    }, 1000);  
+}
+</code></pre>
+
+<p>Because <code>let</code> create a new lexical environment with those names for a) the initialiser expression b) each iteration (previosly to evaluating the increment expression), more details are <a href="https://stackoverflow.com/a/30900289/3011380">here</a>.</p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>The difference is in the <a href="https://en.wikipedia.org/wiki/Variable_(computer_science)#Scope_and_extent" rel="noreferrer">scope</a> of the variables declared with each.</p>
+
+<p>In practice, there are a number of useful consequences of the difference in scope:</p>
+
+<ol>
+<li><code>let</code> variables are only visible in their <em>nearest enclosing</em> block (<code>{ ... }</code>).</li>
+<li><code>let</code> variables are only usable in lines of code that occur <em>after</em> the variable is declared (even though <a href="/questions/33198849">they are hoisted</a>!).</li>
+<li><code>let</code> variables may not be redeclared by a subsequent <code>var</code> or <code>let</code>.</li>
+<li>Global <code>let</code> variables are not added to the global <code>window</code> object.</li>
+<li><code>let</code> variables are <em>easy to use</em> with closures (they do not cause <a href="https://en.wikipedia.org/wiki/Race_condition#Software" rel="noreferrer">race conditions</a>).</li>
+</ol>
+
+<p>The restrictions imposed by <code>let</code> reduce the visibility of the variables and increase the likelihood that unexpected name collisions will be found early.  This makes it easier to track and reason about variables, including their <a href="https://en.wikipedia.org/wiki/Unreachable_memory" rel="noreferrer">reachability</a>(helping with reclaiming unused memory).</p>
+
+<p>Consequently, <code>let</code> variables are less likely to cause problems when used in large programs or when independently-developed frameworks are combined in new and unexpected ways.</p>
+
+<p><code>var</code> may still be useful if you are sure you want the single-binding effect when using a closure in a loop (#5) or for declaring externally-visible global variables in your code (#4).  Use of <code>var</code> for exports may be supplanted if <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export" rel="noreferrer"><code>export</code></a> migrates out of transpiler space and into the core language.</p>
+
+<h1>Examples</h1>
+
+<p><strong>1. No use outside nearest enclosing block:</strong>
+This block of code will throw a reference error because the second use of <code>x</code> occurs outside of the block where it is declared with <code>let</code>:
+</p>
+
+<pre><code>{
+    let x = 1;
+}
+console.log(`x is ${x}`);  // ReferenceError during parsing: "x is not defined".
+</code></pre>
+
+<p>In contrast, the same example with <code>var</code> works.</p>
+
+<p><strong>2. No use before declaration:</strong><br>
+This block of code will throw a <code>ReferenceError</code> before the code can be run because <code>x</code> is used before it is declared: </p>
+
+<pre><code>{
+    x = x + 1;  // ReferenceError during parsing: "x is not defined".
+    let x;
+    console.log(`x is ${x}`);  // Never runs.
+}
+</code></pre>
+
+<p>In contrast, the same example with <code>var</code> parses and runs without throwing any exceptions.</p>
+
+<p><strong>3. No redeclaration:</strong>
+The following code demonstrates that a variable declared with <code>let</code> may not be redeclared later: </p>
+
+<pre><code>let x = 1;
+let x = 2;  // SyntaxError: Identifier 'x' has already been declared
+</code></pre>
+
+<p><strong>4. Globals not attached to <code>window</code>:</strong>
+</p>
+
+<pre><code>var button = "I cause accidents because my name is too common.";
+let link = "Though my name is common, I am harder to access from other JS files.";
+console.log(link);  // OK
+console.log(window.link);  // undefined (GOOD!)
+console.log(window.button);  // OK
+</code></pre>
+
+<p><strong>5. Easy use with closures:</strong>
+Variables declared with <code>var</code> do not work well with closures inside loops.  Here is a simple loop that outputs the sequence of values that the variable <code>i</code> has at different points in time: </p>
+
+<pre><code>for (let i = 0; i &lt; 5; i++) {
+    console.log(`i is ${i}`), 125/*ms*/);
+}
+</code></pre>
+
+<p>Specifically, this outputs:</p>
+
+<pre><code>i is 0
+i is 1
+i is 2
+i is 3
+i is 4
+</code></pre>
+
+<p>In JavaScript we often use variables at a significantly later time than when they are created.  When we demonstrate this by delaying the output with a closure passed to <code>setTimeout</code>: </p>
+
+<pre><code>for (let i = 0; i &lt; 5; i++) {
+    setTimeout(_ =&gt; console.log(`i is ${i}`), 125/*ms*/);
+}
+</code></pre>
+
+<p>... the output remains unchanged as long as we stick with <code>let</code>.  In contrast, if we had used <code>var i</code> instead: </p>
+
+<pre><code>for (var i = 0; i &lt; 5; i++) {
+    setTimeout(_ =&gt; console.log(`i is ${i}`), 125/*ms*/);
+}
+</code></pre>
+
+<p>... the loop unexpectedly outputs "i is 5" five times:</p>
+
+<pre><code>i is 5
+i is 5
+i is 5
+i is 5
+i is 5
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>Here's an example to add on to what others have already written. Suppose you want to make an array of functions, <code>adderFunctions</code>, where each function takes a single Number argument and returns the sum of the argument and the function's index in the array. Trying to generate <code>adderFunctions</code> with a loop using the <code>var</code> keyword won't work the way someone might naïvely expect:</p>
+
+<pre><code>// An array of adder functions.
+var adderFunctions = [];
+
+for (var i = 0; i &lt; 1000; i++) {
+  // We want the function at index i to add the index to its argument.
+  adderFunctions[i] = function(x) {
+    // What is i bound to here?
+    return x + i;
+  };
+}
+
+var add12 = adderFunctions[12];
+
+// Uh oh. The function is bound to i in the outer scope, which is currently 1000.
+console.log(add12(8) === 20); // =&gt; false
+console.log(add12(8) === 1008); // =&gt; true
+console.log(i); // =&gt; 1000
+
+// It gets worse.
+i = -8;
+console.log(add12(8) === 0); // =&gt; true
+</code></pre>
+
+<p>The process above doesn't generate the desired array of functions because <code>i</code>'s scope extends beyond the iteration of the <code>for</code> block in which each function was created. Instead, at the end of the loop, the <code>i</code> in each function's closure refers to <code>i</code>'s value at the end of the loop (1000) for every anonymous function in <code>adderFunctions</code>. This isn't what we wanted at all: we now have an array of 1000 different functions in memory with exactly the same behavior. And if we subsequently update the value of <code>i</code>, the mutation will affect all the <code>adderFunctions</code>.</p>
+
+<p>However, we can try again using the <code>let</code> keyword:</p>
+
+<pre><code>// Let's try this again.
+// NOTE: We're using another ES6 keyword, const, for values that won't
+// be reassigned. const and let have similar scoping behavior.
+const adderFunctions = [];
+
+for (let i = 0; i &lt; 1000; i++) {
+  // NOTE: We're using the newer arrow function syntax this time, but 
+  // using the "function(x) { ..." syntax from the previous example 
+  // here would not change the behavior shown.
+  adderFunctions[i] = x =&gt; x + i;
+}
+
+const add12 = adderFunctions[12];
+
+// Yay! The behavior is as expected. 
+console.log(add12(8) === 20); // =&gt; true
+
+// i's scope doesn't extend outside the for loop.
+console.log(i); // =&gt; ReferenceError: i is not defined
+</code></pre>
+
+<p>This time, <code>i</code> is rebound on each iteration of the <code>for</code> loop. Each function now keeps the value of <code>i</code> at the time of the function's creation, and <code>adderFunctions</code> behaves as expected.</p>
+
+<p>Now, image mixing the two behaviors and you'll probably see why it's not recommended to mix the newer <code>let</code> and <code>const</code> with the older <code>var</code> in the same script. Doing so can result is some spectacularly confusing code.</p>
+
+<pre><code>const doubleAdderFunctions = [];
+
+for (var i = 0; i &lt; 1000; i++) {
+    const j = i;
+    doubleAdderFunctions[i] = x =&gt; x + i + j;
+}
+
+const add18 = doubleAdderFunctions[9];
+const add24 = doubleAdderFunctions[12];
+
+// It's not fun debugging situations like this, especially when the
+// code is more complex than in this example.
+console.log(add18(24) === 42); // =&gt; false
+console.log(add24(18) === 42); // =&gt; false
+console.log(add18(24) === add24(18)); // =&gt; false
+console.log(add18(24) === 2018); // =&gt; false
+console.log(add24(18) === 2018); // =&gt; false
+console.log(add18(24) === 1033); // =&gt; true
+console.log(add24(18) === 1030); // =&gt; true
+</code></pre>
+
+<p>Don't let this happen to you. Use a linter.</p>
+
+<blockquote>
+  <p><strong>NOTE:</strong> This is a teaching example intended to demonstrate the <code>var</code>/<code>let</code> behavior in loops and with function closures that would also be easy to understand. This would be a terrible way to add numbers. But the general technique of capturing data in anonymous function closures might be encountered in the real world in other contexts. YMMV.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>May the following two functions show the difference:</p>
+
+<pre><code>function varTest() {
+    var x = 31;
+    if (true) {
+        var x = 71;  // Same variable!
+        console.log(x);  // 71
+    }
+    console.log(x);  // 71
+}
+
+function letTest() {
+    let x = 31;
+    if (true) {
+        let x = 71;  // Different variable
+        console.log(x);  // 71
+    }
+    console.log(x);  // 31
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>ES6 introduced two new keyword(<strong>let</strong> and <strong>const</strong>) alternate to <strong>var</strong>.</p>
+<p>When you need a block level deceleration you can go with let and const instead of var.</p>
+<p>The below table summarize the difference between var, let and const</p>
+<p><a href="https://i.stack.imgur.com/GBn5a.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/GBn5a.jpg" alt="enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><h2>Function VS block scope:</h2>
+
+<p>The main difference between <code>var</code> and <code>let</code> is that variables declared with <code>var</code> are <strong>function scoped</strong>. Whereas functions declared with <code>let</code> are <strong>block scoped</strong>. For example:</p>
+
+<pre><code>function testVar () {
+  if(true) {
+    var foo = 'foo';
+  }
+
+  console.log(foo);
+}
+
+testVar();  
+// logs 'foo'
+
+
+function testLet () {
+  if(true) {
+    let bar = 'bar';
+  }
+
+  console.log(bar);
+}
+
+testLet(); 
+// reference error
+// bar is scoped to the block of the if statement 
+</code></pre>
+
+<p><strong>variables with <code>var</code>:</strong></p>
+
+<p>When the first function <code>testVar</code> gets called the variable foo, declared with <code>var</code>, is still accessible outside the <code>if</code> statement. This variable <code>foo</code> would be available <strong>everywhere</strong> within the scope of the <code>testVar</code> <strong>function</strong>.</p>
+
+<p><strong>variables with <code>let</code>:</strong></p>
+
+<p>When the second function <code>testLet</code> gets called the variable bar, declared with <code>let</code>, is only accessible inside the <code>if</code> statement. Because variables declared with <code>let</code> are <strong>block scoped</strong> (where a block is the code between curly brackets e.g <code>if{}</code> , <code>for{}</code>, <code>function{}</code>). </p>
+
+<h2><code>let</code> variables don't get hoisted:</h2>
+
+<p>Another difference between <code>var</code> and <code>let</code> is variables with declared with <code>let</code> <strong>don't get hoisted</strong>. An example is the best way to illustrate this behavior:</p>
+
+<p>variables with <code>let</code> <strong>don't</strong> get hoisted:</p>
+
+<pre><code>console.log(letVar);
+
+let letVar = 10;
+// referenceError, the variable doesn't get hoisted
+</code></pre>
+
+<p>variables with <code>var</code> <strong>do</strong> get hoisted:</p>
+
+<pre><code>console.log(varVar);
+
+var varVar = 10;
+// logs undefined, the variable gets hoisted
+</code></pre>
+
+<h2>Global <code>let</code> doesn't get attached to <code>window</code>:</h2>
+
+<p>A variable declared with <code>let</code> in the global scope (which is code that is not in a function) doesn't get added as a property on the global <code>window</code> object. For example (this code is in global scope):</p>
+
+<pre><code>var bar = 5;
+let foo  = 10;
+
+console.log(bar); // logs 5
+console.log(foo); // logs 10
+
+console.log(window.bar);  
+// logs 5, variable added to window object
+
+console.log(window.foo);
+// logs undefined, variable not added to window object
+</code></pre>
+
+<p><br></p>
+
+<blockquote>
+  <p><strong>When should <code>let</code> be used over <code>var</code>?</strong></p>
+</blockquote>
+
+<p>Use <code>let</code> over <code>var</code> whenever you can because it is simply scoped more specific. This reduces potential naming conflicts which can occur when dealing with a large number of variables. <code>var</code> can be used when you want a global variable explicitly to be on the <code>window</code> object (always consider carefully if this is really necessary). </p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p><code>let</code> is interesting, because it allows us to do something like this:</p>
+
+<pre><code>(() =&gt; {
+    var count = 0;
+
+    for (let i = 0; i &lt; 2; ++i) {
+        for (let i = 0; i &lt; 2; ++i) {
+            for (let i = 0; i &lt; 2; ++i) {
+                console.log(count++);
+            }
+        }
+    }
+})();
+</code></pre>
+
+<p>Which results in counting [0, 7].</p>
+
+<p>Whereas</p>
+
+<pre><code>(() =&gt; {
+    var count = 0;
+
+    for (var i = 0; i &lt; 2; ++i) {
+        for (var i = 0; i &lt; 2; ++i) {
+            for (var i = 0; i &lt; 2; ++i) {
+                console.log(count++);
+            }
+        }
+    }
+})();
+</code></pre>
+
+<p>Only counts [0, 1].</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>This explanation is taken from an article I wrote at <a href="https://blog.devgenius.io/how-does-hoisting-in-javascript-works-80614300cb98" rel="nofollow noreferrer">Medium</a>:</p>
+<blockquote>
+<p>Hoisting is a JavaScript mechanism where variables and function
+declarations are moved to the top of their scope by the parser which
+reads the source code into an intermediate representation before the
+actual code execution starts by the JavaScript interpreter. So, it actually
+doesn’t matter where variables or functions are declared, they will be
+moved to the top of their scope regardless of whether their scope is
+global or local. This means that</p>
+<pre><code>console.log (hi);     
+var hi = &quot;say hi&quot;;
+</code></pre>
+<p>is actually interpreted to</p>
+<pre><code>var hi = undefined;
+console.log (hi);
+hi = &quot;say hi&quot;;
+</code></pre>
+<p>So, as we saw just now, <code>var</code> variables are being hoisted to the top
+of their scope and are being initialized with the value of undefined
+which means that we can actually assign their value before actually
+declaring them in the code like so:</p>
+<pre><code>hi = “say hi”
+console.log (hi); // say hi
+var hi;
+</code></pre>
+<p>Regarding function declarations, we can invoke them before actually declaring them like so:</p>
+<pre><code>sayHi(); // Hi
+
+function sayHi() {
+   console.log('Hi');
+};
+</code></pre>
+<p>Function expressions, on the other hand, are not hoisted, so we’ll get the following error:</p>
+<pre><code>sayHi(); //Output: &quot;TypeError: sayHi is not a function
+
+var sayHi = function() {
+  console.log('Hi');
+}; 
+</code></pre>
+<p>ES6 introduced JavaScript developers the <code>let</code> and <code>const</code> keywords. While <code>let</code> and <code>const</code> are block-scoped and not function
+scoped as <code>var</code> it shouldn’t make a difference while discussing their
+hoisting behavior. We’ll start from the end, JavaScript hoists <code>let</code>
+and <code>const</code>.</p>
+<pre><code>console.log(hi); // Output: Cannot access 'hi' before initialization 
+let hi = 'Hi';
+</code></pre>
+<p>As we can see above, <code>let</code> doesn’t allow us to use undeclared
+variables, hence the interpreter explicitly output a reference error
+indicating that the <code>hi</code> variable cannot be accessed before
+initialization. The same error will occur if we change the above <code>let</code>
+to <code>const</code></p>
+<pre><code>console.log(hi); // Output: Cannot access 'hi' before initialization
+const hi = 'Hi';
+</code></pre>
+<p>So, bottom line, the JavaScript parser searches for variable
+declarations and functions and hoists them to the top of their scope
+before code execution and assign values to them in the memory so in
+case the interpreter will encounter them while executing the code he
+will recognize them and will be able to execute the code with their
+assigned values. Variables declared with <code>let</code> or <code>const</code> remain
+uninitialized at the beginning of execution while that variables
+declared with <code>var</code> are being initialized with a value of <code>undefined</code>.</p>
+<p>I added this visual illustration to better help understanding of how are the hoisted
+variables and function are being saved in the memory <a href="https://i.stack.imgur.com/7aRxL.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/7aRxL.png" alt="enter image
+description here" /></a></p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>It also appears that, at least in Visual Studio 2015, TypeScript 1.5, "var" allows multiple declarations of the same variable name in a block, and "let" doesn't.</p>
+
+<p>This won't generate a compile error:</p>
+
+<pre><code>var x = 1;
+var x = 2;
+</code></pre>
+
+<p>This will:</p>
+
+<pre><code>let x = 1;
+let x = 2;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><pre><code>var   --&gt; Function scope  
+let   --&gt; Block scope
+const --&gt; Block scope
+</code></pre>
+<p><strong>var</strong></p>
+<p>In this code sample, variable <code>i</code> is declared using <code>var</code>. Therefore, it has a <em>function scope</em>. It means you can access <code>i</code> from only inside the <code>function x</code>. You can't read it from outside the <code>function x</code></p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function x(){
+  var i = 100;
+  console.log(i); // 100
+}
+ 
+console.log(i); // Error. You can't do this
+
+x();</code></pre>
+</div>
+</div>
+</p>
+<p>In this sample, you can see <code>i</code> is declared inside a <code>if</code> block. But it's declared using <code>var</code>. Therefore, it gets function scope. It means still you can access variable <code>i</code> inside <code>function x</code>. Because <code>var</code> always get scoped to functions. Even though variable <code>i</code> is declared inside <code>if</code> block, because of it's using <code>var</code> it get scoped to parent <code>function x</code>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function x(){
+  if(true){
+    var i = 100;
+  }
+  console.log(i); 
+}
+
+x();</code></pre>
+</div>
+</div>
+</p>
+<p>Now variable <code>i</code> is declared inside the <code>function y</code>. Therefore, <code>i</code> scoped to <code>function y</code>. You can access <code>i</code> inside <code>function y</code>. But not from outside <code>function y</code>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function x(){
+  function y(){
+    var i = 100;
+    console.log(i);
+  }
+  
+  y();
+}
+
+x();</code></pre>
+</div>
+</div>
+</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function x(){
+  function y(){
+    var i = 100;
+  }
+  console.log(i); // ERROR
+}
+
+x();</code></pre>
+</div>
+</div>
+</p>
+<p><strong>let, const</strong></p>
+<p>let and const has block scope.</p>
+<p><code>const</code> and <code>let</code> behave same. But the difference is, when you assign value to <code>const</code> you can't re-assign. But you can re-assign values with <code>let</code>.</p>
+<p>In this example, variable <code>i</code> is declared inside an <code>if</code> block. So it can be only accessed from inside that <code>if</code> block. We can't access it from outside that <code>if</code> block. (here <code>const</code> work same as <code>let</code>)</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>if(true){
+  let i = 100;
+  console.log(i); // Output: 100
+}
+
+console.log(i); // Error</code></pre>
+</div>
+</div>
+</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function x(){
+  if(true){
+    let i = 100;
+    console.log(i); // Output: 100
+  }
+  console.log(i); // Error
+}
+
+x();</code></pre>
+</div>
+</div>
+</p>
+<p>Another difference with <code>(let, const)</code> vs <code>var</code> is you can access <code>var</code> defined variable before declaring it. It will give you <code>undefined</code>. But if you do that with <code>let</code> or <code>const</code> defined variable it will give you an error.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>console.log(x);
+var x = 100;</code></pre>
+</div>
+</div>
+</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>console.log(x); // ERROR
+let x = 100;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p><code>var</code> is global scope (hoist-able) variable.</p>
+
+<p><code>let</code> and <code>const</code> is block scope.</p>
+
+<blockquote>
+  <p>test.js</p>
+</blockquote>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>{
+    let l = 'let';
+    const c = 'const';
+    var v = 'var';
+    v2 = 'var 2';
+}
+
+console.log(v, this.v);
+console.log(v2, this.v2);
+console.log(l); // ReferenceError: l is not defined
+console.log(c); // ReferenceError: c is not defined</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>If I read the specs right then <code>let</code> <strong>thankfully</strong> can also be leveraged to avoid <a href="https://stackoverflow.com/questions/592396/what-is-the-purpose-of-a-self-executing-function-in-javascript#592414">self invoking functions</a> used to simulate private only members - <em>a popular design pattern that decreases code readability, complicates debugging, that adds no real code protection or other benefit - except maybe satisfying someone's desire for semantics, so stop using it. /rant</em></p>
+
+<pre><code>var SomeConstructor;
+
+{
+    let privateScope = {};
+
+    SomeConstructor = function SomeConstructor () {
+        this.someProperty = "foo";
+        privateScope.hiddenProperty = "bar";
+    }
+
+    SomeConstructor.prototype.showPublic = function () {
+        console.log(this.someProperty); // foo
+    }
+
+    SomeConstructor.prototype.showPrivate = function () {
+        console.log(privateScope.hiddenProperty); // bar
+    }
+
+}
+
+var myInstance = new SomeConstructor();
+
+myInstance.showPublic();
+myInstance.showPrivate();
+
+console.log(privateScope.hiddenProperty); // error
+</code></pre>
+
+<p>See '<a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/let#Emulating_private_interfaces" rel="noreferrer">Emulating private interfaces</a>'</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p><strong>When Using <code>let</code></strong></p>
+
+<p>The <code>let</code> keyword attaches the variable declaration to the scope of whatever block (commonly a <code>{ .. }</code> pair) it's contained in. In other words,<code>let</code> implicitly hijacks any block's scope for its variable declaration.</p>
+
+<p><code>let</code> variables cannot be accessed in the <code>window</code> object because they cannot be globally accessed.</p>
+
+<pre><code>function a(){
+    { // this is the Max Scope for let variable
+        let x = 12;
+    }
+    console.log(x);
+}
+a(); // Uncaught ReferenceError: x is not defined
+</code></pre>
+
+<p><strong>When Using <code>var</code></strong></p>
+
+<p><code>var</code> and variables in ES5 has scopes in functions meaning the variables are valid within the function and not outside the function itself.</p>
+
+<p><code>var</code> variables can be accessed in the <code>window</code> object because they cannot be globally accessed.</p>
+
+<pre><code>function a(){ // this is the Max Scope for var variable
+    { 
+        var x = 12;
+    }
+    console.log(x);
+}
+a(); // 12
+</code></pre>
+
+<p><strong>If you want to know more continue reading below</strong></p>
+
+<p>one of the most famous interview questions on scope also can suffice the exact use of <code>let</code> and <code>var</code> as below;</p>
+
+<p><strong>When using <code>let</code></strong></p>
+
+<pre><code>for (let i = 0; i &lt; 10 ; i++) {
+    setTimeout(
+        function a() {
+            console.log(i); //print 0 to 9, that is literally AWW!!!
+        }, 
+        100 * i);
+}
+</code></pre>
+
+<p>This is because when using <code>let</code>, for every loop iteration the variable is scoped and has its own copy.</p>
+
+<p><strong>When using <code>var</code></strong></p>
+
+<pre><code>for (var i = 0; i &lt; 10 ; i++) {
+    setTimeout(
+        function a() {
+            console.log(i); //print 10 times 10
+        }, 
+        100 * i);
+}
+</code></pre>
+
+<p>This is because when using <code>var</code>, for every loop iteration the variable is scoped and has shared copy.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>Some hacks with <code>let</code>:</p>
+
+<p>1.</p>
+
+<pre><code>    let statistics = [16, 170, 10];
+    let [age, height, grade] = statistics;
+
+    console.log(height)
+</code></pre>
+
+<p>2.</p>
+
+<pre><code>    let x = 120,
+    y = 12;
+    [x, y] = [y, x];
+    console.log(`x: ${x} y: ${y}`);
+</code></pre>
+
+<p>3.</p>
+
+<pre><code>    let node = {
+                   type: "Identifier",
+                   name: "foo"
+               };
+
+    let { type, name, value } = node;
+
+    console.log(type);      // "Identifier"
+    console.log(name);      // "foo"
+    console.log(value);     // undefined
+
+    let node = {
+        type: "Identifier"
+    };
+
+    let { type: localType, name: localName = "bar" } = node;
+
+    console.log(localType);     // "Identifier"
+    console.log(localName);     // "bar"
+</code></pre>
+
+<h3>Getter and setter with <code>let</code>:</h3>
+
+<pre><code>let jar = {
+    numberOfCookies: 10,
+    get cookies() {
+        return this.numberOfCookies;
+    },
+    set cookies(value) {
+        this.numberOfCookies = value;
+    }
+};
+
+console.log(jar.cookies)
+jar.cookies = 7;
+
+console.log(jar.cookies)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>let vs var. It's all about <strong>scope</strong>. </p>
+
+<p><strong>var variables are global</strong> and can be accessed basically everywhere, while <strong>let variables are not global</strong> and only exist until a closing parenthesis kills them. </p>
+
+<p>See my example below, and note how the lion (let) variable acts differently in the two console.logs; it becomes out of scope in the 2nd console.log.</p>
+
+<pre><code>var cat = "cat";
+let dog = "dog";
+
+var animals = () =&gt; {
+    var giraffe = "giraffe";
+    let lion = "lion";
+
+    console.log(cat);  //will print 'cat'.
+    console.log(dog);  //will print 'dog', because dog was declared outside this function (like var cat).
+
+    console.log(giraffe); //will print 'giraffe'.
+    console.log(lion); //will print 'lion', as lion is within scope.
+}
+
+console.log(giraffe); //will print 'giraffe', as giraffe is a global variable (var).
+console.log(lion); //will print UNDEFINED, as lion is a 'let' variable and is now out of scope.
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>I just came across one use case that I had to use <code>var</code> over <code>let</code> to introduce new variable. Here's a case:</p>
+<p>I want to create a new variable with dynamic variable names.</p>
+<pre><code>let variableName = 'a';
+eval(&quot;let &quot; + variableName + '= 10;');
+console.log(a);   // this doesn't work
+</code></pre>
+<pre><code>var variableName = 'a';
+eval(&quot;var &quot; + variableName + '= 10;');
+console.log(a);   // this works
+</code></pre>
+<p>The above code doesn't work because <code>eval</code> introduces a new block of code. The declaration using <code>var</code> will declare a variable outside of this block of code since <code>var</code> declares a variable in the function scope.</p>
+<p><code>let</code>, on the other hand, declares a variable in a block scope. So, <code>a</code> variable will only be visible in <code>eval</code> block.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>The below shows how 'let' and 'var' are different in the scope:</p>
+
+<pre><code>let gfoo = 123;
+if (true) {
+    let gfoo = 456;
+}
+console.log(gfoo); // 123
+
+var hfoo = 123;
+if (true) {
+    var hfoo = 456;
+}
+console.log(hfoo); // 456
+</code></pre>
+
+<p>The <code>gfoo</code>, defined by <code>let</code> initially is in the <strong>global scope</strong>, and when we declare <code>gfoo</code> again inside the <code>if clause</code> its <strong><em>scope changed</em></strong> and when a new value is assigned to the variable inside that scope it <strong>does not affect</strong> the global scope.</p>
+
+<p>Whereas <code>hfoo</code>, defined by <code>var</code> is initially in the <strong>global scope</strong>, but again when we declare it inside the <code>if clause</code>, it considers the global scope hfoo, although var has been used again to declare it. And when we re-assign its value we see that the global scope hfoo is also affected. This is the primary difference.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>let is a part of es6. These functions will explain the difference in easy way.</p>
+
+<pre><code>function varTest() {
+  var x = 1;
+  if (true) {
+    var x = 2;  // same variable!
+    console.log(x);  // 2
+  }
+  console.log(x);  // 2
+}
+
+function letTest() {
+  let x = 1;
+  if (true) {
+    let x = 2;  // different variable
+    console.log(x);  // 2
+  }
+  console.log(x);  // 1
+}
+</code></pre>
+</div></body></html>

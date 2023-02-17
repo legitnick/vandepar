@@ -1,0 +1,597 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Does Python have a ternary conditional operator?</p><div class="s-prose js-post-body"><p>Is there a <a href="https://en.wikipedia.org/wiki/%3F:#Python" rel="noreferrer">ternary conditional operator</a> in Python?</p>
+</div><p class="this-has-helped">This answer has helped 8806 people.</p><div class="s-prose js-post-body"><p>Yes, it was <a href="https://mail.python.org/pipermail/python-dev/2005-September/056846.html" rel="noreferrer" title="[Python-Dev] Conditional Expression Resolution">added</a> in version 2.5. The expression syntax is:</p>
+<pre class="lang-py prettyprint-override"><code>a if condition else b
+</code></pre>
+<p>First <code>condition</code> is evaluated, then exactly one of either <code>a</code> or <code>b</code> is evaluated and returned based on the <a href="https://en.wikipedia.org/wiki/Boolean_data_type" rel="noreferrer" title="Boolean data type">Boolean</a> value of <code>condition</code>. If <code>condition</code> evaluates to <code>True</code>, then <code>a</code> is evaluated and returned but <code>b</code> is ignored, or else when <code>b</code> is evaluated and returned but <code>a</code> is ignored.</p>
+<p>This allows short-circuiting because when <code>condition</code> is true only <code>a</code> is evaluated and <code>b</code> is not evaluated at all, but when <code>condition</code> is false only <code>b</code> is evaluated and <code>a</code> is not evaluated at all.</p>
+<p>For example:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; 'true' if True else 'false'
+'true'
+&gt;&gt;&gt; 'true' if False else 'false'
+'false'
+</code></pre>
+<p>Note that conditionals are an <em>expression</em>, not a <em>statement</em>. This means you can't use <strong>statements</strong> such as <code>pass</code>, or assignments with <code>=</code> (or &quot;augmented&quot; assignments like <code>+=</code>), within a conditional <strong>expression</strong>:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; pass if False else pass
+  File &quot;&lt;stdin&gt;&quot;, line 1
+    pass if False else pass
+         ^
+SyntaxError: invalid syntax
+
+&gt;&gt;&gt; # Python parses this as `x = (1 if False else y) = 2`
+&gt;&gt;&gt; # The `(1 if False else x)` part is actually valid, but
+&gt;&gt;&gt; # it can't be on the left-hand side of `=`.
+&gt;&gt;&gt; x = 1 if False else y = 2
+  File &quot;&lt;stdin&gt;&quot;, line 1
+SyntaxError: cannot assign to conditional expression
+
+&gt;&gt;&gt; # If we parenthesize it instead...
+&gt;&gt;&gt; (x = 1) if False else (y = 2)
+  File &quot;&lt;stdin&gt;&quot;, line 1
+    (x = 1) if False else (y = 2)
+       ^
+SyntaxError: invalid syntax
+</code></pre>
+<p>(In 3.8 and above, the <code>:=</code> &quot;walrus&quot; operator allows simple assignment of values <em>as an expression</em>, which is then compatible with this syntax. But please don't write code like that; it will quickly become very difficult to understand.)</p>
+<p>Similarly, because it is an expression, the <code>else</code> part is <em>mandatory</em>:</p>
+<pre><code># Invalid syntax: we didn't specify what the value should be if the 
+# condition isn't met. It doesn't matter if we can verify that
+# ahead of time.
+a if True
+</code></pre>
+<p>You can, however, use conditional expressions to assign a variable like so:</p>
+<pre class="lang-py prettyprint-override"><code>x = a if True else b
+</code></pre>
+<p>Or for example to return a value:</p>
+<pre><code># Of course we should just use the standard library `max`;
+# this is just for demonstration purposes.
+def my_max(a, b):
+    return a if a &gt; b else b
+</code></pre>
+<p>Think of the conditional expression as switching between two values. We can use it when we are in a 'one value or another' situation, where we will <em>do the same thing</em> with the result, regardless of whether the condition is met. We use the expression to compute the value, and then do something with it. If you need to <em>do something different</em> depending on the condition, then use a normal <code>if</code> <strong>statement</strong> instead.</p>
+<hr />
+<p>Keep in mind that it's frowned upon by some Pythonistas for several reasons:</p>
+<ul>
+<li>The order of the arguments is different from those of the classic <code>condition ? a : b</code> ternary operator from many other languages (such as <a href="https://en.wikipedia.org/wiki/C_%28programming_language%29" rel="noreferrer">C</a>, <a href="https://en.wikipedia.org/wiki/C%2B%2B" rel="noreferrer">C++</a>, <a href="https://en.wikipedia.org/wiki/Go_%28programming_language%29" rel="noreferrer">Go</a>, <a href="https://en.wikipedia.org/wiki/Perl" rel="noreferrer">Perl</a>, <a href="https://en.wikipedia.org/wiki/Ruby_%28programming_language%29" rel="noreferrer">Ruby</a>, <a href="https://en.wikipedia.org/wiki/Java_%28programming_language%29" rel="noreferrer">Java</a>, <a href="https://en.wikipedia.org/wiki/JavaScript" rel="noreferrer">JavaScript</a>, etc.), which may lead to bugs when people unfamiliar with Python's &quot;surprising&quot; behaviour use it (they may reverse the argument order).</li>
+<li>Some find it &quot;unwieldy&quot;, since it goes contrary to the normal flow of thought (thinking of the condition first and then the effects).</li>
+<li>Stylistic reasons. (Although the 'inline <code>if</code>' can be <em>really</em> useful, and make your script more concise, it really does complicate your code)</li>
+</ul>
+<p>If you're having trouble remembering the order, then remember that when read aloud, you (almost) say what you mean. For example, <code>x = 4 if b &gt; 8 else 9</code> is read aloud as <code>x will be 4 if b is greater than 8 otherwise 9</code>.</p>
+<p>Official documentation:</p>
+<ul>
+<li><a href="https://docs.python.org/3/reference/expressions.html#conditional-expressions" rel="noreferrer" title="Conditional expressions">Conditional expressions</a></li>
+<li><a href="https://docs.python.org/3/faq/programming.html#is-there-an-equivalent-of-c-s-ternary-operator" rel="noreferrer" title="Is there an equivalent of C’s ”?:” ternary operator?">Is there an equivalent of C’s ”?:” ternary operator?</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 975 people.</p><div class="s-prose js-post-body"><p>You can index into a tuple:</p>
+
+<pre><code>(falseValue, trueValue)[test]
+</code></pre>
+
+<p><code>test</code> needs to return <em>True</em> or <em>False</em>.<br>
+It might be safer to always implement it as:</p>
+
+<pre><code>(falseValue, trueValue)[test == True]
+</code></pre>
+
+<p>or you can use the built-in <a href="https://docs.python.org/3.3/library/functions.html#bool" rel="noreferrer" title="bool"><code>bool()</code></a> to assure a <a href="https://en.wikipedia.org/wiki/Boolean_data_type" rel="noreferrer" title="Boolean data type">Boolean</a> value:</p>
+
+<pre><code>(falseValue, trueValue)[bool(&lt;expression&gt;)]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 430 people.</p><div class="s-prose js-post-body"><p>For versions prior to 2.5, there's the trick:</p>
+<pre><code>[expression] and [on_true] or [on_false]
+</code></pre>
+<p>It can give wrong results when <code>on_true</code> has a false Boolean value.<sup>1</sup></p>
+<p>Although it does have the benefit of evaluating expressions left to right, which is clearer in my opinion.</p>
+<p><sub>1. <a href="http://docs.python.org/3.3/faq/programming.html#is-there-an-equivalent-of-c-s-ternary-operator" rel="noreferrer">Is there an equivalent of C’s ”?:” ternary operator?</a></sub></p>
+</div><p class="this-has-helped">This answer has helped 344 people.</p><div class="s-prose js-post-body"><p><code> <i>&lt;expression 1&gt;</i> <b>if</b> <i>&lt;condition&gt;</i> <b>else</b> <i>&lt;expression 2&gt;</i> </code></p>
+
+<pre class="lang-py prettyprint-override"><code>a = 1
+b = 2
+
+1 if a &gt; b else -1 
+# Output is -1
+
+1 if a &gt; b else -1 if a &lt; b else 0
+# Output is -1
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 202 people.</p><div class="s-prose js-post-body"><p>From <a href="https://docs.python.org/3/reference/expressions.html#conditional-expressions" rel="noreferrer" title="Conditional expressions">the documentation</a>:</p>
+
+<blockquote>
+  <p>Conditional expressions (sometimes called a “ternary operator”) have the lowest priority of all Python operations.</p>
+  
+  <p>The expression <code>x if C else y</code> first evaluates the condition, <em>C</em> (<em>not x</em>); if <em>C</em> is true, <em>x</em> is evaluated and its value is returned; otherwise, <em>y</em> is evaluated and its value is returned.</p>
+  
+  <p>See <a href="https://www.python.org/dev/peps/pep-0308/" rel="noreferrer" title="PEP 308 -- Conditional Expressions">PEP 308</a> for more details about conditional expressions.</p>
+</blockquote>
+
+<p>New since version 2.5.</p>
+</div><p class="this-has-helped">This answer has helped 171 people.</p><div class="s-prose js-post-body"><p>An operator for a conditional expression in Python was added in 2006 as part of <a href="https://www.python.org/dev/peps/pep-0308/" rel="nofollow noreferrer">Python Enhancement Proposal 308</a>. Its form differs from common <code>?:</code> operator and it looks like this:</p>
+<pre><code>&lt;expression1&gt; if &lt;condition&gt; else &lt;expression2&gt;
+</code></pre>
+<p>which is equivalent to:</p>
+<pre><code>if &lt;condition&gt;: &lt;expression1&gt; else: &lt;expression2&gt;
+</code></pre>
+<p>Here is an example:</p>
+<pre><code>result = x if a &gt; b else y
+</code></pre>
+<p>Another syntax which can be used (compatible with versions before 2.5):</p>
+<pre><code>result = (lambda:y, lambda:x)[a &gt; b]()
+</code></pre>
+<p>where operands are <a href="https://en.wikipedia.org/wiki/Lazy_evaluation" rel="nofollow noreferrer">lazily evaluated</a>.</p>
+<p>Another way is by indexing a tuple (which isn't consistent with the conditional operator of most other languages):</p>
+<pre><code>result = (y, x)[a &gt; b]
+</code></pre>
+<p>or explicitly constructed dictionary:</p>
+<pre><code>result = {True: x, False: y}[a &gt; b]
+</code></pre>
+<p>Another (less reliable), but simpler method is to use <code>and</code> and <code>or</code> operators:</p>
+<pre><code>result = (a &gt; b) and x or y
+</code></pre>
+<p>however this won't work if <code>x</code> would be <code>False</code>.</p>
+<p>A possible workaround is to make <code>x</code> and <code>y</code> lists or tuples as in the following:</p>
+<pre><code>result = ((a &gt; b) and [x] or [y])[0]
+</code></pre>
+<p>or:</p>
+<pre><code>result = ((a &gt; b) and (x,) or (y,))[0]
+</code></pre>
+<p>If you're working with dictionaries, instead of using a ternary conditional, you can take advantage of <a href="https://docs.python.org/3/library/stdtypes.html#dict.get" rel="nofollow noreferrer"><code>get(key, default)</code></a>, for example:</p>
+<pre><code>shell = os.environ.get('SHELL', &quot;/bin/sh&quot;)
+</code></pre>
+<p><sup>Source: <a href="https://en.wikipedia.org/wiki/%3F:#Python" rel="nofollow noreferrer">?: in Python at Wikipedia</a></sup></p>
+</div><p class="this-has-helped">This answer has helped 122 people.</p><div class="s-prose js-post-body"><p>Unfortunately, the</p>
+<pre><code>(falseValue, trueValue)[test]
+</code></pre>
+<p>solution doesn't have short-circuit behaviour; thus both <code>falseValue</code> and <code>trueValue</code> are evaluated regardless of the condition. This could be suboptimal or even buggy (i.e. both <code>trueValue</code> and <code>falseValue</code> could be methods and have side effects).</p>
+<p>One solution to this would be</p>
+<pre><code>(lambda: falseValue, lambda: trueValue)[test]()
+</code></pre>
+<p>(execution delayed until the winner is known ;)), but it introduces inconsistency between callable and non-callable objects. In addition, it doesn't solve the case when using properties.</p>
+<p>And so the story goes - choosing between three mentioned solutions is a trade-off between having the short-circuit feature, using at least Python 2.5 (IMHO, not a problem anymore) and not being prone to &quot;<code>trueValue</code>-evaluates-to-false&quot; errors.</p>
+</div><p class="this-has-helped">This answer has helped 100 people.</p><div class="s-prose js-post-body"><h2><strong>Ternary operator in different programming languages</strong></h2>
+<p>Here I just try to show some important differences in the <a href="https://en.wikipedia.org/wiki/%3F:" rel="noreferrer">ternary operator</a> between a couple of programming languages.</p>
+<h3><em>Ternary operator in <a href="https://en.wikipedia.org/wiki/JavaScript" rel="noreferrer">JavaScript</a></em></h3>
+<pre><code>var a = true ? 1 : 0;
+# 1
+var b = false ? 1 : 0;
+# 0
+</code></pre>
+<h3><em>Ternary operator in <a href="https://en.wikipedia.org/wiki/Ruby_%28programming_language%29" rel="noreferrer">Ruby</a></em></h3>
+<pre><code>a = true ? 1 : 0
+# 1
+b = false ? 1 : 0
+# 0
+</code></pre>
+<h3><em>Ternary operator in <a href="https://en.wikipedia.org/wiki/Scala_%28programming_language%29" rel="noreferrer">Scala</a></em></h3>
+<pre><code>val a = true ? 1 | 0
+# 1
+val b = false ? 1 | 0
+# 0
+</code></pre>
+<h3><em>Ternary operator in <a href="https://en.wikipedia.org/wiki/R_%28programming_language%29" rel="noreferrer">R</a> programming</em></h3>
+<pre><code>a &lt;- if (TRUE) 1 else 0
+# 1
+b &lt;- if (FALSE) 1 else 0
+# 0
+</code></pre>
+<h3><em>Ternary operator in Python</em></h3>
+<pre><code>a = 1 if True else 0
+# 1
+b = 1 if False else 0
+# 0
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 83 people.</p><div class="s-prose js-post-body"><p>For Python 2.5 and newer there is a specific syntax:</p>
+<pre><code>[on_true] if [cond] else [on_false]
+</code></pre>
+<p>In older Pythons, a ternary operator is not implemented but it's possible to simulate it.</p>
+<pre><code>cond and on_true or on_false
+</code></pre>
+<p>Though there is a potential problem, which is if <code>cond</code> evaluates to <code>True</code> and <code>on_true</code> evaluates to <code>False</code> then <code>on_false</code> is returned instead of <code>on_true</code>. If you want this behaviour the method is OK, otherwise use this:</p>
+<pre><code>{True: on_true, False: on_false}[cond is True] # is True, not == True
+</code></pre>
+<p>which can be wrapped by:</p>
+<pre><code>def q(cond, on_true, on_false)
+    return {True: on_true, False: on_false}[cond is True]
+</code></pre>
+<p>and used this way:</p>
+<pre><code>q(cond, on_true, on_false)
+</code></pre>
+<p>It is compatible with all Python versions.</p>
+</div><p class="this-has-helped">This answer has helped 59 people.</p><div class="s-prose js-post-body"><p>You might often find</p>
+<pre class="lang-py prettyprint-override"><code>cond and on_true or on_false
+</code></pre>
+<p>but this leads to a problem when on_true == 0</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; x = 0
+&gt;&gt;&gt; print x == 0 and 0 or 1
+1
+&gt;&gt;&gt; x = 1
+&gt;&gt;&gt; print x == 0 and 0 or 1
+1
+</code></pre>
+<p>Where you would expect this result for a normal ternary operator:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; x = 0
+&gt;&gt;&gt; print 0 if x == 0 else 1
+0
+&gt;&gt;&gt; x = 1
+&gt;&gt;&gt; print 0 if x == 0 else 1
+1
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><blockquote>
+<h1>Does Python have a ternary conditional operator?</h1>
+</blockquote>
+<p>Yes. From the <a href="https://docs.python.org/reference/grammar.html" rel="noreferrer">grammar file</a>:</p>
+<pre class="lang-py prettyprint-override"><code>test: or_test ['if' or_test 'else' test] | lambdef
+</code></pre>
+<p>The part of interest is:</p>
+<pre class="lang-py prettyprint-override"><code>or_test ['if' or_test 'else' test]
+</code></pre>
+<p>So, a ternary conditional operation is of the form:</p>
+<pre class="lang-py prettyprint-override"><code>expression1 if expression2 else expression3
+</code></pre>
+<p><code>expression3</code> will be lazily evaluated (that is, evaluated only if <code>expression2</code> is false in a boolean context). And because of the recursive definition, you can chain them indefinitely (though it may considered bad style.)</p>
+<pre class="lang-py prettyprint-override"><code>expression1 if expression2 else expression3 if expression4 else expression5 # and so on
+</code></pre>
+<h3>A note on usage:</h3>
+<p>Note that every <code>if</code> must be followed with an <code>else</code>. People learning list comprehensions and generator expressions may find this to be a difficult lesson to learn - the following will not work, as Python expects a third expression for an else:</p>
+<pre class="lang-py prettyprint-override"><code>[expression1 if expression2 for element in iterable]
+#                          ^-- need an else here
+</code></pre>
+<p>which raises a <code>SyntaxError: invalid syntax</code>.
+So the above is either an incomplete piece of logic (perhaps the user expects a no-op in the false condition) or what may be intended is to use <code>expression2</code> as a filter - notes that the following is legal Python:</p>
+<pre class="lang-py prettyprint-override"><code>[expression1 for element in iterable if expression2]
+</code></pre>
+<p><code>expression2</code> works as a filter for the list comprehension, and is <em>not</em> a ternary conditional operator.</p>
+<h3>Alternative syntax for a more narrow case:</h3>
+<p>You may find it somewhat painful to write the following:</p>
+<pre class="lang-py prettyprint-override"><code>expression1 if expression1 else expression2
+</code></pre>
+<p><code>expression1</code> will have to be evaluated twice with the above usage. It can limit redundancy if it is simply a local variable. However, a common and performant Pythonic idiom for this use-case is to use <code>or</code>'s shortcutting behavior:</p>
+<pre class="lang-py prettyprint-override"><code>expression1 or expression2
+</code></pre>
+<p>which is equivalent in semantics. Note that some style-guides may limit this usage on the grounds of clarity - it does pack a lot of meaning into very little syntax.</p>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>One of the alternatives to Python's <a href="https://mail.python.org/pipermail/python-dev/2005-September/056846.html" rel="noreferrer">conditional expression</a></p>
+<pre><code>&quot;yes&quot; if boolean else &quot;no&quot;
+</code></pre>
+<p>is the following:</p>
+<pre><code>{True: &quot;yes&quot;, False: &quot;no&quot;}[boolean]
+</code></pre>
+<p>which has the following nice extension:</p>
+<pre><code>{True: &quot;yes&quot;, False: &quot;no&quot;, None: &quot;maybe&quot;}[boolean_or_none]
+</code></pre>
+<p>The shortest alternative remains</p>
+<pre><code>(&quot;no&quot;, &quot;yes&quot;)[boolean]
+</code></pre>
+<p>which works because <code>issubclass(bool, int)</code>.</p>
+<p>Careful, though: the alternative to</p>
+<pre><code>yes() if boolean else no()
+</code></pre>
+<p>is <em>not</em></p>
+<pre><code>(no(), yes())[boolean]  # bad: BOTH no() and yes() are called
+</code></pre>
+<p>but</p>
+<pre><code>(no, yes)[boolean]()
+</code></pre>
+<p>This works fine as long as <code>no</code> and <code>yes</code> are to be called with exactly the same parameters. If they are not, like in</p>
+<pre><code>yes(&quot;ok&quot;) if boolean else no()  # (1)
+</code></pre>
+<p>or in</p>
+<pre><code>yes(&quot;ok&quot;) if boolean else no(&quot;sorry&quot;)  # (2)
+</code></pre>
+<p>then a similar alternative either does not exist (1) or is hardly viable (2). (In rare cases, depending on the context, something like</p>
+<pre><code>msg = (&quot;sorry&quot;, &quot;ok&quot;)[boolean]
+(no, yes)[boolean](msg)
+</code></pre>
+<p>could make sense.)</p>
+<p><sub>Thanks to Radek Rojík for his comment</sub></p>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>As already answered, yes, there is a ternary operator in Python:</p>
+<pre class="lang-none prettyprint-override"><code>&lt;expression 1&gt; if &lt;condition&gt; else &lt;expression 2&gt;
+</code></pre>
+<p>In many cases <code>&lt;expression 1&gt;</code> is also used as Boolean evaluated <code>&lt;condition&gt;</code>. Then you can use <a href="https://en.wikipedia.org/wiki/Short-circuit_evaluation" rel="nofollow noreferrer">short-circuit evaluation</a>.</p>
+<pre class="lang-py prettyprint-override"><code>a = 0
+b = 1
+
+# Instead of this:
+x = a if a else b
+# Evaluates as 'a if bool(a) else b'
+
+# You could use short-circuit evaluation:
+x = a or b
+</code></pre>
+<p>One big pro of short-circuit evaluation is the possibility of chaining more than two expressions:</p>
+<pre class="lang-py prettyprint-override"><code>x = a or b or c or d or e
+</code></pre>
+<p>When working with functions it is more different in detail:</p>
+<pre class="lang-py prettyprint-override"><code># Evaluating functions:
+def foo(x):
+    print('foo executed')
+    return x
+
+
+def bar(y):
+    print('bar executed')
+    return y
+
+
+def blubb(z):
+    print('blubb executed')
+    return z
+
+
+# Ternary Operator expression 1 equals to False
+print(foo(0) if foo(0) else bar(1))
+''' foo and bar are executed once
+foo executed
+bar executed
+1
+'''
+
+# Ternary Operator expression 1 equals to True
+print(foo(2) if foo(2) else bar(3))
+''' foo is executed twice!
+foo executed
+foo executed
+2
+'''
+
+# Short-circuit evaluation second equals to True
+print(foo(0) or bar(1) or blubb(2))
+''' blubb is not executed
+foo executed
+bar executed
+1
+'''
+
+# Short-circuit evaluation third equals to True
+print(foo(0) or bar(0) or blubb(2))
+'''
+foo executed
+bar executed
+blubb executed
+2
+'''
+
+# Short-circuit evaluation all equal to False
+print(foo(0) or bar(0) or blubb(0))
+''' Result is 0 (from blubb(0)) because no value equals to True
+foo executed
+bar executed
+blubb executed
+0
+'''
+</code></pre>
+<p>PS: Of course, a short-circuit evaluation is not a ternary operator, but often the ternary is used in cases where the short circuit would be enough. It has a better readability and can be chained.</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>Simulating the Python ternary operator.</p>
+<p>For example</p>
+<pre><code>a, b, x, y = 1, 2, 'a greather than b', 'b greater than a'
+result = (lambda:y, lambda:x)[a &gt; b]()
+</code></pre>
+<p>Output:</p>
+<pre><code>'b greater than a'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 29 people.</p><div class="s-prose js-post-body"><pre><code>a if condition else b
+</code></pre>
+
+<p>Just memorize this pyramid if you have trouble remembering:</p>
+
+<pre><code>     condition
+  if           else
+a                   b 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>The ternary conditional operator simply allows testing a condition in a single line replacing the multiline if-else making the code compact.</p>
+<h3>Syntax:</h3>
+<blockquote>
+<p>[on_true] if [expression] else [on_false]</p>
+</blockquote>
+<h3>1- Simple Method to use ternary operator:</h3>
+<pre><code># Program to demonstrate conditional operator
+a, b = 10, 20
+# Copy value of a in min if a &lt; b else copy b
+min = a if a &lt; b else b
+print(min)  # Output: 10
+</code></pre>
+<h3>2- Direct Method of using tuples, Dictionary, and lambda:</h3>
+<pre><code># Python program to demonstrate ternary operator
+a, b = 10, 20
+# Use tuple for selecting an item
+print( (b, a) [a &lt; b] )
+# Use Dictionary for selecting an item
+print({True: a, False: b} [a &lt; b])
+# lambda is more efficient than above two methods
+# because in lambda  we are assure that
+# only one expression will be evaluated unlike in
+# tuple and Dictionary
+print((lambda: b, lambda: a)[a &lt; b]()) # in output you should see three 10
+</code></pre>
+<h3>3- Ternary operator can be written as nested if-else:</h3>
+<pre><code># Python program to demonstrate nested ternary operator
+a, b = 10, 20
+print (&quot;Both a and b are equal&quot; if a == b else &quot;a is greater than b&quot;
+        if a &gt; b else &quot;b is greater than a&quot;)
+</code></pre>
+<p>Above approach can be written as:</p>
+<pre><code># Python program to demonstrate nested ternary operator
+a, b = 10, 20
+if a != b:
+    if a &gt; b:
+        print(&quot;a is greater than b&quot;)
+    else:
+        print(&quot;b is greater than a&quot;)
+else:
+    print(&quot;Both a and b are equal&quot;)
+# Output: b is greater than a
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p><a href="https://stackoverflow.com/questions/394809/does-python-have-a-ternary-conditional-operator/394814#394814">Vinko Vrsalovic's answer</a> is good enough. There is only one more thing:</p>
+<blockquote>
+<p>Note that conditionals are an <em>expression</em>, not a <em>statement</em>. This means you can't use assignment statements or <code>pass</code> or other <strong>statements</strong> within a conditional <strong>expression</strong></p>
+</blockquote>
+<h3>Walrus operator in Python 3.8</h3>
+<p>After the <a href="https://docs.python.org/3/whatsnew/3.8.html#assignment-expressions" rel="noreferrer">walrus operator</a> was introduced in Python 3.8, something changed.</p>
+<pre><code>(a := 3) if True else (b := 5)
+</code></pre>
+<p>gives <code>a = 3</code> and <code>b is not defined</code>,</p>
+<pre><code>(a := 3) if False else (b := 5)
+</code></pre>
+<p>gives <code>a is not defined</code> and <code>b = 5</code>, and</p>
+<pre><code>c = (a := 3) if False else (b := 5)
+</code></pre>
+<p>gives <code>c = 5</code>, <code>a is not defined</code> and <code>b = 5</code>.</p>
+<p>Even if this may be ugly, <strong>assignments</strong> can be done <strong>inside</strong> conditional expressions after Python 3.8. Anyway, it is still better to use normal <code>if</code> <strong>statement</strong> instead in this case.</p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>More a tip than an answer (I don't need to repeat the obvious for the hundredth time), but I sometimes use it as a one-liner shortcut in such constructs:</p>
+<pre><code>if conditionX:
+    print('yes')
+else:
+    print('nah')
+</code></pre>
+<p>, becomes:</p>
+<pre><code>print('yes') if conditionX else print('nah')
+</code></pre>
+<p>Some (many :) may frown upon it as unpythonic (even, Ruby-ish :), but I personally find it more natural - i.e., how you'd express it normally, plus a bit more visually appealing in large blocks of code.</p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>You can do this:</p>
+<pre class="lang-none prettyprint-override"><code>[condition] and [expression_1] or [expression_2];
+</code></pre>
+<p>Example:</p>
+<pre class="lang-none prettyprint-override"><code>print(number%2 and &quot;odd&quot; or &quot;even&quot;)
+</code></pre>
+<p>This would print &quot;odd&quot; if the number is odd or &quot;even&quot; if the number is even.</p>
+<hr />
+<p><strong>The result:</strong> If condition is true, exp_1 is executed, else exp_2 is executed.</p>
+<p><strong>Note:</strong> 0, None, False, emptylist, and emptyString evaluates as False.</p>
+<p>And any data other than 0 evaluates to True.</p>
+<h2>Here's how it works:</h2>
+<p>If the condition [condition] becomes &quot;True&quot;, then expression_1 will be evaluated, but not expression_2.</p>
+<p>If we &quot;and&quot; something with 0 (zero), the result will always to be false. So in the below statement,</p>
+<pre><code>0 and exp
+</code></pre>
+<p>The expression <em>exp</em> won't be evaluated at all since &quot;and&quot; with 0 will always evaluate to zero and there is no need to evaluate the expression. This is how the compiler itself works, in all languages.</p>
+<p>In</p>
+<pre><code>1 or exp
+</code></pre>
+<p>the expression <em>exp</em> won't be evaluated at all since &quot;or&quot; with 1 will always be 1. So it won't bother to evaluate the expression exp since the result will be 1 anyway (compiler optimization methods).</p>
+<p>But in case of</p>
+<pre><code>True and exp1 or exp2
+</code></pre>
+<p>The second expression exp2 won't be evaluated since <code>True and exp1</code> would be True when exp1 isn't false.</p>
+<p>Similarly in</p>
+<pre><code>False and exp1 or exp2
+</code></pre>
+<p>The expression <em>exp1</em> won't be evaluated since False is equivalent to writing 0 and doing &quot;and&quot; with 0 would be 0 itself, but after exp1 since &quot;or&quot; is used, it will evaluate the expression exp2 after &quot;or&quot;.</p>
+<hr />
+<p><strong>Note:-</strong> This kind of branching using &quot;or&quot; and &quot;and&quot; can only be used when the expression_1 doesn't have a Truth value of False (or 0 or None or emptylist [ ] or emptystring ' '.) since if expression_1 becomes False, then the expression_2 will be evaluated because of the presence &quot;or&quot; between exp_1 and exp_2.</p>
+<p><strong>In case you still want to make it work for all the cases regardless of what exp_1 and exp_2 truth values are, do this:</strong></p>
+<pre class="lang-none prettyprint-override"><code>[condition] and ([expression_1] or 1) or [expression_2];
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>Many programming languages derived from <a href="https://en.wikipedia.org/wiki/C_%28programming_language%29" rel="nofollow noreferrer">C</a> usually have the following syntax of the ternary conditional operator:</p>
+<pre><code>&lt;condition&gt; ? &lt;expression1&gt; : &lt;expression2&gt;
+</code></pre>
+<p>At first, the Python's <a href="https://en.wikipedia.org/wiki/Benevolent_dictator_for_life" rel="nofollow noreferrer">benevolent dictator for life</a> (I mean <a href="https://en.wikipedia.org/wiki/Guido_van_Rossum" rel="nofollow noreferrer">Guido van Rossum</a>, of course) rejected it (as non-Pythonic style), since it's quite hard to understand for people not used to C language. Also, the colon sign <strong><code>:</code></strong> already has many uses in Python. After <strong>PEP 308</strong> was approved, Python finally received its own shortcut conditional expression (what we use now):</p>
+<pre><code>&lt;expression1&gt; if &lt;condition&gt; else &lt;expression2&gt;
+</code></pre>
+<p>So, firstly it evaluates the condition. If it returns <code>True</code>, <strong>expression1</strong> will be evaluated to give the result, otherwise <strong>expression2</strong> will be evaluated. Due to <a href="https://en.wikipedia.org/wiki/Lazy_evaluation" rel="nofollow noreferrer">lazy evaluation</a> mechanics – only one expression will be executed.</p>
+<p>Here are some examples (conditions will be evaluated from left to right):</p>
+<pre><code>pressure = 10
+print('High' if pressure &lt; 20 else 'Critical')
+
+# Result is 'High'
+</code></pre>
+<p>Ternary operators can be chained in series:</p>
+<pre><code>pressure = 5
+print('Normal' if pressure &lt; 10 else 'High' if pressure &lt; 20 else 'Critical')
+
+# Result is 'Normal'
+</code></pre>
+<p>The following one is the same as previous one:</p>
+<pre><code>pressure = 5
+
+if pressure &lt; 20:
+    if pressure &lt; 10:
+        print('Normal')
+    else:
+        print('High')
+else:
+    print('Critical')
+
+# Result is 'Normal'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p><em>Yes</em>, Python have a ternary operator, here is the syntax and an example code to demonstrate the same :)</p>
+<pre><code>#[On true] if [expression] else[On false]
+# if the expression evaluates to true then it will pass On true otherwise On false
+
+a = input(&quot;Enter the First Number &quot;)
+b = input(&quot;Enter the Second Number &quot;)
+
+print(&quot;A is Bigger&quot;) if a&gt;b else print(&quot;B is Bigger&quot;)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>Other answers correctly talk about the Python ternary operator. I would like to complement by mentioning a scenario for which the ternary operator is often used, but for which there is a better idiom. This is the scenario of using a default value.</p>
+<p>Suppose we want to use <code>option_value</code> with a default value if it is not set:</p>
+<pre><code>run_algorithm(option_value if option_value is not None else 10)
+</code></pre>
+<p>or, if <code>option_value</code> is never set to a falsy value (<code>0</code>, <code>&quot;&quot;</code>, etc.), simply</p>
+<pre><code>run_algorithm(option_value if option_value else 10)
+</code></pre>
+<p>However, in this case an ever better solution is simply to write</p>
+<pre><code>run_algorithm(option_value or 10)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>The syntax for the ternary operator in Python is:</p>
+<p><code>[on_true] if [expression] else [on_false]</code></p>
+<p>Using that syntax, here is how we would rewrite the code above using Python’s ternary operator:</p>
+<pre class="lang-py prettyprint-override"><code>game_type = 'home'
+shirt = 'white' if game_type == 'home' else 'green'
+
+</code></pre>
+<p>It's still pretty clear, but much shorter. Note that the expression could be any type of expression, including a function call, that returns a value that evaluates to True or False.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>Python has a ternary form for assignments; however there may be even a shorter form that people should be aware of.</p>
+<p>It's very common to need to assign to a variable one value or another depending on a condition.</p>
+<pre><code>&gt;&gt;&gt; li1 = None
+&gt;&gt;&gt; li2 = [1, 2, 3]
+&gt;&gt;&gt;
+&gt;&gt;&gt; if li1:
+...     a = li1
+... else:
+...     a = li2
+...
+&gt;&gt;&gt; a
+[1, 2, 3]
+</code></pre>
+<p>^ This is the long form for doing such assignments.</p>
+<p>Below is the ternary form. But this isn't the most succinct way - see the last example.</p>
+<pre><code>&gt;&gt;&gt; a = li1 if li1 else li2
+&gt;&gt;&gt;
+&gt;&gt;&gt; a
+[1, 2, 3]
+&gt;&gt;&gt;
+</code></pre>
+<p>With Python, you can simply use <code>or</code> for alternative assignments.</p>
+<pre><code>&gt;&gt;&gt; a = li1 or li2
+&gt;&gt;&gt;
+&gt;&gt;&gt; a
+[1, 2, 3]
+&gt;&gt;&gt;
+</code></pre>
+<p>The above works since <code>li1</code> is <code>None</code> and the interpreter treats that as False in logic expressions. The interpreter then moves on and evaluates the second expression, which is not <code>None</code> and it's not an empty list - so it gets assigned to <em>a</em>.</p>
+<p>This also works with empty lists. For instance, if you want to assign <code>a</code> whichever list has items.</p>
+<pre><code>&gt;&gt;&gt; li1 = []
+&gt;&gt;&gt; li2 = [1, 2, 3]
+&gt;&gt;&gt;
+&gt;&gt;&gt; a = li1 or li2
+&gt;&gt;&gt;
+&gt;&gt;&gt; a
+[1, 2, 3]
+&gt;&gt;&gt;
+</code></pre>
+<p>Knowing this, you can simply such assignments whenever you encounter them. This also works with strings and other iterables. You could assign <code>a</code> whichever string isn't empty.</p>
+<pre><code>&gt;&gt;&gt; s1 = ''
+&gt;&gt;&gt; s2 = 'hello world'
+&gt;&gt;&gt;
+&gt;&gt;&gt; a = s1 or s2
+&gt;&gt;&gt;
+&gt;&gt;&gt; a
+'hello world'
+&gt;&gt;&gt;
+</code></pre>
+<p>I always liked the C ternary syntax, but Python takes it a step further!</p>
+<p>I understand that some may say this isn't a good stylistic choice, because it relies on mechanics that aren't immediately apparent to all developers. I personally disagree with that viewpoint. Python is a syntax-rich language with lots of idiomatic tricks that aren't immediately apparent to the dabbler. But the more you learn and understand the mechanics of the underlying system, the more you appreciate it.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>Pythonic way of doing the things:</p>
+<pre><code>&quot;true&quot; if var else &quot;false&quot;
+</code></pre>
+<p>But there always exists a different way of doing a ternary condition too:</p>
+<pre><code>&quot;true&quot; and var or &quot;false&quot;
+</code></pre>
+</div></body></html>

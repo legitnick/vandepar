@@ -1,0 +1,765 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to disable text selection highlighting</p><div class="s-prose js-post-body"><p>For anchors that act like buttons (for example, the buttons on the sidebar of this Stack Overflow page titled <em>Questions</em>, <em>Tags</em>, and <em>Users</em>) or tabs, is there a CSS standard way to disable the highlighting effect if the user accidentally selects the text?</p>
+<p>I realize that this could be done with JavaScript and a little googling yielded the Mozilla-only <code>-moz-user-select</code> option.</p>
+<p>Is there a standard-compliant way to accomplish this with CSS, and if not, what is the &quot;best practice&quot; approach?</p>
+</div><p class="this-has-helped">This answer has helped 8452 people.</p><div class="s-prose js-post-body"><p><strong>UPDATE January, 2017:</strong></p>
+<p>According to <a href="http://caniuse.com/#feat=user-select-none" rel="noreferrer">Can I use</a>, the <code>user-select</code> + <strong><code>-webkit-user-select</code> for Safari</strong> is enough to achieve desired behavior in all major browsers.</p>
+<hr />
+<p>These are all of the available correct CSS variations:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.noselect {
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Old versions of Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome, Edge, Opera and Firefox */
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;p&gt;
+  Selectable text.
+&lt;/p&gt;
+&lt;p class="noselect"&gt;
+  Unselectable text.
+&lt;/p&gt;</code></pre>
+</div>
+</div>
+</p>
+<hr />
+<p>Note that <code>user-select</code> is in standardization process (currently in a <a href="https://drafts.csswg.org/css-ui-4/#propdef-user-select" rel="noreferrer">W3C working draft</a>). It is not guaranteed to work everywhere and there might be differences in implementation among browsers. Also, browsers can drop support for it in the future.</p>
+<hr />
+<p>More information can be found in <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/user-select" rel="noreferrer">Mozilla Developer Network documentation</a>.</p>
+<p>The values of this attribute are <code>none</code>, <code>text</code>, <code>toggle</code>, <code>element</code>, <code>elements</code>, <code>all</code> and <code>inherit</code>.</p>
+</div><p class="this-has-helped">This answer has helped 948 people.</p><div class="s-prose js-post-body"><p>In most browsers, this can be achieved using proprietary variations on the CSS <code>user-select</code> property, <a href="http://www.w3.org/TR/2000/WD-css3-userint-20000216#user-select" rel="noreferrer">originally proposed and then abandoned in CSS&nbsp;3</a> and now proposed in <a href="https://drafts.csswg.org/css-ui-4/#content-selection" rel="noreferrer">CSS UI Level 4</a>:</p>
+
+<pre class="lang-css prettyprint-override"><code>*.unselectable {
+   -moz-user-select: none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+
+   /*
+     Introduced in Internet Explorer 10.
+     See http://ie.microsoft.com/testdrive/HTML5/msUserSelect/
+   */
+   -ms-user-select: none;
+   user-select: none;
+}
+</code></pre>
+
+<p>For Internet Explorer &lt; 10 and <a href="http://en.wikipedia.org/wiki/Opera_%28web_browser%29" rel="noreferrer">Opera</a> &lt; 15, you will need to use the <code>unselectable</code> attribute of the element you wish to be unselectable. You can set this using an attribute in HTML:</p>
+
+<pre><code>&lt;div id="foo" unselectable="on" class="unselectable"&gt;...&lt;/div&gt;
+</code></pre>
+
+<p>Sadly this property isn't inherited, meaning you have to put an attribute in the start tag of every element inside the <code>&lt;div&gt;</code>. If this is a problem, you could instead use JavaScript to do this recursively for an element's descendants:</p>
+
+<pre><code>function makeUnselectable(node) {
+    if (node.nodeType == 1) {
+        node.setAttribute("unselectable", "on");
+    }
+    var child = node.firstChild;
+    while (child) {
+        makeUnselectable(child);
+        child = child.nextSibling;
+    }
+}
+
+makeUnselectable(document.getElementById("foo"));
+</code></pre>
+
+<hr>
+
+<p><strong>Update 30 April 2014</strong>: This tree traversal needs to be rerun whenever a new element is added to the tree, but it seems from a comment by @Han that it is possible to avoid this by adding a <code>mousedown</code> event handler that sets <code>unselectable</code> on the target of the event. See <a href="http://jsbin.com/yagekiji/1" rel="noreferrer">http://jsbin.com/yagekiji/1</a> for details.</p>
+
+<hr>
+
+<p>This still doesn't cover all possibilities. While it is impossible to initiate selections in unselectable elements, in some browsers (Internet&nbsp;Explorer and Firefox, for example) it's still impossible to prevent selections that start before and end after the unselectable element without making the whole document unselectable.</p>
+</div><p class="this-has-helped">This answer has helped 232 people.</p><div class="s-prose js-post-body"><p>Until CSS 3's <a href="http://www.w3.org/TR/1999/WD-css3-userint-19990916#user-select" rel="noreferrer">user-select</a> property becomes available, <a href="http://en.wikipedia.org/wiki/Gecko_%28layout_engine%29" rel="noreferrer">Gecko</a>-based browsers support the <code>-moz-user-select</code> property you already found. <a href="https://en.wikipedia.org/wiki/WebKit" rel="noreferrer">WebKit</a> and Blink-based browsers support the <code>-webkit-user-select</code> property.</p>
+
+<p>This of course is not supported in browsers that do not use the Gecko rendering engine.</p>
+
+<p>There is no "standards" compliant quick-and-easy way to do it; using JavaScript is an option.</p>
+
+<p>The real question is, why do you want users to not be able to highlight and presumably copy and paste certain elements? I have not come across a single time that I wanted to not let users highlight a certain portion of my website. Several of my friends, after spending many hours reading and writing code will use the highlight feature as a way to remember where on the page they were, or providing a marker so that their eyes know where to look next.</p>
+
+<p>The only place I could see this being useful is if you have buttons for forms that should not be copy and pasted if a user copy and pasted the website.</p>
+</div><p class="this-has-helped">This answer has helped 207 people.</p><div class="s-prose js-post-body"><p>A JavaScript solution for Internet&nbsp;Explorer is:</p>
+
+<pre><code>onselectstart="return false;"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 155 people.</p><div class="s-prose js-post-body"><p>If you want to disable text selection on everything except on <code>&lt;p&gt;</code> elements, you can do this in CSS (watch out for the <code>-moz-none</code> which allows override in sub-elements, which is allowed in other browsers with <code>none</code>):</p>
+
+<pre class="lang-css prettyprint-override"><code>* {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+p {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -o-user-select: text;
+    user-select: text;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 138 people.</p><div class="s-prose js-post-body"><p>In the solutions in previous answers selection is stopped, but the user still thinks you can select text because the cursor still changes. To keep it static, you'll have to set your CSS cursor:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.noselect {
+    cursor: default;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;p&gt;
+  Selectable text.
+&lt;/p&gt;
+&lt;p class="noselect"&gt;
+  Unselectable text.
+&lt;/p&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>This will make your text totally flat, like it would be in a desktop application.</p>
+</div><p class="this-has-helped">This answer has helped 120 people.</p><div class="s-prose js-post-body"><p>You can do so in Firefox and Safari (Chrome also?)</p>
+
+<pre class="lang-css prettyprint-override"><code>::selection { background: transparent; }
+::-moz-selection { background: transparent; }
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 90 people.</p><div class="s-prose js-post-body"><p>Workaround for <a href="http://en.wikipedia.org/wiki/WebKit" rel="noreferrer">WebKit</a>:</p>
+
+<pre class="lang-css prettyprint-override"><code>/* Disable tap highlighting */
+-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+</code></pre>
+
+<p>I found it in a CardFlip example.</p>
+</div><p class="this-has-helped">This answer has helped 86 people.</p><div class="s-prose js-post-body"><p>I like the hybrid CSS + jQuery solution.</p>
+
+<p>To make all elements inside <code>&lt;div class="draggable"&gt;&lt;/div&gt;</code> unselectable, use this CSS:</p>
+
+<pre class="lang-css prettyprint-override"><code>.draggable {
+    -webkit-user-select: none;
+     -khtml-user-select: none;
+       -moz-user-select: none;
+        -ms-user-select: none;
+         -o-user-select: none;
+            user-select: none;
+}
+
+.draggable input {
+    -webkit-user-select: text;
+     -khtml-user-select: text;
+       -moz-user-select: text;
+         -o-user-select: text;
+            user-select: text;
+ }
+</code></pre>
+
+<p>And then, if you're using jQuery, add this inside a <code>$(document).ready()</code> block:</p>
+
+<pre><code>if (($.browser.msie &amp;&amp; $.browser.version &lt; 10) || $.browser.opera) $('.draggable').find(':not(input)').attr('unselectable', 'on');
+</code></pre>
+
+<p>I figure you still want any input elements to be interactable, hence the <code>:not()</code> pseudo-selector. You could use <code>'*'</code> instead if you don't care.</p>
+
+<p>Caveat: Internet&nbsp;Explorer&nbsp;9 may not need this extra jQuery piece, so you may want to add a version check in there.</p>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.hidden:after {
+    content: attr(data-txt);
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;p class="hidden" data-txt="Some text you don't want to be selected"&gt;&lt;/p&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>It's not the best way, though.</p>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><p>You can use <strong>CSS</strong> or <strong>JavaScript</strong> for that.</p>
+
+<p>The <strong>JavaScript</strong> way is supported in <em>older</em> browsers, like <em>old</em> versions of Internet&nbsp;Explorer as well, but if it's not your case, use the CSS way then:</p>
+
+<p><strong>HTML/JavaScript:</strong></p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;html onselectstart='return false;'&gt;
+  &lt;body&gt;
+    &lt;h1&gt;This is the Heading!&lt;/h1&gt;
+    &lt;p&gt;And I'm the text, I won't be selected if you select me.&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p><strong>HTML/CSS:</strong></p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.not-selectable {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;body class="not-selectable"&gt;
+  &lt;h1&gt;This is the Heading!&lt;/h1&gt;
+  &lt;p&gt;And I'm the text, I won't be selected if you select me.&lt;/p&gt;
+&lt;/body&gt;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><p>For Internet Explorer in addition, you need to add <strong>pseudo class <code>focus</code></strong> (.ClassName:focus) and <code>outline-style: none</code>.</p>
+
+<pre class="lang-css prettyprint-override"><code>.ClassName,
+.ClassName:focus {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    outline-style: none; /* Internet Explorer  */
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 62 people.</p><div class="s-prose js-post-body"><p>Try to insert these rows into the CSS and call the "disHighlight" at class property:</p>
+
+<pre class="lang-css prettyprint-override"><code>.disHighlight {
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none;
+    -o-user-select: none;
+    -moz-user-select: none;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 61 people.</p><div class="s-prose js-post-body"><p><strong>A Quick Hack Update</strong></p>
+
+<p>If you use the value <code>none</code> for all the CSS <code>user-select</code> properties (including browser prefixes of it), there is a problem which can be still occurred by this.</p>
+
+<pre class="lang-css prettyprint-override"><code>.div {
+    -webkit-user-select: none; /* Chrome all / Safari all */
+    -moz-user-select: none;    /* Firefox all             */
+    -ms-user-select: none;     /* Internet Explorer  10+  */
+     user-select: none;        /* Likely future           */
+}
+</code></pre>
+
+<p>As <a href="https://css-tricks.com/almanac/properties/u/user-select/" rel="noreferrer">CSS-Tricks</a> says, the <strong>problem</strong> is:</p>
+
+<p><a href="http://en.wikipedia.org/wiki/WebKit" rel="noreferrer">WebKit</a> still allows the text to be copied, if you select elements around it.</p>
+
+<p>You can also use the below one to <code>enforce</code> that an entire element gets selected which means if you click on an element, all the text wrapped in that element will get selected. For this all you have to do is changing the value <code>none</code> to <code>all</code>.</p>
+
+<pre class="lang-css prettyprint-override"><code>.force-select {
+    -webkit-user-select: all;  /* Chrome 49+     */
+    -moz-user-select: all;     /* Firefox 43+    */
+    -ms-user-select: all;      /* No support yet */
+    user-select: all;          /* Likely future  */
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><h2>With <a href="https://sass-lang.com/" rel="nofollow noreferrer">SASS</a> (SCSS syntax)</h2>
+<p>You can do this with a <a href="https://sass-lang.com/documentation/at-rules/mixin" rel="nofollow noreferrer">mixin</a>:</p>
+<pre class="lang-css prettyprint-override"><code>// Disable selection
+@mixin disable-selection {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none;   /* Safari */
+    -khtml-user-select: none;    /* Konqueror HTML */
+    -moz-user-select: none;      /* Firefox */
+    -ms-user-select: none;       /* Internet Explorer/Edge */
+    user-select: none;           /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
+// No selectable element
+.no-selectable {
+    @include disable-selection;
+}
+</code></pre>
+<p>In an HTML tag:</p>
+<pre><code>&lt;div class=&quot;no-selectable&quot;&gt;TRY TO HIGHLIGHT. YOU CANNOT!&lt;/div&gt;
+</code></pre>
+<hr />
+<p><strong>Try it</strong> in this <a href="https://codepen.io/alessandroinfo/pen/eYNNQNv" rel="nofollow noreferrer">CodePen</a>.</p>
+<p><em>If you are using an <a href="https://github.com/postcss/autoprefixer" rel="nofollow noreferrer">autoprefixer</a> you can remove other prefixes.</em></p>
+<p>Browser compatibility <a href="https://caniuse.com/#feat=user-select-none" rel="nofollow noreferrer">here</a>.</p>
+</div><p class="this-has-helped">This answer has helped 52 people.</p><div class="s-prose js-post-body"><p>For those who have trouble achieving the same in the Android browser with the touch event, use:</p>
+
+<pre class="lang-css prettyprint-override"><code>html, body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><p>If you are using <a href="https://en.wikipedia.org/wiki/Less_%28stylesheet_language%29" rel="noreferrer">Less</a> and <a href="https://en.wikipedia.org/wiki/Bootstrap_%28front-end_framework%29" rel="noreferrer">Bootstrap</a> you could write:</p>
+
+<pre class="lang-css prettyprint-override"><code>.user-select(none);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><pre class="lang-css prettyprint-override"><code>-webkit-user-select: none;
+-khtml-user-select: none;
+-moz-user-select: none;
+-o-user-select: none;
+user-select: none;
+
+*.unselectable {
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+   user-select: none;
+}
+</code></pre>
+
+<pre class="lang-html prettyprint-override"><code>&lt;div id="foo" unselectable="on" class="unselectable"&gt;...&lt;/div&gt;
+</code></pre>
+
+<pre class="lang-js prettyprint-override"><code>function makeUnselectable(node) {
+    if (node.nodeType == 1) {
+        node.unselectable = true;
+    }
+    var child = node.firstChild;
+    while (child) {
+        makeUnselectable(child);
+        child = child.nextSibling;
+    }
+}
+
+makeUnselectable(document.getElementById("foo"));
+</code></pre>
+
+<pre class="lang-css prettyprint-override"><code>-webkit-user-select: none;
+-moz-user-select: none;
+</code></pre>
+
+<pre class="lang-html prettyprint-override"><code>onselectstart="return false;"
+</code></pre>
+
+<pre class="lang-css prettyprint-override"><code>::selection { 
+    background: transparent; 
+}
+
+::-moz-selection { 
+    background: transparent; 
+}
+
+* {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+p {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -o-user-select: text;
+    user-select: text;
+}
+</code></pre>
+
+<pre class="lang-html prettyprint-override"><code>&lt;div class="draggable"&gt;&lt;/div&gt;
+</code></pre>
+
+<pre class="lang-css prettyprint-override"><code>.draggable {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    user-select: none;
+}
+
+.draggable input {
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -o-user-select: text;
+    user-select: text;
+ }
+</code></pre>
+
+<pre class="lang-js prettyprint-override"><code>if ($.browser.msie)
+    $('.draggable').find(':not(input)').attr('unselectable', 'on');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 40 people.</p><div class="s-prose js-post-body"><p>Aside from the Mozilla-only property, no, there is no way to disable text selection with just standard CSS (as of now).</p>
+
+<p>If you notice, Stack Overflow doesn't disable text selection for their navigation buttons, and I would recommend against doing so in most cases, since it modifies normal selection behavior and makes it conflict with a user's expectations.</p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>This works in <em>some</em> browsers:</p>
+
+<pre class="lang-css prettyprint-override"><code>::selection{ background-color: transparent;}
+::moz-selection{ background-color: transparent;}
+::webkit-selection{ background-color: transparent;}
+</code></pre>
+
+<p>Simply add your desired elements/ids in front of the selectors separated by commas without spaces, like so:</p>
+
+<pre class="lang-css prettyprint-override"><code>h1::selection,h2::selection,h3::selection,p::selection{ background-color: transparent;}
+h1::moz-selection,h2::moz-selection,h3::moz-selection,p::moz-selection{ background-color: transparent;}
+h1::webkit-selection,h2::webkit-selection,h3::webkit-selection,p::webkit-selection{ background-color: transparent;}
+</code></pre>
+
+<p>The other answers are better; this should probably be seen as a last resort/catchall.</p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>Suppose there are two <code>div</code>s like this:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.second {
+  cursor: default;
+  user-select: none;
+  -webkit-user-select: none;
+  /* Chrome/Safari/Opera */
+  -moz-user-select: none;
+  /* Firefox */
+  -ms-user-select: none;
+  /* Internet Explorer/Edge */
+  -webkit-touch-callout: none;
+  /* iOS Safari */
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div class="first"&gt;
+  This is my first div
+&lt;/div&gt;
+
+&lt;div class="second"&gt;
+  This is my second div
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>Set cursor to default so that it will give a unselectable feel to the user.</p>
+
+<blockquote>
+  <p>Prefix need to be used to support it in all browsers. Without a prefix this may not work in all the answers.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 33 people.</p><div class="s-prose js-post-body"><p>This will be useful if color selection is also not needed:</p>
+
+<pre class="lang-css prettyprint-override"><code>::-moz-selection { background:none; color:none; }
+::selection { background:none; color:none; }
+</code></pre>
+
+<p>...all other browser fixes. It will work in <a href="http://en.wikipedia.org/wiki/Internet_Explorer_9">Internet&nbsp;Explorer&nbsp;9</a> or later.</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>Add this to the first div in which you want to disable the selection for text:</p>
+
+<pre><code>onmousedown='return false;' 
+onselectstart='return false;'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p><strong>NOTE:</strong></p>
+
+<p>The correct answer is correct in that it prevents you from being able to select the text. However, it does not prevent you from being able to copy the text, as I'll show with the next couple of screenshots (as of 7th Nov 2014).</p>
+
+<p><img src="https://i.stack.imgur.com/gcKTY.png" alt="Before we have selected anything"></p>
+
+<p><img src="https://i.stack.imgur.com/xwPld.png" alt="After we have selected"></p>
+
+<p><img src="https://i.stack.imgur.com/Ex6UH.png" alt="The numbers have been copied"></p>
+
+<p>As you can see, we were unable to select the numbers, but we were able to copy them.</p>
+
+<p>Tested on: <a href="http://en.wikipedia.org/wiki/Ubuntu_%28operating_system%29">Ubuntu</a>, <a href="http://en.wikipedia.org/wiki/Google_Chrome">Google Chrome</a> 38.0.2125.111.</p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>It is easily done with:</p>
+
+<pre class="lang-css prettyprint-override"><code>-webkit-user-select: none;
+-moz-user-select: none;
+-ms-user-select: none;
+-o-user-select: none;
+user-select: none;
+</code></pre>
+
+<hr>
+
+<p>Alternatively:</p>
+
+<p>Let's say you have a <code>&lt;h1 id="example"&gt;Hello, World!&lt;/h1&gt;</code>. You will have to remove the innerHTML of that <code>h1</code>, in this case <strong>Hello, World</strong>. Then you will have to go to CSS and do this:</p>
+
+<pre><code>#example::before // You can of course use **::after** as well.
+{
+    content: 'Hello, World!'; // Both single-quotes and double-quotes can be used here.
+
+    display: block; // To make sure it works fine in every browser.
+}
+</code></pre>
+
+<p>Now it simply thinks it is a block-element, and not text.</p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>To get the result I needed, I found I had to use both <strong><code>::selection</code></strong> and <strong><code>user-select</code></strong></p>
+
+<pre class="lang-css prettyprint-override"><code>input.no-select:focus {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+input.no-select::selection {
+    background: transparent;
+}
+
+input.no-select::-moz-selection {
+    background: transparent;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>This is not CSS, but it is worth a mention:</p>
+
+<p><a href="http://api.jqueryui.com/disableSelection/" rel="noreferrer">jQuery UI Disable Selection</a>:</p>
+
+<pre><code>$("your.selector").disableSelection();
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>Check my solution without JavaScript:</p>
+
+<p><a href="http://jsfiddle.net/y4Lac/">jsFiddle</a></p>
+
+<p><div class="snippet" data-lang="js" data-hide="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>li:hover {
+    background-color: silver;
+}
+#id1:before {
+    content: "File";
+}
+#id2:before {
+    content: "Edit";
+}
+#id3:before {
+    content: "View";
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;ul&gt;
+    &lt;li&gt;&lt;a id="id1" href="www.w1.com"&gt;&lt;/a&gt;
+    &lt;li&gt;&lt;a id="id2" href="www.w2.com"&gt;&lt;/a&gt;
+    &lt;li&gt;&lt;a id="id3" href="www.w3.com"&gt;&lt;/a&gt;
+&lt;/ul&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>Popup menu with my technique applied: <a href="http://jsfiddle.net/y4Lac/2/">http://jsfiddle.net/y4Lac/2/</a></p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><h1>FIRST METHOD: ( TOTALLY NONSENSE ):</h1>
+<pre class="lang-css prettyprint-override"><code>.no-select::selection, .no-select *::selection {
+  background-color: Transparent;
+}
+
+.no-select { /* Sometimes I add this too. */
+  cursor: default;
+}
+</code></pre>
+<pre class="lang-html prettyprint-override"><code>&lt;span&gt;RixTheTyrunt is da best!&lt;/span&gt;
+&lt;br&gt;
+&lt;span class=&quot;no-select&quot;&gt;RixTheTyrunt is da best!&lt;/span&gt;
+</code></pre>
+<p>Snippet:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.no-select::selection, .no-select *::selection {
+  background-color: Transparent;
+}
+
+.no-select {
+  /* Sometimes I add this too. */
+  cursor: default;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;span&gt;RixTheTyrunt is da best!&lt;/span&gt;
+&lt;br&gt;
+&lt;span class="no-select"&gt;RixTheTyrunt is da best!&lt;/span&gt;</code></pre>
+</div>
+</div>
+</p>
+<h1>SECOND METHOD ( NO NONSENSE INCLUDED )</h1>
+<pre class="lang-css prettyprint-override"><code>.no-select {
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+</code></pre>
+<p>Snippet:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.no-select {
+  user-select: none;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;span&gt;RixTheTyrunt is da best!&lt;/span&gt;
+&lt;br&gt;
+&lt;span class="no-select"&gt;RixTheTyrunt is da best!&lt;/span&gt;</code></pre>
+</div>
+</div>
+</p>
+<blockquote>
+<p>First, solve the problem. Then, write the code.</p>
+<p>John Johnson</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>Though this pseudo-element was in drafts of CSS Selectors Level 3, it was removed during the Candidate Recommendation phase, as it appeared that its behavior was under-specified, especially with nested elements, and interoperability wasn't achieved.</p>
+
+<p>It's being discussed in <em><a href="http://lists.w3.org/Archives/Public/www-style/2008Oct/0268.html" rel="nofollow noreferrer">How ::selection works on nested elements</a></em>.</p>
+
+<p>Despite it is being implemented in browsers, you can make an illusion of text not being selected by using the same color and background color on selection as of the tab design (in your case).</p>
+
+<h3>Normal CSS Design</h3>
+
+<pre class="lang-css prettyprint-override"><code>p { color: white;  background: black; }
+</code></pre>
+
+<h3>On selection</h3>
+
+<pre class="lang-css prettyprint-override"><code>p::-moz-selection { color: white;  background: black; }
+p::selection      { color: white;  background: black; }
+</code></pre>
+
+<p>Disallowing users to select the text will raise usability issues.</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I have learned from the <a href="https://css-tricks.com/almanac/properties/u/user-select/" rel="nofollow noreferrer">CSS-Tricks</a> website.</p>
+
+<pre class="lang-css prettyprint-override"><code>user-select: none;
+</code></pre>
+
+<p>And this also:</p>
+
+<pre class="lang-css prettyprint-override"><code>::selection {
+    background-color: transparent;
+}
+
+::moz-selection {
+    background-color: transparent;
+}
+
+::webkit-selection {
+    background-color: transparent;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>If you want to disable selection and highlighting for the whole page with CSS, you can easily apply it to all elements:</p>
+<pre class="lang-css prettyprint-override"><code>* {
+    -webkit-touch-callout: none; /* iOS Safari */
+      -webkit-user-select: none; /* Safari */
+       -khtml-user-select: none; /* Konqueror HTML */
+         -moz-user-select: none; /* Firefox */
+          -ms-user-select: none; /* Internet Explorer/Edge */
+              user-select: none; /* Non-prefixed version, currently
+                                    supported by Chrome and Opera */
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Have you tried this?</p>
+<pre><code>.disableSelect{
+    user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    -webkit-touch-callout: none;
+    -o-user-select: none;
+    -moz-user-select: none;
+
+    pointer-events:none;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>You can use a <code>*-user-select</code> property as below for that...</p>
+
+<pre class="lang-css prettyprint-override"><code>p {
+    -webkit-user-select: none;  /* Chrome all and Safari all */
+    -moz-user-select: none;     /* Firefox all */
+    -ms-user-select: none;      /* Internet Explorer 10 and later */
+    user-select: none;          /* Likely future */
+}
+</code></pre>
+
+<p><a href="https://css-tricks.com/almanac/properties/u/user-select/" rel="nofollow noreferrer">Link for the Detailed Description</a></p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>Try to use this one:</p>
+
+<pre class="lang-css prettyprint-override"><code>::selection {
+    background: transparent;
+}
+</code></pre>
+
+<p>And if you wish to specify not select inside a specific element, just put the element class or id before the selection rule, such as:</p>
+
+<pre class="lang-css prettyprint-override"><code>.ClassNAME::selection {
+    background: transparent;
+}
+#IdNAME::selection {
+    background: transparent;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Add a class to your CSS that defines you cannot select or highlight an element. I have an example:</p>
+
+<pre class="lang-html prettyprint-override"><code>&lt;style&gt; 
+    .no_highlighting{
+        user-select: none;
+    }
+
+    .anchor_without_decoration:hover{
+        text-decoration-style: none;
+    }
+&lt;/style&gt;
+
+&lt;a href="#" class="anchor_without_decoration no_highlighting"&gt;Anchor text&lt;/a&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>This highlighting effect is due to the action called <em>hover</em> (onMouseHover).</p>
+<p>When you will hover on any tab its color will be changed.</p>
+<p>Just say for example,</p>
+<h3>HTML code</h3>
+<pre class="lang-html prettyprint-override"><code>&lt;div class=&quot;menu&quot;&gt;
+    &lt;ul class=&quot;effect&quot;&gt;
+        &lt;li&gt;Questions&lt;/li&gt;
+        &lt;li&gt;JOBS&lt;/li&gt;
+        &lt;li&gt;Users&lt;/li&gt;
+    &lt;/ul&gt;
+&lt;/div&gt;
+</code></pre>
+<h3>CSS code</h3>
+<pre class="lang-css prettyprint-override"><code>.effect:hover {
+    color: none;
+}
+</code></pre>
+<p>You can use any color if you want to get it highlighted. Else you can use <code>none</code>.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>With CSS-</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>div {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -o-user-select: none;
+
+  "unselectable='on' onselectstart="return false;"
+  onmousedown="return false;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div&gt;
+  Blabla
+  &lt;br/&gt; More Blabla
+  &lt;br/&gt; More Blabla...
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>I see many detailed answers but I believe that writing just this line of code should be enough for the required task:</p>
+<pre><code>*{
+    -webkit-user-select: none;
+ }
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>Even better, you can disable text selection.</p>
+
+<p>If you like Sass (SCSS), and you don't want to use <a href="http://en.wikipedia.org/wiki/Compass_Project" rel="nofollow noreferrer">Compass</a> you can do this:</p>
+
+<p><code>styles.scss</code></p>
+
+<pre><code>@mixin user-select($select) {
+    -webkit-touch-callout:#{$select};
+    @each $pre in -webkit-, -moz-, -ms-, -o-, -khtml- {
+        #{$pre + user-select}: #{$select};
+    }
+    #{user-select}: #{$select};
+}
+
+.no-select {
+    @include user-select(none);
+}
+</code></pre>
+</div></body></html>

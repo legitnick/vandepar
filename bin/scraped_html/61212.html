@@ -1,0 +1,456 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I remove local (untracked) files from the current Git working tree?</p><div class="s-prose js-post-body"><p>How do I delete untracked local files from the current working tree?</p>
+</div><p class="this-has-helped">This answer has helped 9619 people.</p><div class="s-prose js-post-body"><blockquote>
+<h2><a href="https://git-scm.com/docs/git-clean" rel="noreferrer">git-clean</a> - Remove untracked files from the working tree</h2>
+<h3>Synopsis</h3>
+<pre><code>git clean [-d] [-f] [-i] [-n] [-q] [-e &lt;pattern&gt;] [-x | -X] [--] &lt;path&gt;…​
+</code></pre>
+<h3>Description</h3>
+<p>Cleans the working tree by recursively removing files that are not under version control, <strong>starting from the current directory</strong>.</p>
+<p>Normally, only files unknown to Git are removed, but if the <code>-x</code> option is specified, ignored files are also removed. This can, for example, be useful to remove all build products.</p>
+<p>If any optional <code>&lt;path&gt;...</code> arguments are given, only those paths are affected.</p>
+</blockquote>
+<hr />
+<p>Step 1 is to show what will be deleted by using the <code>-n</code> option:</p>
+<pre><code># Print out the list of files and directories which will be removed (dry run)
+git clean -n -d
+</code></pre>
+<p>Clean Step - <strong>beware: this will delete files</strong>:</p>
+<pre><code># Delete the files from the repository
+git clean -f
+</code></pre>
+<ul>
+<li>To remove directories, run <code>git clean -f -d</code> or <code>git clean -fd</code></li>
+<li>To remove ignored files, run <code>git clean -f -X</code> or <code>git clean -fX</code></li>
+<li>To remove ignored and non-ignored files, run <code>git clean -f -x</code> or <code>git clean -fx</code></li>
+</ul>
+<p><strong>Note</strong> the case difference on the <code>X</code> for the two latter commands.</p>
+<p>If <code>clean.requireForce</code> is set to &quot;true&quot; (the default) in your configuration, one needs to specify <code>-f</code> otherwise nothing will actually happen.</p>
+<p>Again see the <a href="http://git-scm.com/docs/git-clean" rel="noreferrer"><code>git-clean</code></a> docs for more information.</p>
+<hr />
+<blockquote>
+<h3>Options</h3>
+<p><strong><code>-f</code>, <code>--force</code></strong></p>
+<p>If the Git configuration variable clean.requireForce is not set to
+false, git clean will refuse to run unless given <code>-f</code>, <code>-n</code> or <code>-i</code>.</p>
+<p><strong><code>-x</code></strong></p>
+<p>Don’t use the standard ignore rules read from .gitignore (per
+directory) and <code>$GIT_DIR/info/exclude</code>, but do still use the ignore
+rules given with <code>-e</code> options. This allows removing all untracked files,
+including build products. This can be used (possibly in conjunction
+with git reset) to create a pristine working directory to test a clean
+build.</p>
+<p><strong><code>-X</code></strong></p>
+<p>Remove only files ignored by Git. This may be useful to rebuild
+everything from scratch, but keep manually created files.</p>
+<p><strong><code>-n</code>, <code>--dry-run</code></strong></p>
+<p>Don’t actually remove anything, just show what would be done.</p>
+<p><strong><code>-d</code></strong></p>
+<p>Remove untracked directories in addition to untracked files. If an
+untracked directory is managed by a different Git repository, it is
+not removed by default. Use <code>-f</code> option twice if you really want to
+remove such a directory.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 1231 people.</p><div class="s-prose js-post-body"><p>Use <code>git clean -f -d</code> to make sure that <strong>directories</strong> are also removed.</p>
+
+<ol>
+<li><p>Don’t actually remove anything, just show what would be done.</p>
+
+<pre><code>git clean -n
+</code></pre>
+
+<p>or </p>
+
+<pre><code>git clean --dry-run
+</code></pre></li>
+<li><p>Remove untracked directories in addition to untracked files. If an untracked directory is managed by a different Git repository, it is not removed by default. Use the <code>-f</code> option twice if you really want to remove such a directory.</p>
+
+<pre><code>git clean -fd
+</code></pre></li>
+</ol>
+
+<p>You can then check if your files are really gone with <code>git status</code>.</p>
+</div><p class="this-has-helped">This answer has helped 551 people.</p><div class="s-prose js-post-body"><p>I am surprised nobody mentioned this before:</p>
+
+<pre><code>git clean -i
+</code></pre>
+
+<p>That stands for <em>interactive</em> and you will get a quick overview of what is going to be deleted offering you the possibility to include/exclude the affected files. Overall, still faster than running the mandatory <code>--dry-run</code> before the real cleaning.</p>
+
+<p>You will have to toss in a <code>-d</code> if you also want to take care of empty folders. At the end, it makes  for a nice alias:</p>
+
+<pre><code>git iclean
+</code></pre>
+
+<p>That being said, the extra hand holding of interactive commands can be tiring for experienced users.  These days I just use the already mentioned <code>git clean -fd</code> </p>
+</div><p class="this-has-helped">This answer has helped 412 people.</p><div class="s-prose js-post-body"><p><a href="http://git-scm.com/docs/git-clean" rel="noreferrer"><code>git-clean</code> - Remove untracked files from the working tree</a></p>
+</div><p class="this-has-helped">This answer has helped 372 people.</p><div class="s-prose js-post-body"><h2>Simple Way to remove untracked files</h2>
+
+<p>To remove all untracked files, The simple
+way is to <strong>add all of them first</strong> and <strong>reset the repo</strong> as below</p>
+
+<pre><code>git add --all
+git reset --hard HEAD
+</code></pre>
+
+<hr>
+</div><p class="this-has-helped">This answer has helped 294 people.</p><div class="s-prose js-post-body"><p>If untracked directory is a git repository of its own (e.g. submodule), you need to use <code>-f</code> twice:</p>
+
+<p><code>git clean -d -f -f</code></p>
+</div><p class="this-has-helped">This answer has helped 160 people.</p><div class="s-prose js-post-body"><p>This is what I always use:</p>
+
+<pre><code>git clean -fdx
+</code></pre>
+
+<p>For a very large project you might want to run it a couple of times.</p>
+</div><p class="this-has-helped">This answer has helped 155 people.</p><div class="s-prose js-post-body"><p>I like <code>git stash push -u</code> because you can undo them all with <code>git stash pop</code>.</p>
+
+<p>EDIT: Also I found a way to show untracked file in a stash (e.g. <code>git show stash@{0}^3</code>) <a href="https://stackoverflow.com/a/12681856/338986">https://stackoverflow.com/a/12681856/338986</a></p>
+
+<p>EDIT2: <code>git stash save</code> is deprecated in favor of <code>push</code>. Thanks @script-wolf.</p>
+</div><p class="this-has-helped">This answer has helped 115 people.</p><div class="s-prose js-post-body"><h1>Be careful while running `git clean` command.</h1>
+<h2><strong>Always use</strong> <code>-n</code> first</h2>
+<p>Always use <code>-n</code> before running the clean command as it will show you what files would get removed.</p>
+<p><code>-d</code> Normally, when no  is specified, git clean will not recurse into untracked directories to avoid removing too much. Specify -d to have it recurse into such directories as well. If any paths are specified, -d is irrelevant; all untracked files matching the specified paths (with exceptions for nested git directories mentioned under --force) will be removed.</p>
+<p><code>-f</code> | <code>--force</code>
+If the Git configuration variable clean.requireForce is not set to false, git clean will refuse to delete files or directories unless given -f or -i. Git will refuse to modify untracked nested git repositories (directories with a .git subdirectory) unless a second -f is given.</p>
+<pre><code>git clean -n -d 
+git clean -n -d -f
+</code></pre>
+<p>Now run without <code>-n</code> if output was what you intend to remove.</p>
+<pre><code>git clean -d -f
+</code></pre>
+<p>By default, <code>git clean</code> will only remove untracked files that are not ignored. Any file that matches a pattern in your .gitignore or other ignore files will not be removed. If you want to remove those files too, you can add a <code>-x</code> to the clean command.</p>
+<pre><code>git clean -f -d -x
+</code></pre>
+<p>There is also interactive mode available <code>-i</code> with the clean command</p>
+<pre><code>git clean -x -i
+</code></pre>
+<h1>Alternatively</h1>
+If you are not 100% sure that deleting your uncommitted work is safe, you could use stashing instead
+<pre><code>git stash --all
+</code></pre>
+<p>Before you use <code>stash --all</code> note:
+If the <code>--all</code> option is used, then the <strong>ignored files</strong> are stashed and cleaned in addition to the <strong>untracked files</strong>.</p>
+<pre><code>git stash push --keep-index
+</code></pre>
+<p>If the --keep-index option is used, all changes already added to the index are left intact. Your staged changes remain in your workspace, but at the same time, they are also saved into your stash.</p>
+<p>Calling <code>git stash</code> without any arguments is equivalent to <code>git stash push</code>.</p>
+<pre><code>git stash push -m &quot;name your stash&quot; // before git stash save (deprecated)
+</code></pre>
+<p>Stashing based on the used flags can clear your directory from unstaged / staged files by writing them to stash storage. I give’s flexibility to retrieve the files at any point in time using <strong>stash</strong> with <strong>apply</strong> or <strong>pop</strong>. Then if you are fine with removing your stashed files you could run:</p>
+<pre><code>git stash drop // or clean
+</code></pre>
+<p>To see full instruction on how to work with stash see this <a href="https://stackoverflow.com/questions/11269256/how-to-name-and-retrieve-a-stash-by-name-in-git">How to name and retrieve a stash by name in git?</a></p>
+<p><a href="https://i.stack.imgur.com/G356U.jpg" rel="noreferrer"><img src="https://i.stack.imgur.com/G356U.jpg" alt="enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 109 people.</p><div class="s-prose js-post-body"><p><a href="http://www.kernel.org/pub/software/scm/git/docs/git-clean.html" rel="noreferrer">git-clean</a> is what you are looking for. It is used to remove untracked files from the working tree.</p>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>If needed to remove untracked files from particular subdirectory,</p>
+
+<pre><code>git clean -f {dir_path}
+</code></pre>
+
+<p>And combined way to delete untracked dir/files and ignored files. </p>
+
+<pre><code>git clean -fxd {dir_path}
+</code></pre>
+
+<p>after this you will have modified files only in <code>git status</code>.</p>
+</div><p class="this-has-helped">This answer has helped 92 people.</p><div class="s-prose js-post-body"><p><strong>Remove all extra folders and files in this repo + submodules</strong></p>
+
+<p>This gets you in same state as fresh clone.</p>
+
+<pre><code>git clean -ffdx
+</code></pre>
+
+<p><strong>Remove all extra folders and files in this repo but not its submodules</strong></p>
+
+<pre><code>git clean -fdx
+</code></pre>
+
+<p><strong>Remove extra folders but not files (ex. build or logs folder)</strong></p>
+
+<pre><code>git clean -fd
+</code></pre>
+
+<p><strong>Remove extra folders + ignored files (but not newly added files)</strong></p>
+
+<p>If file wasn't ignored and not yet checked-in then  it stays. Note the capital X.</p>
+
+<pre><code>git clean -fdX
+</code></pre>
+
+<p><strong>New interactive mode</strong></p>
+
+<pre><code>git clean
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 69 people.</p><div class="s-prose js-post-body"><p><strong>OK,</strong> deleting <strong>unwanted untracked files and folders</strong> are easy using <code>git</code> in command line, just do it like this:</p>
+
+<pre><code>git clean -fd
+</code></pre>
+
+<p><strong>Double check</strong> before doing it as it will delete the files and folders without making any history...</p>
+
+<p>Also in this case, <code>-f</code> stands for force and <code>-d</code> stands for directory...</p>
+
+<p>So, if you want to delete files only, you can use <code>-f</code> only:</p>
+
+<pre><code>git clean -f
+</code></pre>
+
+<p>If you want to <strong>delete</strong>(directories) and files, you can delete only untracked directories and files like this:</p>
+
+<pre><code>git clean -fd
+</code></pre>
+
+<p>Also, you can use <code>-x</code> flag for including the files which are ignored by git. This would be helpful if you want to delete everything.</p>
+
+<p>And adding <code>-i</code> flag, makes git asking you for permission for deleting files one by one on the go.</p>
+
+<p>If you not sure and want to check things first, add <code>-n</code> flag.</p>
+
+<p>Use <code>-q</code> if you don't want to see any report after successful deletion.</p>
+
+<p>I also create the image below to make it more memorable, especially I have seen many people confuse <code>-f</code> for cleaning folder sometimes or mix it up somehow!</p>
+
+<p><br>
+<a href="https://i.stack.imgur.com/3W563.png" rel="noreferrer"><img src="https://i.stack.imgur.com/3W563.png" alt="deleting unwanted untracked files and folder"></a> </p>
+</div><p class="this-has-helped">This answer has helped 68 people.</p><div class="s-prose js-post-body"><p><code>git clean -fd</code> removes directory</p>
+
+<p><code>git clean -fX</code> removes ignored files</p>
+
+<p><code>git clean -fx</code> removes ignored and un-ignored files</p>
+
+<p>can be used all above options in combination as </p>
+
+<p><code>git clean -fdXx</code> </p>
+
+<p>check git manual for more help</p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p>A better way is to use: git clean</p>
+
+<pre><code>git clean -d -x -f
+</code></pre>
+
+<p>This removes untracked files, including directories <code>(-d)</code> and files ignored by <code>git (-x)</code>.</p>
+
+<p>Also, replace the <code>-f</code> argument with <code>-n</code> to perform a <code>dry-run</code> or <code>-i</code> for interactive mode and it will tell you what will be removed.</p>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><p><strong><em>User interactive approach:</em></strong>    </p>
+
+<pre><code>git clean -i -fd
+
+Remove .classpath [y/N]? N
+Remove .gitignore [y/N]? N
+Remove .project [y/N]? N
+Remove .settings/ [y/N]? N
+Remove src/com/arsdumpgenerator/inspector/ [y/N]? y
+Remove src/com/arsdumpgenerator/manifest/ [y/N]? y
+Remove src/com/arsdumpgenerator/s3/ [y/N]? y
+Remove tst/com/arsdumpgenerator/manifest/ [y/N]? y
+Remove tst/com/arsdumpgenerator/s3/ [y/N]? y
+</code></pre>
+
+<p>-i for interactive<br>
+-f for force<br>
+-d for directory<br>
+-x for ignored files(add if required)<br><br>
+<strong>Note:</strong> <em>Add <strong>-n</strong> or <strong>--dry-run</strong> to just check what it will do.</em></p>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p>To remove Untracked files :</p>
+
+<pre><code>git add .
+git reset --hard HEAD
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>A lifehack for such situation I just invented and tried (that works perfectly):</p>
+
+<pre><code>git add .
+git reset --hard HEAD
+</code></pre>
+
+<p><strong>Beware!</strong> Be sure to <strong>commit any needed changes</strong> (even in non-untracked files) <strong>before performing this</strong>.</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>For me only following worked:</p>
+
+<pre><code>git clean -ffdx
+</code></pre>
+
+<p>In all other cases, I was getting message <em>"Skipping Directory"</em> for some subdirectories. </p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p><code>git clean -f -d -x $(git rev-parse --show-cdup)</code> applies clean to the root directory, no matter where you call it within a repository directory tree. I use it all the time as it does not force you to leave the folder where you working now and allows to clean &amp; commit right from the place where you are.</p>
+
+<p>Be sure that flags <code>-f</code>, <code>-d</code>, <code>-x</code> match your needs:</p>
+
+<pre><code>-d
+       Remove untracked directories in addition to untracked files. If an
+       untracked directory is managed by a different Git repository, it is
+       not removed by default. Use -f option twice if you really want to
+       remove such a directory.
+
+-f, --force
+       If the Git configuration variable clean.requireForce is not set to
+       false, git clean will refuse to delete files or directories unless
+       given -f, -n or -i. Git will refuse to delete directories with .git
+       sub directory or file unless a second -f is given. This affects
+       also git submodules where the storage area of the removed submodule
+       under .git/modules/ is not removed until -f is given twice.
+
+-x
+       Don't use the standard ignore rules read from .gitignore (per
+       directory) and $GIT_DIR/info/exclude, but do still use the ignore
+       rules given with -e options. This allows removing all untracked
+       files, including build products. This can be used (possibly in
+       conjunction with git reset) to create a pristine working directory
+       to test a clean build.
+</code></pre>
+
+<p>There are other flags as well available, just check <code>git clean --help</code>.</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>If you just want to delete the files listed as untracked by 'git status'</p>
+
+<pre><code>git stash save -u
+git stash drop "stash@{0}"
+</code></pre>
+
+<p>I prefer this to 'git clean' because 'git clean' will delete files
+ignored by git, so your next build will have to rebuild everything
+and you may lose your IDE settings too.</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>To know what will be deleted before actually deleting:</p>
+
+<p><code>git clean -d -n</code></p>
+
+<p>It will output something like:</p>
+
+<p><strong>Would remove sample.txt</strong></p>
+
+<p>To delete everything listed in the output of the previous command:</p>
+
+<p><code>git clean -d -f</code></p>
+
+<p>It will output something like:</p>
+
+<p><strong>Removing sample.txt</strong></p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p><code>git add --all</code>, <code>git stash</code> and <code>git stash drop</code>, try these three commands in this order inorder to remove all untracked files. By adding all those untracked files to git and stashing them will move all those untracked files to stash list and dropping out top one i.e., stash@{0} will remove the stashed changes from stash list.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>To remove the untracked files you should first use command to view the files that will be affected by cleaning </p>
+
+<pre><code>git clean -fdn
+</code></pre>
+
+<p>This will show you the list of files that will be deleted. Now to actually delete those files use this command:</p>
+
+<pre><code>git clean -fd
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>uggested Command for <strong>Removing Untracked Files from git docs</strong> is <strong>git clean</strong> </p>
+
+<p><strong>git clean</strong> - Remove untracked files from the working tree</p>
+
+<p><strong>Suggested Method:</strong>  Interative Mode by using <code>git clean -i</code>
+so we can have control over it. let see remaining available options.</p>
+
+<p><strong>Available Options:</strong></p>
+
+<pre><code>git clean 
+    -d -f -i -n -q -e -x -X (can use either)
+</code></pre>
+
+<p><strong>Explanation:</strong></p>
+
+<p><strong>1.</strong> <strong>-d</strong></p>
+
+<p>Remove untracked directories in addition to untracked files. If an untracked directory is managed by a different Git repository,
+   it is not removed by default. Use -f option twice if you really want to remove such a directory.</p>
+
+<p><strong>2. -f, --force</strong></p>
+
+<p>If the Git configuration variable clean.requireForce is not set to false, git clean will refuse to run unless given -f, -n or
+   -i.</p>
+
+<p><strong>3. -i, --interactive</strong></p>
+
+<p>Show what would be done and clean files interactively. See “Interactive mode” for details.</p>
+
+<p><strong>4. -n, --dry-run</strong></p>
+
+<p>Don’t actually remove anything, just show what would be done.</p>
+
+<p><strong>5. -q, --quiet</strong></p>
+
+<p>Be quiet, only report errors, but not the files that are successfully removed.</p>
+
+<p><strong>6. -e , --exclude=</strong></p>
+
+<p>In addition to those found in .gitignore (per directory) and $GIT_DIR/info/exclude, also consider these patterns to be in the
+   set of the ignore rules in effect.</p>
+
+<p><strong>7. -x</strong></p>
+
+<p>Don’t use the standard ignore rules read from .gitignore (per directory) and $GIT_DIR/info/exclude, but do still use the ignore
+   rules given with -e options. This allows removing all untracked files, including build products. This can be used (possibly in
+   conjunction with git reset) to create a pristine working directory to test a clean build.</p>
+
+<p><strong>8. -X</strong></p>
+
+<p>Remove only files ignored by Git. This may be useful to rebuild everything from scratch, but keep manually created files.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p><code>git clean -f to remove untracked files from working directory.</code></p>
+
+<p>I have covered some basics here in my blog, <a href="https://vaisakh.github.io/2017/02/14/git-intro-basic-commands.html" rel="noreferrer">git-intro-basic-commands</a></p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>Normal <code>git clean</code> command doesn't remove untracked files with my <code>git version 2.9.0.windows.1</code>.</p>
+
+<pre><code>$ git clean -fdx     # doesn't remove untracked files
+$ git clean -fdx *   # Append star then it works!
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>We can easily removed local untracked files from the current git working tree by using below git comments.</p>
+
+<pre><code>git reset [--soft | --mixed [-N] | --hard | --merge | --keep] [-q] [&lt;commit&gt;]
+</code></pre>
+
+<p><strong>Example:</strong></p>
+
+<pre><code>git reset --hard HEAD
+</code></pre>
+
+<p><strong>Links :</strong></p>
+
+<ol>
+<li><a href="https://git-scm.com/docs/git-reset" rel="noreferrer">https://git-scm.com/docs/git-reset</a></li>
+<li><a href="https://stackoverflow.com/questions/9529078/how-do-i-use-git-reset-hard-head-to-revert-to-a-previous-commit">How do I use &#39;git reset --hard HEAD&#39; to revert to a previous commit?</a></li>
+<li><a href="https://stackoverflow.com/questions/1628088/reset-local-repository-branch-to-be-just-like-remote-repository-head">Reset local repository branch to be just like remote repository HEAD</a></li>
+<li><a href="https://jwiegley.github.io/git-from-the-bottom-up/3-Reset/4-doing-a-hard-reset.html" rel="noreferrer">https://jwiegley.github.io/git-from-the-bottom-up/3-Reset/4-doing-a-hard-reset.html</a> </li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><blockquote>
+  <h2><strong>Clean out git repository and all submodules recursively</strong></h2>
+  
+  <p>The following command will clean out
+  the current git repository and all its submodules recursively:</p>
+
+<pre><code>(git clean -d -x -f &amp;&amp; git submodule foreach --recursive git clean -d -x -f)
+</code></pre>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p><strong>oh-my-zsh</strong> with <strong>zsh</strong> provides those great aliases via the git plugin. They can be used in bash as well.</p>
+
+<p><code>gclean='git clean -fd'</code><br>
+<code>gpristine='git reset --hard &amp;&amp; git clean -dfx'</code></p>
+
+<ul>
+<li><code>gclean</code> <em>removes untracked directories in addition to untracked files</em>.</li>
+<li><code>gpristine</code> hard reset the local changes, remove untracked directories, 
+untracked files and <em>don't use the standard ignore rules read from .gitignore (per directory) and $GIT_DIR/info/exclude, but do still use the ignore rules given with -e options. This allows removing all untracked files, including build products. This can be used (possibly in conjunction with git reset) to create a pristine working directory to test a clean build</em>.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><pre><code>git clean -f
+</code></pre>
+
+<p>will remove the untracked files from the current git </p>
+
+<pre><code>git clean -fd
+</code></pre>
+
+<p>when you want to remove directories and files, this will delete only untracked directories and files</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>I think the safe and easy way is this!</p>
+<pre><code>git add .
+git stash 
+</code></pre>
+<p>For  more information
+<a href="https://www.atlassian.com/git/tutorials/saving-changes/git-stash#stashing-your-work" rel="noreferrer">https://www.atlassian.com/git/tutorials/saving-changes/git-stash#stashing-your-work</a></p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>To remove complete changes <strong>git clean -f -d</strong></p>
+<pre><code>$ git clean -f -d
+Removing client/app/helpers/base64.js
+Removing files/
+Removing package.json.bak
+
+where 
+-f is force 
+-d is a directory 
+</code></pre>
+</div></body></html>

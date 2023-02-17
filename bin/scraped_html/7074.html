@@ -1,0 +1,508 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the difference between String and string in C#?</p><div class="s-prose js-post-body"><p>What are the differences between these two and which one should I use?</p>
+<pre><code>string s = &quot;Hello world!&quot;;
+String s = &quot;Hello world!&quot;;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6962 people.</p><div class="s-prose js-post-body"><p><a href="https://learn.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/string" rel="noreferrer"><code>string</code></a> is an alias in C# for <a href="https://learn.microsoft.com/en-us/dotnet/api/system.string" rel="noreferrer"><code>System.String</code></a>.<br />
+So technically, there is no difference.  It's like <a href="https://stackoverflow.com/questions/62503/c-int-or-int32-should-i-care"><code>int</code> <em>vs.</em> <code>System.Int32</code></a>.</p>
+<p>As far as guidelines, it's generally recommended to use <code>string</code> any time you're referring to an object.</p>
+<p>e.g.</p>
+<pre><code>string place = &quot;world&quot;;
+</code></pre>
+<p>Likewise, I think it's generally recommended to use <code>String</code> if you need to refer specifically to the class.</p>
+<p>e.g.</p>
+<pre><code>string greet = String.Format(&quot;Hello {0}!&quot;, place);
+</code></pre>
+<h3>This is the style that Microsoft tends to use in <a href="https://learn.microsoft.com/en-us/dotnet/api/system.string.format#examples" rel="noreferrer">their examples</a>.</h3>
+<p>It appears that the guidance in this area may have changed, as <a href="https://github.com/StyleCop" rel="noreferrer">StyleCop</a> now enforces the use of the C# specific aliases.</p>
+</div><p class="this-has-helped">This answer has helped 3772 people.</p><div class="s-prose js-post-body">
+<p>Just for the sake of completeness, here's a brain dump of related information...</p>
+<p>As others have noted, <code>string</code> is an alias for <code>System.String</code>. Assuming your code using <code>String</code> compiles to <code>System.String</code> (i.e. you haven't got a using directive for some other namespace with a different <code>String</code> type), they compile to the same code, so at execution time there is no difference whatsoever. This is just one of the aliases in C#. The complete list is:</p>
+<pre class="lang-c# prettyprint-override"><code>object:  System.Object
+string:  System.String
+bool:    System.Boolean
+byte:    System.Byte
+sbyte:   System.SByte
+short:   System.Int16
+ushort:  System.UInt16
+int:     System.Int32
+uint:    System.UInt32
+long:    System.Int64
+ulong:   System.UInt64
+float:   System.Single
+double:  System.Double
+decimal: System.Decimal
+char:    System.Char
+</code></pre>
+<p>Apart from <code>string</code> and <code>object</code>, the aliases are all to value types. <code>decimal</code> is a value type, but not a primitive type in the CLR. The only primitive type which doesn't have an alias is <code>System.IntPtr</code>.</p>
+<p>In the spec, the value type aliases are known as &quot;simple types&quot;. Literals can be used for constant values of every simple type; no other value types have literal forms available. (Compare this with VB, which allows <code>DateTime</code> literals, and has an alias for it too.)</p>
+<p>There is one circumstance in which you <em>have</em> to use the aliases: when explicitly specifying an enum's underlying type. For instance:</p>
+<pre class="lang-c# prettyprint-override"><code>public enum Foo : UInt32 {} // Invalid
+public enum Bar : uint   {} // Valid
+</code></pre>
+<p>That's just a matter of the way the spec defines enum declarations - the part after the colon has to be the <em>integral-type</em> production, which is one token of <code>sbyte</code>, <code>byte</code>, <code>short</code>, <code>ushort</code>, <code>int</code>, <code>uint</code>, <code>long</code>, <code>ulong</code>, <code>char</code>... as opposed to a <em>type</em> production as used by variable declarations for example. It doesn't indicate any other difference.</p>
+<p>Finally, when it comes to which to use: personally I use the aliases everywhere for the implementation, but the CLR type for any APIs. It really doesn't matter too much which you use in terms of implementation - consistency among your team is nice, but no-one else is going to care. On the other hand, it's genuinely important that if you refer to a type in an API, you do so in a language-neutral way. A method called <code>ReadInt32</code> is unambiguous, whereas a method called <code>ReadInt</code> requires interpretation. The caller could be using a language that defines an <code>int</code> alias for <code>Int16</code>, for example. The .NET framework designers have followed this pattern, good examples being in the <code>BitConverter</code>, <code>BinaryReader</code> and <code>Convert</code> classes.</p>
+</div><p class="this-has-helped">This answer has helped 819 people.</p><div class="s-prose js-post-body"><p><code>String</code> stands for <code>System.String</code> and it is a .NET Framework type. <strong><code>string</code> is an alias</strong> in the C# language for  <code>System.String</code>. Both of them are compiled to <strong><code>System.String</code> in IL</strong> (Intermediate Language), so there is no difference. Choose what you like and use that. If you code in C#, I'd prefer <code>string</code> as it's a C# type alias and well-known by C# programmers.</p>
+
+<p>I can say the same about <strong>(<code>int</code>, <code>System.Int32</code>)</strong> etc..</p>
+</div><p class="this-has-helped">This answer has helped 581 people.</p><div class="s-prose js-post-body"><p>The best answer I have ever heard about using the provided type aliases in C# comes from Jeffrey Richter in his book <a href="https://rads.stackoverflow.com/amzn/click/com/0735621632" rel="noreferrer" rel="nofollow noreferrer">CLR Via C#</a>. Here are his 3 reasons:</p>
+
+<blockquote>
+  <ul>
+  <li>I've seen a number of developers confused, not knowing whether to use <strong>string</strong> or <strong>String</strong> in their code. Because in C# the string (a keyword) maps exactly to System.String (an FCL type), there is no difference and either can be used.</li>
+  <li>In C#, <strong>long</strong> maps to <strong>System.Int64</strong>, but in a different programming language, <strong>long</strong> could map to an <strong>Int16</strong> or <strong>Int32</strong>. In fact, C++/CLI does in fact treat long as an <strong>Int32</strong>. Someone reading source code in one language could easily misinterpret the code's intention if he or she were used to programming in a different programming language. In fact, most languages won't even treat <strong>long</strong> as a keyword and won't compile code that uses it.</li>
+  <li>The FCL has many methods that have type names as part of their method names. For example, the <strong>BinaryReader</strong> type offers methods such as <strong>ReadBoolean</strong>, <strong>ReadInt32</strong>, <strong>ReadSingle</strong>, and so on, and the <strong>System.Convert</strong> type offers methods such as <strong>ToBoolean</strong>, <strong>ToInt32</strong>, <strong>ToSingle</strong>, and so on. Although it's legal to write the following code, the line with float feels very unnatural to me, and it's not obvious that the line is correct:</li>
+  </ul>
+</blockquote>
+
+<pre><code>BinaryReader br = new BinaryReader(...);
+float val  = br.ReadSingle(); // OK, but feels unnatural
+Single val = br.ReadSingle(); // OK and feels good
+</code></pre>
+
+<p>So there you have it. I think these are all really good points. I however, don't find myself using Jeffrey's advice in my own code. Maybe I am too stuck in my C# world but I end up trying to make my code look like the framework code.</p>
+</div><p class="this-has-helped">This answer has helped 515 people.</p><div class="s-prose js-post-body"><p><code>string</code> is a reserved word, but <code>String</code> is just a class name. 
+This means that <code>string</code> cannot be used as a variable name by itself.</p>
+
+<p>If for some reason you wanted a variable called <em>string</em>, you'd see only the first of these compiles:</p>
+
+<pre><code>StringBuilder String = new StringBuilder();  // compiles
+StringBuilder string = new StringBuilder();  // doesn't compile 
+</code></pre>
+
+<p>If you really want a variable name called <em>string</em> you can use <code>@</code> as a prefix:</p>
+
+<pre><code>StringBuilder @string = new StringBuilder();
+</code></pre>
+
+<p>Another critical difference: Stack Overflow highlights them differently. </p>
+</div><p class="this-has-helped">This answer has helped 458 people.</p><div class="s-prose js-post-body"><p><strong>There is one difference</strong> - you can't use <code>String</code> without <code>using System;</code> beforehand.</p>
+</div><p class="this-has-helped">This answer has helped 352 people.</p><div class="s-prose js-post-body"><p>It's been covered above; however, you can't use <code>string</code> in reflection; you must use <code>String</code>.</p>
+</div><p class="this-has-helped">This answer has helped 308 people.</p><div class="s-prose js-post-body"><p><code>System.String</code> is the .NET string class - in C# <code>string</code> is an alias for <code>System.String</code> - so in use they are the same.</p>
+
+<p>As for guidelines I wouldn't get too bogged down and just use whichever you feel like - there are more important things in life and the code is going to be the same anyway.</p>
+
+<p>If you find yourselves building systems where it is necessary to specify the size of the integers you are using and so tend to use <code>Int16</code>, <code>Int32</code>, <code>UInt16</code>, <code>UInt32</code> etc. then it might look more natural to use <code>String</code> - and when moving around between different .net languages it might make things more understandable - otherwise I would use string and int.</p>
+</div><p class="this-has-helped">This answer has helped 244 people.</p><div class="s-prose js-post-body"><p>
+I prefer the capitalized <code>.NET</code> types (rather than the aliases) for formatting reasons. The <code>.NET</code> types are colored the same as other object types (the value types are proper objects, after all).</p>
+
+<p>Conditional and control keywords (like <code>if</code>, <code>switch</code>, and <code>return</code>) are lowercase and colored dark blue (by default). And I would rather not have the disagreement in use and format.</p>
+
+<p>Consider:</p>
+
+<pre class="lang-c# prettyprint-override"><code>String someString; 
+string anotherString; 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 220 people.</p><div class="s-prose js-post-body"><p><code>string</code> and <code>String</code> are identical in all ways (except the uppercase "S").  There are no performance implications either way.</p>
+
+<p>Lowercase <code>string</code> is preferred in most projects due to the syntax highlighting</p>
+</div><p class="this-has-helped">This answer has helped 220 people.</p><div class="s-prose js-post-body"><p><a href="http://www.youtube.com/watch?v=ikqUUIg8gmk" rel="noreferrer">This YouTube</a> video demonstrates practically how they differ.</p>
+<p>But now for a long textual answer.</p>
+<p>When we talk about <code>.NET</code> there are two different things one there is <code>.NET</code> framework and the other there are languages (<code>C#</code>, <code>VB.NET</code> etc) which use that framework.</p>
+<p><img src="https://i.stack.imgur.com/jQUcj.png" alt="enter image description here" /></p>
+<p>&quot;<code>System.String</code>&quot; a.k.a &quot;String&quot; (capital &quot;S&quot;) is a <code>.NET</code> framework data type while &quot;string&quot; is a <code>C#</code> data type.</p>
+<p><img src="https://i.stack.imgur.com/tKhjh.png" alt="enter image description here" /></p>
+<p>In short &quot;String&quot; is an alias (the same thing called with different names) of &quot;string&quot;. So technically both the below code statements will give the same output.</p>
+<pre><code>String s = &quot;I am String&quot;;
+</code></pre>
+<p>or</p>
+<pre><code>string s = &quot;I am String&quot;;
+</code></pre>
+<p>In the same way, there are aliases for other C# data types as shown below:</p>
+<p>object: <code>System.Object</code>, string: <code>System.String</code>, bool: <code>System.Boolean</code>, byte: <code>System.Byte</code>, sbyte: <code>System.SByte</code>, short: <code>System.Int16</code> and so on.</p>
+<p><strong>Now the million-dollar question from programmer's point of view: So when to use &quot;String&quot; and &quot;string&quot;?</strong></p>
+<p>The first thing to avoid confusion use one of them consistently. But from best practices perspective when you do variable declaration it's good to use &quot;string&quot; (small &quot;s&quot;) and when you are using it as a class name then &quot;String&quot; (capital &quot;S&quot;) is preferred.</p>
+<p>In the below code the left-hand side is a variable declaration and it is declared using &quot;string&quot;. On the right-hand side, we are calling a method so &quot;String&quot; is more sensible.</p>
+<pre><code>string s = String.ToUpper() ;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 216 people.</p><div class="s-prose js-post-body"><p>C# is a language which is used together with the CLR.</p>
+
+<p><strong><code>string</code></strong> is a type in C#.</p>
+
+<p><strong><code>System.String</code></strong> is a type in the CLR.</p>
+
+<p>When you use C# together with the CLR <strong><code>string</code></strong> will be mapped to <strong><code>System.String</code></strong>.</p>
+
+<p>Theoretically, you could implement a C#-compiler that generated Java bytecode. A sensible implementation of this compiler would probably map <strong><code>string</code></strong> to <strong><code>java.lang.String</code></strong> in order to interoperate with the Java runtime library.</p>
+</div><p class="this-has-helped">This answer has helped 192 people.</p><div class="s-prose js-post-body"><p>Lower case <code>string</code> is an alias for <code>System.String</code>.
+They are the same in <code>C#</code>.</p>
+
+<p>There's a debate over whether you should use the System types (<code>System.Int32</code>, <code>System.String</code>, etc.) types or the <code>C# aliases</code> (<code>int</code>, <code>string</code>, etc). I personally believe you should use the <code>C# aliases</code>, but that's just my personal preference.</p>
+</div><p class="this-has-helped">This answer has helped 172 people.</p><div class="s-prose js-post-body"><p><code>string</code> is just an alias for <code>System.String</code>. The compiler will treat them identically.</p>
+
+<p>The only practical difference is the syntax highlighting as you mention, and that you have to write <code>using System</code> if you use <code>String</code>.</p>
+</div><p class="this-has-helped">This answer has helped 160 people.</p><div class="s-prose js-post-body"><p>Both are same. But from coding guidelines perspective it's better to use <code>string</code> instead of <code>String</code>. This is what generally developers use. e.g. instead of using <code>Int32</code> we use <code>int</code> as <code>int</code> is alias to <code>Int32</code></p>
+
+<p>FYI
+“The keyword string is simply an alias for the predefined class <code>System.String</code>.” - C# Language Specification 4.2.3
+<a href="http://msdn2.microsoft.com/En-US/library/aa691153.aspx" rel="noreferrer">http://msdn2.microsoft.com/En-US/library/aa691153.aspx</a></p>
+</div><p class="this-has-helped">This answer has helped 134 people.</p><div class="s-prose js-post-body"><p>As the others are saying, they're the same.  StyleCop rules, by default, will enforce you to use <code>string</code> as a C# code style best practice, except when referencing <code>System.String</code> static functions, such as <code>String.Format</code>, <code>String.Join</code>, <code>String.Concat</code>, etc...</p>
+</div><p class="this-has-helped">This answer has helped 124 people.</p><div class="s-prose js-post-body"><p>New answer after 6 years and 5 months (procrastination).</p>
+
+<p>While <code>string</code> is a reserved C# keyword that always has a fixed meaning, <code>String</code> is just an ordinary <em>identifier</em> which could refer to anything. Depending on members of the current type, the current namespace and the applied <code>using</code> directives and their placement, <code>String</code> could be a value or a type distinct from <code>global::System.String</code>.</p>
+
+<p>I shall provide two examples where <em><code>using</code> directives will not help</em>.</p>
+
+<hr>
+
+<p>First, when <code>String</code> is a <strong><em>value</em></strong> of the current type (or a local variable):</p>
+
+<pre><code>class MySequence&lt;TElement&gt;
+{
+  public IEnumerable&lt;TElement&gt; String { get; set; }
+
+  void Example()
+  {
+    var test = String.Format("Hello {0}.", DateTime.Today.DayOfWeek);
+  }
+}
+</code></pre>
+
+<p>The above will not compile because <code>IEnumerable&lt;&gt;</code> does not have a non-static member called <code>Format</code>, and no extension methods apply. In the above case, it may still be possible to use <code>String</code> in other contexts where a <em>type</em> is the only possibility syntactically. For example <code>String local = "Hi mum!";</code> could be OK (depending on namespace and <code>using</code> directives).</p>
+
+<p>Worse: Saying <code>String.Concat(someSequence)</code> will likely (depending on <code>using</code>s) go to the Linq extension method <code>Enumerable.Concat</code>. It will not go to the static method <code>string.Concat</code>.</p>
+
+<hr>
+
+<p>Secondly, when <code>String</code> is another <strong><em>type</em></strong>, nested inside the current type:</p>
+
+<pre><code>class MyPiano
+{
+  protected class String
+  {
+  }
+
+  void Example()
+  {
+    var test1 = String.Format("Hello {0}.", DateTime.Today.DayOfWeek);
+    String test2 = "Goodbye";
+  }
+}
+</code></pre>
+
+<p>Neither statement in the <code>Example</code> method compiles. Here <code>String</code> is always a piano <a href="http://en.wikipedia.org/wiki/String_(music)" rel="noreferrer">string</a>, <code>MyPiano.String</code>. No member (<code>static</code> or not) <code>Format</code> exists on it (or is inherited from its base class). And the value <code>"Goodbye"</code> cannot be converted into it.</p>
+</div><p class="this-has-helped">This answer has helped 109 people.</p><div class="s-prose js-post-body"><p>Using System types makes it easier to port between C# and VB.Net, if you are into that sort of thing.</p>
+</div><p class="this-has-helped">This answer has helped 98 people.</p><div class="s-prose js-post-body"><p>Against what seems to be common practice among other programmers, I prefer <code>String</code> over <code>string</code>, just to highlight the fact that <code>String</code> is a reference type, as Jon Skeet mentioned.</p>
+</div><p class="this-has-helped">This answer has helped 92 people.</p><div class="s-prose js-post-body"><p><code>string</code> is an alias (or shorthand) of <code>System.String</code>. That means, by typing <code>string</code> we meant <code>System.String</code>. You can read more in think link: <a href="http://www.jeeshenlee.com/2011/10/difference-between-string-and.html" rel="noreferrer">'string' is an alias/shorthand of System.String.</a></p>
+</div><p class="this-has-helped">This answer has helped 89 people.</p><div class="s-prose js-post-body"><p>I'd just like to add this to lfousts answer, from Ritchers book:</p>
+
+<blockquote>
+  <p>The C# language specification states, “As a matter of style, use of the keyword is favored over
+  use of the complete system type name.” I disagree with the language specification; I prefer
+  to use the FCL type names and completely avoid the primitive type names. In fact, I wish that
+  compilers didn’t even offer the primitive type names and forced developers to use the FCL
+  type names instead. Here are my reasons:</p>
+  
+  <ul>
+  <li><p>I’ve seen a number of developers confused, not knowing whether to use <strong>string</strong>
+  or <strong>String</strong> in their code. Because in C# <strong>string</strong> (a keyword) maps exactly to
+  <strong>System.String</strong> (an FCL type), there is no difference and either can be used. Similarly,
+  I’ve heard some developers say that <strong>int</strong> represents a 32-bit integer when the application
+  is running on a 32-bit OS and that it represents a 64-bit integer when the application
+  is running on a 64-bit OS. This statement is absolutely false: in C#, an <strong>int</strong> always maps
+  to <strong>System.Int32</strong>, and therefore it represents a 32-bit integer regardless of the OS the
+  code is running on. If programmers would use <strong>Int32</strong> in their code, then this potential
+  confusion is also eliminated.</p></li>
+  <li><p>In C#, <strong>long</strong> maps to <strong>System.Int64</strong>, but in a different programming language, <strong>long</strong>
+  could map to an <strong>Int16</strong> or <strong>Int32</strong>. In fact, C++/CLI does treat <strong>long</strong> as an <strong>Int32</strong>.
+  Someone reading source code in one language could easily misinterpret the code’s
+  intention if he or she were used to programming in a different programming language.
+  In fact, most languages won’t even treat <strong>long</strong> as a keyword and won’t compile code
+  that uses it.</p></li>
+  <li><p>The FCL has many methods that have type names as part of their method names. For
+  example, the <strong>BinaryReader</strong> type offers methods such as <strong>ReadBoolean</strong>, <strong>ReadInt32</strong>,
+  <strong>ReadSingle</strong>, and so on, and the <strong>System.Convert</strong> type offers methods such as
+  <strong>ToBoolean</strong>, <strong>ToInt32</strong>, <strong>ToSingle</strong>, and so on. Although it’s legal to write the following
+  code, the line with <strong>float</strong> feels very unnatural to me, and it’s not obvious that the line is
+  correct:</p>
+
+<pre><code>BinaryReader br = new BinaryReader(...);
+float val = br.ReadSingle(); // OK, but feels unnatural
+Single val = br.ReadSingle(); // OK and feels good
+</code></pre></li>
+  <li><p>Many programmers that use C# exclusively tend to forget that other programming
+  languages can be used against the CLR, and because of this, C#-isms creep into the
+  class library code. For example, Microsoft’s FCL is almost exclusively written in C# and
+  developers on the FCL team have now introduced methods into the library such as
+  <strong>Array</strong>’s <strong>GetLongLength</strong>, which returns an <strong>Int64</strong> value that is a <strong>long</strong> in C# but not
+  in other languages (like C++/CLI). Another example is <strong>System.Linq.Enumerable</strong>’s
+  <strong>LongCount</strong> method.</p></li>
+  </ul>
+</blockquote>
+
+<p>I didn't get his opinion before I read the complete paragraph.  </p>
+</div><p class="this-has-helped">This answer has helped 80 people.</p><div class="s-prose js-post-body"><p>String (<code>System.String</code>) is a class in the base class library. string (lower case) is a reserved work in C# that is an alias for System.String. Int32 vs int is a similar situation as is <code>Boolean vs. bool</code>. These C# language specific keywords enable you to declare primitives in a style similar to C. </p>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><p>It's a matter of convention, really.  <code>string</code> just looks more like C/C++ style.  The general convention is to use whatever shortcuts your chosen language has provided (int/Int for <code>Int32</code>).  This goes for "object" and <code>decimal</code> as well.</p>
+
+<p>Theoretically this could help to port code into some future 64-bit standard in which "int" might mean <code>Int64</code>, but that's not the point, and I would expect any upgrade wizard to change any <code>int</code> references to <code>Int32</code> anyway just to be safe.</p>
+</div><p class="this-has-helped">This answer has helped 76 people.</p><div class="s-prose js-post-body"><p><a href="https://stackoverflow.com/users/23283/jaredpar">@JaredPar</a> (a developer on the C# compiler and prolific SO user!) wrote a <a href="http://blog.paranoidcoding.com/2019/04/08/string-vs-String-is-not-about-style.html" rel="noreferrer">great blog post</a> on this issue. I think it is worth sharing here. It is a nice perspective on our subject.</p>
+<blockquote>
+<h1><code>string</code> vs. <code>String</code> is not a style debate</h1>
+</blockquote>
+<blockquote>
+<p>[...]</p>
+</blockquote>
+<blockquote>
+<p>The keyword <code>string</code> has concrete meaning in C#. It is the type <code>System.String</code> which exists in the core runtime assembly. The runtime intrinsically understands this type and provides the capabilities developers expect for strings in .NET. Its presence is so critical to C# that if that type doesn’t exist the compiler will exit before attempting to even parse a line of code. Hence <code>string</code> has a precise, unambiguous meaning in C# code.</p>
+</blockquote>
+<blockquote>
+<p>The identifier <code>String</code> though has no concrete meaning in C#. It is an identifier that goes through all the name lookup rules as <code>Widget</code>, <code>Student</code>, etc … It could bind to string or it could bind to a type in another assembly entirely whose purposes may be entirely different than <code>string</code>. Worse it could be defined in a way such that code like <code>String s = &quot;hello&quot;</code>; continued to compile.</p>
+</blockquote>
+<blockquote>
+<pre><code>class TricksterString { 
+  void Example() {
+    String s = &quot;Hello World&quot;; // Okay but probably not what you expect.
+  }
+}
+
+class String {
+  public static implicit operator String(string s) =&gt; null;
+}
+</code></pre>
+<p>The actual meaning of <code>String</code> will always depend on name resolution.
+That means it depends on all the source files in the project and all
+the types defined in all the referenced assemblies. In short it
+requires quite a bit of context to <em>know</em> what it means.</p>
+<p>True that in the vast majority of cases <code>String</code> and <code>string</code> will bind to
+the same type. But using <code>String</code> still means developers are leaving
+their program up to interpretation in places where there is only one
+correct answer. When <code>String</code> does bind to the wrong type it can leave
+developers debugging for hours, filing bugs on the compiler team, and
+generally wasting time that could’ve been saved by using <code>string</code>.</p>
+<p>Another way to visualize the difference is with this sample:</p>
+<pre><code>string s1 = 42; // Errors 100% of the time  
+String s2 = 42; // Might error, might not, depends on the code
+</code></pre>
+<p>Many will argue that while this is information technically accurate using <code>String</code> is still fine because it’s exceedingly rare that a codebase would define a type of this name. Or that when <code>String</code> is defined it’s a sign of a bad codebase.</p>
+</blockquote>
+<blockquote>
+<p>[...]</p>
+</blockquote>
+<blockquote>
+<p>You’ll see that <code>String</code> is defined for a number of completely valid purposes: reflection helpers, serialization libraries, lexers, protocols, etc … For any of these libraries <code>String</code> vs. <code>string</code> has real consequences depending on where the code is used.</p>
+</blockquote>
+<blockquote>
+<p>So remember when you see the <code>String</code> vs. <code>string</code> debate this is about semantics, not style. Choosing string gives crisp meaning to your codebase. Choosing <code>String</code> isn’t wrong but it’s leaving the door open for surprises in the future.</p>
+</blockquote>
+<p>Note: I copy/pasted most of the blog posts for archive reasons. I ignore some parts, so I recommend skipping and reading the <a href="http://blog.paranoidcoding.com/2019/04/08/string-vs-String-is-not-about-style.html" rel="noreferrer">blog post</a> if you can.</p>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p><code>String</code> is not a keyword and it can be used as Identifier whereas <code>string</code> is a keyword and cannot be used as Identifier. And in function point of view both are same.</p>
+</div><p class="this-has-helped">This answer has helped 74 people.</p><div class="s-prose js-post-body"><p>Coming late to the party: I use the CLR types 100% of the time (well, except if <em>forced</em> to use the C# type, but I don't remember when the last time that was). </p>
+
+<p>I originally started doing this years ago, as per the CLR books by Ritchie. It made sense to me that all CLR languages ultimately have to be able to support the set of CLR types, so using the CLR types yourself provided clearer, and possibly more "reusable" code.</p>
+
+<p>Now that I've been doing it for years, it's a habit and I like the coloration that VS shows for the CLR types.</p>
+
+<p>The only real downer is that auto-complete uses the C# type, so I end up re-typing automatically generated types to specify the CLR type instead.</p>
+
+<p>Also, now, when I see "int" or "string", it just looks really wrong to me, like I'm looking at 1970's C code.</p>
+</div><p class="this-has-helped">This answer has helped 58 people.</p><div class="s-prose js-post-body"><p>There is no difference.</p>
+
+<p>The C# keyword <code>string</code> maps to the .NET type <code>System.String</code> - it is an alias that keeps to the naming conventions of the language.</p>
+
+<p>Similarly, <code>int</code> maps to <code>System.Int32</code>.</p>
+</div><p class="this-has-helped">This answer has helped 52 people.</p><div class="s-prose js-post-body"><p>There's a quote on this issue from <a href="https://www.goodreads.com/book/show/14975275-illustrated-c-2012" rel="noreferrer">Daniel Solis' book</a>.</p>
+
+<blockquote>
+  <p>All the predefined types  are mapped directly to
+  underlying .NET types. The C# type names (string) are simply aliases for the
+  .NET types (String or System.String), so using the .NET names works fine syntactically, although
+  this is discouraged. Within a C# program, you should use the C# names
+  rather than the .NET names.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p>Yes, that's no difference between them, just like the <code>bool</code> and <code>Boolean</code>.</p>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p><strong>string</strong> is a keyword, and you can't use string as an identifier. </p>
+
+<p><strong>String</strong> is not a keyword, and you can use it as an identifier:</p>
+
+<p><strong>Example</strong></p>
+
+<pre><code>string String = "I am a string";
+</code></pre>
+
+<p>The keyword <code>string</code>  is an alias for
+ <code>System.String</code> aside from the keyword issue, the two are exactly
+ equivalent.</p>
+
+<pre><code> typeof(string) == typeof(String) == typeof(System.String)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>There is no difference between the two - <code>string</code>, however, appears to be the preferred option when considering other developers' source code.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>One argument not mentioned elsewhere to prefer the pascal case <code>String</code>:</p>
+
+<p><code>System.String</code> is a reference type, and <em>reference types names are pascal case by convention</em>.</p>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p>Both are the same.The difference is how you use it.
+Convention is,</p>
+
+<p><strong>s</strong>tring is for variables </p>
+
+<p><strong>S</strong>tring is for calling other String class methods</p>
+
+<p>Like:</p>
+
+<pre><code>string fName = "John";
+string lName = "Smith";
+
+string fullName = String.Concat(fName,lName);
+
+if (String.IsNullOrEmpty(fName))
+{
+  Console.WriteLine("Enter first name");
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>There is practically no difference</p>
+
+<p>The C# keyword string maps to the .NET type System.String - it is an alias that keeps to the naming conventions of the language.</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>There is one practical difference between <code>string</code> and <code>String</code>.</p>
+
+<pre><code>nameof(String); // compiles
+nameof(string); // doesn't compile
+</code></pre>
+
+<p>This is because <code>string</code> is a keyword (an alias in this case) whereas <code>String</code> is a type.</p>
+
+<p>The same is true for the other aliases as well.</p>
+
+<pre class="lang-none prettyprint-override"><code>| Alias     | Type             |
+|-----------|------------------|
+|  bool     |  System.Boolean  |
+|  byte     |  System.Byte     |
+|  sbyte    |  System.SByte    |
+|  char     |  System.Char     |
+|  decimal  |  System.Decimal  |
+|  double   |  System.Double   |
+|  float    |  System.Single   |
+|  int      |  System.Int32    |
+|  uint     |  System.UInt32   |
+|  long     |  System.Int64    |
+|  ulong    |  System.UInt64   |
+|  object   |  System.Object   |
+|  short    |  System.Int16    |
+|  ushort   |  System.UInt16   |
+|  string   |  System.String   |
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>In case it's useful to really see there is no difference between <code>string</code> and <code>System.String</code>:</p>
+
+<pre><code>var method1 = typeof(MyClass).GetMethod("TestString1").GetMethodBody().GetILAsByteArray();
+var method2 = typeof(MyClass).GetMethod("TestString2").GetMethodBody().GetILAsByteArray();
+
+//...
+
+public string TestString1()
+{
+    string str = "Hello World!";
+    return str;
+}
+
+public string TestString2()
+{
+    String str = "Hello World!";
+    return str;
+}
+</code></pre>
+
+<p>Both produce exactly the same IL byte array:</p>
+
+<pre><code>[ 0, 114, 107, 0, 0, 112, 10, 6, 11, 43, 0, 7, 42 ]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p><code>String</code> refers to a string object which comes with various functions for manipulating the contained string.</p>
+
+<p><code>string</code> refers to a primitive type </p>
+
+<p>In C# they both compile to String but in other languages they do not so you should use String if you want to deal with String objects and string if you want to deal with literals.</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>In C#, string is the shorthand version of System.String (String). They basically mean the same thing.</p>
+<p>It's just like <code>bool</code> and <code>Boolean</code>, not much difference..</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>You don't need <strong>import</strong> namespace (using <code>System</code>;) to use <code>string</code> because it is a global alias of <code>System.String</code>.</p>
+
+<p>To know more about aliases you can check this <a href="https://www.codeproject.com/Articles/11856/C-Aliases" rel="noreferrer">link</a>.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>First of All, both <code>string</code> &amp; <code>String</code> are not same.
+There is a difference:
+<code>String</code> is not a keyword and it can be used as an identifier whereas <code>string</code> is a keyword and cannot be used as identifier.</p>
+<p>I am trying to explain with different example :
+First, when I put <code>string s;</code>  into Visual Studio and hover over it I get (without the colour):<br />
+<a href="https://i.stack.imgur.com/wHzSk.jpg" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/wHzSk.jpg" alt="String Definition" /></a></p>
+<p>That says that string is <code>System.String</code>, right?
+The documentation is at <a href="https://msdn.microsoft.com/en-us/library/362314fe.aspx" rel="nofollow noreferrer">https://msdn.microsoft.com/en-us/library/362314fe.aspx</a>. The second sentence says &quot;string is an alias for String in the .NET Framework.&quot;.</p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>To be honest, in practice usually there is not difference between <code>System.String</code> and <code>string</code>.</p>
+<p>All types in C# are objects and all derives from <code>System.Object</code> class. One difference is that string is a C# keyword and <code>String</code> you can use as variable name. <code>System.String</code> is conventional .NET name of this type and string is convenient C# name. Here is simple program which presents difference between <code>System.String</code> and string.</p>
+<pre><code>string a = new string(new char[] { 'x', 'y', 'z' });
+string b = new String(new char[] { 'x', 'y', 'z' });
+String c = new string(new char[] { 'x', 'y', 'z' });
+String d = new String(new char[] { 'x', 'y', 'z' });
+MessageBox.Show((a.GetType() == typeof(String) &amp;&amp; a.GetType() == typeof(string)).ToString()); // shows true
+MessageBox.Show((b.GetType() == typeof(String) &amp;&amp; b.GetType() == typeof(string)).ToString()); // shows true
+MessageBox.Show((c.GetType() == typeof(String) &amp;&amp; c.GetType() == typeof(string)).ToString()); // shows true
+MessageBox.Show((d.GetType() == typeof(String) &amp;&amp; d.GetType() == typeof(string)).ToString()); // shows true
+</code></pre>
+<p>@JonSkeet in my compiler</p>
+<pre><code>public enum Foo : UInt32 { }
+</code></pre>
+<p>is working. I've Visual Studio 2015 Community.</p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p><code>string</code> is equal to <code>System.String</code> in VS2015 if you write this:</p>
+<pre><code>System.String str;
+</code></pre>
+<p>Than compiler will show potential fix to optimize it and after applying that fixe it will look like this</p>
+<pre><code>string str;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>Jeffrey Richter written:</p>
+
+<blockquote>
+  <p>Another way to think of this is that the C# compiler automatically
+  assumes that you have the following <code>using</code> directives in all of your
+  source code files:</p>
+</blockquote>
+
+<pre><code>using int = System.Int32;
+using uint = System.UInt32;
+using string = System.String;
+...
+</code></pre>
+
+<blockquote>
+  <p>I’ve seen a number of developers confused, not knowing whether to use
+  string or String in their code. Because in C# string (a keyword) maps
+  exactly to System.String (an FCL type), <strong>there is no difference</strong> and
+  either can be used.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p><strong>String:</strong> A String object is called immutable (read-only) because its value cannot be modified once it has been created. Methods that appear to modify a String object actually return a new String object that contains the modification. If it is necessary to modify the actual contents of a string-like object</p>
+
+<p><strong>string:</strong> The string type represents a sequence of zero or more Unicode characters. string is an alias for String in the .NET Framework. <code>string</code> is the intrinsic C# datatype, and is an alias for the system provided type "System.String". The C# specification states that as a matter of style the keyword (<strong>string</strong>) is preferred over the full system type name (System.String, or String).
+Although string is a reference type, the equality operators (== and !=) are defined to compare the values of string objects, not references. This makes testing for string equality more intuitive. For example: </p>
+
+<p><strong>Difference between string &amp; String:</strong></p>
+
+<ul>
+<li>The <code>string</code> is usually used for declaration while <code>String</code> is used for accessing static string methods</li>
+<li>You can use <code>'string'</code> do declare fields, properties etc that use the predefined type <code>'string'</code>, since the C# specification tells me this is good style.</li>
+<li>You can use <code>'String'</code> to use system-defined methods, such as String.Compare etc. They are originally defined on 'System.String', not 'string'. <code>'string'</code> is just an alias in this case.</li>
+<li>You can also use <code>'String'</code> or 'System.Int32' when communicating with other system, especially if they are CLR-compliant. i.e. - if I get data from elsewhere, I'd de-serialize it into a System.Int32 rather than an 'int', if the origin by definition was something else than a C# system.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>There is no difference between the two.  You can use either of them in your code.</p>
+
+<p><code>System.String</code> is a class (reference type) defined the <code>mscorlib</code> in the namespace <code>System</code>. In other words, <code>System.String</code> is a type in the <code>CLR</code>.</p>
+
+<p><code>string</code> is a keyword in <code>C#</code></p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>In the context of <strong>MSDN Documentation</strong>, <code>String</code> class is documented like any other data type (<em>e.g.</em>, <code>XmlReader</code>, <code>StreamReader</code>) in the <strong><a href="http://msdn.microsoft.com/en-us/library/system.string%28v=vs.110%29.aspx" rel="noreferrer">BCL</a></strong>.</p>
+
+<p>And <code>string</code> is documented like a keyword (C# Reference) or like any basic C# language construct (<em>e.g.</em>, <code>for</code>, <code>while</code>, <code>default</code>).</p>
+
+<p><strong><a href="http://msdn.microsoft.com/en-us/library/362314fe.aspx" rel="noreferrer">Reference</a></strong>.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>As pointed out, they are the same thing and <code>string</code> is just an alias to <code>String</code>.</p>
+
+<p>For what it's worth, I use string to declare types - variables, properties, return values and parameters. This is consistent with the use of other system types - <code>int, bool, var</code> etc (although <code>Int32</code> and <code>Boolean</code> are also correct).</p>
+
+<p>I use <code>String</code> when using the static methods on the String class, like <code>String.Split()</code> or <code>String.IsNullOrEmpty()</code>. I feel that this makes more sense because the methods belong to a class, and it is consistent with how I use other static methods.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>I prefer to use <code>string</code> because this type is used so much that I don't want the syntax highlighter blending it in with all the other classes. Although it is a class it is used more like a primitive therefore I think the different highlight colour is appropriate.</p>
+
+<p>If you right click on the <code>string</code> keyword and select <code>Go to definition</code> from the context menu it'll take you to the <code>String</code> class - it's just syntactic sugar but it improves readability imo.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>A <strong>string</strong> is a <em>sequential collection of characters</em> that is used to represent text.</p>
+
+<p>A <strong>String object</strong> is a <em>sequential collection of System.Char objects</em> that represent a string; a System.Char object corresponds to a UTF-16 code unit.</p>
+
+<p>The value of the String object is the content of the sequential collection of System.Char objects, and that value is immutable (that is, it is read-only). </p>
+
+<p>For more information about the immutability of strings, see the Immutability and the StringBuilder class section in msdn. </p>
+
+<p>The maximum size of a String object in memory is 2GB, or about 1 billion characters.</p>
+
+<p>Note : answer is extracted from msdn help section. You can see the full content <a href="https://msdn.microsoft.com/en-us/library/system.string(v=vs.110).aspx" rel="noreferrer">here in msdn String Class</a> topic under Remarks section</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p><code>string</code> is short name of <a href="https://msdn.microsoft.com/en-us/library/system.string(v=vs.110).aspx" rel="noreferrer"><code>System.String</code></a>. 
+<code>String</code> or <code>System.String</code> is name of string in <code>CTS(Common Type System)</code>.</p>
+</div></body></html>

@@ -1,0 +1,900 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the difference between px, dip, dp, and sp?</p><div class="s-prose js-post-body"><p>What is the difference between the units of measure
+px, dip, dp, and sp?</p>
+</div><p class="this-has-helped">This answer has helped 6149 people.</p><div class="s-prose js-post-body"><p>From the <a href="http://developer.android.com/guide/topics/resources/more-resources.html#Dimension" rel="noreferrer">Android Developer Documentation</a>:</p>
+<ol>
+<li>
+<blockquote>
+<p><strong>px</strong><br />
+<strong>Pixels</strong> - corresponds to actual pixels on the screen.</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p><strong>in</strong><br />
+<strong>Inches</strong> - based on the physical size of the screen.<br />
+1 Inch OR 2.54 centimeters</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p><strong>mm</strong><br />
+&gt; <strong>Millimeters</strong> - based on the physical size of the screen.</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p><strong>pt</strong><br />
+&gt; <strong>Points</strong> - 1/72 of an inch based on the physical size of the screen.</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p><strong>dp</strong> or <strong>dip</strong><br />
+&gt; <strong>Density</strong>-independent Pixels - an abstract unit that is based on the physical density of the screen. These units are relative to a 160
+dpi screen, so one dp is one pixel on a 160 dpi screen. The ratio of dp-to-pixel will change with the screen density, but not necessarily in direct proportion. Note: The compiler accepts both &quot;dip&quot; and &quot;dp&quot;, though &quot;dp&quot; is more consistent with &quot;sp&quot;.</p>
+</blockquote>
+</li>
+<li>
+<blockquote>
+<p><strong>sp</strong><br />
+&gt; <a href="https://developer.android.com/training/multiscreen/screendensities#TaskUseDP" rel="noreferrer">Scaleable Pixels</a> <strong>OR</strong> <a href="https://developer.android.com/guide/topics/resources/more-resources.html#Dimension" rel="noreferrer">scale-independent pixels</a> - this is like the dp unit, but it is also scaled by the user's font size preference. It is recommended you
+use this unit when specifying font sizes, so they will be adjusted
+for both the screen density and the user's preference. Note, the Android documentation is inconsistent on what <code>sp</code> actually stands for, one <a href="https://developer.android.com/guide/topics/resources/more-resources.html#Dimension" rel="noreferrer">doc</a> says &quot;scale-independent pixels&quot;, the <a href="https://developer.android.com/training/multiscreen/screendensities#TaskUseDP" rel="noreferrer">other</a> says &quot;scaleable pixels&quot;.</p>
+</blockquote>
+</li>
+</ol>
+<p>From <a href="https://blog.mindorks.com/understanding-density-independent-pixel-sp-dp-dip-in-android" rel="noreferrer">Understanding Density Independence In Android</a>:</p>
+<div class="s-table-container">
+<table class="s-table">
+<thead>
+<tr>
+<th>Density Bucket</th>
+<th>Screen Density</th>
+<th>Physical Size</th>
+<th>Pixel Size</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>ldpi</td>
+<td>120 dpi</td>
+<td>0.5 x 0.5 in</td>
+<td>0.5 in * 120 dpi = 60x60 px</td>
+</tr>
+<tr>
+<td>mdpi</td>
+<td>160 dpi</td>
+<td>0.5 x 0.5 in</td>
+<td>0.5 in * 160 dpi = 80x80 px</td>
+</tr>
+<tr>
+<td>hdpi</td>
+<td>240 dpi</td>
+<td>0.5 x 0.5 in</td>
+<td>0.5 in * 240 dpi = 120x120 px</td>
+</tr>
+<tr>
+<td>xhdpi</td>
+<td>320 dpi</td>
+<td>0.5 x 0.5 in</td>
+<td>0.5 in * 320 dpi = 160x160 px</td>
+</tr>
+<tr>
+<td>xxhdpi</td>
+<td>480 dpi</td>
+<td>0.5 x 0.5 in</td>
+<td>0.5 in * 480 dpi = 240x240 px</td>
+</tr>
+<tr>
+<td>xxxhdpi</td>
+<td>640 dpi</td>
+<td>0.5 x 0.5 in</td>
+<td>0.5 in * 640 dpi = 320x320 px</td>
+</tr>
+</tbody>
+</table>
+</div><div class="s-table-container">
+<table class="s-table">
+<thead>
+<tr>
+<th>Unit</th>
+<th>Description</th>
+<th>Units Per Physical Inch</th>
+<th>Density Independent?</th>
+<th>Same Physical Size On Every Screen?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>px</td>
+<td>Pixels</td>
+<td>Varies</td>
+<td>No</td>
+<td>No</td>
+</tr>
+<tr>
+<td>in</td>
+<td>Inches</td>
+<td>1</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>mm</td>
+<td>Millimeters</td>
+<td>25.4</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>pt</td>
+<td>Points</td>
+<td>72</td>
+<td>Yes</td>
+<td>Yes</td>
+</tr>
+<tr>
+<td>dp</td>
+<td>Density Independent Pixels</td>
+<td>~160</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>sp</td>
+<td>Scale Independent Pixels</td>
+<td>~160</td>
+<td>Yes</td>
+<td>No</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>More info can be also be found in the <a href="https://material.io/design/layout/pixel-density.html" rel="noreferrer">Google Design Documentation</a>.</p>
+</div><p class="this-has-helped">This answer has helped 739 people.</p><div class="s-prose js-post-body"><p>Pretty much everything about this and how to achieve the best support for multiple screens of different sizes and densities is very well documented here:</p>
+<ul>
+<li><a href="http://developer.android.com/guide/practices/screens_support.html" rel="noreferrer">Supporting Multiple Screens</a></li>
+</ul>
+<blockquote>
+<p><strong>Screen size</strong><br/>
+Actual physical size, measured as the screen's diagonal.
+For simplicity, Android groups all actual screen sizes into four
+generalized sizes: small, normal, large, and extra-large.</p>
+<p><strong>Screen density</strong><br/>
+The number of pixels within a physical area of the
+screen; usually referred to as dpi (dots per inch). For example, a
+&quot;low&quot; density screen has fewer pixels within a given physical area,
+compared to a &quot;normal&quot; or &quot;high&quot; density screen. For simplicity,
+Android groups all actual screen densities into six generalized
+densities: low, medium, high, extra-high, extra-extra-high, and
+extra-extra-extra-high.</p>
+<p><strong>Orientation</strong><br/>The orientation of the screen from the user's point of
+view. This is either landscape or portrait, meaning that the screen's
+aspect ratio is either wide or tall, respectively. Be aware that not
+only do different devices operate in different orientations by
+default, but the orientation can change at runtime when the user
+rotates the device.</p>
+</blockquote>
+<blockquote>
+<p><strong>Resolution</strong><br/> The total number of physical pixels on
+a screen. When adding support for multiple screens, applications do
+not work directly with resolution; applications should be concerned
+only with screen size and density, as specified by the generalized
+size and density groups.</p>
+</blockquote>
+<blockquote>
+<p><strong>Density-independent pixel (dp)</strong><br/> A virtual
+pixel unit that you should use when defining UI layout, to express
+layout dimensions or position in a density-independent way.
+The density-independent pixel is equivalent to one physical pixel on a 160
+dpi screen, which is the baseline density assumed by the system for a
+&quot;medium&quot; density screen. At runtime, the system transparently handles
+any scaling of the dp units, as necessary, based on the actual density
+of the screen in use. The conversion of dp units to screen pixels is
+simple:
+<code>px = dp * (dpi / 160)</code>.
+For example, on a 240 dpi screen, 1 dp
+equals 1.5 physical pixels. You should always use dp units when
+defining your application's UI, to ensure proper display of your UI on
+screens with different densities.</p>
+</blockquote>
+<p>If you are at all serious about developing an Android app for more than one type of device, you should have read the screens support development document at least once. In addition to that, it is always a good thing to know the actual number of active devices that have a particular screen configuration.</p>
+<ul>
+<li><a href="http://developer.android.com/resources/dashboard/screens.html" rel="noreferrer">Screen Sizes and Densities</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 382 people.</p><div class="s-prose js-post-body"><p>I will elaborate more on how exactly does dp convert to px:</p>
+
+<ul>
+<li>If running on an mdpi device, a <code>150 x 150 px</code> image will take up <code>150 * 150 dp</code> of screen space.</li>
+<li>If running on an hdpi device, a <code>150 x 150 px</code> image will take up <code>100 * 100 dp</code> of screen space.</li>
+<li>If running on an xhdpi device, a <code>150x150 px</code> image will take up <code>75 * 75 dp</code> of screen space.</li>
+</ul>
+
+<p>The other way around: say, you want to add an image to your application and you need it to fill a <code>100 * 100 dp</code> control. You'll need to create different size images for supported screen sizes:</p>
+
+<ul>
+<li><code>100 * 100 px</code> image for mdpi</li>
+<li><code>150 * 150 px</code> image for hdpi</li>
+<li><code>200 * 200 px</code> image for xhdpi</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 249 people.</p><div class="s-prose js-post-body"><p><strong>Moreover you should have a clear understanding of the following concepts:</strong></p>
+<p><strong>Screen size:</strong></p>
+<blockquote>
+<p>Actual physical size, measured as the screen's diagonal. For simplicity, Android groups all actual screen sizes into
+four generalized sizes: small, normal, large, and extra-large.</p>
+</blockquote>
+<p><strong>Screen density:</strong></p>
+<blockquote>
+<p>The number of pixels within a physical area of the screen; usually referred to as dpi (dots per inch). For example, a
+&quot;low&quot; density screen has fewer pixels within a given physical area,
+compared to a &quot;normal&quot; or &quot;high&quot; density screen. For simplicity,
+Android groups all actual screen densities into four generalized
+densities: low, medium, high, and extra high.</p>
+</blockquote>
+<p><strong>Orientation:</strong></p>
+<blockquote>
+<p>The orientation of the screen from the user's point of view. This is either landscape or portrait, meaning that the
+screen's aspect ratio is either wide or tall, respectively. Be aware
+that not only do different devices operate in different orientations
+by default, but the orientation can change at runtime when the user
+rotates the device.</p>
+</blockquote>
+<p><strong>Resolution:</strong></p>
+<blockquote>
+<p>The total number of physical pixels on a screen. When adding support for multiple screens, applications do not work directly
+with resolution; applications should be concerned only with screen
+size and density, as specified by the generalized size and density
+groups.</p>
+</blockquote>
+<p><strong>Density-independent pixel (dp):</strong></p>
+<blockquote>
+<p>A virtual pixel unit that you should use when defining UI layout, to express layout dimensions or
+position in a density-independent way. The density-independent pixel
+is equivalent to one physical pixel on a 160 dpi screen, which is the
+baseline density assumed by the system for a &quot;medium&quot; density screen.
+At runtime, the system transparently handles any scaling of the dp
+units, as necessary, based on the actual density of the screen in use.
+The conversion of dp units to screen pixels is simple: px = dp * (dpi
+/ 160). For example, on a 240 dpi screen, 1 dp equals 1.5 physical
+pixels. You should always use dp units when defining your
+application's UI, to ensure proper display of your UI on screens with
+different densities.</p>
+</blockquote>
+<p>Reference: <a href="http://developer.android.com/guide/practices/screens_support.html#terms" rel="noreferrer">Android developers site</a></p>
+</div><p class="this-has-helped">This answer has helped 217 people.</p><div class="s-prose js-post-body"><p><code>dp</code> is  <code>dip</code>. Use it for everything (margin, padding, etc.).</p>
+
+<p>Use <code>sp</code> for {text-size} only. </p>
+
+<hr>
+
+<h2>To get the same size on different screen densities, Android translates these units into pixels at runtime, so there is no tricky math for you to do.</h2>
+
+<hr>
+
+<p>See the difference between <code>px</code>, <code>dp</code> and <code>sp</code> on different screen sizes.</p>
+
+<p><img src="https://i.stack.imgur.com/84sUp.png" alt="Enter image description here"></p>
+
+<p>Source: <a href="http://www.bignerdranch.com/we-write/android-programming.html">Android Programming: The Big Nerd Ranch Guide</a></p>
+</div><p class="this-has-helped">This answer has helped 166 people.</p><div class="s-prose js-post-body"><h1>Definitions</h1>
+
+<p><strong>px</strong> or dot is a <em>pixel</em> on the physical screen.</p>
+
+<p><strong>dpi</strong> are pixels per inch on the physical screen and represent the density of the display.</p>
+
+<p>Android gives <a href="http://developer.android.com/guide/practices/screens_support.html#range" rel="noreferrer">alias names to several densities</a></p>
+
+<ul>
+<li>ldpi (low) ~120dpi</li>
+<li>mdpi (medium) ~160dpi</li>
+<li>hdpi (high) ~240dpi
+
+<ul>
+<li><strong>most devices in 2015 are here</strong></li>
+</ul></li>
+<li>xhdpi (extra-high) ~320dpi
+
+<ul>
+<li>Apple iPhone 4/5/6, Nexus 4</li>
+</ul></li>
+<li>xxhdpi (extra-extra-high) ~480dpi
+
+<ul>
+<li>Nexus 5</li>
+</ul></li>
+<li>xxxhdpi (extra-extra-extra-high) ~640dpi</li>
+</ul>
+
+<p><strong>dip</strong> or <strong>dp</strong> are <em>density-indenpendant pixels</em>, i.e. they correspond to more or less pixels depending on the physical density.</p>
+
+<ul>
+<li>1dp = 1px on mdpi</li>
+</ul>
+
+<p><a href="https://i.stack.imgur.com/fAucF.png" rel="noreferrer"><img src="https://i.stack.imgur.com/fAucF.png" alt="enter image description here"></a></p>
+
+<p><strong>sp</strong> or <strong>sip</strong> is a <em>scale-independant pixel</em>. They are scaled when the <em>Large Text</em> option is turned on in <kbd>Settings</kbd> > <kbd>Accessibility</kbd></p>
+
+<ul>
+<li>1sp = 1dp</li>
+<li>1sp = 1.2dp with accessibility Large Text</li>
+</ul>
+
+<h1>What to use?</h1>
+
+<blockquote>
+  <p>Use <strong>sp</strong> for Text size.</p>
+  
+  <p>Use <strong>dp</strong> for everything else.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 155 people.</p><div class="s-prose js-post-body"><p>I have calculated the formula below to make the conversions <code>dpi</code> to <code>dp</code> and <code>sp</code>
+<a href="https://i.stack.imgur.com/DoAxa.png" rel="noreferrer"><img src="https://i.stack.imgur.com/DoAxa.png" alt="enter image description here"></a></p>
+</div><p class="this-has-helped">This answer has helped 141 people.</p><div class="s-prose js-post-body"><p><a href="http://answersfactory.com/difference-between-px-dp-dip-and-sp-in-android" rel="nofollow noreferrer">Source 1</a></p>
+<p><a href="http://stefan222devel.blogspot.com/2012/10/android-screen-densities-sizes.html" rel="nofollow noreferrer">Source 2</a></p>
+<p><a href="http://developer.android.com/guide/topics/resources/more-resources.html#Dimension" rel="nofollow noreferrer">Source 3</a>: (data from source 3 is given below)</p>
+<blockquote>
+<p>These are dimension values defined in XML. A dimension is specified
+with a number followed by a unit of measure. For example: 10px, 2in,
+5sp. The following units of measure are supported by Android:</p>
+<p><strong>dp</strong></p>
+<p>Density-independent Pixels - An abstract unit that is based on the
+physical density of the screen. These units are relative to a 160 dpi
+(dots per inch) screen, on which 1dp is roughly equal to 1px. When
+running on a higher density screen, the number of pixels used to draw
+1dp is scaled up by a factor appropriate for the screen's dpi.
+Likewise, when on a lower density screen, the number of pixels used
+for 1dp is scaled down. The ratio of dp-to-pixel will change with the
+screen density, but not necessarily in direct proportion. Using dp
+units (instead of px units) is a simple solution to making the view
+dimensions in your layout resize properly for different screen
+densities. In other words, it provides consistency for the real-world
+sizes of your UI elements across different devices.</p>
+<p><strong>sp</strong></p>
+<p>Scale-independent Pixels - This is like the dp unit, but it is also
+scaled by the user's font size preference. It is recommended that you use
+this unit when specifying font sizes, so they will be adjusted for
+both the screen density and the user's preference.</p>
+<p><strong>pt</strong></p>
+<p>Points - 1/72 of an inch based on the physical size of the screen.</p>
+<p><strong>px</strong></p>
+<p>Pixels - Corresponds to actual pixels on the screen. This unit of
+measure is not recommended because the actual representation can vary
+across devices; each device may have a different number of pixels per
+inch and may have more or fewer total pixels available on the screen.</p>
+<p><strong>mm</strong></p>
+<p>Millimeters - Based on the physical size of the screen.</p>
+<p><strong>in</strong></p>
+<p>Inches - Based on the physical size of the screen.</p>
+</blockquote>
+<p><strong>Note:</strong> A dimension is a simple resource that is referenced using the value provided in the name attribute (not the name of the XML file). As such, you can combine dimension resources with other simple resources in one XML file, under one  element.</p>
+</div><p class="this-has-helped">This answer has helped 130 people.</p><div class="s-prose js-post-body"><p>Basically the only time where px applies is one px, and that's if you want exactly one pixel on the screen like in the case of a divider: </p>
+
+<p>On >160 dpi, you may get 2-3 pixels, </p>
+
+<p>On >120 dpi, it rounds to 0.</p>
+</div><p class="this-has-helped">This answer has helped 107 people.</p><div class="s-prose js-post-body"><h2>Where to use what &amp; relationship between px &amp; dp?</h2>
+<h3>Density-independent pixel (dp)</h3>
+<p>A virtual pixel unit that you should use when defining UI layout, to express layout dimensions or position in a density-independent way. As described above, the density-independent pixel is equivalent to one physical pixel on a 160 dpi screen, which is the baseline density assumed by the system for a &quot;medium&quot; density screen. At runtime, the system transparently handles any scaling of the dp units, as necessary, based on the actual density of the screen in use. The conversion of dp units to screen pixels is
+simple:</p>
+<p>px = dp * (dpi / 160).</p>
+<p>For example, on a 240 dpi screen, 1 dp equals 1.5 physical pixels. You should always use dp units when defining your application's UI, to ensure
+proper display of your UI on screens with different densities.</p>
+<p>Understanding pixel to dp and vice versa is very essential (especially for giving exact dp values to creative team)</p>
+<pre><code>dp = px * 160 / dpi
+
+MDPI = 160 dpi || Therefore, on MDPI 1 px = 1 dp
+For example, if you want to convert 20 pixel to dp, use the above formula,
+dp = 20 * 160 / 160 = 20.
+So, 20 pixel = 20 dp.
+
+HDPI = 240 dpi - So, on HDPI 1.5 px = 1 dp
+XHDPI = 320 dpi - So, on XHDPI 2 px = 1 dp
+XXHDPI = 480 dpi - So, on XXHDPI 3 px = 1 dp
+
+For example, let us consider Nexus 4.
+If 24 pixels to be converted to dp and if it is a Nexus 4 screen, developers can
+convert it to dp easily by the following calculation :
+dp = 24 * 160 / 320 = 12 dp
+Screen dimension:
+768 x 1280 pixel resolution (320 ppi or 320dpi)
+Optional (screen size):
+ 4.7&quot; diagonal
+</code></pre>
+<ul>
+<li>Try to get all pixel values in even numbers from the creative team. Otherwise precision lose will happen while multiplying with 0.5.</li>
+</ul>
+<h3>px</h3>
+<p>It is explained above. Try to avoid in layout files. But there are some cases, where px is required. for example, ListView divider line. px is better here for giving a one-pixel line as a divider for all across screen resolutions.</p>
+<h3>sp</h3>
+<p>Use sp for font sizes. Then only the font inside the application will change while device fonts size changes (that is, Display -&gt; Fonts on Device). If you want to keep a static sized font inside the app, you can give the font dimension in dp. In such a case, it will never change. Developers may get such a requirement for some specific screens, for that, developers can use dp instead of sp. In all other cases, sp is recommended.</p>
+</div><p class="this-has-helped">This answer has helped 99 people.</p><div class="s-prose js-post-body"><p>You can see the difference between <code>px</code> and <code>dp</code> from the below picture, and you can also find that the <code>px</code> and <code>dp</code> could not guarantee the same physical sizes on the different screens.</p>
+
+<p><img src="https://i.stack.imgur.com/KFn2N.png" alt="enter image description here"></p>
+</div><p class="this-has-helped">This answer has helped 86 people.</p><div class="s-prose js-post-body"><p>Anything related with the size of text and appearance must use <code>sp</code> or <code>pt</code>. Whereas, anything related to the size of the controls, the layouts, etc. must be used with <code>dp</code>.</p>
+
+<p>You can use both <code>dp</code> and <code>dip</code> at its places.</p>
+</div><p class="this-has-helped">This answer has helped 80 people.</p><div class="s-prose js-post-body"><p>I would only use dp.</p>
+
+<p>There is a lot of talk about using "sp" for font sizes, and while I appreciate the point, I don't think that it is the right thing to do from a design point of view. You can end up breaking your design if the user has some wonky font size selection, and the user will end up blaming <em>the app</em>, and not their own life choices.</p>
+
+<p>Also, if you take an sp-font app on a 160&nbsp;dpi tablet, you will find that <em>everything</em> scales up... but your font, which is going to look tiny in comparison. It isn't a good look.</p>
+
+<p>While the idea of "sp" fonts has a good heart, it is a poor idea. Stick with dp for everything.</p>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p>sp = scale independent pixel</p>
+<p>dp = dip = density independent pixels</p>
+<p>dpi = dots per inch</p>
+<blockquote>
+<p>We should avoid to use <strong>sp</strong>.</p>
+<p>We should use <strong>dp</strong> to support multiple screens.</p>
+</blockquote>
+<p>Android supports different screen resolutions</p>
+<ul>
+<li>ldpi (low) ~120 dpi</li>
+<li>mdpi (medium) ~160 dpi</li>
+<li>hdpi (high) ~240 dpi</li>
+<li>xhdpi (extra-high) ~320 dpi</li>
+<li>xxhdpi (extra-extra-high) ~480 dpi</li>
+<li>xxxhdpi (extra-extra-extra-high) ~640 dpi</li>
+</ul>
+<p>An 120 dp ldpi device has 120 pixels in 1 inch size.</p>
+<p>The same for other densities...</p>
+<p>We as software engineers should use this conversion formula:</p>
+<blockquote>
+<p>pixel = dp * (density / 160)</p>
+</blockquote>
+<p>So 240 dpi device's 1 dp will have = 1 * (240/160) = 3/2 = 1.5 pixels.</p>
+<p>And 480 dpi device's 1 dp will have = 1 * (480/160) = 3 pixels.</p>
+<p>Using this 1.5 and 3 pixels knowledge, a software engineer can design layouts for different densities.</p>
+<p>To check screen parameters of any device:</p>
+<pre><code>DisplayMetrics metrics = new DisplayMetrics();
+getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+Toast.makeText(
+    this,
+    &quot;4:&quot; + metrics.heightPixels + &quot;,&quot; + metrics.density + &quot;,&quot;
+    + metrics.densityDpi, Toast.LENGTH_LONG).show();
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 67 people.</p><div class="s-prose js-post-body"><p>Difference between <code>dp</code> and <code>sp</code> units mentioned as "<em>user's font size preference</em>" by the answers copied from official documentation can be seen at run time by changing <code>Settings-&gt;Accessibility-&gt;Large Text</code> option.</p>
+
+<p><code>Large Text</code> option forces text to become <code>1.3</code> times bigger.</p>
+
+<pre><code>private static final float LARGE_FONT_SCALE = 1.3f;
+</code></pre>
+
+<p>This might be well of course vendor dependent since it lies in <a href="https://android.googlesource.com/platform/packages/apps/Settings/+/android-4.3.1_r1/src/com/android/settings/AccessibilitySettings.java" rel="noreferrer">packages/apps/Settings</a>.</p>
+</div><p class="this-has-helped">This answer has helped 59 people.</p><div class="s-prose js-post-body"><p>dpi -</p>
+
+<ul>
+<li>Dots per inches</li>
+<li>Measuring the pixel density of the screen.</li>
+</ul>
+
+<p>px - pixel</p>
+
+<ul>
+<li>For mapping screen pixels</li>
+</ul>
+
+<p>pt - points</p>
+
+<ul>
+<li>About 1/72 of an inch, with respect to physical screen size.</li>
+</ul>
+
+<p>in - inch
+ - with respect to physical screen size(1 inch = 2.54 cm).</p>
+
+<p>mm- milimeter
+ - with respect to physical screen size.</p>
+
+<p>sp - scale-independent pixel.</p>
+
+<ul>
+<li>Based on user`s font size preference.</li>
+<li>Font should be in 'sp'.</li>
+</ul>
+
+<p>dip -</p>
+
+<ul>
+<li>dip == dp</li>
+<li>Density independent pixel.</li>
+<li>It varies based on Screen Density.</li>
+<li>In 160 dpi screen, 1 dp = 1 pixel.</li>
+<li>Use dp except the text font size.</li>
+</ul>
+
+<p>In standard, dp and sp are used. sp for font size and dp for everything else.</p>
+
+<p>Formula for conversion of units:</p>
+
+<blockquote>
+  <p>px = dp * ( dpi / 160 );</p>
+</blockquote>
+
+<pre><code>Density Bucket -&gt; Screen Display =&gt; Physical Size        =&gt; Pixel Size                   
+
+ldpi         -&gt; 120 dpi          =&gt; 0.5 x 0.5 in         =&gt; 0.5 in * 120 dpi = 60x60 px   
+
+mdpi         -&gt; 160 dpi          =&gt; 0.5 x 0.5 in         =&gt; 0.5 in * 160 dpi = 80x80 px   
+
+hdpi         -&gt; 240 dpi          =&gt; 0.5 x 0.5 in         =&gt; 0.5 in * 240 dpi = 120x120 px  
+
+xhdpi        -&gt; 320 dpi          =&gt; 0.5 x 0.5 in         =&gt; 0.5 in * 320 dpi = 160x160 px  
+
+xxhdpi       -&gt; 480 dpi          =&gt; 0.5 x 0.5 in         =&gt; 0.5 in * 480 dpi = 240x240 px 
+
+xxxhdpi      -&gt; 640 dpi          =&gt; 0.5 x 0.5 in         =&gt; 0.5 in * 640 dpi = 320x320 px  
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 56 people.</p><div class="s-prose js-post-body"><p>Please read the answer from the community wiki.
+Below mentioned is some information to be considered in addition to the above answers. Most Android developers miss this while developing apps, so I am adding these points.</p>
+<p>sp = scale independent pixel</p>
+<p>dp = density independent pixels</p>
+<p>dpi = density pixels</p>
+<p>I have gone through the above answers...not finding them exactly correct.
+sp for text size, dp for layout bounds - standard.
+But <strong>sp for text size will break the layout if used carelessly</strong> in most of the devices.</p>
+<p>sp take the text size of the device, whereas dp take that of device density standard( never change in a device)
+Say 100sp text can occupy 80% of the screen or 100% of the screen depending on the font size set in the device</p>
+<p><a href="https://i.stack.imgur.com/9syOs.png" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/9syOs.png" alt="enter image description here" /></a></p>
+<p>You can use sp for layout bounds also, it will work :)
+<strong>No standard app use sp for whole text</strong></p>
+<p>Use sp and dp for text size considering UX.</p>
+<ul>
+<li>Don't use sp for text in the toolbar( can use android dimens available for different screen sizes with dp)</li>
+<li>Don't use sp for text in small bounded buttons, very smaller text, etc</li>
+</ul>
+<p>Some people use huge FONT size in their phone for more readability, giving them small hardcoded sized text will be a UX issue. Put sp for text where necessary, but make sure it won't break the layout when the user changes his settings.</p>
+<p>Similarly, if you have a single app supporting all dimensions, adding xxxhdpi assets increases the app size a lot. But now xxxhdpi phones are common so we have to include xxxhdpi assets at least for icons in the sidebar, toolbar, and bottom bar. It's better to move to vector images to have a uniform and better quality images for all screen sizes.</p>
+<p>Also, note that people use custom fonts on their phones. So lack of a font can cause problems regarding spacing and all. Say text size 12sp for a custom font may take some pixels extra than the default font.</p>
+<p>Refer to google developer site for screen densities and base density details for android.
+<a href="https://developer.android.com/training/multiscreen/screendensities" rel="nofollow noreferrer">https://developer.android.com/training/multiscreen/screendensities</a></p>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><p><strong>Screen Size</strong> in <code>Android</code> is grouped into categories <code>small</code>, <code>medium</code>, <code>large</code>, <code>extra large</code>, <code>double-extra</code> and <code>triple-extra</code>. Screen density is the number of pixels within an area (like an inch) of the screen. Generally, it is measured in dots-per-inch (dpi). Screen density is grouped as low, medium, high, and extra high. Resolution is the total number of pixels on the screen.</p>
+<ul>
+<li><strong>dp:</strong> Density Independent Pixel, varies based on screen density. In 160 dpi screen, 1 dp = 1 pixel. Except for font size, use dp always.</li>
+<li><strong>dip:</strong> dip == dp. In earlier Android versions dip was used and later changed to dp.</li>
+<li><strong>sp:</strong> Scale Independent Pixel, scaled based on user’s font size preference. Fonts should use sp.</li>
+<li><strong>px:</strong> our usual standard pixel which maps to the screen pixel.</li>
+<li><strong>in:</strong> inches, concerning the physical screen size.</li>
+<li><strong>mm:</strong> millimeters, concerning the physical screen size.</li>
+<li><strong>pt:</strong> 1/72 of an inch, concerning the physical screen size.</li>
+</ul>
+<p><strong>Formula for Conversion between Units</strong></p>
+<pre><code> px = dp * (dpi / 160)
+</code></pre>
+<p><strong>dp to px in device</strong></p>
+<p>The following example may help understand better. The scaling occurs based on bucket sizes of 120(ldpi), 160(mdpi), 240(hdpi), 320(xhdpi), 480(xxhdpi), and 640(xxxhdpi). The Google suggested ratio for designing is 3:4:6:8:12 for ldpi:mdpi:hdpi:xhdpi:xxhdpi</p>
+<p>A 150px X 150px image will occupy,</p>
+<blockquote>
+<ul>
+<li>150 dp X 150 dp screen space in mdpi</li>
+<li>100 dp X 100 dp screen space in hdpi</li>
+<li>75 dp X 75 dp screen space in xhdpi</li>
+</ul>
+</blockquote>
+<p>You may use the following DPI calculator to fix your image sizes and other dimensions when you wish to have a uniform UI design on all Android devices.</p>
+<H1>DPI Calculator in Java</H1>
+<pre><code>/*
+Program output
+LDPI: 165.0 X 60.0
+MDPI: 220.0 X 80.0
+HDPI: 330.0 X 120.0
+XHDPI: 440.0 X 160.0
+XXHDPI: 660.0 X 240.0
+XXXHDPI: 880.0 X 320.0
+*/
+
+
+public class DPICalculator {
+
+private final float LDPI = 120;
+private final float MDPI = 160;
+private final float HDPI = 240;
+private final float XHDPI = 320;
+private final float XXHDPI = 480;
+private final float XXXHDPI = 640;    
+
+private float forDeviceDensity;
+private float width;
+private float height;
+
+public DPICalculator(float forDeviceDensity, float width, float height){
+    this.forDeviceDensity = forDeviceDensity;
+    this.width = width;
+    this.height = height;
+}
+
+public static void main(String... args) {
+    DPICalculator dpiCalculator = new DPICalculator(240,330,120);
+    dpiCalculator.calculateDPI();
+}
+
+
+private float getPx(float dp, float value) {
+    float px = dp * (value / forDeviceDensity );        
+    return px;
+}
+
+private void calculateDPI() {
+
+    float ldpiW = getPx(LDPI,width);        
+    float ldpiH =  getPx(LDPI,height);
+    float mdpiW = getPx(MDPI,width);        
+    float mdpiH =  getPx(MDPI,height);        
+    float hdpiW = getPx(HDPI,width);        
+    float hdpiH =  getPx(HDPI,height);       
+    float xdpiW = getPx(XHDPI,width);        
+    float xdpiH =  getPx(XHDPI,height);
+    float xxdpiW = getPx(XXHDPI,width);        
+    float xxdpiH =  getPx(XXHDPI,height);
+    float xxxdpiW = getPx(XXXHDPI,width);        
+    float xxxdpiH =  getPx(XXXHDPI,height);
+    
+    System.out.println(&quot;LDPI: &quot; + ldpiW + &quot; X &quot; + ldpiH);
+    System.out.println(&quot;MDPI: &quot; + mdpiW + &quot; X &quot; + mdpiH);
+    System.out.println(&quot;HDPI: &quot; + hdpiW + &quot; X &quot; + hdpiH);
+    System.out.println(&quot;XHDPI: &quot; + xdpiW + &quot; X &quot; + xdpiH);
+    System.out.println(&quot;XXHDPI: &quot; + xxdpiW + &quot; X &quot; + xxdpiH);
+    System.out.println(&quot;XXXHDPI: &quot; + xxxdpiW + &quot; X &quot; + xxxdpiH);        
+   }
+}
+</code></pre>
+<p><strong>More Information refer to the following link.</strong></p>
+<p><a href="http://javapapers.com/android/difference-between-dp-dip-sp-px-in-mm-pt-in-android/" rel="noreferrer">http://javapapers.com/android/difference-between-dp-dip-sp-px-in-mm-pt-in-android/</a></p>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><p><strong>Here's the formula used by Android:</strong></p>
+
+<blockquote>
+  <p>px = dp * (dpi / 160)</p>
+</blockquote>
+
+<p>Where dpi is one of the following screen densities. For a list of all possible densities <a href="http://developer.android.com/reference/android/util/DisplayMetrics.html" rel="noreferrer">go here</a></p>
+
+<p>It defines the "DENSITY_*" constants.</p>
+
+<ul>
+<li>ldpi (low) ~120dpi </li>
+<li>mdpi (medium) ~160dpi </li>
+<li>hdpi (high) ~240dpi </li>
+<li>xhdpi (extra-high) ~320dpi </li>
+<li>xxhdpi (extra-extra-high) ~480dpi </li>
+<li>xxxhdpi (extra-extra-extra-high) ~640dpi</li>
+</ul>
+
+<p>Taken from <a href="http://developer.android.com/guide/practices/screens_support.html" rel="noreferrer">here</a>. </p>
+
+<p>This will sort out a lot of the confusion when translating between px and dp, if you know your screen dpi.</p>
+
+<p>So, let's say you want an image of 60 dp for an hdpi screen then the physical pixel size of 60 dp is:</p>
+
+<pre><code>px = 60 * (240 / 160)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 46 people.</p><div class="s-prose js-post-body"><ul>
+<li>px - one pixel, same as to what is used in CSS, JavaScript, etc.</li>
+<li>sp - scale-independent pixels</li>
+<li>dip - density-independent pixels</li>
+</ul>
+
+<p>Normally sp is used for font sizes, while dip is used (also called dp) for others.</p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p>I've come across a good article about designing Android apps UI for different screen resolutions, and I'd like to leave it here just for somebody searching in this area. Yes, I know that it's somehow described in Google docs (and mentioned in the posts above), I read that but it was not good for me (yeah, I may be too stupid)). It remained unclear to me how to design layouts capable to handle different screen sizes. I hate the DP concept and so on when I need to implement a &quot;flexible&quot; UI layout for different screens. (Hey iOS developers - yes, you're right it's a Storyboard concept).</p>
+<p>Android has not bad UI concept, but lacks iOS Storyboard features, unfortunately. Designing flexible UI in Android is not an easy thing (at the best).</p>
+<p>Here goes the article that helped me to understand what to do in Android to make layouts for different screen sizes:</p>
+<p><a href="http://jmsliu.com/1718/decide-android-app-screen-size.html" rel="nofollow noreferrer">JMSTUDIO Blog:- Decide Android App Screen Size</a></p>
+<blockquote>
+<p><strong>How to Design UI for Android Apps for Different Screen Size</strong></p>
+<p>To design an app UI for different screen sizes, our initial design has to
+meet a minimum required space for each screen size. Android defines a
+minimum size (in dp) for each generalized screen type. Here is an
+Android screen size guideline.
+<a href="https://i.stack.imgur.com/MPEMR.jpg" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/MPEMR.jpg" alt="Minimum Screen Size for Android in dp" /></a>
+When we get the screen size in dp, it is not enough for us to design
+the Android app UI. For each screen size, we need to prepare graphics
+and bitmap images for each density. Here is an Android screen density
+guideline.
+<a href="https://i.stack.imgur.com/Px14F.jpg" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/Px14F.jpg" alt="Android Density Guideline (dpi)" /></a></p>
+<p>For easy calculation, we can follow the 3:4:6:8 scaling ratio between
+the four generalized densities. If we create a 36×36 pixel picture for
+ldpi device, the rest densities pictures size will be 48×48 for mdpi,
+72×72 for hdpi, and 96×96 for xhdpi.</p>
+<p><strong>How to Design Android Apps UI in Photoshop</strong></p>
+<p>Many designers have problems designing Android app UI in photoshop or another pixel
+based graphic design tools because of the density-independent unit, dp.
+Designers don’t know how to map dp to pixel. Google also doesn’t give
+a clear Android UI design guide for them, though they give a basic
+formula for dp and pixel translation.</p>
+<p>As Android’s definition, 1pd equal to 1px under 160 dpi device (mdpi).
+So we want to design an Android app for xlarge Android devices with
+mdpi density, we can define our UI size in pixel as 960 pixels in width
+and 720px in height; Follow the same mapping rule, we can get
+following Android App screen size UI design guideline:</p>
+<p><a href="https://i.stack.imgur.com/5Kt3R.jpg" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/5Kt3R.jpg" alt="Android App Screen Size in Pixel Guideline" /></a></p>
+</blockquote>
+<p><strong>ADDED</strong>: If you are interested in &quot;flexible&quot; UI too, have a look at this library: <a href="https://github.com/intuit/sdp" rel="nofollow noreferrer">An Android SDK that provides a new size unit - sdp (scalable dp). This size unit scales with the screen size</a> (this also mentioned in an answer here, about <code>SDP</code> library)</p>
+<p><strong>ADDED2</strong> Google has finally understood the usefulness of the iOS Storeboard UI concept, and here goes <code>ConstraintLayout</code> for Android world: <a href="https://developer.android.com/training/constraint-layout/index.html" rel="nofollow noreferrer">Build a Responsive UI with ConstraintLayout</a></p>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>1) <strong><code>dp: (density independent pixels)</code></strong></p>
+
+<p>The number of pixels represented in one unit of dp will increase as the screen resolution increases (when you have more dots/pixels per inch). Conversely on devices with lower resolution, the number of pixels represented in on unit of dp will decrease. Since this is a relative unit, it needs to have a baseline to be compared with. This baseline is a 160 dpi screen. This is the equation: <code>px = dp * (dpi / 160).</code></p>
+
+<p><br>
+2) <strong><code>sp: (scale independent pixels)</code></strong></p>
+
+<p>This unit scales according to the screen dpi (similar to dp) as well as the user’s font size preference.</p>
+
+<p><br>
+3) <strong><code>px: (pixels)</code></strong> </p>
+
+<p>Actual pixels or dots on the screen.</p>
+
+<p><br></p>
+
+<p>For more details you can visit </p>
+
+<blockquote>
+  <p><a href="http://developer.android.com/guide/topics/resources/more-resources.html#Dimension" rel="noreferrer">Android Developer Guide > Dimension</a><br>
+  <a href="http://developer.android.com/about/dashboards/index.html#Screens" rel="noreferrer">Android Developer Guide > Screens</a> </p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><p><strong>Screen size</strong> in Android is grouped into categories <code>ldpi</code>, <code>mdpi</code>, <code>hdpi</code>, <code>xhdpi</code>, <code>xxhdpi</code> and <code>xxxhdpi</code>. <strong>Screen density</strong> is the amount of pixels within an area (like inch) of the screen. Generally it is measured in dots-per-inch (<code>dpi</code>).</p>
+
+<p><strong><code>PX(Pixels):</code></strong> </p>
+
+<ul>
+<li>our usual standard pixel which maps to the screen pixel. <code>px</code> is meant for absolute pixels. This is used if you want to give in terms of absolute pixels for width or height. Not recommended.</li>
+</ul>
+
+<p><strong><code>DP/DIP(Density pixels / Density independent pixels):</code></strong></p>
+
+<ul>
+<li><p><code>dip == dp</code>. In earlier Android versions dip was used and later changed to <code>dp</code>. This is alternative of <code>px</code>.</p></li>
+<li><p>Generally we never use <code>px</code> because it is absolute value. If you use <code>px</code> to set width or height, and if that application is being downloaded into different screen sized devices, then that view will not stretch as per the screen original size.</p></li>
+<li><p><code>dp</code> is highly recommended to use in place of <code>px</code>. Use <code>dp</code> if you want to mention width and height to grow &amp; shrink dynamically  based on screen sizes.</p></li>
+<li><p>if we give <code>dp/dip</code>, android will automatically calculate the pixel size on the basis of 160 pixel sized screen.</p></li>
+</ul>
+
+<p><strong><code>SP(Scale independent pixels):</code></strong> </p>
+
+<ul>
+<li><p>scaled based on user’s font size preference. Fonts should use <code>sp</code>.</p></li>
+<li><p>when mentioning the font sizes to fit for various screen sizes, use <code>sp</code>. This is similar to <code>dp</code>.Use <code>sp</code> especially for font sizes to grow &amp; shrink dynamically based on screen sizes</p></li>
+</ul>
+
+<p>Android Documentation says:</p>
+
+<blockquote>
+  <p>when specifying dimensions, always use either <code>dp</code> or <code>sp</code> units. A <code>dp</code> is
+  a density-independent pixel that corresponds to the physical size of a
+  pixel at 160 <code>dpi</code>. An <code>sp</code> is the same base unit, but is scaled by the
+  user's preferred text size (it’s a scale-independent pixel), so you
+  should use this measurement unit when defining text size</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><h1>Pixel density</h1>
+<p>Screen pixel density and resolution vary depending on the platform. Device-independent pixels and scalable pixels are units that provide a flexible way to accommodate a design across platforms.</p>
+<h2>Calculating pixel density</h2>
+<p>The number of pixels that fit into an inch is referred to as pixel density. High-density screens have more pixels per inch than low-density ones...</p>
+<p>The number of pixels that fit into an inch is referred to as pixel density. High-density screens have more pixels per inch than low-density ones. As a result, UI elements of the same pixel dimensions appear larger on low-density screens, and smaller on high-density screens.</p>
+<p>To calculate screen density, you can use this equation:</p>
+<p><strong>Screen density = Screen width (or height) in pixels / Screen width (or height) in inches</strong></p>
+<h2><a href="https://i.stack.imgur.com/Oy13H.png" rel="noreferrer"><img src="https://i.stack.imgur.com/Oy13H.png" alt="Hight density vs lower density displays" /></a></h2>
+<h1>Density independence</h1>
+<p>Screen pixel density and resolution vary depending on the platform. Device-independent pixels and scalable pixels are units that provide a flexible way to accommodate a design across platforms.</p>
+<p>Calculating pixel density
+The number of pixels that fit into an inch is referred to as <em>pixel density</em>. High-density screens have more pixels per inch than low-density ones...</p>
+<p><strong>Density independence</strong> refers to the uniform display of UI elements on screens with different densities.</p>
+<p><em>Density-independent pixels</em>, written as <em>dp</em> (pronounced “<em>dips</em>”), are flexible units that scale to have uniform dimensions on any screen. Material UIs use density-independent pixels to display elements consistently on screens with different densities.</p>
+<img src="https://storage.googleapis.com/spec-host-backup/mio-design%2Fassets%2F1QqdZ48smdRjk9itSexZz2DcWI92iXxR7%2Flayout-unitsmeasurements-pixeldensity-lowhigh.png" width="600" height="300"/>
+<ol>
+<li>Low-density screen displayed with density independence</li>
+<li>High-density screen displayed with density independence</li>
+</ol>
+<p><em>Read full text</em>
+<a href="https://material.io/design/layout/pixel-density.html" rel="noreferrer">https://material.io/design/layout/pixel-density.html</a></p>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>The screen of a mobile phone is made up of thousands of tiny dots known as <strong>pixels (px)</strong>. A pixel is the smallest element which goes to make the picture. The more the number of pixels to make a picture or wording, the sharper it becomes and makes the smartphone screen more easily readable.</p>
+
+<p>Screen resolution is measured in terms of number of pixels on the screen. Screen resolution is a commonly-used specification when buying a device, but it's actually not that useful when designing for Android because thinking of screens in terms of pixels ignores the notion of physical size, which for a touch device is really really important.</p>
+
+<p><strong>Density independent pixel (dp or dip)</strong> allow the designer to create assets that appear in a expected way, no matter the resolution or density of target device.</p>
+
+<p>A density independent pixel (dp or dip) is equal to one pixel at the baseline density or 160 dpi (dots per inch).</p>
+
+<p>1 px/1dp = 160 dpi/160 dpi</p>
+
+<p>2 px/1dp = 320 dpi(2x)/160 dpi</p>
+
+<p>where,</p>
+
+<p>dpi is dots per inch</p>
+
+<p>So, at 320 dpi, 1 dp is equal to 2 px.</p>
+
+<p>Formula</p>
+
+<p>px/dp = dpi/160dpi</p>
+
+<p>Dots per inch (dpi) is a measure of the sharpness (that is, the density of illuminated points) on a display screen. The dots per inch for a given picture resolution will differ based on the overall screen size since the same number of pixels are being spread out over a different space.</p>
+
+<p>Working with density independent pixels help us to deal with a situation like where you have two devices with same pixel resolution, but differing amount of space. Suppose in a case, a tablet and phone has the same pixel resolution 1280 by 800 pixels (160 dpi) and 800 by 1280 pixels (320 dpi) respectively.</p>
+
+<p>Now because a tablet is at baseline density (160 dpi) its physical and density independent pixels sizes are the same, 1280 by 800. The phone on the other hand has a higher pixel density, so it has half as many density independent pixels as physical pixels. So a phone has 400 by 640 density independent pixels. So using a density-independent pixel makes it easier to mentally picture that tablet has much more space than the phone.</p>
+
+<p>Similarly, if you have two devices with similar screen size, but different pixel density, say one is 800 by 1280 pixels (320 dpi), and the other is 400 by 640 pixels (160 dpi), we don't need to define totally different layouts for these two devices as we can measure assets in terms of density independent pixel which is same for both devices.</p>
+
+<p>800 by 1280 pixels (320dpi)=400 by 640 density independent pixel (dp)</p>
+
+<p>400 by 640 pixels (160 dpi)=400 by 640 density independent pixel (dp)</p>
+
+<p><strong>Scale independent pixels(sp)</strong> is the preferred unit for font size.
+For accessibility purposes, Android allows users to customize their device's font size. Users that have trouble reading text can increase their device's font size. You can normally find this option in the display setting on your phone or tablet under font size. It's often also available through the accessibility settings.</p>
+
+<p>With scale independent pixels, 16 sp is exactly the same as 16 dp when the device's font size is normal or 100%. But when device's font size is large, for example 125%, 16 sp will translate to 20 dp or 1.25 times 16.</p>
+
+<p>If you use dp as the unit for font size, then that piece of text has a specific physical size no matter if the user has customize device's font size. Using sp units will make a better experience for people with impaired eyesight.</p>
+
+<p><strong>Reference</strong>: <a href="https://www.udacity.com/courses/android" rel="noreferrer">Udacity</a>, Google</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><blockquote>
+  <p>sp: scale independent pixel</p>
+</blockquote>
+
+<p>You should use it with texts because it is automatically scaled according to the font size that is being used by the user in his device.</p>
+
+<blockquote>
+  <p>px: pixel or picture element is the single point on the screen</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p><strong>Pixels(px)</strong> – corresponds to actual pixels on the screen. This is used if you want to give in terms of absolute pixels for width or height.</p>
+<p><strong>Density-independent Pixels (dp or dip)</strong> – an abstract unit that is based on the physical density of the screen. These units are relative to a 160 dpi screen, so one dp is one pixel on a 160 dpi screen. The ratio of dp-to-pixel will change with the screen density, but not necessarily in direct proportion. Note: The compiler accepts both “dip” and “dp”, though “dp” is more consistent with “sp”.</p>
+<p><strong>Scale-independent Pixels(sp)</strong> – this is like the dp unit, but it is also scaled by the user’s font size preference. It is recommended you use this unit when specifying font sizes, so they will be adjusted for both the screen density and user’s preference.</p>
+<p>Always use dp and sp only. sp for font sizes and dp for everything else. It will make UI compatible for Android devices with different densities.
+You can learn more about pixel and dp from
+<a href="https://www.google.com/design/spec/layout/units-measurements.html#units-measurements-density-independent-pixels-dp-" rel="nofollow noreferrer">https://www.google.com/design/spec/layout/units-measurements.html#units-measurements-density-independent-pixels-dp-</a></p>
+<p>Source URL:- <a href="http://www.androidtutorialshub.com/what-is-the-difference-between-px-dp-dip-sp-on-android/" rel="nofollow noreferrer">http://www.androidtutorialshub.com/what-is-the-difference-between-px-dp-dip-sp-on-android/</a></p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>I want to provide an easy way to understand <code>dp</code>. In fact, I think <code>dp</code> is the easiest one to understand. <code>dp</code> is just a physical length unit. It's of the same dimension as <code>mm</code> or <code>inch</code>. It's just convenient for us to write <code>50dp</code>, <code>60dp</code> rather than <code>50/160 inch</code> or <code>60/160 inch</code>, because one <code>dp</code> is just <code>1/160 inch</code> whatever the screen size or resolution is. </p>
+
+<p>The only problem is that, the android dpi of some screens are not accurate. For example, a screen classified to 160dpi may have 170dpi indeed. So the computation result of <code>dp</code> is fuzzy. It should be approximately the same as <code>1/160 inch</code>.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p><strong>SDP</strong> - a scalable size unit - basically it is not a unit, but dimension resources for different screen size.</p>
+
+<p>Try the <a href="https://github.com/intuit/sdp" rel="noreferrer">sdp</a> library from Intuit. It's very handy to solve unit problems, and you can <em>quickly support multiple screens</em>.</p>
+
+<p>Usage</p>
+
+<p><code>android:paddingBottom="@dimen/_15sdp"</code> for positive and <code>android:layout_marginTop="@dimen/_minus10sdp"</code>  for negative sdp sdp</p>
+
+<p>It has equivalent value in dp for each size in <code>values-sw&lt;N&gt;dp</code> folders (sw = smallestWidth).</p>
+
+<p><strong>Attention</strong></p>
+
+<p>Use it carefully! In most cases you still need to design a different layout for tablets.</p>
+
+<p>Example</p>
+
+<pre><code>&lt;LinearLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_marginTop="@dimen/_minus10sdp"
+          android:paddingBottom="@dimen/_15sdp"
+          android:orientation="horizontal" &gt;
+
+                &lt;TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:text="♡"
+                    android:textColor="#ED6C27"
+                    android:textSize="@dimen/_70sdp"
+                    android:textStyle="bold" /&gt;
+
+                &lt;TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:includeFontPadding="false"
+                    android:text="U"
+                    android:textColor="@android:color/black"
+                    android:textSize="@dimen/_70sdp" /&gt;
+            &lt;/LinearLayout&gt;
+</code></pre>
+
+<p>You can use db for text size, but I prefer <a href="https://github.com/intuit/ssp" rel="noreferrer">ssp</a> for text size.</p>
+
+<p>For more details, check <a href="https://github.com/intuit/sdp" rel="noreferrer">the library GitHub page</a>.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>The ratio of <strong>dp-to-pixel</strong> will change with the screen density, but not necessarily in direct proportion.</p>
+
+<p><strong>Note</strong>: The compiler accepts both "<strong>dip</strong>" and "<strong>dp</strong>", though "<strong>dp</strong>" is more consistent with "<strong>sp</strong>".</p>
+
+<p><strong>Scale-independent Pixels</strong> - this is like the <strong>dp</strong> unit, but it is also scaled by the user's font size preference.</p>
+</div></body></html>

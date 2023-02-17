@@ -1,0 +1,87 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to check whether a string contains a substring in JavaScript?</p><div class="s-prose js-post-body"><p>Usually I would expect a <code>String.contains()</code> method, but there doesn't seem to be one. </p>
+
+<p>What is a reasonable way to check for this?</p>
+</div><p class="this-has-helped">This answer has helped 15574 people.</p><div class="s-prose js-post-body"><p>ECMAScript 6  introduced <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes" rel="noreferrer"><code>String.prototype.includes</code></a>:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const string = "foo";
+const substring = "oo";
+
+console.log(string.includes(substring)); // true</code></pre>
+</div>
+</div>
+</p>
+<p><code>String.prototype.includes</code> is <strong>case-sensitive</strong> and <a href="https://caniuse.com/#feat=es6-string-includes" rel="noreferrer">is <strong>not</strong> supported by Internet Explorer</a> without a <a href="https://github.com/zloirock/core-js/blob/master/packages/core-js/modules/es.string.includes.js" rel="noreferrer">polyfill</a>.</p>
+<p>In ECMAScript 5 or older environments, use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/indexOf" rel="noreferrer"><code>String.prototype.indexOf</code></a>, which returns -1 when a substring cannot be found:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var string = "foo";
+var substring = "oo";
+
+console.log(string.indexOf(substring) !== -1); // true</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 765 people.</p><div class="s-prose js-post-body"><p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes" rel="noreferrer">There is a <code>String.prototype.includes</code> in ES6</a>:</p>
+<pre><code>&quot;potato&quot;.includes(&quot;to&quot;);
+&gt; true
+</code></pre>
+<p>Note that this <a href="https://caniuse.com/?v=1#feat=es6-string-includes" rel="noreferrer">does not work in Internet Explorer or some other old browsers</a> with no or incomplete ES6 support. To make it work in old browsers, you may wish to use a transpiler like <a href="https://babeljs.io/" rel="noreferrer">Babel</a>, a shim library like <a href="https://github.com/paulmillr/es6-shim" rel="noreferrer">es6-shim</a>, or this <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/includes#Polyfill" rel="noreferrer">polyfill from MDN</a>:</p>
+<pre><code>if (!String.prototype.includes) {
+  String.prototype.includes = function(search, start) {
+    'use strict';
+    if (typeof start !== 'number') {
+      start = 0;
+    }
+
+    if (start + search.length &gt; this.length) {
+      return false;
+    } else {
+      return this.indexOf(search, start) !== -1;
+    }
+  };
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>Another alternative is <a href="https://en.wikipedia.org/wiki/Knuth%E2%80%93Morris%E2%80%93Pratt_algorithm" rel="noreferrer">KMP</a> (Knuth–Morris–Pratt).</p>
+<p>The KMP algorithm searches for a length-<em>m</em> substring in a length-<em>n</em> string in worst-case O(<em>n</em>+<em>m</em>) time, compared to a worst-case of O(<em>n</em>⋅<em>m</em>) for the naive algorithm, so using KMP may be reasonable if you care about worst-case time complexity.</p>
+<p>Here's a JavaScript implementation by Project Nayuki, taken from <a href="https://www.nayuki.io/res/knuth-morris-pratt-string-matching/kmp-string-matcher.js" rel="noreferrer">https://www.nayuki.io/res/knuth-morris-pratt-string-matching/kmp-string-matcher.js</a>:</p>
+<pre><code>// Searches for the given pattern string in the given text string using the Knuth-Morris-Pratt string matching algorithm.
+// If the pattern is found, this returns the index of the start of the earliest match in 'text'. Otherwise -1 is returned.
+</code></pre>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function kmpSearch(pattern, text) {
+  if (pattern.length == 0)
+    return 0; // Immediate match
+
+  // Compute longest suffix-prefix table
+  var lsp = [0]; // Base case
+  for (var i = 1; i &lt; pattern.length; i++) {
+    var j = lsp[i - 1]; // Start by assuming we're extending the previous LSP
+    while (j &gt; 0 &amp;&amp; pattern[i] !== pattern[j])
+      j = lsp[j - 1];
+    if (pattern[i] === pattern[j])
+      j++;
+    lsp.push(j);
+  }
+
+  // Walk through text string
+  var j = 0; // Number of chars matched in pattern
+  for (var i = 0; i &lt; text.length; i++) {
+    while (j &gt; 0 &amp;&amp; text[i] != pattern[j])
+      j = lsp[j - 1]; // Fall back in the pattern
+    if (text[i]  == pattern[j]) {
+      j++; // Next char matched, increment position
+      if (j == pattern.length)
+        return i - (j - 1);
+    }
+  }
+  return -1; // Not found
+}
+
+console.log(kmpSearch('ays', 'haystack') != -1) // true
+console.log(kmpSearch('asdf', 'haystack') != -1) // false</code></pre>
+</div>
+</div>
+</p>
+</div></body></html>

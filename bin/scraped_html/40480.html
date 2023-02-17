@@ -1,0 +1,2071 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Is Java &quot;pass-by-reference&quot; or &quot;pass-by-value&quot;?</p><div class="s-prose js-post-body"><p>I always thought Java uses <strong>pass-by-reference</strong>. However, I read <a href="http://javadude.com/articles/passbyvalue.htm" rel="nofollow noreferrer">a blog post</a> which claims that Java uses <strong>pass-by-value</strong>. I don't think I understand the distinction the author is making.</p>
+<p>What is the explanation?</p>
+</div><p class="this-has-helped">This answer has helped 6887 people.</p><div class="s-prose js-post-body"><p>The terms &quot;pass-by-value&quot; and &quot;pass-by-reference&quot; have special, <a href="https://en.wikipedia.org/w/index.php?title=Pass-by-value" rel="noreferrer">precisely defined</a> meanings in computer science. These meanings differ from the intuition many people have when first hearing the terms. Much of the confusion in this discussion seems to come from this fact.</p>
+<p>The terms &quot;pass-by-value&quot; and &quot;pass-by-reference&quot; are talking about <em>variables.</em> Pass-by-value means that the <em>value</em> of a variable is passed to a function/method. Pass-by-reference means that a <em>reference</em> to that variable is passed to the function. The latter gives the function a way to change the contents of the variable.</p>
+<p>By those definitions, Java is always <strong>pass-by-value</strong>.  Unfortunately, when we deal with variables holding objects we are really dealing with object-handles called <em>references</em> which are passed-by-value as well.  This terminology and semantics easily confuse many beginners.</p>
+<p>It goes like this:</p>
+<pre><code>public static void main(String[] args) {
+    Dog aDog = new Dog(&quot;Max&quot;);
+    Dog oldDog = aDog;
+
+    // we pass the object to foo
+    foo(aDog);
+    // aDog variable is still pointing to the &quot;Max&quot; dog when foo(...) returns
+    aDog.getName().equals(&quot;Max&quot;); // true
+    aDog.getName().equals(&quot;Fifi&quot;); // false
+    aDog == oldDog; // true
+}
+
+public static void foo(Dog d) {
+    d.getName().equals(&quot;Max&quot;); // true
+    // change d inside of foo() to point to a new Dog instance &quot;Fifi&quot;
+    d = new Dog(&quot;Fifi&quot;);
+    d.getName().equals(&quot;Fifi&quot;); // true
+}
+</code></pre>
+<p>In the example above <code>aDog.getName()</code> will still return <code>&quot;Max&quot;</code>. The value <code>aDog</code> within <code>main</code> is not changed in the function <code>foo</code> with the <code>Dog</code> <code>&quot;Fifi&quot;</code> as the object reference is passed by value. If it were passed by reference, then the <code>aDog.getName()</code> in <code>main</code> would return <code>&quot;Fifi&quot;</code> after the call to <code>foo</code>.</p>
+<p>Likewise:</p>
+<pre><code>public static void main(String[] args) {
+    Dog aDog = new Dog(&quot;Max&quot;);
+    Dog oldDog = aDog;
+
+    foo(aDog);
+    // when foo(...) returns, the name of the dog has been changed to &quot;Fifi&quot;
+    aDog.getName().equals(&quot;Fifi&quot;); // true
+    // but it is still the same dog:
+    aDog == oldDog; // true
+}
+
+public static void foo(Dog d) {
+    d.getName().equals(&quot;Max&quot;); // true
+    // this changes the name of d to be &quot;Fifi&quot;
+    d.setName(&quot;Fifi&quot;);
+}
+</code></pre>
+<p>In the above example, <code>Fifi</code> is the dog's name after call to <code>foo(aDog)</code> because the object's name was set inside of <code>foo(...)</code>. Any operations that <code>foo</code> performs on <code>d</code> are such that, for all practical purposes, they are performed on <code>aDog</code>, but it is <strong>not</strong> possible to change the value of the variable <code>aDog</code> itself.</p>
+<p>For more information on pass by reference and pass by value, consult the following answer: <a href="https://stackoverflow.com/a/430958/6005228">https://stackoverflow.com/a/430958/6005228</a>. This explains more thoroughly the semantics and history behind the two and also explains why Java and many other modern languages appear to do both in certain cases.</p>
+</div><p class="this-has-helped">This answer has helped 3530 people.</p><div class="s-prose js-post-body"><p>I just noticed you referenced <a href="http://javadude.com/articles/passbyvalue.htm" rel="noreferrer">my article</a>.</p>
+<p>The Java Spec says that everything in Java is pass-by-value. There is no such thing as &quot;pass-by-reference&quot; in Java.</p>
+<p>The key to understanding this is that something like</p>
+<pre><code>Dog myDog;
+</code></pre>
+<p>is <em>not</em> a Dog; it's actually a <em>pointer</em> to a Dog. The use of the term &quot;reference&quot; in Java is very misleading and is what causes most of the confusion here. What they call &quot;references&quot; act/feel more like what we'd call &quot;pointers&quot; in most other languages.</p>
+<p>What that means, is when you have</p>
+<pre><code>Dog myDog = new Dog(&quot;Rover&quot;);
+foo(myDog);
+</code></pre>
+<p>you're essentially passing the <em>address</em> of the created <code>Dog</code> object to the <code>foo</code> method.</p>
+<p>(I say essentially because Java pointers/references aren't direct addresses, but it's easiest to think of them that way.)</p>
+<p>Suppose the <code>Dog</code> object resides at memory address 42. This means we pass 42 to the method.</p>
+<p>if the Method were defined as</p>
+<pre><code>public void foo(Dog someDog) {
+    someDog.setName(&quot;Max&quot;);     // AAA
+    someDog = new Dog(&quot;Fifi&quot;);  // BBB
+    someDog.setName(&quot;Rowlf&quot;);   // CCC
+}
+</code></pre>
+<p>let's look at what's happening.</p>
+<ul>
+<li>the parameter <code>someDog</code> is set to the value 42</li>
+<li>at line &quot;AAA&quot;
+<ul>
+<li><code>someDog</code> is followed to the <code>Dog</code> it points to (the <code>Dog</code> object at address 42)</li>
+<li>that <code>Dog</code> (the one at address 42) is asked to change his name to Max</li>
+</ul>
+</li>
+<li>at line &quot;BBB&quot;
+<ul>
+<li>a new <code>Dog</code> is created. Let's say he's at address 74</li>
+<li>we assign the parameter <code>someDog</code> to 74</li>
+</ul>
+</li>
+<li>at line &quot;CCC&quot;
+<ul>
+<li>someDog is followed to the <code>Dog</code> it points to (the <code>Dog</code> object at address 74)</li>
+<li>that <code>Dog</code> (the one at address 74) is asked to change his name to Rowlf</li>
+</ul>
+</li>
+<li>then, we return</li>
+</ul>
+<p>Now let's think about what happens outside the method:</p>
+<p><em>Did <code>myDog</code> change?</em></p>
+<p>There's the key.</p>
+<p>Keeping in mind that <code>myDog</code> is a <em>pointer</em>, and not an actual <code>Dog</code>, the answer is NO. <code>myDog</code> still has the value 42; it's still pointing to the original <code>Dog</code> (but note that because of line &quot;AAA&quot;, its name is now &quot;Max&quot; - still the same Dog; <code>myDog</code>'s value has not changed.)</p>
+<p>It's perfectly valid to <em>follow</em> an address and change what's at the end of it; that does not change the variable, however.</p>
+<p>Java works exactly like C. You can assign a pointer, pass the pointer to a method, follow the pointer in the method and change the data that was pointed to. However, the caller will not see any changes you make to where that pointer points. (In a language with pass-by-reference semantics, the method function <em>can</em> change the pointer and the caller will see that change.)</p>
+<p>In C++, Ada, Pascal and other languages that support pass-by-reference, you can actually change the variable that was passed.</p>
+<p>If Java had pass-by-reference semantics, the <code>foo</code> method we defined above would have changed where <code>myDog</code> was pointing when it assigned <code>someDog</code> on line BBB.</p>
+<p>Think of reference parameters as being aliases for the variable passed in. When that alias is assigned, so is the variable that was passed in.</p>
+<h2>Update</h2>
+<p>A discussion in the comments warrants some clarification...</p>
+<p>In C, you can write</p>
+<pre class="lang-c prettyprint-override"><code>void swap(int *x, int *y) {
+    int t = *x;
+    *x = *y;
+    *y = t;
+}
+
+int x = 1;
+int y = 2;
+swap(&amp;x, &amp;y);
+</code></pre>
+<p>This is not a special case in C. Both languages use pass-by-value semantics. Here the call site is creating additional data structure to assist the function to access and manipulate data.</p>
+<p>The function is being passed pointers to data, and follows those pointers to access and modify that data.</p>
+<p>A similar approach in Java, where the caller sets up assisting structure, might be:</p>
+<pre class="lang-java prettyprint-override"><code>void swap(int[] x, int[] y) {
+    int temp = x[0];
+    x[0] = y[0];
+    y[0] = temp;
+}
+
+int[] x = {1};
+int[] y = {2};
+swap(x, y);
+</code></pre>
+<p>(or if you wanted both examples to demonstrate features the other language doesn't have, create a mutable IntWrapper class to use in place of the arrays)</p>
+<p>In these cases, both C and Java are <em>simulating</em> pass-by-reference. They're still both passing values (pointers to ints or arrays), and following those pointers inside the called function to manipulate the data.</p>
+<p>Pass-by-reference is all about the function <em>declaration/definition</em>, and how it handles its parameters. Reference semantics apply to <em>every</em> call to that function, and the call site only needs to pass variables, no additional data structure.</p>
+<p>These simulations require the call site and the function to cooperate. No doubt it's useful, but it's still pass-by-value.</p>
+</div><p class="this-has-helped">This answer has helped 2084 people.</p><div class="s-prose js-post-body"><p>Java always passes arguments <em>by value</em>, NOT by reference.</p>
+<hr />
+<p>Let me explain this through an <a href="https://stackoverflow.com/a/9404727/597657">example</a>:</p>
+<pre class="lang-java prettyprint-override"><code>public class Main {
+
+     public static void main(String[] args) {
+          Foo f = new Foo(&quot;f&quot;);
+          changeReference(f); // It won't change the reference!
+          modifyReference(f); // It will modify the object that the reference variable &quot;f&quot; refers to!
+     }
+
+     public static void changeReference(Foo a) {
+          Foo b = new Foo(&quot;b&quot;);
+          a = b;
+     }
+
+     public static void modifyReference(Foo c) {
+          c.setAttribute(&quot;c&quot;);
+     }
+
+}
+</code></pre>
+<p>I will explain this in steps:</p>
+<ol>
+<li><p>Declaring a reference named <code>f</code> of type <code>Foo</code> and assign it a new object of type <code>Foo</code> with an attribute <code>&quot;f&quot;</code>.</p>
+<pre><code>Foo f = new Foo(&quot;f&quot;);
+</code></pre>
+<p><img src="https://i.stack.imgur.com/arXpP.png" alt="enter image description here" /></p>
+</li>
+<li><p>From the method side, a reference of type <code>Foo</code> with a name <code>a</code> is declared and it's initially assigned <code>null</code>.</p>
+<pre><code>public static void changeReference(Foo a)
+</code></pre>
+<p><img src="https://i.stack.imgur.com/k2LBD.png" alt="enter image description here" /></p>
+</li>
+<li><p>As you call the method <code>changeReference</code>, the reference <code>a</code> will be assigned the object which is passed as an argument.</p>
+<pre><code>changeReference(f);
+</code></pre>
+<p><img src="https://i.stack.imgur.com/1Ez74.png" alt="enter image description here" /></p>
+</li>
+<li><p>Declaring a reference named <code>b</code> of type <code>Foo</code> and assign it a new object of type <code>Foo</code> with an attribute <code>&quot;b&quot;</code>.</p>
+<pre><code>Foo b = new Foo(&quot;b&quot;);
+</code></pre>
+<p><img src="https://i.stack.imgur.com/Krx4N.png" alt="enter image description here" /></p>
+</li>
+<li><p><code>a = b</code> makes a new assignment to the reference <code>a</code>, <strong>not</strong> <code>f</code>, of the object whose attribute is <code>&quot;b&quot;</code>.</p>
+<p><img src="https://i.stack.imgur.com/rCluu.png" alt="enter image description here" /></p>
+</li>
+<li><p>As you call <code>modifyReference(Foo c)</code> method, a reference <code>c</code> is created and assigned the object with attribute <code>&quot;f&quot;</code>.</p>
+<p><img src="https://i.stack.imgur.com/PRZPg.png" alt="enter image description here" /></p>
+</li>
+<li><p><code>c.setAttribute(&quot;c&quot;);</code> will change the attribute of the object that reference <code>c</code> points to it, and it's the same object that reference <code>f</code> points to it.</p>
+<p><img src="https://i.stack.imgur.com/H9Qsf.png" alt="enter image description here" /></p>
+</li>
+</ol>
+<p>I hope you understand now how passing objects as arguments works in Java :)</p>
+</div><p class="this-has-helped">This answer has helped 842 people.</p><div class="s-prose js-post-body"><p>Java is always pass by value, with no exceptions, <strong>ever</strong>.</p>
+
+<p>So how is it that anyone can be at all confused by this, and believe that Java is pass by reference, or think they have an example of Java acting as pass by reference? The key point is that Java <strong>never</strong> provides direct access to the values of <em>objects themselves</em>, in <em>any</em> circumstances. The only access to objects is through a <em>reference</em> to that object. Because Java objects are <em>always</em> accessed through a reference, rather than directly, it is common to talk about fields and variables <em>and method arguments</em> as being <em>objects</em>, when pedantically they are only <em>references to objects</em>. <strong>The confusion stems from this (strictly speaking, incorrect) change in nomenclature.</strong></p>
+
+<p>So, when calling a method</p>
+
+<ul>
+<li>For primitive arguments (<code>int</code>, <code>long</code>, etc.), the pass by value is <em>the actual value</em> of the primitive (for example, 3).</li>
+<li>For objects, the pass by value is the value of <em>the reference to the object</em>.</li>
+</ul>
+
+<p>So if you have <code>doSomething(foo)</code> and <code>public void doSomething(Foo foo) { .. }</code> the two Foos have copied <em>references</em> that point to the same objects.</p>
+
+<p>Naturally, passing by value a reference to an object looks very much like (and is indistinguishable in practice from) passing an object by reference.</p>
+</div><p class="this-has-helped">This answer has helped 795 people.</p><div class="s-prose js-post-body"><p><strong>This will give you some insights of how Java really works to the point that in your next discussion about Java passing by reference or passing by value you'll just smile :-)</strong></p>
+
+<p>Step one please erase from your mind that word that starts with 'p' "_ _ _ _ _ _ _", especially if you come from other programming languages. Java and 'p' cannot be written in the same book, forum, or even txt.</p>
+
+<p>Step two remember that when you pass an Object into a method you're passing the Object reference and not the Object itself.</p>
+
+<ul>
+<li><em>Student</em>: Master, does this mean that Java is pass-by-reference?</li>
+<li><em>Master</em>: Grasshopper, No.</li>
+</ul>
+
+<p>Now think of what an Object's reference/variable does/is:</p>
+
+<ol>
+<li><strong>A variable holds the bits that tell the JVM how to get to the referenced Object in memory (Heap).</strong></li>
+<li>When passing arguments to a method <strong>you ARE NOT passing the reference variable, but a copy of the bits in the reference variable</strong>. Something like this: 3bad086a. 3bad086a represents a way to get to the passed object.</li>
+<li>So you're just passing 3bad086a that it's the value of the reference.</li>
+<li>You're passing the value of the reference and not the reference itself (and not the object).</li>
+<li><strong><em>This value is actually COPIED and given to the method</em></strong>. </li>
+</ol>
+
+<p>In the following (please don't try to compile/execute this...):</p>
+
+<pre><code>1. Person person;
+2. person = new Person("Tom");
+3. changeName(person);
+4.
+5. //I didn't use Person person below as an argument to be nice
+6. static void changeName(Person anotherReferenceToTheSamePersonObject) {
+7.     anotherReferenceToTheSamePersonObject.setName("Jerry");
+8. }
+</code></pre>
+
+<p>What happens?</p>
+
+<ul>
+<li>The variable <em>person</em> is created in line #1 and it's null at the beginning.</li>
+<li>A new Person Object is created in line #2, stored in memory, and the variable <em>person</em> is given the reference to the Person object. That is, its address. Let's say 3bad086a.</li>
+<li>The variable <em>person</em> holding the address of the Object is passed to the function in line #3.</li>
+<li>In line #4 you can listen to the sound of silence </li>
+<li>Check the comment on line #5</li>
+<li>A method local variable -<em>anotherReferenceToTheSamePersonObject</em>- is created and then comes the magic in line #6:
+
+<ul>
+<li>The variable/reference <em>person</em> is copied bit-by-bit and passed to <em>anotherReferenceToTheSamePersonObject</em> inside the function.</li>
+<li>No new instances of Person are created.</li>
+<li>Both "<em>person</em>" and "<em>anotherReferenceToTheSamePersonObject</em>" hold the same value of 3bad086a.</li>
+<li>Don't try this but person==anotherReferenceToTheSamePersonObject would be true.</li>
+<li>Both variables have IDENTICAL COPIES of the reference and they both refer to the same Person Object, the SAME Object on the Heap and NOT A COPY.</li>
+</ul></li>
+</ul>
+
+<p>A picture is worth a thousand words:</p>
+
+<p><img src="https://i.stack.imgur.com/Ba3hJ.jpg" alt="Pass by Value"></p>
+
+<p><strong>Note that the anotherReferenceToTheSamePersonObject arrows is directed towards the Object and not towards the variable person!</strong></p>
+
+<p>If you didn't get it then just trust me and remember that it's better to say that <strong>Java is pass by value</strong>. Well, <strong>pass by reference value</strong>. Oh well, even better is <strong><em>pass-by-copy-of-the-variable-value! ;)</em></strong></p>
+
+<p>Now feel free to hate me but note that given this <strong>there is no difference between passing primitive data types and Objects</strong> when talking about method arguments.</p>
+
+<p>You always pass a copy of the bits of the value of the reference!</p>
+
+<ul>
+<li>If it's a primitive data type these bits will contain the value of the primitive data type itself.</li>
+<li>If it's an Object the bits will contain the value of the address that tells the JVM how to get to the Object.</li>
+</ul>
+
+<blockquote>
+  <p>Java is pass-by-value because inside a method you can modify the referenced Object as much as you want but no matter how hard you try you'll never be able to modify the passed variable that will keep referencing (not p _ _ _ _ _ _ _) the same Object no matter what!</p>
+</blockquote>
+
+<hr>
+
+<blockquote>
+  <p>The changeName function above will never be able to modify the actual content (the bit values) of the passed reference. In other word changeName cannot make Person person refer to another Object.</p>
+</blockquote>
+
+<hr>
+
+<p>Of course you can cut it short and just say that  <strong>Java is pass-by-value!</strong></p>
+</div><p class="this-has-helped">This answer has helped 388 people.</p><div class="s-prose js-post-body"><p>Java passes references by value.</p>
+
+<p>So you can't change the reference that gets passed in.</p>
+</div><p class="this-has-helped">This answer has helped 293 people.</p><div class="s-prose js-post-body"><p>I feel like arguing about "pass-by-reference vs pass-by-value" is not super-helpful.</p>
+
+<p>If you say, "Java is pass-by-whatever (reference/value)", in either case, you're not provide a complete answer. Here's some additional information that will hopefully aid in understanding what's happening in memory.</p>
+
+<p>Crash course on stack/heap before we get to the Java implementation:
+Values go on and off the stack in a nice orderly fashion, like a stack of plates at a cafeteria.
+Memory in the heap (also known as dynamic memory) is haphazard and disorganized. The JVM just finds space wherever it can, and frees it up as the variables that use it are no longer needed.</p>
+
+<p>Okay. First off, local primitives go on the stack. So this code:</p>
+
+<pre><code>int x = 3;
+float y = 101.1f;
+boolean amIAwesome = true;
+</code></pre>
+
+<p>results in this:</p>
+
+<p><img src="https://i.stack.imgur.com/7nGKU.png" alt="primitives on the stack"></p>
+
+<p>When you declare and instantiate an object. The actual object goes on the heap. What goes on the stack? The address of the object on the heap. C++ programmers would call this a pointer, but some Java developers are against the word "pointer". Whatever. Just know that the address of the object goes on the stack.</p>
+
+<p>Like so:</p>
+
+<pre><code>int problems = 99;
+String name = "Jay-Z";
+</code></pre>
+
+<p><img src="https://i.stack.imgur.com/yTIYp.png" alt="a b*7ch aint one!"></p>
+
+<p>An array is an object, so it goes on the heap as well. And what about the objects in the array? They get their own heap space, and the address of each object goes inside the array.</p>
+
+<pre><code>JButton[] marxBros = new JButton[3];
+marxBros[0] = new JButton("Groucho");
+marxBros[1] = new JButton("Zeppo");
+marxBros[2] = new JButton("Harpo");
+</code></pre>
+
+<p><img src="https://i.stack.imgur.com/v2b33.png" alt="marx brothers"></p>
+
+<p>So, what gets passed in when you call a method? If you pass in an object, what you're actually passing in is the address of the object. Some might say the "value" of the address, and some say it's just a reference to the object. This is the genesis of the holy war between "reference" and "value" proponents. What you call it isn't as important as that you understand that what's getting passed in is the address to the object.</p>
+
+<pre><code>private static void shout(String name){
+    System.out.println("There goes " + name + "!");
+}
+
+public static void main(String[] args){
+    String hisName = "John J. Jingleheimerschmitz";
+    String myName = hisName;
+    shout(myName);
+}
+</code></pre>
+
+<p>One String gets created and space for it is allocated in the heap, and the address to the string is stored on the stack and given the identifier <code>hisName</code>, since the address of the second String is the same as the first, no new String is created and no new heap space is allocated, but a new identifier is created on the stack. Then we call <code>shout()</code>: a new stack frame is created and a new identifier, <code>name</code> is created and assigned the address of the already-existing String.</p>
+
+<p><img src="https://i.stack.imgur.com/q0prc.png" alt="la da di da da da da"></p>
+
+<p>So, value, reference? You say "potato".</p>
+</div><p class="this-has-helped">This answer has helped 232 people.</p><div class="s-prose js-post-body"><p>Basically, reassigning Object parameters doesn't affect the argument, e.g.,</p>
+<pre><code>private static void foo(Object bar) {
+    bar = null;
+}
+
+public static void main(String[] args) {
+    String baz = &quot;Hah!&quot;;
+    foo(baz);
+    System.out.println(baz);
+}
+</code></pre>
+<p>will print out <code>&quot;Hah!&quot;</code> instead of <code>null</code>. The reason this works is because <code>bar</code> is a copy of the value of <code>baz</code>, which is just a reference to <code>&quot;Hah!&quot;</code>. If it were the actual reference itself, then <code>foo</code> would have redefined <code>baz</code> to <code>null</code>.</p>
+</div><p class="this-has-helped">This answer has helped 217 people.</p><div class="s-prose js-post-body"><p>Just to show the contrast, compare the following <a href="https://en.wikipedia.org/wiki/C++" rel="noreferrer">C++</a> and <a href="http://en.wikipedia.org/wiki/Java_%28programming_language%29" rel="noreferrer">Java</a> snippets:</p>
+
+<p>In C++: <strong>Note: Bad code - memory leaks!</strong>  But it demonstrates the point.</p>
+
+<pre><code>void cppMethod(int val, int &amp;ref, Dog obj, Dog &amp;objRef, Dog *objPtr, Dog *&amp;objPtrRef)
+{
+    val = 7; // Modifies the copy
+    ref = 7; // Modifies the original variable
+    obj.SetName("obj"); // Modifies the copy of Dog passed
+    objRef.SetName("objRef"); // Modifies the original Dog passed
+    objPtr-&gt;SetName("objPtr"); // Modifies the original Dog pointed to 
+                               // by the copy of the pointer passed.
+    objPtr = new Dog("newObjPtr");  // Modifies the copy of the pointer, 
+                                   // leaving the original object alone.
+    objPtrRef-&gt;SetName("objRefPtr"); // Modifies the original Dog pointed to 
+                                    // by the original pointer passed. 
+    objPtrRef = new Dog("newObjPtrRef"); // Modifies the original pointer passed
+}
+
+int main()
+{
+    int a = 0;
+    int b = 0;
+    Dog d0 = Dog("d0");
+    Dog d1 = Dog("d1");
+    Dog *d2 = new Dog("d2");
+    Dog *d3 = new Dog("d3");
+    cppMethod(a, b, d0, d1, d2, d3);
+    // a is still set to 0
+    // b is now set to 7
+    // d0 still have name "d0"
+    // d1 now has name "objRef"
+    // d2 now has name "objPtr"
+    // d3 now has name "newObjPtrRef"
+}
+</code></pre>
+
+<p>In Java, </p>
+
+<pre><code>public static void javaMethod(int val, Dog objPtr)
+{
+   val = 7; // Modifies the copy
+   objPtr.SetName("objPtr") // Modifies the original Dog pointed to 
+                            // by the copy of the pointer passed.
+   objPtr = new Dog("newObjPtr");  // Modifies the copy of the pointer, 
+                                  // leaving the original object alone.
+}
+
+public static void main()
+{
+    int a = 0;
+    Dog d0 = new Dog("d0");
+    javaMethod(a, d0);
+    // a is still set to 0
+    // d0 now has name "objPtr"
+}
+</code></pre>
+
+<p>Java only has the two types of passing: by value for built-in types, and by value of the pointer for object types.</p>
+</div><p class="this-has-helped">This answer has helped 210 people.</p><div class="s-prose js-post-body"><p>Java passes references to objects by value.</p>
+</div><p class="this-has-helped">This answer has helped 172 people.</p><div class="s-prose js-post-body"><p>I can't believe that nobody mentioned Barbara Liskov yet. When she designed CLU in 1974, she ran into this same terminology problem, and she invented the term <em>call by sharing</em> (also known as <em>call by object-sharing</em> and <em>call by object</em>) for this specific case of "call by value where the value is a reference".</p>
+</div><p class="this-has-helped">This answer has helped 139 people.</p><div class="s-prose js-post-body"><p>The crux of the matter is that the word <em>reference</em> in the expression "pass by reference" means something completely different from the usual meaning of the word <em>reference</em> in Java. </p>
+
+<p>Usually in Java <em>reference</em> means a a <em>reference to an object</em>. But the technical terms <em>pass by reference/value</em> from programming language theory is talking about a <em>reference to the memory cell holding the variable</em>, which is something completely different.</p>
+</div><p class="this-has-helped">This answer has helped 105 people.</p><div class="s-prose js-post-body"><p>There are already great answers that cover this. I wanted to make a small contribution by sharing a <strong>very simple example</strong> (which will compile) contrasting the behaviors between Pass-by-reference in c++ and Pass-by-value in Java.</p>
+<p>A few points:</p>
+<ol>
+<li>The term &quot;reference&quot; is a overloaded with two separate meanings. In Java it simply means a pointer, but in the context of &quot;Pass-by-reference&quot; it means a handle to the original variable which was passed in.</li>
+<li><strong>Java is Pass-by-value</strong>. Java is a descendent of C (among other languages). Before C, several (but not all) earlier languages like FORTRAN and COBOL supported PBR, but C did not. PBR allowed these other languages to make changes to the passed variables inside sub-routines. In order to accomplish the same thing (i.e. change the values of variables inside functions), C programmers passed pointers to variables into functions. Languages inspired by C, such as Java, borrowed this idea and continue to pass pointer to methods as C did, except that Java calls its pointers References. Again, this is a different use of the word &quot;Reference&quot; than in &quot;Pass-By-Reference&quot;.</li>
+<li><strong>C++ allows Pass-by-reference</strong> by declaring a reference parameter using the &quot;&amp;&quot; character (which happens to be the same character used to indicate &quot;the address of a variable&quot; in both C and C++). For example, if we pass in a pointer by reference, the parameter and the argument are not just pointing to the same object. Rather, they are the same variable. If one gets set to a different address or to null, so does the other.</li>
+<li>In the C++ example below I'm passing a <strong>pointer</strong> to a null terminated string <strong>by reference</strong>. And in the Java example below I'm passing a Java reference to a String (again, the same as a pointer to a String) by value. Notice the output in the comments.</li>
+</ol>
+<p>C++ pass by reference example:</p>
+<pre><code>using namespace std;
+#include &lt;iostream&gt;
+
+void change (char *&amp;str){   // the '&amp;' makes this a reference parameter
+    str = NULL;
+}
+
+int main()
+{
+    char *str = &quot;not Null&quot;;
+    change(str);
+    cout&lt;&lt;&quot;str is &quot; &lt;&lt; str;      // ==&gt;str is &lt;null&gt;
+}
+</code></pre>
+<p>Java pass &quot;a Java reference&quot; by value example</p>
+<pre><code>public class ValueDemo{
+    
+    public void change (String str){
+        str = null;
+    }
+
+     public static void main(String []args){
+        ValueDemo vd = new ValueDemo();
+        String str = &quot;not null&quot;;
+        vd.change(str);
+        System.out.println(&quot;str is &quot; + str);    // ==&gt; str is not null!!
+                                                // Note that if &quot;str&quot; was
+                                                // passed-by-reference, it
+                                                // WOULD BE NULL after the
+                                                // call to change().
+     }
+}
+</code></pre>
+<p><strong>EDIT</strong></p>
+<p>Several people have written comments which seem to indicate that either they are not looking at my examples or they don't get the c++ example. Not sure where the disconnect is, but guessing the c++ example is not clear. I'm posting the same example in pascal because I think pass-by-reference looks cleaner in pascal, but I could be wrong. I might just be confusing people more; I hope not.</p>
+<p>In pascal, parameters passed-by-reference are called &quot;var parameters&quot;. In the procedure setToNil below, please note the keyword 'var' which precedes the parameter 'ptr'. When a pointer is passed to this procedure, it will be passed <strong>by reference</strong>. Note the behavior: when this procedure sets ptr to nil (that's pascal speak for NULL), it will set the argument to nil--you can't do that in Java.</p>
+<pre><code>program passByRefDemo;
+type 
+   iptr = ^integer;
+var
+   ptr: iptr;
+   
+   procedure setToNil(var ptr : iptr);
+   begin
+       ptr := nil;
+   end;
+
+begin
+   new(ptr);
+   ptr^ := 10;
+   setToNil(ptr);
+   if (ptr = nil) then
+       writeln('ptr seems to be nil');     { ptr should be nil, so this line will run. }
+end.
+</code></pre>
+<p><strong>EDIT 2</strong></p>
+<p>Some excerpts from <strong>&quot;THE Java Programming Language&quot;</strong> by Ken Arnold, <strong>James Gosling (the guy who invented Java)</strong>, and David Holmes, chapter 2, section 2.6.5</p>
+<blockquote>
+<p><strong>All parameters to methods are passed &quot;by value&quot;</strong>. In other words,
+values of parameter variables in a method are copies of the invoker
+specified as arguments.</p>
+</blockquote>
+<p>He goes on to make the same point regarding objects . . .</p>
+<blockquote>
+<p>You should note that when the parameter is an object reference, it is
+the object reference-not the object itself-that is <strong>passed &quot;by value&quot;</strong>.</p>
+</blockquote>
+<p>And towards the end of the same section he makes a broader statement about java being only pass by value and never pass by reference.</p>
+<blockquote>
+<p>The Java programming language <strong>does not pass objects by reference; it</strong>
+<strong>passes object references by value</strong>. Because two copies of the same
+reference refer to the same actual object, changes made through one
+reference variable are visible through the other. There is exactly one
+parameter passing mode-<strong>pass by value</strong>-and that helps keep things
+simple.</p>
+</blockquote>
+<p>This section of the book has a great explanation of parameter passing in Java and of the distinction between pass-by-reference and pass-by-value and it's by the creator of Java. I would encourage anyone to read it, especially if you're still not convinced.</p>
+<p>I think the difference between the two models is very subtle and unless you've done programming where you actually used pass-by-reference, it's easy to miss where two models differ.</p>
+<p>I hope this settles the debate, but probably won't.</p>
+<p><strong>EDIT 3</strong></p>
+<p>I might be a little obsessed with this post. Probably because I feel that the makers of Java inadvertently spread misinformation. If instead of using the word &quot;reference&quot; for pointers they had used something else, say
+dingleberry, there would've been no problem. You could say, &quot;Java passes dingleberries by value and not by reference&quot;, and nobody would be confused.</p>
+<p>That's the reason only Java developers have issue with this. They look at the word &quot;reference&quot; and think they know exactly what that means, so they don't even bother to consider the opposing argument.</p>
+<p>Anyway, I noticed a comment in an older post, which made a balloon analogy which I really liked. So much so that I decided to glue together some clip-art to make a set of cartoons to illustrate the point.</p>
+<p><strong>Passing a reference by value</strong>--Changes to the reference are not reflected in the caller's scope, but the changes to the object are. This is because the reference is copied, but the both the original and the copy refer to the same object.
+<a href="https://i.stack.imgur.com/RvkqU.png" rel="noreferrer"><img src="https://i.stack.imgur.com/RvkqU.png" alt="Passing Object references By Value" /></a></p>
+<p><strong>Pass by reference</strong>--There is no copy of the reference. Single reference is shared by both the caller and the function being called. Any changes to the reference or the Object's data are reflected in the caller's scope.
+<a href="https://i.stack.imgur.com/SHXkC.png" rel="noreferrer"><img src="https://i.stack.imgur.com/SHXkC.png" alt="Pass by reference" /></a></p>
+<p><strong>EDIT 4</strong></p>
+<p>I have seen posts on this topic which describe the low level implementation of parameter passing in Java, which I think is great and very helpful because it makes an abstract idea concrete. However, to me the question is more about <strong>the behavior described in the language specification</strong> than about the technical implementation of the behavior. This is an exerpt from the <a href="https://docs.oracle.com/javase/specs/jls/se19/html/jls-8.html#jls-8.4.1" rel="noreferrer">Java Language Specification, section 8.4.1</a> :</p>
+<blockquote>
+<p>When the method or constructor is invoked (§15.12), <strong>the values of the
+actual argument expressions initialize newly created parameter
+variables, each of the declared type, before execution of the body of
+the method or constructor.</strong> The Identifier that appears in the
+DeclaratorId may be used as a simple name in the body of the method or
+constructor to refer to the formal parameter.</p>
+</blockquote>
+<p>Which means, java creates a copy of the passed parameters before executing a method. Like most people who studied compilers in college, I used <a href="https://rads.stackoverflow.com/amzn/click/com/0201100886" rel="noreferrer" rel="nofollow noreferrer">&quot;The Dragon Book&quot;</a> which is <strong>THE</strong> compilers book. It has a good description of &quot;Call-by-value&quot; and &quot;Call-by-Reference&quot; in Chapter 1. The Call-by-value description matches up with Java Specs exactly.</p>
+<p>Back when I studied compilers-in the 90's, I used the first edition of the book from 1986 which pre-dated Java by about 9 or 10 years. However, I just ran across a copy of the <a href="https://rads.stackoverflow.com/amzn/click/com/B009TGD06W" rel="noreferrer" rel="nofollow noreferrer">2nd Eddition</a> from 2007 <strong>which actually mentions Java!</strong> Section 1.6.6 labeled &quot;Parameter Passing Mechanisms&quot; describes parameter passing pretty nicely. Here is an excerpt under the heading &quot;Call-by-value&quot; which mentions Java:</p>
+<blockquote>
+<p>In call-by-value, the actual parameter is evaluated (if it is an
+expression) or copied (if it is a variable). The value is placed in
+the location belonging to the corresponding formal parameter of the
+called procedure. <strong>This method is used in C and Java, and is a common
+option in C++ , as well as in most other languages.</strong></p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>In java everything is reference, so when you have something like:
+    <code>Point pnt1 = new Point(0,0);</code> Java does following:</p>
+
+<ol>
+<li>Creates new Point object</li>
+<li>Creates new Point reference and initialize that reference to <em>point (refer to)</em> on previously created Point object.</li>
+<li>From here, through Point object life, you will access to that object through pnt1
+ reference. So we can say that in Java you manipulate object through its reference.<br></li>
+</ol>
+
+<p><img src="https://i.stack.imgur.com/jM54f.png" alt="enter image description here"></p>
+
+<p><strong>Java doesn't pass method arguments by reference; it passes them by value.</strong> I will use example from <a href="http://www.javaworld.com/javaqa/2000-05/03-qa-0526-pass.html" rel="noreferrer">this site</a>: </p>
+
+<pre><code>public static void tricky(Point arg1, Point arg2) {
+  arg1.x = 100;
+  arg1.y = 100;
+  Point temp = arg1;
+  arg1 = arg2;
+  arg2 = temp;
+}
+public static void main(String [] args) {
+  Point pnt1 = new Point(0,0);
+  Point pnt2 = new Point(0,0);
+  System.out.println("X1: " + pnt1.x + " Y1: " +pnt1.y); 
+  System.out.println("X2: " + pnt2.x + " Y2: " +pnt2.y);
+  System.out.println(" ");
+  tricky(pnt1,pnt2);
+  System.out.println("X1: " + pnt1.x + " Y1:" + pnt1.y); 
+  System.out.println("X2: " + pnt2.x + " Y2: " +pnt2.y);  
+}
+</code></pre>
+
+<p>Flow of the program:</p>
+
+<pre><code>Point pnt1 = new Point(0,0);
+Point pnt2 = new Point(0,0);
+</code></pre>
+
+<p>Creating two different Point object with two different reference associated.
+<img src="https://i.stack.imgur.com/5LIKC.png" alt="enter image description here"></p>
+
+<pre><code>System.out.println("X1: " + pnt1.x + " Y1: " +pnt1.y); 
+System.out.println("X2: " + pnt2.x + " Y2: " +pnt2.y);
+System.out.println(" ");
+</code></pre>
+
+<p>As expected output will be:</p>
+
+<pre><code>X1: 0     Y1: 0
+X2: 0     Y2: 0
+</code></pre>
+
+<p><strong>On this line 'pass-by-value' goes into the play...</strong> <br></p>
+
+<pre><code>tricky(pnt1,pnt2);           public void tricky(Point arg1, Point arg2);
+</code></pre>
+
+<p>References <code>pnt1</code> and <code>pnt2</code> are <strong>passed by value</strong> to the tricky method, which means that now yours references <code>pnt1</code> and <code>pnt2</code> have their <code>copies</code> named <code>arg1</code> and <code>arg2</code>.So <code>pnt1</code> and <code>arg1</code> <em>points</em> to the same object. (Same for the <code>pnt2</code> and <code>arg2</code>)
+<img src="https://i.stack.imgur.com/qd1GH.png" alt="enter image description here"></p>
+
+<p>In the <code>tricky</code> method:</p>
+
+<pre><code> arg1.x = 100;
+ arg1.y = 100;
+</code></pre>
+
+<p><img src="https://i.stack.imgur.com/o4WT0.png" alt="enter image description here"></p>
+
+<p>Next in the <code>tricky</code> method</p>
+
+<pre><code>Point temp = arg1;
+arg1 = arg2;
+arg2 = temp;
+</code></pre>
+
+<p>Here, you first create new <code>temp</code> Point reference which will <em>point</em> on same place like <code>arg1</code> reference. Then you move reference <code>arg1</code> to <em>point</em> to the same place like <code>arg2</code> reference.
+Finally <code>arg2</code> will <em>point</em> to the same place like <code>temp</code>.</p>
+
+<p><img src="https://i.stack.imgur.com/fX5Q3.png" alt="enter image description here"></p>
+
+<p>From here scope of <code>tricky</code> method is gone and you don't have access any more to the references: <code>arg1</code>, <code>arg2</code>, <code>temp</code>. <strong>But important note is that everything you do with these references when they are 'in life' will permanently affect object on which they are <em>point</em> to.</strong> </p>
+
+<p>So after executing method <code>tricky</code>, when you return to <code>main</code>, you have this situation:
+<img src="https://i.stack.imgur.com/LRETe.png" alt="enter image description here"></p>
+
+<p>So now, completely execution of program will be:</p>
+
+<pre><code>X1: 0         Y1: 0
+X2: 0         Y2: 0
+X1: 100       Y1: 100
+X2: 0         Y2: 0
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 98 people.</p><div class="s-prose js-post-body"><p><strong>Java is always pass by value, not pass by reference</strong></p>
+<p>First of all, we need to understand what pass by value and pass by reference are.</p>
+<p><strong>Pass by value means that you are making a copy in memory of the actual parameter's value that is passed in. This is a copy of the contents of the actual parameter</strong>.</p>
+<p><strong>Pass by reference (also called pass by address) means that a copy of the address of the actual parameter is stored</strong>.</p>
+<p>Sometimes Java can give the illusion of pass by reference. Let's see how it works by using the example below:</p>
+<pre><code>public class PassByValue {
+    public static void main(String[] args) {
+        Test t = new Test();
+        t.name = &quot;initialvalue&quot;;
+        new PassByValue().changeValue(t);
+        System.out.println(t.name);
+    }
+    
+    public void changeValue(Test f) {
+        f.name = &quot;changevalue&quot;;
+    }
+}
+
+class Test {
+    String name;
+}
+</code></pre>
+<p>The output of this program is:</p>
+<blockquote>
+<pre><code>changevalue
+</code></pre>
+</blockquote>
+<p>Let's understand step by step:</p>
+<pre><code>Test t = new Test();
+</code></pre>
+<p>As we all know it will create an object in the heap and return the reference value back to t. For example, suppose the value of t is <code>0x100234</code> (we don't know the actual JVM internal value, this is just an example) .</p>
+<p><img src="https://i.stack.imgur.com/AVrhI.png" alt="first illustration" /></p>
+<pre><code>new PassByValue().changeValue(t);
+</code></pre>
+<p>When passing reference t to the function it will not directly pass the actual reference value of object test,  but it will create a copy of t and then pass it to the function. Since it is <strong>passing by value</strong>, it passes a copy of the variable rather than the actual reference of it. Since we said the value of t was <code>0x100234</code>, both t and f will have the same value and hence they will point to the same object.</p>
+<p><img src="https://i.stack.imgur.com/WwdPh.png" alt="second illustration" /></p>
+<p>If you change anything in the function using reference f it will modify the existing contents of the object. That is why we got the output <code>changevalue</code>,   which is updated in the function.</p>
+<p>To understand this more clearly, consider the following example:</p>
+<pre><code>public class PassByValue {
+    public static void main(String[] args) {
+        Test t = new Test();
+        t.name = &quot;initialvalue&quot;;
+        new PassByValue().changeRefence(t);
+        System.out.println(t.name);
+    }
+    
+    public void changeRefence(Test f) {
+        f = null;
+    }
+}
+
+class Test {
+    String name;
+}
+</code></pre>
+<p>Will this throw a <code>NullPointerException</code>? No, because it only passes a copy of the reference.
+In the case of passing by reference, it could have thrown a <code>NullPointerException</code>, as seen below:</p>
+<p><img src="https://i.stack.imgur.com/jH6KP.png" alt="third illustration" /></p>
+<p>Hopefully this will help.</p>
+</div><p class="this-has-helped">This answer has helped 90 people.</p><div class="s-prose js-post-body"><p>Java is a pass by value(stack memory)</p>
+<p>How it works</p>
+<ul>
+<li><p>Let's first understand that where java stores primitive data type and object data type.</p>
+</li>
+<li><p>Primitive data types itself and object references are stored in the stack.
+Objects themselves are stored in the heap.</p>
+</li>
+<li><p>It means, Stack memory stores primitive data types and also the
+addresses of objects.</p>
+</li>
+<li><p>And you always pass a copy of the bits of the value of the reference.</p>
+</li>
+<li><p>If it's a primitive data type then these copied bits contain the value of the primitive data type itself, That's why when we change the value of argument inside the method then it does not reflect the changes outside.</p>
+</li>
+<li><p>If it's an object data type like <strong>Foo foo=new Foo()</strong> then in this case copy of the address of the object passes like file shortcut  , suppose we have a text file <strong>abc.txt</strong> at <strong>C:\desktop</strong> and suppose we make shortcut of the same file and put this inside <strong>C:\desktop\abc-shortcut</strong> so when you access the file from <strong>C:\desktop\abc.txt</strong> and write <strong>'Stack Overflow'</strong> and close the file and again you open the file from shortcut then you write <strong>' is the largest online community for programmers to learn'</strong> then total file change will be <strong>'Stack Overflow is the largest online community for programmers to learn'</strong> which means it doesn't matter from where you open the file , each time we were accessing the same file , here we can assume <strong>Foo</strong> as a file and suppose foo stored at <strong>123hd7h</strong>(original address like <strong>C:\desktop\abc.txt</strong> ) address and <strong>234jdid</strong>(copied address like <strong>C:\desktop\abc-shortcut</strong> which actually contains the original address of the file inside) ..
+So for better understanding make shortcut file and feel.</p>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 76 people.</p><div class="s-prose js-post-body"><h2>A reference is always a value when represented, no matter what language you use.</h2>
+
+<p>Getting an outside of the box view, let's look at Assembly or some low level memory management. At the CPU level a <em>reference</em> to anything immediately becomes a <em>value</em> if it gets written to memory or to one of the CPU registers. (That is why <em>pointer</em> is a good definition. It is a value, which has a purpose at the same time).</p>
+
+<p>Data in memory has a <strong>Location</strong> and at that location there is a value (byte,word, whatever). In Assembly we have a convenient solution to give a <strong>Name</strong> to certain <strong>Location</strong> (aka variable), but when compiling the code, the assembler simply replaces <strong>Name</strong> with the designated location just like your browser replaces domain names with IP addresses.</p>
+
+<p>Down to the core it is technically impossible to pass a reference to anything in any language without representing it (when it immediately becomes a value).</p>
+
+<p>Lets say we have a variable Foo, its <strong>Location</strong> is at the 47th byte in memory and its <strong>Value</strong> is 5. We have another variable <strong>Ref2Foo</strong> which is at 223rd byte in memory, and its value will be 47. This Ref2Foo might be a technical variable, not explicitly created by the program. If you just look at 5 and 47 without any other information, you will see just two <strong>Values</strong>.
+If you use them as references then to reach to <code>5</code> we have to travel:</p>
+
+<pre><code>(Name)[Location] -&gt; [Value at the Location]
+---------------------
+(Ref2Foo)[223]  -&gt; 47
+(Foo)[47]       -&gt; 5
+</code></pre>
+
+<p>This is how jump-tables work. </p>
+
+<p>If we want to call a method/function/procedure with Foo's value, there are a few possible way to pass the variable to the method, depending on the <strong>language</strong> and its several method invocation modes:</p>
+
+<ol>
+<li>5 gets copied to one of the CPU registers (ie. EAX).</li>
+<li>5 gets PUSHd to the stack.</li>
+<li>47 gets copied to one of the CPU registers</li>
+<li>47 PUSHd to the stack.</li>
+<li>223 gets copied to one of the CPU registers.</li>
+<li>223 gets PUSHd to the stack.</li>
+</ol>
+
+<p>In every cases above a value - a <strong>copy</strong> of an existing value - has been created, it is now upto the receiving method to handle it. When you write "Foo" inside the method, it is either read out from EAX, or automatically  <strong>dereferenced</strong>, or double dereferenced, the process depends on how the language works and/or what the type of Foo dictates. This is hidden from the developer until she circumvents the dereferencing process. So a <em>reference</em> is a <em>value</em> when represented, because a reference is a value that has to be processed (at language level).</p>
+
+<p>Now we have passed Foo to the method:</p>
+
+<ul>
+<li>in case 1. and 2. if you change Foo (<code>Foo = 9</code>) it only affects local scope as you have a copy of the Value. From inside the method we cannot even determine where in memory the original Foo was located.</li>
+<li>in case 3. and 4. if you use default language constructs and change Foo (<code>Foo = 11</code>), it could change Foo globally (depends on the language, ie. Java or like Pascal's <code>procedure findMin(x, y, z: integer;</code><strong>var m</strong><code>: integer);</code>). However if the language allows you to circumvent the dereference process, you can change <code>47</code>, say to <code>49</code>. At that point Foo seems to have been changed if you read it, because you have changed the <strong>local pointer</strong> to it. And if you were to modify this Foo inside the method (<code>Foo = 12</code>) you will probably FUBAR the execution of the program (aka. segfault) because you will write to a different memory than expected, you can even modify an area that is destined to hold executable program and writing to it will modify running code (Foo is now not at <code>47</code>). BUT Foo's value of <code>47</code> did not change globally, only the one inside the method, because <code>47</code> was also a copy to the method.</li>
+<li>in case 5. and 6. if you modify <code>223</code> inside the method it creates the same mayhem as in 3. or 4. (a pointer, pointing to a now bad value, that is again used as a pointer) but this is still a local problem, as 223 was <strong>copied</strong>. However if you are able to dereference <code>Ref2Foo</code> (that is <code>223</code>), reach to and modify the pointed value <code>47</code>, say, to <code>49</code>, it will affect Foo <strong>globally</strong>, because in this case the methods got a copy of <code>223</code>  but the referenced <code>47</code> exists only once, and changing that to <code>49</code> will lead every <code>Ref2Foo</code> double-dereferencing to a wrong value.</li>
+</ul>
+
+<p>Nitpicking on insignificant details, even languages that do pass-by-reference will pass values to functions, but those functions know that they have to use it for dereferencing purposes. This pass-the-reference-as-value is just hidden from the programmer because it is practically useless and the terminology is only <em>pass-by-reference</em>.</p>
+
+<p>Strict <em>pass-by-value</em> is also useless, it would mean that a 100 Mbyte array should have to be copied every time we call a method with the array as argument, therefore Java cannot be stricly pass-by-value. Every language would pass a reference to this huge array (as a value) and either employs copy-on-write mechanism if that array can be changed locally inside the method or allows the method (as Java does) to modify the array globally (from the caller's view) and a few languages allows to modify the Value of the reference itself.</p>
+
+<p>So in short and in Java's own terminology, Java is <em>pass-by-value</em> where <em>value</em> can be: either a <strong>real value</strong> or a <strong>value</strong> that is a representation of a <strong>reference</strong>. </p>
+</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><p><strong>In Java, method arguments are all passed by value :</strong></p>
+<p>Java arguments are <strong>all passed by value</strong> (the value  or reference is copied when used by the method) :</p>
+<p>In the case of primitive types, Java behaviour is simple:
+The value is copied in another instance of the primitive type.</p>
+<p>In case of Objects, this is the same:
+Object variables are references (mem buckets holding only Object’s <strong>address</strong> instead of a primitive value) that was created using the &quot;new&quot; keyword, and are copied like primitive types.</p>
+<p>The behaviour can appear different from primitive types: Because the copied object-variable contains the same address (to the same Object).
+Object's <strong>content/members</strong> might still be modified within a method and later access outside, giving the illusion that the (containing) Object itself was passed by reference.</p>
+<p>&quot;String&quot; Objects appear to be a good <strong>counter-example</strong> to the urban legend saying that &quot;Objects are passed by reference&quot;:</p>
+<p>In effect, using a method, you will never be able, to update the value of a String passed as argument:</p>
+<p>A String Object, holds characters by an array declared <strong>final</strong> that can't be modified.
+Only the address of the Object might be replaced by another using &quot;new&quot;.
+Using &quot;new&quot; to update the variable, will not let the Object be accessed from outside, since the variable was initially passed by value and copied.</p>
+</div><p class="this-has-helped">This answer has helped 63 people.</p><div class="s-prose js-post-body"><p>As far as I know, Java only knows call by value. This means for primitive datatypes you will work with an copy and for objects you will work with an copy of the reference to the objects. However I think there are some pitfalls; for example, this will not work:</p>
+
+<pre><code>public static void swap(StringBuffer s1, StringBuffer s2) {
+    StringBuffer temp = s1;
+    s1 = s2;
+    s2 = temp;
+}
+
+
+public static void main(String[] args) {
+    StringBuffer s1 = new StringBuffer("Hello");
+    StringBuffer s2 = new StringBuffer("World");
+    swap(s1, s2);
+    System.out.println(s1);
+    System.out.println(s2);
+}
+</code></pre>
+
+<p>This will populate Hello World and not World Hello because in the swap function you use copys which have no impact on the references in the main. But if your objects are not immutable you can change it for example:</p>
+
+<pre><code>public static void appendWorld(StringBuffer s1) {
+    s1.append(" World");
+}
+
+public static void main(String[] args) {
+    StringBuffer s = new StringBuffer("Hello");
+    appendWorld(s);
+    System.out.println(s);
+}
+</code></pre>
+
+<p>This will populate Hello World on the command line. If you change StringBuffer into String it will produce just Hello because String is immutable. For example:</p>
+
+<pre><code>public static void appendWorld(String s){
+    s = s+" World";
+}
+
+public static void main(String[] args) {
+    String s = new String("Hello");
+    appendWorld(s);
+    System.out.println(s);
+}
+</code></pre>
+
+<p>However you could make a wrapper for String like this which would make it able to use it with Strings:</p>
+
+<pre><code>class StringWrapper {
+    public String value;
+
+    public StringWrapper(String value) {
+        this.value = value;
+    }
+}
+
+public static void appendWorld(StringWrapper s){
+    s.value = s.value +" World";
+}
+
+public static void main(String[] args) {
+    StringWrapper s = new StringWrapper("Hello");
+    appendWorld(s);
+    System.out.println(s.value);
+}
+</code></pre>
+
+<p>edit: i believe this is also the reason to use StringBuffer when it comes to "adding" two Strings because you can modifie the original object which u can't with immutable objects like String is.</p>
+</div><p class="this-has-helped">This answer has helped 60 people.</p><div class="s-prose js-post-body"><p>No, it's not pass by reference.</p>
+
+<p>Java is pass by value according to the Java Language Specification:</p>
+
+<blockquote>
+  <p>When the method or constructor is invoked (§15.12), <strong>the values of the actual argument expressions initialize newly created parameter variables</strong>, each of the declared type, before execution of the body of the method or constructor. The Identifier that appears in the DeclaratorId may be used as a simple name in the body of the method or constructor to refer to the <a href="http://docs.oracle.com/javase/specs/jls/se7/html/jls-8.html#jls-8.4.1" rel="noreferrer">formal parameter</a>. </p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 57 people.</p><div class="s-prose js-post-body"><p>Let me try to explain my understanding with the help of four examples. Java is pass-by-value, and not pass-by-reference</p>
+
+<p>/**</p>
+
+<p>Pass By Value</p>
+
+<p>In Java, all parameters are passed by value, i.e. assigning a method argument is not visible to the caller.</p>
+
+<p>*/</p>
+
+<p><strong>Example 1:</strong></p>
+
+<pre><code>public class PassByValueString {
+    public static void main(String[] args) {
+        new PassByValueString().caller();
+    }
+
+    public void caller() {
+        String value = "Nikhil";
+        boolean valueflag = false;
+        String output = method(value, valueflag);
+        /*
+         * 'output' is insignificant in this example. we are more interested in
+         * 'value' and 'valueflag'
+         */
+        System.out.println("output : " + output);
+        System.out.println("value : " + value);
+        System.out.println("valueflag : " + valueflag);
+
+    }
+
+    public String method(String value, boolean valueflag) {
+        value = "Anand";
+        valueflag = true;
+        return "output";
+    }
+}
+</code></pre>
+
+<p><strong>Result</strong></p>
+
+<pre><code>output : output
+value : Nikhil
+valueflag : false
+</code></pre>
+
+<p><strong>Example 2:</strong></p>
+
+<p>/**
+ * 
+ * Pass By Value
+ *
+ */</p>
+
+<pre><code>public class PassByValueNewString {
+    public static void main(String[] args) {
+        new PassByValueNewString().caller();
+    }
+
+    public void caller() {
+        String value = new String("Nikhil");
+        boolean valueflag = false;
+        String output = method(value, valueflag);
+        /*
+         * 'output' is insignificant in this example. we are more interested in
+         * 'value' and 'valueflag'
+         */
+        System.out.println("output : " + output);
+        System.out.println("value : " + value);
+        System.out.println("valueflag : " + valueflag);
+
+    }
+
+    public String method(String value, boolean valueflag) {
+        value = "Anand";
+        valueflag = true;
+        return "output";
+    }
+}
+</code></pre>
+
+<p><strong>Result</strong></p>
+
+<pre><code>output : output
+value : Nikhil
+valueflag : false
+</code></pre>
+
+<p><strong>Example 3:</strong></p>
+
+<p>/**
+  This 'Pass By Value has a feeling of 'Pass By Reference'</p>
+
+<p>Some people say primitive types and 'String' are 'pass by value'
+  and objects are 'pass by reference'.</p>
+
+<p>But from this example, we can understand that it is infact pass by value only,
+  keeping in mind that here we are passing the reference as the value.
+  ie: reference is passed by value.
+  That's why are able to change and still it holds true after the local scope.
+  But we cannot change the actual reference outside the original scope.
+  what that means is demonstrated by next example of PassByValueObjectCase2.</p>
+
+<p>*/</p>
+
+<pre><code>public class PassByValueObjectCase1 {
+
+    private class Student {
+        int id;
+        String name;
+        public Student() {
+        }
+        public Student(int id, String name) {
+            super();
+            this.id = id;
+            this.name = name;
+        }
+        public int getId() {
+            return id;
+        }
+        public void setId(int id) {
+            this.id = id;
+        }
+        public String getName() {
+            return name;
+        }
+        public void setName(String name) {
+            this.name = name;
+        }
+        @Override
+        public String toString() {
+            return "Student [id=" + id + ", name=" + name + "]";
+        }
+    }
+
+    public static void main(String[] args) {
+        new PassByValueObjectCase1().caller();
+    }
+
+    public void caller() {
+        Student student = new Student(10, "Nikhil");
+        String output = method(student);
+        /*
+         * 'output' is insignificant in this example. we are more interested in
+         * 'student'
+         */
+        System.out.println("output : " + output);
+        System.out.println("student : " + student);
+    }
+
+    public String method(Student student) {
+        student.setName("Anand");
+        return "output";
+    }
+}
+</code></pre>
+
+<p><strong>Result</strong></p>
+
+<pre><code>output : output
+student : Student [id=10, name=Anand]
+</code></pre>
+
+<p><strong>Example 4:</strong></p>
+
+<p>/**</p>
+
+<p>In addition to what was mentioned in Example3 (PassByValueObjectCase1.java),  we cannot change the actual reference outside the original scope."</p>
+
+<p>Note: I am not pasting the code for <code>private class Student</code>. The class definition for <code>Student</code> is same as Example3.</p>
+
+<p>*/</p>
+
+<pre><code>public class PassByValueObjectCase2 {
+
+    public static void main(String[] args) {
+        new PassByValueObjectCase2().caller();
+    }
+
+    public void caller() {
+        // student has the actual reference to a Student object created
+        // can we change this actual reference outside the local scope? Let's see
+        Student student = new Student(10, "Nikhil");
+        String output = method(student);
+        /*
+         * 'output' is insignificant in this example. we are more interested in
+         * 'student'
+         */
+        System.out.println("output : " + output);
+        System.out.println("student : " + student); // Will it print Nikhil or Anand?
+    }
+
+    public String method(Student student) {
+        student = new Student(20, "Anand");
+        return "output";
+    }
+
+}
+</code></pre>
+
+<p><strong>Result</strong></p>
+
+<pre><code>output : output
+student : Student [id=10, name=Nikhil]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 56 people.</p><div class="s-prose js-post-body"><p>I thought I'd contribute this answer to add more details from the Specifications.</p>
+<p>First, <a href="https://stackoverflow.com/questions/373419/whats-the-difference-between-passing-by-reference-vs-passing-by-value">What&#39;s the difference between passing by reference vs. passing by value?</a></p>
+<blockquote>
+<p>Passing by reference means the called functions' parameter will be the
+same as the callers' passed argument (not the value, but the identity</p>
+<ul>
+<li>the variable itself).</li>
+</ul>
+<p>Pass by value means the called functions' parameter will be a copy of
+the callers' passed argument.</p>
+</blockquote>
+<p>Or from wikipedia, <a href="http://en.wikipedia.org/wiki/Call_by_reference#Call_by_reference" rel="noreferrer">on the subject of pass-by-reference</a></p>
+<blockquote>
+<p>In call-by-reference evaluation (also referred to as
+pass-by-reference), a function receives an implicit reference to a
+variable used as argument, rather than a copy of its value. This
+typically means that the function can modify (i.e. assign to) the
+variable used as argument—something that will be seen by its caller.</p>
+</blockquote>
+<p>And <a href="http://en.wikipedia.org/wiki/Call_by_value#Call_by_value" rel="noreferrer">on the subject of pass-by-value</a></p>
+<blockquote>
+<p>In call-by-value, the argument expression is evaluated, and the
+resulting value is bound to the corresponding variable in the function [...].
+If the function or procedure is able to assign values to its
+parameters, only its local copy is assigned [...].</p>
+</blockquote>
+<p>Second, we need to know what Java uses in its method invocations. The <a href="http://docs.oracle.com/javase/specs/jls/se8/html/jls-8.html#jls-8.4.1" rel="noreferrer">Java Language Specification</a> states</p>
+<blockquote>
+<p>When the method or constructor is invoked (§15.12), <strong>the values of the
+actual argument expressions initialize newly created parameter
+variables</strong>, each of the declared type, before execution of the body of
+the method or constructor.</p>
+</blockquote>
+<p>So it assigns (or binds) the value of the argument to the corresponding parameter variable.</p>
+<p><strong>What is the value of the argument?</strong></p>
+<p>Let's consider reference types, the <a href="http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.4" rel="noreferrer">Java Virtual Machine Specification</a> states</p>
+<blockquote>
+<p>There are three kinds of <strong>reference types</strong>: class types, array types,
+and interface types. <strong>Their values are references to dynamically
+created class instances, arrays, or class instances or arrays that
+implement interfaces, respectively.</strong></p>
+</blockquote>
+<p>The <a href="http://docs.oracle.com/javase/specs/jls/se8/html/jls-4.html#jls-4.3.1" rel="noreferrer">Java Language Specification</a> also states</p>
+<blockquote>
+<p><strong>The reference values (often just references) are pointers to these objects</strong>, and a special null reference, which refers to no object.</p>
+</blockquote>
+<p>The value of an argument (of some reference type) is a pointer to an object. Note that a variable, an invocation of a method with a reference type return type, and an instance creation expression (<code>new ...</code>) all resolve to a reference type value.</p>
+<p>So</p>
+<pre><code>public void method (String param) {}
+...
+String variable = new String(&quot;ref&quot;);
+method(variable);
+method(variable.toString());
+method(new String(&quot;ref&quot;));
+</code></pre>
+<p>all bind the value of a reference to a <code>String</code> instance to the method's newly created parameter, <code>param</code>. This is exactly what the definition of pass-by-value describes. As such, <strong>Java is pass-by-value</strong>.</p>
+<p><strong>The fact that you can follow the reference to invoke a method or access a field of the referenced object is completely irrelevant to the conversation.</strong> The definition of pass-by-reference was</p>
+<blockquote>
+<p>This typically means that the function can modify (i.e. assign to) the
+variable used as argument—something that will be seen by its caller.</p>
+</blockquote>
+<p>In Java, modifying the variable means reassigning it. In Java, if you reassigned the variable within the method, it would go unnoticed to the caller. <strong>Modifying the object referenced by the variable is a different concept entirely.</strong></p>
+<hr />
+<p>Primitive values are also defined in the Java Virtual Machine Specification, <a href="http://docs.oracle.com/javase/specs/jvms/se8/html/jvms-2.html#jvms-2.3" rel="noreferrer">here</a>. The value of the type is the corresponding integral or floating point value, encoded appropriately (8, 16, 32, 64, etc. bits).</p>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><p>You can never pass by reference in Java, and one of the ways that is obvious is when you want to return more than one value from a method call. Consider the following bit of code in C++:</p>
+
+<pre><code>void getValues(int&amp; arg1, int&amp; arg2) {
+    arg1 = 1;
+    arg2 = 2;
+}
+void caller() {
+    int x;
+    int y;
+    getValues(x, y);
+    cout &lt;&lt; "Result: " &lt;&lt; x &lt;&lt; " " &lt;&lt; y &lt;&lt; endl;
+}
+</code></pre>
+
+<p>Sometimes you want to use the same pattern in Java, but you can't; at least not directly. Instead you could do something like this:</p>
+
+<pre><code>void getValues(int[] arg1, int[] arg2) {
+    arg1[0] = 1;
+    arg2[0] = 2;
+}
+void caller() {
+    int[] x = new int[1];
+    int[] y = new int[1];
+    getValues(x, y);
+    System.out.println("Result: " + x[0] + " " + y[0]);
+}
+</code></pre>
+
+<p>As was explained in previous answers, in Java you're passing a pointer to the array as a value into <code>getValues</code>. That is enough, because the method then modifies the array element, and by convention you're expecting element 0 to contain the return value. Obviously you can do this in other ways, such as structuring your code so this isn't necessary, or constructing a class that can contain the return value or allow it to be set. But the simple pattern available to you in C++ above is not available in Java.</p>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>The distinction, or perhaps just the way I remember as I used to be under the same impression as the original poster is this: Java is always pass by value. All objects( in Java, anything except for primitives) in Java are references. These references are passed by value.</p>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p>As many people mentioned it before, <a href="http://academic.regis.edu/dbahr/GeneralPages/IntroToProgramming/JavaPassByValue.htm" rel="noreferrer">Java is always pass-by-value</a></p>
+
+<p>Here is another example that will help you understand the difference (<a href="http://www.javaranch.com/campfire/StoryPassBy.jsp" rel="noreferrer">the classic swap example</a>):</p>
+
+<pre><code>public class Test {
+  public static void main(String[] args) {
+    Integer a = new Integer(2);
+    Integer b = new Integer(3);
+    System.out.println("Before: a = " + a + ", b = " + b);
+    swap(a,b);
+    System.out.println("After: a = " + a + ", b = " + b);
+  }
+
+  public static swap(Integer iA, Integer iB) {
+    Integer tmp = iA;
+    iA = iB;
+    iB = tmp;
+  }
+}
+</code></pre>
+
+<p>Prints:  </p>
+
+<blockquote>
+  <p>Before: a = 2, b = 3<br>
+  After: a = 2, b = 3</p>
+</blockquote>
+
+<p>This happens because iA and iB are new local reference variables that have the same value of the passed references (they point to a and b respectively). So, trying to change the references of iA or iB will only change in the local scope and not outside of this method.</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>I always think of it as "pass by copy". It is a copy of the value be it primitive or reference. If it is a primitive it is a copy of the bits that are the value and if it is an Object it is a copy of the reference.</p>
+
+<pre><code>public class PassByCopy{
+    public static void changeName(Dog d){
+        d.name = "Fido";
+    }
+    public static void main(String[] args){
+        Dog d = new Dog("Maxx");
+        System.out.println("name= "+ d.name);
+        changeName(d);
+        System.out.println("name= "+ d.name);
+    }
+}
+class Dog{
+    public String name;
+    public Dog(String s){
+        this.name = s;
+    }
+}
+</code></pre>
+
+<p>output of java PassByCopy:</p>
+
+<blockquote>
+  <p>name= Maxx<br>
+  name= Fido</p>
+</blockquote>
+
+<p>Primitive wrapper classes and Strings are immutable so any example using those types will not work the same as other types/objects.</p>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>Java has only pass by value. A very simple example to validate this.</p>
+
+<pre><code>public void test() {
+    MyClass obj = null;
+    init(obj);
+    //After calling init method, obj still points to null
+    //this is because obj is passed as value and not as reference.
+}
+private void init(MyClass objVar) {
+    objVar = new MyClass();
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>Unlike some other languages, Java does not allow you to choose between pass-by-value and pass-by-reference—all arguments are passed by value. A method call can pass two types of values to a method—copies of primitive values (e.g., values of int and double) and copies of references to objects.</p>
+
+<p>When a method modifies a primitive-type parameter, changes to the parameter have no effect on the original argument value in the calling method.</p>
+
+<p>When it comes to objects, objects themselves cannot be passed to methods. So we pass the reference(address) of the object. We can manipulate the original object using this reference.</p>
+
+<p><strong>How Java creates and stores objects:</strong> When we create an object we store the object’s address in a reference variable. Let's analyze the following statement.</p>
+
+<pre><code>Account account1 = new Account();
+</code></pre>
+
+<p>“Account account1” is the type and name of the reference variable, “=” is the assignment operator, “new” asks for the required amount of space from the system. The constructor to the right of keyword new which creates the object is called implicitly by the keyword new. Address of the created object(result of right value, which is an expression called "class instance creation expression") is assigned to the left value (which is a reference variable with a name and a type specified) using the assign operator.</p>
+
+<p>Although an object’s reference is passed by value, a method can still interact with the referenced object by calling its public methods using the copy of the object’s reference. Since the reference stored in the parameter is a copy of the reference that was passed as an argument, the parameter in the called method and the argument in the calling method refer to the same object in memory.</p>
+
+<p>Passing references to arrays, instead of the array objects themselves, makes sense for performance reasons. Because everything in Java is passed by value, if array objects were passed,
+a copy of each element would be passed. For large arrays, this would waste time and consume
+considerable storage for the copies of the elements.</p>
+
+<p>In the image below you can see we have two reference variables(These are called pointers in C/C++, and I think that term makes it easier to understand this feature.) in the main method. Primitive and reference variables are kept in stack memory(left side in images below). array1 and array2 reference variables "point" (as C/C++ programmers call it) or reference to a and b arrays respectively, which are objects (values these reference variables hold are addresses of objects) in heap memory (right side in images below).</p>
+
+<p><a href="https://i.stack.imgur.com/sF7QZ.png" rel="noreferrer"><img src="https://i.stack.imgur.com/sF7QZ.png" alt="Pass by value example 1"></a></p>
+
+<p>If we pass the value of array1 reference variable as an argument to the reverseArray method, a reference variable is created in the method and that reference variable starts pointing to the same array (a). </p>
+
+<pre><code>public class Test
+{
+    public static void reverseArray(int[] array1)
+    {
+        // ...
+    }
+
+    public static void main(String[] args)
+    {
+        int[] array1 = { 1, 10, -7 };
+        int[] array2 = { 5, -190, 0 };
+
+        reverseArray(array1);
+    }
+}
+</code></pre>
+
+<p><a href="https://i.stack.imgur.com/W1wgZ.png" rel="noreferrer"><img src="https://i.stack.imgur.com/W1wgZ.png" alt="Pass by value example 2"></a></p>
+
+<p>So, if we say </p>
+
+<pre><code>array1[0] = 5;
+</code></pre>
+
+<p>in reverseArray method, it will make a change in array a.</p>
+
+<p>We have another reference variable in reverseArray method (array2) that points to an array c. If we were to say </p>
+
+<pre><code>array1 = array2;
+</code></pre>
+
+<p>in reverseArray method, then the reference variable array1 in method reverseArray would stop pointing to array a and start pointing to array c (Dotted line in second image).</p>
+
+<p>If we return value of reference variable array2 as the return value of method reverseArray and assign this value to reference variable array1 in main method, array1 in main will start pointing to array c.</p>
+
+<p>So let's write all the things we have done at once now.</p>
+
+<pre><code>public class Test
+{
+    public static int[] reverseArray(int[] array1)
+    {
+        int[] array2 = { -7, 0, -1 };
+
+        array1[0] = 5; // array a becomes 5, 10, -7
+
+        array1 = array2; /* array1 of reverseArray starts
+          pointing to c instead of a (not shown in image below) */
+        return array2;
+    }
+
+    public static void main(String[] args)
+    {
+        int[] array1 = { 1, 10, -7 };
+        int[] array2 = { 5, -190, 0 };
+
+        array1 = reverseArray(array1); /* array1 of 
+         main starts pointing to c instead of a */
+    }
+}
+</code></pre>
+
+<p><a href="https://i.stack.imgur.com/5hRyX.png" rel="noreferrer"><img src="https://i.stack.imgur.com/5hRyX.png" alt="enter image description here"></a></p>
+
+<p>And now that reverseArray method is over, its reference variables(array1 and array2) are gone. Which means we now only have the two reference variables in main method array1 and array2 which point to c and b arrays respectively. No reference variable is pointing to object (array) a. So it is eligible for garbage collection.</p>
+
+<p>You could also assign value of array2 in main to array1. array1 would start pointing to b.</p>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>To make a long story short, <a href="http://en.wikipedia.org/wiki/Java_%28programming_language%29" rel="noreferrer">Java</a> objects have some very peculiar properties.</p>
+
+<p>In general, Java has primitive types (<code>int</code>, <code>bool</code>, <code>char</code>, <code>double</code>, etc) that are passed directly by value. Then Java has objects (everything that derives from <code>java.lang.Object</code>). Objects are actually always handled through a reference (a reference being a pointer that you can't touch). That means that in effect, objects are passed by reference, as the references are normally not interesting. It does however mean that you cannot change which object is pointed to as the reference itself is passed by value.</p>
+
+<p>Does this sound strange and confusing? Let's consider how C implements pass by reference and pass by value. In C, the default convention is pass by value. <code>void foo(int x)</code> passes an int by value. <code>void foo(int *x)</code> is a function that does not want an <code>int a</code>, but a pointer to an int: <code>foo(&amp;a)</code>. One would use this with the <code>&amp;</code> operator to pass a variable address.</p>
+
+<p>Take this to C++, and we have references. References are basically (in this context) syntactic sugar that hide the pointer part of the equation: <code>void foo(int &amp;x)</code> is called by <code>foo(a)</code>, where the compiler itself knows that it is a reference and the address of the non-reference <code>a</code> should be passed. In Java, all variables referring to objects are actually of reference type, in effect forcing call by reference for most intends and purposes without the fine grained control (and complexity) afforded by, for example, C++.</p>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><p>I have created a thread devoted to these kind of questions for <em>any</em> programming languages <a href="https://stackoverflow.com/questions/2027/pass-by-reference-or-pass-by-value">here</a>.</p>
+
+<p><a href="https://stackoverflow.com/questions/2027/pass-by-reference-or-pass-by-value#2028">Java is also mentioned</a>. Here is the short summary:</p>
+
+<ul>
+<li>Java passes it parameters by value</li>
+<li>"by value" is the only way in java to pass a parameter to a method</li>
+<li>using methods from the object given as parameter will alter the
+object as the references point to
+the original objects. (if that
+method itself alters some values)</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>A few corrections to some posts.</p>
+
+<p>C does NOT support pass by reference. It is ALWAYS pass by value. C++ does support pass by reference, but is not the default and is quite dangerous.</p>
+
+<p>It doesn't matter what the value is in Java: primitive or address(roughly) of object, it is ALWAYS passed by value.</p>
+
+<p>If a Java object "behaves" like it is being passed by reference, that is a property of mutability and has absolutely nothing to do with passing mechanisms.</p>
+
+<p>I am not sure why this is so confusing, perhaps because so many Java "programmers" are not formally trained, and thus do not understand what is really going on in memory?</p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>One of the biggest confusion in Java programming language is whether Java is <strong>Pass by Value</strong> or <strong>Pass by Reference</strong>.</p>
+
+<p>First of all, we should understand what is meant by pass by value or pass by reference.</p>
+
+<p><strong>Pass by Value:</strong> The method parameter values are copied to another variable and then the copied object is passed, that’s why it’s called pass by value.</p>
+
+<p><strong>Pass by Reference:</strong> An alias or reference to the actual parameter is passed to the method, that’s why it’s called pass by reference.</p>
+
+<p>Let’s say we have a class Balloon like below.</p>
+
+<pre><code>public class Balloon {
+
+    private String color;
+
+    public Balloon(){}
+
+    public Balloon(String c){
+        this.color=c;
+    }
+
+    public String getColor() {
+        return color;
+    }
+
+    public void setColor(String color) {
+        this.color = color;
+    }
+}
+</code></pre>
+
+<p>And we have a simple program with a generic method to swap two objects, the class looks like below.</p>
+
+<pre><code>public class Test {
+
+    public static void main(String[] args) {
+
+        Balloon red = new Balloon("Red"); //memory reference 50
+        Balloon blue = new Balloon("Blue"); //memory reference 100
+
+        swap(red, blue);
+        System.out.println("red color="+red.getColor());
+        System.out.println("blue color="+blue.getColor());
+
+        foo(blue);
+        System.out.println("blue color="+blue.getColor());
+
+    }
+
+    private static void foo(Balloon balloon) { //baloon=100
+        balloon.setColor("Red"); //baloon=100
+        balloon = new Balloon("Green"); //baloon=200
+        balloon.setColor("Blue"); //baloon = 200
+    }
+
+    //Generic swap method
+    public static void swap(Object o1, Object o2){
+        Object temp = o1;
+        o1=o2;
+        o2=temp;
+    }
+}
+</code></pre>
+
+<p>When we execute the above program, we get following output.</p>
+
+<pre><code>red color=Red
+blue color=Blue
+blue color=Red
+</code></pre>
+
+<p>If you look at the first two lines of the output, it’s clear that swap method didn’t work. This is because Java is passed by value, this swap() method test can be used with any programming language to check whether it’s pass by value or pass by reference.</p>
+
+<p>Let’s analyze the program execution step by step.</p>
+
+<pre><code>Balloon red = new Balloon("Red");
+Balloon blue = new Balloon("Blue");
+</code></pre>
+
+<p>When we use the new operator to create an instance of a class, the instance is created and the variable contains the reference location of the memory where the object is saved. For our example, let’s assume that “red” is pointing to 50 and “blue” is pointing to 100 and these are the memory location of both Balloon objects.</p>
+
+<p>Now when we are calling swap() method, two new variables o1 and o2 are created pointing to 50 and 100 respectively.</p>
+
+<p>So below code snippet explains what happened in the swap() method execution.</p>
+
+<pre><code>public static void swap(Object o1, Object o2){ //o1=50, o2=100
+    Object temp = o1; //temp=50, o1=50, o2=100
+    o1=o2; //temp=50, o1=100, o2=100
+    o2=temp; //temp=50, o1=100, o2=50
+} //method terminated
+</code></pre>
+
+<p>Notice that we are changing values of o1 and o2 but they are copies of “red” and “blue” reference locations, so actually, there is no change in the values of “red” and “blue” and hence the output.</p>
+
+<p>If you have understood this far, you can easily understand the cause of confusion. Since the variables are just the reference to the objects, we get confused that we are passing the reference so Java is passed by reference. However, we are passing a copy of the reference and hence it’s pass by value. I hope it clears all the doubts now.</p>
+
+<p>Now let’s analyze <strong>foo()</strong> method execution.</p>
+
+<pre><code>private static void foo(Balloon balloon) { //baloon=100
+    balloon.setColor("Red"); //baloon=100
+    balloon = new Balloon("Green"); //baloon=200
+    balloon.setColor("Blue"); //baloon = 200
+}
+</code></pre>
+
+<p>The first line is the important one when we call a method the method is called on the Object at the reference location. At this point, the balloon is pointing to 100 and hence it’s color is changed to Red.</p>
+
+<p>In the next line, balloon reference is changed to 200 and any further methods executed are happening on the object at memory location 200 and not having any effect on the object at memory location 100. This explains the third line of our program output printing blue color=Red.</p>
+
+<p>I hope above explanation clear all the doubts, just remember that variables are references or pointers and its copy is passed to the methods, so Java is always passed by value. It would be more clear when you will learn about Heap and Stack memory and where different objects and references are stored.</p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>Java passes parameters by VALUE, and by value <strong>ONLY</strong>.</p>
+
+<p><strong>To cut long story short:</strong></p>
+
+<blockquote>
+  <p>For those coming from C#: <strong>THERE IS NO "out" parameter.</strong></p>
+  
+  <p>For those coming from PASCAL: <strong>THERE IS NO "var" parameter</strong>.</p>
+</blockquote>
+
+<p>It means you can't change the reference from the object itself, but you can always change the object's properties.</p>
+
+<p>A workaround is to use <code>StringBuilder</code> parameter instead <code>String</code>. And you can always use arrays!</p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>This is the best way to answer the question imo...</p>
+
+<p>First, we must understand that, in Java, the <em>parameter passing behavior</em>...</p>
+
+<pre><code>public void foo(Object param)
+{
+  // some code in foo...
+}
+
+public void bar()
+{
+  Object obj = new Object();
+
+  foo(obj);
+}
+</code></pre>
+
+<p>is exactly the same as...</p>
+
+<pre><code>public void bar()
+{
+  Object obj = new Object();
+
+  Object param = obj;
+
+  // some code in foo...
+}
+</code></pre>
+
+<p>not considering stack locations, which aren't relevant in this discussion.</p>
+
+<p>So, in fact, what we're looking for in Java is how <em>variable assignment</em> works. I found it in <a href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/op1.html" rel="noreferrer">the docs</a> :</p>
+
+<blockquote>
+  <p>One of the most common operators that you'll encounter is the simple assignment operator "=" [...] <b>it assigns the value</b> on its right to the operand on its left:</p>
+  
+  <p>int cadence = 0;<br>
+   int speed = 0;<br>
+   int gear = 1;  </p>
+  
+  <p>This operator can also be used on objects to assign <b>object references</b> [...]</p>
+</blockquote>
+
+<p>It's clear how this operator acts in two distinct ways: assign values and assign references. The last, when it's an object... the first, when it isn't an object, that is, when it's a primitive. But so, can we understand that Java's function params can be <em>pass-by-value</em> and <em>pass-by-reference</em>? </p>
+
+<p>The truth is in the code. Let's try it:</p>
+
+<pre><code>public class AssignmentEvaluation
+{
+  static public class MyInteger
+  {
+    public int value = 0;
+  }
+
+  static public void main(String[] args)
+  {
+    System.out.println("Assignment operator evaluation using two MyInteger objects named height and width\n");
+
+    MyInteger height = new MyInteger();
+    MyInteger width  = new MyInteger();
+
+    System.out.println("[1] Assign distinct integers to height and width values");
+
+    height.value = 9;
+    width.value  = 1;
+
+    System.out.println("-&gt;  height is " + height.value + " and width is " + width.value + ", we are different things! \n");
+
+    System.out.println("[2] Assign to height's value the width's value");
+
+    height.value = width.value;
+
+    System.out.println("-&gt;  height is " + height.value + " and width is " + width.value + ", are we the same thing now? \n");
+
+    System.out.println("[3] Assign to height's value an integer other than width's value");
+
+    height.value = 9;
+
+    System.out.println("-&gt;  height is " + height.value + " and width is " + width.value + ", we are different things yet! \n");
+
+    System.out.println("[4] Assign to height the width object");
+
+    height = width;
+
+    System.out.println("-&gt;  height is " + height.value + " and width is " + width.value + ", are we the same thing now? \n");
+
+    System.out.println("[5] Assign to height's value an integer other than width's value");
+
+    height.value = 9;
+
+    System.out.println("-&gt;  height is " + height.value + " and width is " + width.value + ", we are the same thing now! \n");
+
+    System.out.println("[6] Assign to height a new MyInteger and an integer other than width's value");
+
+    height = new MyInteger();
+    height.value = 1;
+
+    System.out.println("-&gt;  height is " + height.value + " and width is " + width.value + ", we are different things again! \n");
+  }
+}
+</code></pre>
+
+<p>This is the output of my run:</p>
+
+<pre>
+Assignment operator evaluation using two MyInteger objects named height and width
+
+[1] Assign distinct integers to height and width values
+->  height is 9 and width is 1, we are different things! 
+
+[2] Assign to height's value the width's value
+->  height is 1 and width is 1, are we the same thing now? 
+
+[3] Assign to height's value an integer other than width's value
+->  height is 9 and width is 1, we are different things yet! 
+
+[4] Assign to height the width object
+->  height is 1 and width is 1, are we the same thing now? 
+
+[5] Assign to height's value an integer other than width's value
+->  height is 9 and width is 9, we are the same thing now! 
+
+[6] Assign to height a new MyInteger and an integer other than width's value
+->  height is 1 and width is 9, we are different things again! 
+</pre>
+
+<p>In <em>[2]</em> we have distinct objects and assign one variable's value to the other. But after assigning a new value in <em>[3]</em> the objects had different values, which means that in <em>[2]</em> the assigned value was a copy of the primitive variable, usually called <strong>pass-by-value</strong>, otherwise, the values printed in <em>[3]</em> should be the same.</p>
+
+<p>In <em>[4]</em> we still have distinct objects and assign one object to the other. And after assigning a new value in <em>[5]</em> the objects had the same values, which means that in <em>[4]</em> the assigned object was not a copy of the other, which should be called <strong>pass-by-reference</strong>. But, if we look carefully in <em>[6]</em>, we can't be so sure that no copy was done... ?????</p>
+
+<p>We can't be so sure because in <em>[6]</em> the objects were the same, then we assigned a new object to one of them, and after, the objects had different values! How can they be distinct now if they were the same? They should be the same here too!  ?????</p>
+
+<p>We'll need to remember <a href="https://docs.oracle.com/javase/tutorial/java/nutsandbolts/op1.html" rel="noreferrer">the docs</a> to understand what's going on:</p>
+
+<blockquote>
+  <p>This operator can also be used on objects to assign <b>object references</b></p>
+</blockquote>
+
+<p>So our two variables were storing references... our variables had the same reference after <em>[4]</em> and different references after <em>[6]</em>... if such a thing is possible, this means that assignment of objects is done by copy of the object's reference, otherwise, if it was not a copy of reference, the printed value of the variables in <em>[6]</em> should be the same. So objects (references), just like primitives, are copied to variables through assignment, what people usually call <em>pass-by-value</em>. That's the only <em>pass-by-</em> in Java.</p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>Java copies the reference by value. So if you change it to something else (e.g, using <code>new</code>) the reference does not change outside the method. For native types, it is always pass by value.</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>It's really quite, quite simple:</p>
+
+<p>For a variable of primitive type (eg. <code>int</code>, <code>boolean</code>, <code>char</code>, etc...), when you use its name for a method argument, you are passing the value contained in it (<code>5</code>, <code>true</code>, or <code>'c'</code>). This value gets "copied", and the variable retains its value even after the method invocation.</p>
+
+<p>For a variable of reference type (eg. <code>String</code>, <code>Object</code>, etc...), when you use its name for a method argument, you are passing the value contained in it (<em>the <strong>reference value</strong> that "points" to the object</em>). This <strong><em>reference value</em></strong> gets "copied", and the variable retains its value even after the method invocation. <strong><em>The reference variable keeps "pointing" to the same object.</em></strong></p>
+
+<p>Either way, you're always passing stuff by value.</p>
+
+<hr>
+
+<p>Compare this to say C++ where you can have a method to take an <code>int&amp;</code>, or in C# where you could have take a <code>ref int</code> (although, in this case, you also have to use the <code>ref</code> modifier when passing the variable's name to the method.)</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>Throughout all the answers we see that Java pass-by-value or rather as @Gevorg 
+wrote: "pass-by-copy-of-the-variable-value" and this is the idea that we should have in mind all the time. </p>
+
+<p>I am focusing on examples that helped me understand the idea and it is rather addendum to previous answers.</p>
+
+<p>From [1] In Java you always are passing arguments by copy; that is you're always creating a new instance of the value inside the function. But there are certain behaviors that can make you think you're passing by reference.</p>
+
+<ul>
+<li><p>Passing by copy: When a variable is passed to a method/function, a copy is made (sometimes we hear that when you pass primitives, you're making copies).</p></li>
+<li><p>Passing by reference: When a variable is passed to a method/function, the code in the method/function operates on the original variable (You're still passing by copy, but references to values inside the complex object are parts of both versions of the variable, both the original and the version inside the function. The complex objects themselves are being copied, but the internal references are being retained)</p></li>
+</ul>
+
+<h2>Examples of Passing by copy/ by value</h2>
+
+<p><strong>Example from [ref 1]</strong></p>
+
+<pre><code>void incrementValue(int inFunction){
+  inFunction ++;
+  System.out.println("In function: " + inFunction);
+}
+
+int original = 10;
+System.out.print("Original before: " + original);
+incrementValue(original);
+System.out.println("Original after: " + original);
+
+We see in the console:
+ &gt; Original before: 10
+ &gt; In Function: 11
+ &gt; Original after: 10 (NO CHANGE)
+</code></pre>
+
+<p><strong>Example from [ref 2]</strong></p>
+
+<blockquote>
+  <p>shows nicely the mechanism
+  <a href="https://www.youtube.com/watch?v=W2ysz_6AyJE&amp;list=PL6C11012B1B464EC5#t=502" rel="noreferrer">watch max 5 min</a></p>
+</blockquote>
+
+<h2>(Passing by reference) pass-by-copy-of-the-variable-value</h2>
+
+<p><strong>Example from [ref 1]</strong>
+(remember that an array is an object)</p>
+
+<pre><code>void incrementValu(int[] inFuncion){
+  inFunction[0]++;
+  System.out.println("In Function: " + inFunction[0]);
+}
+
+int[] arOriginal = {10, 20, 30};
+System.out.println("Original before: " + arOriginal[0]);
+incrementValue(arOriginal[]);
+System.out.println("Original before: " + arOriginal[0]);
+
+We see in the console:
+  &gt;Original before: 10
+  &gt;In Function: 11
+  &gt;Original before: 11 (CHANGE)
+</code></pre>
+
+<p>The complex objects themselves are being copied, but the internal references are being retained.</p>
+
+<p><strong>Example from[ref 3]</strong></p>
+
+<pre><code>package com.pritesh.programs;
+
+class Rectangle {
+  int length;
+  int width;
+
+  Rectangle(int l, int b) {
+    length = l;
+    width = b;
+  }
+
+  void area(Rectangle r1) {
+    int areaOfRectangle = r1.length * r1.width;
+    System.out.println("Area of Rectangle : " 
+                            + areaOfRectangle);
+  }
+}
+
+class RectangleDemo {
+  public static void main(String args[]) {
+    Rectangle r1 = new Rectangle(10, 20);
+    r1.area(r1);
+  }
+}
+</code></pre>
+
+<p>The area of the rectangle is 200 and the length=10 and width=20</p>
+
+<p><strong>Last thing</strong> I would like to share was this moment of the lecture:
+<strong><a href="https://www.youtube.com/watch?v=W8nNdNZ40EQ#t=1206" rel="noreferrer">Memory Allocation</a></strong>
+which I found very helpful in understanding the Java passing by value or rather “pass-by-copy-of-the-variable-value” as @Gevorg has written.</p>
+
+<ol>
+<li><a href="http://www.lynda.com/Android-tutorials/Passing-arguments-reference-value/86005/94989-4.html" rel="noreferrer">REF 1 Lynda.com</a></li>
+<li><a href="http://see.stanford.edu/see/courseinfo.aspx?coll=824a47e1-135f-4508-a5aa-866adcae1111" rel="noreferrer">REF 2 Professor Mehran Sahami</a>
+
+<ul>
+<li><a href="https://www.youtube.com/watch?v=W2ysz_6AyJE&amp;list=PL6C11012B1B464EC5#t=502" rel="noreferrer">watch max 5 min</a></li>
+<li><a href="https://www.youtube.com/watch?v=W8nNdNZ40EQ#t=1206" rel="noreferrer">Memory Allocation</a></li>
+</ul></li>
+<li><a href="http://www.c4learn.com/" rel="noreferrer">REF 3 c4learn</a>
+
+<ul>
+<li><a href="http://www.c4learn.com/java/java-passing-object-as-parameter-to-method/" rel="noreferrer">passing-object-as-parameter-to-method</a></li>
+</ul></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>So many long answers. Let me give a simple one:</p>
+
+<ul>
+<li>Java always passes everything by value</li>
+<li>that means also references are passed by value</li>
+</ul>
+
+<p>In short, you can not modify value of any parameter passed, but you can call methods or change attributes of an object reference passed.</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><h3>Java is strictly passed by value</h3>
+
+<p>When I say <strong><em>pass by value</em></strong> it means whenever caller has invoked the callee the arguments(ie: the data to be passed to the other function) <strong>is copied</strong> and placed in the formal parameters (callee's local variables for receiving the input). Java makes data communications from one function to other function only in a pass by value environment.</p>
+
+<p>An important point would be to know that even C language is strictly passed by value only:<br>
+<em>ie:</em> Data is copied from caller to the callee and more ever the operation performed by the callee are on the same memory location and 
+what we pass them is the address of that location that we obtain from (&amp;) operator and the identifier used in the formal parameters are declared to be a pointer variable (*) using which we can get inside the memory location for accessing the data in it.</p>
+
+<p>Hence here the formal parameter is nothing but mere aliases for that location. And any modifications done on that location is visible where ever that scope of the variable (that identifies that location) is alive.</p>
+
+<p>In Java, there is no concept of pointers (<em>ie:</em> there is nothing called a pointer variable), although we can think of reference variable as a pointer technically in java we call it as a handle. The reason why we call the pointer to an address as a handle in java is  because a pointer variable is capable of performing not just single dereferencing but multiple dereferencing 
+for example: <code>int *p;</code> in P means p points to an integer
+and <code>int **p;</code> in C means p is pointer to a pointer to an integer
+we dont have this facility in Java, so its absolutely correct and technically legitimate to say it as an handle, also there are rules for pointer arithmetic in C. Which allows performing arithmetic operation on pointers with constraints on it. </p>
+
+<p>In C we call such mechanism of passing address and receiving them with pointer variables as <em>pass by reference</em> since we are passing their addresses and receiving them as pointer variable in formal parameter but at the compiler level that address is copied into pointer variable (since data here is address even then its data ) hence we can be 100% sure that C is Strictly passed by value (as we are passing data only)</p>
+
+<p>(and if we pass the data directly in C we call that as pass by value.)</p>
+
+<p>In java when we do the same we do it with the handles; since they are not called pointer variables like in (as discussed above) even though we are passing the references we cannot say its pass by reference since we are not collecting that with a pointer variable in Java.</p>
+
+<p>Hence Java <strong>strictly use pass by value mechanism</strong> </p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>Java is pass by constant reference where a copy of the reference is passed which means that it is basically a pass by value. You might change the contents of the reference if the class is mutable but you cannot change the reference itself. In other words the address can not be changed since it is passed by value but the content that is pointed by the address can be changed. In case of immutable classes, the content of the reference cannot be changed either.</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>Java always uses <strong>call by value</strong>. That means the method gets copy of all parameter values.</p>
+
+<p>Consider next 3 situations:</p>
+
+<h2>1) Trying to change primitive variable</h2>
+
+<pre><code>public static void increment(int x) { x++; }
+
+int a = 3;
+increment(a);
+</code></pre>
+
+<p>x will copy value of a and will increment x, a remains the same</p>
+
+<h2>2) Trying to change primitive field of an object</h2>
+
+<pre><code>public static void increment(Person p) { p.age++; }
+
+Person pers = new Person(20); // age = 20
+increment(pers);
+</code></pre>
+
+<p>p will copy reference value of pers and will increment age field, variables are referencing to the same object so age is changed</p>
+
+<h2>3) Trying to change reference value of reference variables</h2>
+
+<pre><code>public static void swap(Person p1, Person p2) {
+    Person temp = p1;
+    p1 = p2;
+    p2 = temp;
+}
+
+Person pers1 = new Person(10);
+Person pers2 = new Person(20);
+swap(pers1, pers2);
+</code></pre>
+
+<p>after calling swap p1, p2 copy reference values from pers1 and pers2, are swapping with values, so pers1 and pers2 remain the same</p>
+
+<p>So. you can change only fields of objects in method passing copy of reference value to this object.</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>Java, for sure, without a doubt, is "pass by value". Also, since Java is (mostly) object-oriented and objects work with references, it's easy to get confused and think of it to be "pass by reference"</p>
+
+<p>Pass by value means you pass the value to the method and if the method changes the passed value, the real entity doesn't change. Pass by reference, on the other hand, means a reference is passed to the method, and if the method changes it, the passed object also changes.</p>
+
+<p>In Java, usually when we pass an object to a method, we basically pass the reference of the object as-a-value because that's how Java works; it works with references and addresses as far as Object in the heap goes.</p>
+
+<p>But to test if it is really pass by value or pass by reference, you can use a primitive type and references:</p>
+
+<pre><code>@Test
+public void sampleTest(){
+    int i = 5;
+    incrementBy100(i);
+    System.out.println("passed ==&gt; "+ i);
+    Integer j = new Integer(5);
+    incrementBy100(j);
+    System.out.println("passed ==&gt; "+ j);
+}
+/**
+ * @param i
+ */
+private void incrementBy100(int i) {
+    i += 100;
+    System.out.println("incremented = "+ i);
+}
+</code></pre>
+
+<p>The output is:</p>
+
+<pre><code>incremented = 105
+passed ==&gt; 5
+incremented = 105
+passed ==&gt; 5
+</code></pre>
+
+<p>So in both cases, whatever happens inside the method doesn't change the real Object, because the value of that object was passed, and not a reference to the object itself.</p>
+
+<p>But when you pass a custom object to a method, and the method and changes it, it will change the real object too, because even when you passed the object, you passed it's reference as a value to the method. Let's try another example:</p>
+
+<pre><code>@Test
+public void sampleTest2(){
+    Person person = new Person(24, "John");
+    System.out.println(person);
+    alterPerson(person);
+    System.out.println(person);
+}
+
+/**
+ * @param person
+ */
+private void alterPerson(Person person) {
+    person.setAge(45);
+    Person altered = person;
+    altered.setName("Tom");
+}
+
+private static class Person{
+    private int age;
+    private String name; 
+
+    public Person(int age, String name) {
+        this.age=age;
+        this.name =name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder builder = new StringBuilder();
+        builder.append("Person [age=");
+        builder.append(age);
+        builder.append(", name=");
+        builder.append(name);
+        builder.append("]");
+        return builder.toString();
+    }
+
+}
+</code></pre>
+
+<p>In this case, the output is:</p>
+
+<pre><code>Person [age=24, name=John]
+Person [age=45, name=Tom]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>The major cornerstone knowledge must be the quoted one,</p>
+
+<blockquote>
+  <p>When an object reference is passed to a method, the reference itself
+  is passed by use of <em>call-by-value</em>. However, since the value being
+  passed refers to an object, the copy of that value will still refer to
+  the same object referred to by its corresponding argument.</p>
+</blockquote>
+
+<p>Java: A Beginner's Guide, Sixth Edition, Herbert Schildt</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>Data is shared between functions by passing parameters. Now, there are 2 ways of passing parameters:</p>
+<ul>
+<li><p><strong>passed by reference :</strong> caller and callee use same variable for parameter.</p>
+</li>
+<li><p><strong>passed by value :</strong> caller and callee have two independent variables with same value.</p>
+</li>
+</ul>
+<p>Java uses <em><strong>pass by value</strong></em></p>
+<ul>
+<li>When passing primitive data, it copies the value of primitive data type.</li>
+<li>When passing object, it copies the address of object and passes to callee method variable.</li>
+</ul>
+<p>Java follows the following rules in storing variables:</p>
+<ul>
+<li>Local variables like primitives and object references are created on Stack memory.</li>
+<li>Objects are created on Heap memory.</li>
+</ul>
+<p>Example using primitive data type:</p>
+<pre><code>public class PassByValuePrimitive {
+    public static void main(String[] args) {
+        int i=5;
+        System.out.println(i);  //prints 5
+        change(i);
+        System.out.println(i);  //prints 5
+    }
+    
+    
+    private static void change(int i) {
+        System.out.println(i);  //prints 5
+        i=10;
+        System.out.println(i); //prints 10
+        
+    }
+}
+</code></pre>
+<p>Example using object:</p>
+<pre><code>public class PassByValueObject {
+    public static void main(String[] args) {
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        list.add(&quot;prem&quot;);
+        list.add(&quot;raj&quot;);
+        new PassByValueObject().change(list);
+        System.out.println(list); // prints [prem, raj, ram]
+        
+    }
+    
+    
+    private  void change(List list) {
+        System.out.println(list.get(0)); // prem
+        list.add(&quot;ram&quot;);
+        list=null;
+        System.out.println(list.add(&quot;bheem&quot;)); //gets NullPointerException
+    }
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>I see that all answers contain the same: pass by value. However, a recent Brian Goetz update on project Valhalla actually answers it differently:</p>
+<blockquote>
+<p>Indeed, it is a common “gotcha” question about whether Java objects are passed by value or by reference, and <strong>the answer is “neither”: object references are passed by value.</strong></p>
+</blockquote>
+<p>You can read more here: <a href="http://cr.openjdk.java.net/%7Ebriangoetz/valhalla/sov/02-object-model.html" rel="noreferrer">State of Valhalla. Section 2: Language Model</a></p>
+<p><strong>Edit:</strong> Brian Goetz is Java Language Architect, leading such projects as Project Valhalla and Project Amber.</p>
+<p><strong>Edit-2020-12-08</strong>: Updated <a href="https://github.com/openjdk/valhalla-docs/blob/main/site/design-notes/state-of-valhalla/02-object-model.md" rel="noreferrer">State of Valhalla</a></p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Have a look at this code. This code will not throw <code>NullPointerException</code>... It will print "Vinay"</p>
+
+<pre><code>public class Main {
+    public static void main(String[] args) {
+        String temp = "Vinay";
+        print(temp);
+        System.err.println(temp);
+    }
+
+    private static void print(String temp) {
+        temp = null;
+    }
+}
+</code></pre>
+
+<p>If Java is pass by reference then it should have thrown <code>NullPointerException</code> as reference is set to Null.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Unlike some other languages, Java does not allow you to choose between pass-by-value and pass-by-reference.</p>
+
+<p>All arguments are passed by value. </p>
+
+<p>A method call can pass two <code>types of values</code>to a method</p>
+
+<ul>
+<li>copies of primitive values (e.g., values of type int and double)</li>
+<li>copies of references to objects.</li>
+</ul>
+
+<p><code>Objects themselves cannot be passed to methods</code>. When a method modifies a primitive-type parameter, changes to the parameter have no effect on the original argument value in the calling method.</p>
+
+<p>This is also true for reference-type parameters. If you modify a reference-type parameter so that it refers to another object, only the parameter refers to the new object—the reference stored in the caller’s variable still refers to the original object.</p>
+
+<p>References: <a href="https://www.safaribooksonline.com/library/view/javatm-how-to/9780133813036/ch07lev2sec11.html" rel="noreferrer">Java™ How To Program (Early Objects), Tenth Edition</a> </p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Long story short: </p>
+
+<ol>
+<li>Non-primitives: Java passes the <em>Value of the Reference</em>.  </li>
+<li>Primitives: just value. </li>
+</ol>
+
+<p>The End.</p>
+
+<p>(2) is too easy. Now if you want to think of what (1) implies, imagine you have a class Apple:</p>
+
+<pre><code>class Apple {
+    private double weight;
+    public Apple(double weight) {
+        this.weight = weight;
+    }
+    // getters and setters ...
+
+}
+</code></pre>
+
+<p>then when you pass an instance of this class to the main method:</p>
+
+<pre><code>class Main {
+    public static void main(String[] args) {
+        Apple apple = new Apple(3.14);
+        transmogrify(apple);
+        System.out.println(apple.getWeight()+ " the goose drank wine...";
+
+    }
+
+    private static void transmogrify(Apple apple) {
+        // does something with apple ...
+        apple.setWeight(apple.getWeight()+0.55);
+    }
+}
+</code></pre>
+
+<p>oh.. but you probably know that, you're interested in what happens when you do something like this:</p>
+
+<pre><code>class Main {
+    public static void main(String[] args) {
+        Apple apple = new Apple(3.14);
+        transmogrify(apple);
+        System.out.println("Who ate my: "+apple.getWeight()); // will it still be 3.14? 
+
+    }
+
+    private static void transmogrify(Apple apple) {
+        // assign a new apple to the reference passed...
+        apple = new Apple(2.71);
+    }
+
+
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><h2>Java passes primitive types by value and class types by reference</h2>
+
+<p>Now, people like to bicker endlessly about whether "pass by reference" is the correct way to describe what Java et al. actually do. The point is this:</p>
+
+<ol>
+<li>Passing an object does not copy the object.</li>
+<li>An object passed to a function can have its members modified by the function.</li>
+<li>A primitive value passed to a function cannot be modified by the function. A copy is made.</li>
+</ol>
+
+<p>In my book that's called passing by reference.</p>
+
+<p>&#8212; <a href="https://www.quora.com/profile/Brian-Bi" rel="noreferrer">Brian Bi</a> - <a href="https://www.quora.com/Which-programming-languages-are-pass-by-reference#" rel="noreferrer">Which programming languages are pass by reference?</a></p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>A simple test to check whether a language supports pass-by-reference is simply writing a traditional swap.
+Can you write a traditional swap(a,b) method/function in Java?</p>
+
+<p>A traditional swap method or function takes two arguments and swaps them such that variables passed into the function are changed outside the function. Its basic structure looks like</p>
+
+<p>(Non-Java) Basic swap function structure</p>
+
+<pre><code>swap(Type arg1, Type arg2) {
+    Type temp = arg1;
+    arg1 = arg2;
+    arg2 = temp;
+}
+</code></pre>
+
+<p>If you can write such a method/function in your language such that calling</p>
+
+<pre><code>Type var1 = ...;
+Type var2 = ...;
+swap(var1,var2);
+</code></pre>
+
+<p>actually switches the values of the variables var1 and var2, the language supports pass-by-reference.
+But <strong>Java does not allow such a thing</strong> as it supports passing the values only and not pointers or references.</p>
+</div></body></html>

@@ -1,0 +1,437 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I reset or revert a file to a specific revision?</p><div class="s-prose js-post-body"><p>How do I revert a modified file to its previous revision at a specific commit hash (which I determined via <a href="https://git-scm.com/docs/git-log" rel="noreferrer"><code>git log</code></a> and <a href="https://git-scm.com/docs/git-diff" rel="noreferrer"><code>git diff</code></a>)?</p>
+</div><p class="this-has-helped">This answer has helped 7464 people.</p><div class="s-prose js-post-body"><p>Assuming the hash of the commit you want is <code>c5f567</code>:</p>
+<pre><code>git checkout c5f567 -- file1/to/restore file2/to/restore
+</code></pre>
+<p>The <a href="https://git-scm.com/docs/git-checkout" rel="noreferrer">git checkout</a> man page gives more information.</p>
+<p>If you want to revert to the commit before <code>c5f567</code>, append <code>~1</code> (where 1 is the number of commits you want to go back, it can be anything):</p>
+<pre><code>git checkout c5f567~1 -- file1/to/restore file2/to/restore
+</code></pre>
+<p>As a side note, I've always been uncomfortable with this command because it's used for both ordinary things (changing between branches) and unusual, destructive things (discarding changes in the working directory).</p>
+<hr />
+<p>There is also a new <a href="https://git-scm.com/docs/git-restore" rel="noreferrer"><code>git restore</code></a> command that is specifically designed for restoring working copy files that have been modified. If your git is new enough you can use this command, but the documentation comes with a warning:</p>
+<blockquote>
+<p>THIS COMMAND IS EXPERIMENTAL. THE BEHAVIOR MAY CHANGE.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 733 people.</p><div class="s-prose js-post-body"><p>You can quickly review the changes made to a file using the diff command:</p>
+
+<pre><code>git diff &lt;commit hash&gt; &lt;filename&gt;
+</code></pre>
+
+<p>Then to revert a specific file to that commit use the reset command:</p>
+
+<pre><code>git reset &lt;commit hash&gt; &lt;filename&gt;
+</code></pre>
+
+<p>You may need to use the <code>--hard</code> option if you have local modifications.</p>
+
+<p>A good workflow for managaging waypoints is to use tags to cleanly mark points in your timeline. I can't quite understand your last sentence but what you may want is diverge a branch from a previous point in time. To do this, use the handy checkout command:</p>
+
+<pre><code>git checkout &lt;commit hash&gt;
+git checkout -b &lt;new branch name&gt;
+</code></pre>
+
+<p>You can then rebase that against your mainline when you are ready to merge those changes:</p>
+
+<pre><code>git checkout &lt;my branch&gt;
+git rebase master
+git checkout master
+git merge &lt;my branch&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 424 people.</p><div class="s-prose js-post-body"><p>You can use any reference to a git commit, including the SHA-1 if that's most convenient. The point is that the command looks like this:</p>
+
+<p><code>git checkout [commit-ref] -- [filename]</code></p>
+</div><p class="this-has-helped">This answer has helped 358 people.</p><div class="s-prose js-post-body"><pre><code>git checkout -- foo
+</code></pre>
+
+<p>That will reset <code>foo</code> to HEAD. You can also:</p>
+
+<pre><code>git checkout HEAD^ foo
+</code></pre>
+
+<p>for one revision back, etc.</p>
+</div><p class="this-has-helped">This answer has helped 148 people.</p><div class="s-prose js-post-body"><p>And to revert to last committed version, which is most frequently needed, you can use this simpler command.</p>
+
+<pre><code>git checkout HEAD file/to/restore
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 124 people.</p><div class="s-prose js-post-body"><p>As of git v2.23.0 there's a new <a href="https://git-scm.com/docs/git-restore/2.23.0" rel="noreferrer">git restore</a> method which is supposed to assume part of what <code>git checkout</code> was responsible for (even the accepted answer mentions that <code>git checkout</code> is quite confusing). See highlights of changes on <a href="https://github.blog/2019-08-16-highlights-from-git-2-23/" rel="noreferrer">github blog</a>.</p>
+
+<p>The default behaviour of this command is to restore the state of a working tree with the content coming from the <code>source</code> parameter (which in your case will be a commit hash).</p>
+
+<p>So based on Greg Hewgill's answer (assuming the commit hash is <code>c5f567</code>) the command would look like this:</p>
+
+<pre><code>git restore --source=c5f567 file1/to/restore file2/to/restore
+</code></pre>
+
+<p>Or if you want to restore to the content of one commit before c5f567:</p>
+
+<pre><code>git restore --source=c5f567~1 file1/to/restore file2/to/restore
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 115 people.</p><div class="s-prose js-post-body"><p>I had the same issue just now and I found <a href="https://stackoverflow.com/questions/725749/how-would-you-go-about-reverting-a-single-file-to-previous-commit-state-using-git/727725#727725">this answer</a> easiest to understand (<code>commit-ref</code> is the SHA value of the change in the log you want to go back to):</p>
+
+<pre><code>git checkout [commit-ref] [filename]
+</code></pre>
+
+<p>This will put that old version in your working directory and from there you can commit it if you want.</p>
+</div><p class="this-has-helped">This answer has helped 103 people.</p><div class="s-prose js-post-body"><p>If you know how many commits you need to go back, you can use:</p>
+
+<pre><code>git checkout master~5 image.png
+</code></pre>
+
+<p>This assumes that you're on the <code>master</code> branch, and the version you want is 5 commits back.</p>
+</div><p class="this-has-helped">This answer has helped 89 people.</p><div class="s-prose js-post-body"><p>I think I've found it....from <a href="http://www-cs-students.stanford.edu/~blynn/gitmagic/ch02.html" rel="noreferrer">http://www-cs-students.stanford.edu/~blynn/gitmagic/ch02.html</a></p>
+
+<p>Sometimes you just want to go back and forget about every change past a certain point because they're all wrong. </p>
+
+<p>Start with:</p>
+
+<p><code>$ git log</code></p>
+
+<p>which shows you a list of recent commits, and their SHA1 hashes. </p>
+
+<p>Next, type:</p>
+
+<p><code>$ git reset --hard SHA1_HASH</code></p>
+
+<p>to restore the state to a given commit and erase all newer commits from the record permanently.</p>
+</div><p class="this-has-helped">This answer has helped 70 people.</p><div class="s-prose js-post-body"><p>This worked for me:</p>
+
+<pre><code>git checkout &lt;commit hash&gt; file
+</code></pre>
+
+<p>Then commit the change:</p>
+
+<pre><code>git commit -a
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 58 people.</p><div class="s-prose js-post-body"><p>You have to be careful when you say "rollback".  If you used to have one version of a file in commit $A, and then later made two changes in two separate commits $B and $C (so what you are seeing is the third iteration of the file), and if you say "I want to roll back to the first one", do you really mean it?  </p>
+
+<p>If  you want to get rid of the changes both the second and the third iteration, it is very simple:</p>
+
+<pre><code>$ git checkout $A file
+</code></pre>
+
+<p>and then you commit the result.  The command asks "I want to check out the file from the state recorded by the commit $A".</p>
+
+<p>On the other hand, what you meant is to get rid of the change the second iteration (i.e. commit $B) brought in, while keeping what commit $C did to the file, you would want to revert $B</p>
+
+<pre><code>$ git revert $B
+</code></pre>
+
+<p>Note that whoever created commit $B may not have been very disciplined and may have committed totally unrelated change in the same commit, and this revert may touch files other than <em>file</em> you see offending changes, so you may want to check the result carefully after doing so.</p>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><ol>
+<li>Git revert file to a specific commit</li>
+</ol>
+
+<blockquote>
+<pre><code>git checkout Last_Stable_commit_Number -- fileName
+</code></pre>
+</blockquote>
+
+<p>2.Git revert file to a specific branch</p>
+
+<blockquote>
+<pre><code>git checkout branchName_Which_Has_stable_Commit fileName
+</code></pre>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>Amusingly, <code>git checkout foo</code> will not work if the working copy is in a directory named <code>foo</code>; however, both <code>git checkout HEAD foo</code> and <code>git checkout ./foo</code> will:</p>
+
+<pre><code>$ pwd
+/Users/aaron/Documents/work/foo
+$ git checkout foo
+D   foo
+Already on "foo"
+$ git checkout ./foo
+$ git checkout HEAD foo
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>Here's how <code>rebase</code> works:</p>
+
+<blockquote>
+<pre><code>git checkout &lt;my branch&gt;
+git rebase master
+git checkout master
+git merge &lt;my branch&gt;
+</code></pre>
+</blockquote>
+
+<hr>
+
+<p>Assume you have</p>
+
+<blockquote>
+<pre><code>---o----o----o----o  master
+    \---A----B       &lt;my branch&gt;
+</code></pre>
+</blockquote>
+
+<p>The first two commands ...
+commit
+    git checkout 
+    git rebase master</p>
+
+<p>... check out the branch of changes you want to apply to the <code>master</code> branch. The <code>rebase</code> command takes the commits from <code>&lt;my branch&gt;</code> (that are not found in <code>master</code>) and reapplies them to the head of <code>master</code>. In other words, the parent of the first commit in <code>&lt;my branch&gt;</code> is no longer a previous commit in the <code>master</code> history, but the current head of <code>master</code>. The two commands are the same as:</p>
+
+<pre><code>git rebase master &lt;my branch&gt;
+</code></pre>
+
+<p>It might be easier to remember this command as both the "base" and "modify" branches are explicit.</p>
+
+<p>. The final history result is:</p>
+
+<blockquote>
+<pre><code>---o----o----o----o   master
+                   \----A'----B'  &lt;my branch&gt;
+</code></pre>
+</blockquote>
+
+<hr>
+
+<p>The final two commands ...</p>
+
+<pre><code>git checkout master
+git merge &lt;my branch&gt;
+</code></pre>
+
+<p>... do a fast-forward merge to apply all <code>&lt;my branch&gt;</code> changes onto <code>master</code>. Without this step, the rebase commit does not get added to <code>master</code>. The final result is:</p>
+
+<blockquote>
+<pre><code>---o----o----o----o----A'----B'  master, &lt;my branch&gt;
+</code></pre>
+</blockquote>
+
+<p><code>master</code> and <code>&lt;my branch&gt;</code> both reference <code>B'</code>. Also, from this point it is safe to delete the <code>&lt;my branch&gt;</code> reference.</p>
+
+<pre><code>git branch -d &lt;my branch&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>First Reset Head For Target File</p>
+
+<pre><code>git reset HEAD path_to_file
+</code></pre>
+
+<p>Second Checkout That File</p>
+
+<pre><code>git checkout -- path_to_file
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>In the case that you want to revert a file to a previous commit (and the file you want to revert already committed) you can use</p>
+
+<pre><code>git checkout HEAD^1 path/to/file
+</code></pre>
+
+<p>or</p>
+
+<pre><code>git checkout HEAD~1 path/to/file
+</code></pre>
+
+<p>Then just stage and commit the "new" version.</p>
+
+<p>Armed with the knowledge that a commit can have two parents in the case of a merge, you should know that HEAD^1 is the first parent and HEAD~1 is the second parent.</p>
+
+<p>Either will work if there is only one parent in the tree.</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><blockquote>
+<p>git-aliases, awk and shell-functions to the rescue!</p>
+</blockquote>
+<pre><code>git prevision &lt;N&gt; &lt;filename&gt;
+</code></pre>
+<p>where <code>&lt;N&gt;</code> is the number of revisions of the file to rollback for file <code>&lt;filename&gt;</code>.<br />
+For example, to checkout the immediate previous revision of a single file <code>x/y/z.c</code>, run</p>
+<pre><code>git prevision -1 x/y/z.c
+</code></pre>
+<hr />
+<h3><a href="http://thecodeartist.blogspot.in/2015/04/git-prevision-checkout-previous-version-of-file.html" rel="noreferrer">How git prevision works?</a></h3>
+<p>Add the following to your <code>gitconfig</code></p>
+<pre><code>[alias]
+        prevision = &quot;!f() { git checkout `git log --oneline $2 |  awk -v commit=&quot;$1&quot; 'FNR == -commit+1 {print $1}'` $2;} ;f&quot;
+</code></pre>
+<blockquote>
+<p>The command basically</p>
+<ul>
+<li>performs a <code>git log</code> on the specified file and</li>
+<li>picks the appropriate commit-id in the history of the file and</li>
+<li>executes a <code>git checkout</code> to the commit-id for the specified file.</li>
+</ul>
+</blockquote>
+<p><em>Essentially, all that one would manually do in this situation,<br />
+wrapped-up in one beautiful, efficient git-alias - <strong><a href="http://thecodeartist.blogspot.in/2015/04/git-prevision-checkout-previous-version-of-file.html" rel="noreferrer">git-prevision</a></strong></em></p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>I have to plug <a href="https://people.gnome.org/~newren/eg/" rel="noreferrer">EasyGit</a> here, which is a wrapper to make git more approachable to novices without confusing seasoned users. One of the things it does is <a href="http://www.gnome.org/~newren/eg/git-eg-differences.html#revert" rel="noreferrer">give more meanings to <code>git revert</code></a>. In this case, you would simply say:</p>
+
+<p><code><a href="http://www.gnome.org/~newren/eg/documentation/revert.html" rel="noreferrer">eg revert</a> <b>foo/bar foo/baz</b></code></p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>Many suggestions here, most along the lines of <code>git checkout $revision -- $file</code>. A couple of obscure alternatives:</p>
+
+<pre><code>git show $revision:$file &gt; $file
+</code></pre>
+
+<p>And also, I use this a lot just to see a particular version temporarily:</p>
+
+<pre><code>git show $revision:$file
+</code></pre>
+
+<p>or</p>
+
+<pre><code>git show $revision:$file | vim -R -
+</code></pre>
+
+<p>(OBS: <code>$file</code> needs to be prefixed with <code>./</code> if it is a relative path for <code>git show $revision:$file</code> to work)</p>
+
+<p>And the even more weird:</p>
+
+<pre><code>git archive $revision $file | tar -x0 &gt; $file
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>Note, however, that <code>git checkout ./foo</code> and <code>git checkout HEAD ./foo</code>
+are not <strong>exactly</strong> the same thing; case in point:</p>
+
+<pre><code>$ echo A &gt; foo
+$ git add foo
+$ git commit -m 'A' foo
+Created commit a1f085f: A
+1 files changed, 1 insertions(+), 0 deletions(-)
+create mode 100644 foo
+$ echo B &gt;&gt; foo
+$ git add foo
+$ echo C &gt;&gt; foo
+$ cat foo
+A
+B
+C
+$ git checkout ./foo
+$ cat foo
+A
+B
+$ git checkout HEAD ./foo
+$ cat foo
+A
+</code></pre>
+
+<p>(The second <code>add</code> stages the file in the index, but it does <em>not</em> get
+committed.)</p>
+
+<p><code>Git checkout ./foo</code> means revert path <code>./foo</code> from the <strong>index</strong>;
+adding <code>HEAD</code> instructs Git to revert that path in the index to its
+<code>HEAD</code> revision before doing so.</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>For me none of the reply seemed really clear and therefore I would like to add mine which seems super easy. </p>
+
+<p>I have a commit <code>abc1</code> and after it I have done several (or one modification) to a file <code>file.txt</code>.</p>
+
+<p><strong>Now say that I messed up something in the file <code>file.txt</code> and I want to go back to a previous commit <code>abc1</code>.</strong></p>
+
+<p>1.<code>git checkout file.txt</code> : this will remove local changes, if you don't need them</p>
+
+<p>2.<code>git checkout abc1 file.txt</code> : this will bring your file to your <em>wanted</em> version</p>
+
+<p>3.<code>git commit -m "Restored file.txt to version abc1"</code> : this will commit your reversion.</p>
+
+<ol start="4">
+<li><code>git push</code> : this will push everything on the remote repository </li>
+</ol>
+
+<p>Between the step 2 and 3 of course you can do <code>git status</code> to understand what is going on. Usually you should see the <code>file.txt</code> already added and that is why there is no need of a <code>git add</code>.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Many answers here claims to use <code>git reset ... &lt;file&gt;</code> or <code>git checkout ... &lt;file&gt;</code> but by doing so, you will loose every modifications on <code>&lt;file&gt;</code> committed after the commit you want to revert.</p>
+
+<p>If you want to revert changes from one commit on a single file only, just as <code>git revert</code> would do but only for one file (or say a subset of the commit files), I suggest to use both <code>git diff</code> and <code>git apply</code> like that (with <code>&lt;sha&gt;</code> = the hash of the commit you want to revert) :</p>
+
+<pre><code>git diff &lt;sha&gt;^ &lt;sha&gt; path/to/file.ext | git apply -R
+</code></pre>
+
+<p>Basically, it will first generate a patch corresponding to the changes you want to revert, and then reverse-apply the patch to drop those changes.</p>
+
+<p>Of course, it shall not work if reverted lines had been modified by any commit between <code>&lt;sha1&gt;</code> and <code>HEAD</code> (conflict).</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>In order to go to a previous commit version of the file, get the commit number, say eb917a1
+then </p>
+
+<pre><code>git checkout eb917a1 YourFileName
+</code></pre>
+
+<p>If you just need to go back to the last commited version</p>
+
+<pre><code>git reset HEAD YourFileName
+git checkout YourFileName
+</code></pre>
+
+<p>This will simply take you to the last committed state of the file</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>This is a very simple step. Checkout file to the commit id we want, here one commit id before, and then just git commit amend and we are done.</p>
+
+<pre><code># git checkout &lt;previous commit_id&gt; &lt;file_name&gt;
+# git commit --amend
+</code></pre>
+
+<p>This is very handy. If we want to bring any file to any prior commit id at the top of commit, we can easily do.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><pre><code>git log --oneline  // you see commits, find commit hash to which you want reset
+git diff y0urhash src/main/.../../YourFile.java   // to see difference
+git reset y0urhash src/main/.../../YourFile.java   // revert to y0urhash commit
+git status                                        // check files to commit
+git commit -m &quot;your commit message&quot;
+git push origin
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>git checkout ref|commitHash -- filePath</p>
+
+<p>e.g. </p>
+
+<pre><code>git checkout HEAD~5 -- foo.bar
+or 
+git checkout 048ee28 -- foo.bar
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p><strong>You can do it in 4 steps:</strong></p>
+
+<ol>
+<li>revert the entire commit with the file you want to specifically revert - it will create a new commit on your branch</li>
+<li>soft reset that commit - removes the commit and moves the changes to the working area</li>
+<li>handpick the files to revert and commit them</li>
+<li>drop all other files in your work area</li>
+</ol>
+
+<p><strong>What you need to type in your terminal</strong>:</p>
+
+<ol>
+<li><code>git revert &lt;commit_hash&gt;</code></li>
+<li><code>git reset HEAD~1</code></li>
+<li><code>git add &lt;file_i_want_to_revert&gt;</code> &amp;&amp; <code>git commit -m 'reverting file'</code></li>
+<li><code>git checkout .</code></li>
+</ol>
+
+<p>good luck</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Use <code>git log</code> to obtain the hash key for specific version and then use <code>git checkout &lt;hashkey&gt;</code></p>
+
+<p>Note: Do not forget to type the hash before the last one. Last hash points your current position (HEAD) and changes nothing.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>Obviously someone either needs to write an intelligible book on git, or git needs to be better explained in the documentation.  Faced with this same problem I guessed that </p>
+
+<pre><code>cd &lt;working copy&gt;
+git revert master
+</code></pre>
+
+<p>would undo the last commit which is seemed to do.</p>
+
+<p>Ian</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><pre><code>git revert &lt;hash&gt;
+</code></pre>
+
+<p>Will revert a given commit.  It sounds like you think <code>git revert</code> only affects the most recent commit.</p>
+
+<p>That doesn't solve your problem, if you want to revert a change in a specific file and that commit changed more than that file.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>if you commit a wrong file in your last commits follow the instruction :</p>
+
+<ol>
+<li>open source tree, change to this commit</li>
+</ol>
+
+<p><a href="https://i.stack.imgur.com/ag9HP.png" rel="noreferrer"><img src="https://i.stack.imgur.com/ag9HP.png" alt="open source tree"></a></p>
+
+<ol start="2">
+<li>change the lines and find your commit that the wrong file sent as commit</li>
+</ol>
+
+<p><a href="https://i.stack.imgur.com/0990p.png" rel="noreferrer"><img src="https://i.stack.imgur.com/0990p.png" alt="enter image description here"></a></p>
+
+<ol start="3">
+<li>you can see the list of your changes in that commit
+<a href="https://i.stack.imgur.com/uFU1E.png" rel="noreferrer"><img src="https://i.stack.imgur.com/uFU1E.png" alt="list of files in the source tree"></a></li>
+<li>select it and then click on ... buttons right-hand side ... click reverse file</li>
+<li>then you can see it on file status tab at the bottom left-hand side 
+then click unstage:</li>
+</ol>
+
+<p><a href="https://i.stack.imgur.com/VOhZZ.png" rel="noreferrer"><img src="https://i.stack.imgur.com/VOhZZ.png" alt="file status tab"></a></p>
+
+<ol start="6">
+<li>open your visual studio code and revert back by committing your removed files</li>
+<li>after them all, you can see results in your last commit in the source tree</li>
+</ol>
+
+<p><a href="https://i.stack.imgur.com/3gpgo.png" rel="noreferrer"><img src="https://i.stack.imgur.com/3gpgo.png" alt="enter image description here"></a></p>
+</div></body></html>

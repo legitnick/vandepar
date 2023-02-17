@@ -1,0 +1,2025 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>var functionName = function() {} vs function functionName() {}</p><div class="s-prose js-post-body"><p>I've recently started maintaining someone else's JavaScript code. I'm fixing bugs, adding features and also trying to tidy up the code and make it more consistent.</p>
+<p>The previous developer used two ways of declaring functions and I can't work out if there is a reason behind it or not.</p>
+<p>The two ways are:</p>
+<pre><code>var functionOne = function() {
+    // Some code
+};
+</code></pre>
+<p>And,</p>
+<pre><code>function functionTwo() {
+    // Some code
+}
+</code></pre>
+<p>What are the reasons for using these two different methods and what are the pros and cons of each? Is there anything that can be done with one method that can't be done with the other?</p>
+</div><p class="this-has-helped">This answer has helped 5529 people.</p><div class="s-prose js-post-body"><p>The difference is that <code>functionOne</code> is a function expression and so only defined when that line is reached, whereas <code>functionTwo</code> is a function declaration and is defined as soon as its surrounding function or script is executed (due to <a href="http://adripofjavascript.com/blog/drips/variable-and-function-hoisting.html" rel="noreferrer">hoisting</a>).  </p>
+
+<p>For example, a function expression:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>// TypeError: functionOne is not a function
+functionOne();
+
+var functionOne = function() {
+  console.log("Hello!");
+};</code></pre>
+</div>
+</div>
+</p>
+
+<p>And, a function declaration:   </p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>// Outputs: "Hello!"
+functionTwo();
+
+function functionTwo() {
+  console.log("Hello!");
+}</code></pre>
+</div>
+</div>
+</p>
+
+<p>Historically, function declarations defined within blocks were handled inconsistently between browsers. Strict mode (introduced in ES5) resolved this by scoping function declarations to their enclosing block.</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>'use strict';    
+{ // note this block!
+  function functionThree() {
+    console.log("Hello!");
+  }
+}
+functionThree(); // ReferenceError</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 2083 people.</p><div class="s-prose js-post-body"><p>First I want to correct Greg: <code>function abc(){}</code> is scoped too &mdash; the name <code>abc</code> is defined in the scope where this definition is encountered. Example:</p>
+
+<pre><code>function xyz(){
+  function abc(){};
+  // abc is defined here...
+}
+// ...but not here
+</code></pre>
+
+<p>Secondly, it is possible to combine both styles:</p>
+
+<pre><code>var xyz = function abc(){};
+</code></pre>
+
+<p><code>xyz</code> is going to be defined as usual, <code>abc</code> is undefined in all browsers but Internet&nbsp;Explorer &mdash; do not rely on it being defined. But it will be defined inside its body:</p>
+
+<pre><code>var xyz = function abc(){
+  // xyz is visible here
+  // abc is visible here
+}
+// xyz is visible here
+// abc is undefined here
+</code></pre>
+
+<p>If you want to alias functions on all browsers, use this kind of declaration:</p>
+
+<pre><code>function abc(){};
+var xyz = abc;
+</code></pre>
+
+<p>In this case, both <code>xyz</code> and <code>abc</code> are aliases of the same object:</p>
+
+<pre><code>console.log(xyz === abc); // prints "true"
+</code></pre>
+
+<p>One compelling reason to use the combined style is the "name" attribute of function objects (<strong>not supported by Internet&nbsp;Explorer</strong>). Basically when you define a function like</p>
+
+<pre><code>function abc(){};
+console.log(abc.name); // prints "abc"
+</code></pre>
+
+<p>its name is automatically assigned. But when you define it like</p>
+
+<pre><code>var abc = function(){};
+console.log(abc.name); // prints ""
+</code></pre>
+
+<p>its name is empty &mdash; we created an anonymous function and assigned it to some variable.</p>
+
+<p>Another good reason to use the combined style is to use a short internal name to refer to itself, while providing a long non-conflicting name for external users:</p>
+
+<pre><code>// Assume really.long.external.scoped is {}
+really.long.external.scoped.name = function shortcut(n){
+  // Let it call itself recursively:
+  shortcut(n - 1);
+  // ...
+  // Let it pass itself as a callback:
+  someFunction(shortcut);
+  // ...
+}
+</code></pre>
+
+<p>In the example above we can do the same with an external name, but it'll be too unwieldy (and slower).</p>
+
+<p><em>(Another way to refer to itself is to use <code>arguments.callee</code>, which is still relatively long, and not supported in the strict mode.)</em></p>
+
+<p>Deep down, JavaScript treats both statements differently. This is a function declaration:</p>
+
+<pre><code>function abc(){}
+</code></pre>
+
+<p><code>abc</code> here is defined everywhere in the current scope:</p>
+
+<pre><code>// We can call it here
+abc(); // Works
+
+// Yet, it is defined down there.
+function abc(){}
+
+// We can call it again
+abc(); // Works
+</code></pre>
+
+<p>Also, it hoisted through a <code>return</code> statement:</p>
+
+<pre><code>// We can call it here
+abc(); // Works
+return;
+function abc(){}
+</code></pre>
+
+<p>This is a function expression:</p>
+
+<pre><code>var xyz = function(){};
+</code></pre>
+
+<p><code>xyz</code> here is defined from the point of assignment:</p>
+
+<pre><code>// We can't call it here
+xyz(); // UNDEFINED!!!
+
+// Now it is defined
+xyz = function(){}
+
+// We can call it here
+xyz(); // works
+</code></pre>
+
+<p>Function declaration vs. function expression is the real reason why there is a difference demonstrated by Greg.</p>
+
+<p>Fun fact:</p>
+
+<pre><code>var xyz = function abc(){};
+console.log(xyz.name); // Prints "abc"
+</code></pre>
+
+<p>Personally, I prefer the "function expression" declaration because this way I can control the visibility. When I define the function like</p>
+
+<pre><code>var abc = function(){};
+</code></pre>
+
+<p>I know that I defined the function locally. When I define the function like</p>
+
+<pre><code>abc = function(){};
+</code></pre>
+
+<p>I know that I defined it globally providing that I didn't define <code>abc</code> anywhere in the chain of scopes. This style of definition is resilient even when used inside <code>eval()</code>. While the definition</p>
+
+<pre><code>function abc(){};
+</code></pre>
+
+<p>depends on the context and may leave you guessing where it is actually defined, especially in the case of <code>eval()</code> &mdash; the answer is: It depends on the browser.</p>
+</div><p class="this-has-helped">This answer has helped 729 people.</p><div class="s-prose js-post-body"><p>Here's the rundown on the standard forms that create functions: <em>(Originally written for another question, but adapted after being moved into the canonical question.)</em></p>
+
+<p>Terms:</p>
+
+<ul>
+<li><strong>ES5</strong>: <a href="http://ecma-international.org/ecma-262/5.1/" rel="noreferrer">ECMAScript 5th edition</a>, 2009</li>
+<li><strong>ES2015</strong>: <a href="http://www.ecma-international.org/ecma-262/6.0/index.html" rel="noreferrer">ECMAScript 2015</a> (also known as "ES6")</li>
+</ul>
+
+<p>The quick list:</p>
+
+<ul>
+<li><p>Function Declaration</p></li>
+<li><p>"Anonymous" <code>function</code> Expression <em>(which despite the term, sometimes create functions with names)</em></p></li>
+<li><p>Named <code>function</code> Expression</p></li>
+<li><p>Accessor Function Initializer (ES5+)</p></li>
+<li><p>Arrow Function Expression (ES2015+) <em>(which, like anonymous function expressions, don't involve an explicit name, and yet can create functions with names)</em></p></li>
+<li><p>Method Declaration in Object Initializer (ES2015+)</p></li>
+<li><p>Constructor and Method Declarations in <code>class</code> (ES2015+)</p></li>
+</ul>
+
+<h3>Function Declaration</h3>
+
+<p>The first form is a <em>function declaration</em>, which looks like this:</p>
+
+<pre><code>function x() {
+    console.log('x');
+}
+</code></pre>
+
+<p>A function declaration is a <em>declaration</em>; it's not a statement or expression. As such, you don't follow it with a <code>;</code> (although doing so is harmless).</p>
+
+<p>A function declaration is processed when execution enters the context in which it appears, <strong>before</strong> any step-by-step code is executed. The function it creates is given a proper name (<code>x</code> in the example above), and that name is put in the scope in which the declaration appears.</p>
+
+<p>Because it's processed before any step-by-step code in the same context, you can do things like this:</p>
+
+<pre><code>x(); // Works even though it's above the declaration
+function x() {
+    console.log('x');
+}
+</code></pre>
+
+<p>Until ES2015, the spec didn't cover what a JavaScript engine should do if you put a function declaration inside a control structure like <code>try</code>, <code>if</code>, <code>switch</code>, <code>while</code>, etc., like this:</p>
+
+<pre><code>if (someCondition) {
+    function foo() {    // &lt;===== HERE THERE
+    }                   // &lt;===== BE DRAGONS
+}
+</code></pre>
+
+<p>And since they're processed <em>before</em> step-by-step code is run, it's tricky to know what to do when they're in a control structure.</p>
+
+<p>Although doing this wasn't <em>specified</em> until ES2015, it was an <em>allowable extension</em> to support function declarations in blocks. Unfortunately (and inevitably), different engines did different things.</p>
+
+<p>As of ES2015, the specification says what to do. In fact, it gives three separate things to do:</p>
+
+<ol>
+<li>If in loose mode <em>not</em> on a web browser, the JavaScript engine is supposed to do one thing</li>
+<li>If in loose mode on a web browser, the JavaScript engine is supposed to do something else</li>
+<li>If in <em>strict</em> mode (browser or not), the JavaScript engine is supposed to do yet another thing</li>
+</ol>
+
+<p>The rules for the loose modes are tricky, but in <em>strict</em> mode, function declarations in blocks are easy: They're local to the block (they have <em>block scope</em>, which is also new in ES2015), and they're hoisted to the top of the block. So:</p>
+
+<pre><code>"use strict";
+if (someCondition) {
+    foo();               // Works just fine
+    function foo() {
+    }
+}
+console.log(typeof foo); // "undefined" (`foo` is not in scope here
+                         // because it's not in the same block)
+</code></pre>
+
+<h3>"Anonymous" <code>function</code> Expression</h3>
+
+<p>The second common form is called an <em>anonymous function expression</em>:</p>
+
+<pre><code>var y = function () {
+    console.log('y');
+};
+</code></pre>
+
+<p>Like all expressions, it's evaluated when it's reached in the step-by-step execution of the code.</p>
+
+<p>In ES5, the function this creates has no name (it's anonymous). In ES2015, the function is assigned a name if possible by inferring it from context. In the example above, the name would be <code>y</code>. Something similar is done when the function is the value of a property initializer. (For details on when this happens and the rules, search for <code>SetFunctionName</code> in the <a href="https://tc39.github.io/ecma262/" rel="noreferrer">the specification</a>&nbsp;&mdash; it appears <em>all over</em> the place.)</p>
+
+<h3>Named <code>function</code> Expression</h3>
+
+<p>The third form is a <em>named function expression</em> ("NFE"):</p>
+
+<pre><code>var z = function w() {
+    console.log('zw')
+};
+</code></pre>
+
+<p>The function this creates has a proper name (<code>w</code> in this case). Like all expressions, this is evaluated when it's reached in the step-by-step execution of the code. The name of the function is <em>not</em> added to the scope in which the expression appears; the name <em>is</em> in scope within the function itself:</p>
+
+<pre><code>var z = function w() {
+    console.log(typeof w); // "function"
+};
+console.log(typeof w);     // "undefined"
+</code></pre>
+
+<p>Note that NFEs have frequently been a source of bugs for JavaScript implementations. IE8 and earlier, for instance, handle NFEs <a href="http://blog.niftysnippets.org/2010/09/double-take.html" rel="noreferrer">completely incorrectly</a>, creating two different functions at two different times. Early versions of Safari had issues as well. The good news is that current versions of browsers (IE9 and up, current Safari) don't have those issues any more. (But as of this writing, sadly, IE8 remains in widespread use, and so using NFEs with code for the web in general is still problematic.)</p>
+
+<h3>Accessor Function Initializer (ES5+)</h3>
+
+<p>Sometimes functions can sneak in largely unnoticed; that's the case with <em>accessor functions</em>. Here's an example:</p>
+
+<pre><code>var obj = {
+    value: 0,
+    get f() {
+        return this.value;
+    },
+    set f(v) {
+        this.value = v;
+    }
+};
+console.log(obj.f);         // 0
+console.log(typeof obj.f);  // "number"
+</code></pre>
+
+<p>Note that when I used the function, I didn't use <code>()</code>! That's because it's an <em>accessor function</em> for a property. We get and set the property in the normal way, but behind the scenes, the function is called.</p>
+
+<p>You can also create accessor functions with <code>Object.defineProperty</code>, <code>Object.defineProperties</code>, and the lesser-known second argument to <code>Object.create</code>.</p>
+
+<h3>Arrow Function Expression (ES2015+)</h3>
+
+<p>ES2015 brings us the <em>arrow function</em>. Here's one example:</p>
+
+<pre><code>var a = [1, 2, 3];
+var b = a.map(n =&gt; n * 2);
+console.log(b.join(", ")); // 2, 4, 6
+</code></pre>
+
+<p>See that <code>n =&gt; n * 2</code> thing hiding in the <code>map()</code> call? That's a function.</p>
+
+<p>A couple of things about arrow functions:</p>
+
+<ol>
+<li><p>They don't have their own <code>this</code>. Instead, they <em>close over</em> the <code>this</code> of the context where they're defined. (They also close over <code>arguments</code> and, where relevant, <code>super</code>.) This means that the <code>this</code> within them is the same as the <code>this</code> where they're created, and cannot be changed.</p></li>
+<li><p>As you'll have noticed with the above, you don't use the keyword <code>function</code>; instead, you use <code>=&gt;</code>.</p></li>
+</ol>
+
+<p>The <code>n =&gt; n * 2</code> example above is one form of them. If you have multiple arguments to pass the function, you use parens:</p>
+
+<pre><code>var a = [1, 2, 3];
+var b = a.map((n, i) =&gt; n * i);
+console.log(b.join(", ")); // 0, 2, 6
+</code></pre>
+
+<p>(Remember that <code>Array#map</code> passes the entry as the first argument, and the index as the second.)</p>
+
+<p>In both cases, the body of the function is just an expression; the function's return value will automatically be the result of that expression (you don't use an explicit <code>return</code>).</p>
+
+<p>If you're doing more than just a single expression, use <code>{}</code> and an explicit <code>return</code> (if you need to return a value), as normal:</p>
+
+<pre><code>var a = [
+  {first: "Joe", last: "Bloggs"},
+  {first: "Albert", last: "Bloggs"},
+  {first: "Mary", last: "Albright"}
+];
+a = a.sort((a, b) =&gt; {
+  var rv = a.last.localeCompare(b.last);
+  if (rv === 0) {
+    rv = a.first.localeCompare(b.first);
+  }
+  return rv;
+});
+console.log(JSON.stringify(a));
+</code></pre>
+
+<p>The version without <code>{ ... }</code> is called an arrow function with an <em>expression body</em> or <em>concise body</em>. (Also: A <em>concise</em> arrow function.) The one with <code>{ ... }</code> defining the body is an arrow function with a <em>function body</em>. (Also: A <em>verbose</em> arrow function.)</p>
+
+<h3>Method Declaration in Object Initializer (ES2015+)</h3>
+
+<p>ES2015 allows a shorter form of declaring a property that references a function called a <em>method definition</em>; it looks like this:</p>
+
+<pre><code>var o = {
+    foo() {
+    }
+};
+</code></pre>
+
+<p>the almost-equivalent in ES5 and earlier would be:</p>
+
+<pre><code>var o = {
+    foo: function foo() {
+    }
+};
+</code></pre>
+
+<p>the difference (other than verbosity) is that a method can use <code>super</code>, but a function cannot. So for instance, if you had an object that defined (say) <code>valueOf</code> using method syntax, it could use <code>super.valueOf()</code> to get the value <code>Object.prototype.valueOf</code> would have returned (before presumably doing something else with it), whereas the ES5 version would have to do <code>Object.prototype.valueOf.call(this)</code> instead.</p>
+
+<p>That also means that the method has a reference to the object it was defined on, so if that object is temporary (for instance, you're passing it into <code>Object.assign</code> as one of the source objects), method syntax <em>could</em> mean that the object is retained in memory when otherwise it could have been garbage collected (if the JavaScript engine doesn't detect that situation and handle it if none of the methods uses <code>super</code>).</p>
+
+<h3>Constructor and Method Declarations in <code>class</code> (ES2015+)</h3>
+
+<p>ES2015 brings us <code>class</code> syntax, including declared constructors and methods:</p>
+
+<pre><code>class Person {
+    constructor(firstName, lastName) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+    }
+
+    getFullName() {
+        return this.firstName + " " + this.lastName;
+    }
+}
+</code></pre>
+
+<p>There are two function declarations above: One for the constructor, which gets the name <code>Person</code>, and one for <code>getFullName</code>, which is a function assigned to <code>Person.prototype</code>.</p>
+</div><p class="this-has-helped">This answer has helped 173 people.</p><div class="s-prose js-post-body"><p>Speaking about the global context, both, the <code>var</code> statement and a <code>FunctionDeclaration</code> at the end will create a <em>non-deleteable</em> property on the global object, but the value of both <em>can be overwritten</em>.</p>
+
+<p>The subtle difference between the two ways is that when the <a href="http://bclary.com/2004/11/07/#a-10.1.3" rel="noreferrer">Variable Instantiation</a> process runs (before the actual code execution) all identifiers declared with <code>var</code> will be initialized with <code>undefined</code>, and the ones used by the <code>FunctionDeclaration</code>'s will be available since that moment, for example:</p>
+
+<pre><code> alert(typeof foo); // 'function', it's already available
+ alert(typeof bar); // 'undefined'
+ function foo () {}
+ var bar = function () {};
+ alert(typeof bar); // 'function'
+</code></pre>
+
+<p>The assignment of the <code>bar</code> <code>FunctionExpression</code> takes place until runtime.</p>
+
+<p>A global property created by a <code>FunctionDeclaration</code> can be overwritten without any problems just like a variable value, e.g.:</p>
+
+<pre><code> function test () {}
+ test = null;
+</code></pre>
+
+<p>Another obvious difference between your two examples is that the first function doesn't have a name, but the second has it, which can be really useful when debugging (i.e. inspecting a call stack).</p>
+
+<p>About your edited first example (<code>foo = function() { alert('hello!'); };</code>), it is an undeclared assignment, I would highly encourage you to always use the <code>var</code> keyword.</p>
+
+<p>With an assignment, without the <code>var</code> statement, if the referenced identifier is not found in the scope chain, it will become a <em>deleteable</em> property of the global object.</p>
+
+<p>Also, undeclared assignments throw a <code>ReferenceError</code> on ECMAScript 5 under <a href="http://dmitrysoshnikov.com/ecmascript/es5-chapter-2-strict-mode/" rel="noreferrer">Strict Mode</a>.</p>
+
+<p>A must read:</p>
+
+<ul>
+<li><a href="http://kangax.github.com/nfe/" rel="noreferrer">Named function expressions demystified</a></li>
+</ul>
+
+<p><strong>Note</strong>: This answer has been merged from <a href="https://stackoverflow.com/questions/3435709/why-are-functions-in-javascript-set-to-global-variables-instead-of-plain-function">another question</a>, in which the major doubt and misconception from the OP was that identifiers declared with a <code>FunctionDeclaration</code>, couldn't be overwritten which is not the case.</p>
+</div><p class="this-has-helped">This answer has helped 144 people.</p><div class="s-prose js-post-body"><p>The two code snippets you've posted there will, for almost all purposes, behave the same way.</p>
+
+<p>However, the difference in behaviour is that with the first variant (<code>var functionOne = function() {}</code>), that function can only be called after that point in the code.</p>
+
+<p>With the second variant (<code>function functionTwo()</code>), the function is available to code that runs above where the function is declared.</p>
+
+<p>This is because with the first variant, the function is assigned to the variable <code>foo</code> at run time. In the second, the function is assigned to that identifier, <code>foo</code>, at parse time.</p>
+
+<p><strong>More technical information</strong></p>
+
+<p>JavaScript has three ways of defining functions.</p>
+
+<ol>
+<li>Your first snippet shows a <strong>function expression</strong>. This involves using the <em>"function" operator</em> to create a function - the result of that operator can be stored in any variable or object property. The function expression is powerful that way. The function expression is often called an "anonymous function", because it does not have to have a name,</li>
+<li>Your second example is a <strong>function declaration</strong>. This uses the <em>"function" statement</em> to create a function. The function is made available at parse time and can be called anywhere in that scope. You can still store it in a variable or object property later.</li>
+<li>The third way of defining a function is the <strong>"Function()" constructor</strong>, which is not shown in your original post. It's not recommended to use this as it works the same way as <code>eval()</code>, which has its problems.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 124 people.</p><div class="s-prose js-post-body"><p>A better explanation to <a href="https://stackoverflow.com/a/336868/2351696">Greg's answer</a></p>
+<pre><code>functionTwo();
+function functionTwo() {
+}
+</code></pre>
+<p><strong>Why no error? We were always taught that expressions are executed from top to bottom(??)</strong></p>
+<h2>Because:</h2>
+<blockquote>
+<p>Function declarations and variable declarations are always moved (<code>hoisted</code>) invisibly to the top of their containing scope by the JavaScript interpreter. Function parameters and language-defined names are, obviously, already there. <a href="http://www.adequatelygood.com/2010/2/JavaScript-Scoping-and-Hoisting" rel="noreferrer">ben cherry</a></p>
+</blockquote>
+<p>This means that code like this:</p>
+<pre><code>functionOne();                  ---------------      var functionOne;
+                                | is actually |      functionOne();
+var functionOne = function(){   | interpreted |--&gt;
+};                              |    like     |      functionOne = function(){
+                                ---------------      };
+</code></pre>
+<p>Notice that the assignment portion of the declarations were not hoisted. Only the name is hoisted.</p>
+<p><em>But in the case with function declarations, the entire function body will be hoisted as well</em>:</p>
+<pre><code>functionTwo();              ---------------      function functionTwo() {
+                            | is actually |      };
+function functionTwo() {    | interpreted |--&gt;
+}                           |    like     |      functionTwo();
+                            ---------------
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 106 people.</p><div class="s-prose js-post-body"><p>Other commenters have already covered the semantic difference of the two variants above. I wanted to note a stylistic difference: Only the "assignment" variation can set a property of another object.</p>
+
+<p>I often build JavaScript modules with a pattern like this:</p>
+
+<pre><code>(function(){
+    var exports = {};
+
+    function privateUtil() {
+            ...
+    }
+
+    exports.publicUtil = function() {
+            ...
+    };
+
+    return exports;
+})();
+</code></pre>
+
+<p>With this pattern, your public functions will all use assignment, while your private functions use declaration.</p>
+
+<p>(Note also that assignment should require a semicolon after the statement, while declaration prohibits it.)</p>
+</div><p class="this-has-helped">This answer has helped 89 people.</p><div class="s-prose js-post-body"><p>An illustration of when to prefer the first method to the second one is when you need to avoid overriding a function's previous definitions.</p>
+
+<p>With</p>
+
+<pre><code>if (condition){
+    function myfunction(){
+        // Some code
+    }
+}
+</code></pre>
+
+<p>, this definition of <code>myfunction</code> will override any previous definition, since it will be done at parse-time.</p>
+
+<p>While</p>
+
+<pre><code>if (condition){
+    var myfunction = function (){
+        // Some code
+    }
+}
+</code></pre>
+
+<p>does the correct job of defining <code>myfunction</code> only when <code>condition</code> is met.</p>
+</div><p class="this-has-helped">This answer has helped 72 people.</p><div class="s-prose js-post-body"><p>An important reason is to add one and only one variable as the "Root" of your namespace...</p>
+
+<pre><code>var MyNamespace = {}
+MyNamespace.foo= function() {
+
+}
+</code></pre>
+
+<p>or</p>
+
+<pre><code>var MyNamespace = {
+  foo: function() {
+  },
+  ...
+}
+</code></pre>
+
+<p>There are many techniques for namespacing. It's become more important with the plethora of JavaScript modules available.</p>
+
+<p>Also see <em><a href="https://stackoverflow.com/questions/881515/">How do I declare a namespace in JavaScript?</a></em></p>
+</div><p class="this-has-helped">This answer has helped 64 people.</p><div class="s-prose js-post-body"><p><strong><a href="http://www.sitepoint.com/back-to-basics-javascript-hoisting/" rel="noreferrer">Hoisting</a></strong> <em>is the JavaScript interpreter’s action of moving all variable and function declarations to the top of the current scope.</em> </p>
+
+<p><em>However, only the actual declarations are hoisted. by leaving assignments where they are.</em></p>
+
+<ul>
+<li>variable's/Function's declared inside the page are global can access anywhere in that page.</li>
+<li>variable's/Functions declared inside the function are having local scope. means they are available/accessed inside the function body (scope), they are not available outside the function body.</li>
+</ul>
+
+<p><strong><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Grammar_and_types#Variables" rel="noreferrer">Variable</a></strong></p>
+
+<p><em>Javascript is called loosely typed language. Which means Javascript variables can hold value of any <a href="https://msdn.microsoft.com/en-us/library/7wkd9z69(v=vs.94).aspx" rel="noreferrer">Data-Type</a>. Javascript automatically takes care of changing the variable-type based on the value/literal provided during runtime.</em></p>
+
+<pre><code>global_Page = 10;                                               var global_Page;      « undefined
+    « Integer literal, Number Type.   -------------------       global_Page = 10;     « Number         
+global_Page = 'Yash';                 |   Interpreted   |       global_Page = 'Yash'; « String
+    « String literal, String Type.    «       AS        «       global_Page = true;   « Boolean 
+var global_Page = true;               |                 |       global_Page = function (){          « function
+    « Boolean Type                    -------------------                 var local_functionblock;  « undefined
+global_Page = function (){                                                local_functionblock = 777;« Number
+    var local_functionblock = 777;                              };  
+    // Assigning function as a data.
+};  
+</code></pre>
+
+<hr>
+
+<p><strong>Function</strong></p>
+
+<pre><code>function Identifier_opt ( FormalParameterList_opt ) { 
+      FunctionBody | sequence of statements
+
+      « return;  Default undefined
+      « return 'some data';
+}
+</code></pre>
+
+<ul>
+<li>functions declared inside the page are hoisted to top of the page having global access.</li>
+<li>functions declared inside the function-block are hoisted to top of the block.</li>
+<li><p>Default return value of function is '<a href="https://javascriptweblog.wordpress.com/2010/08/16/understanding-undefined-and-preventing-referenceerrors/" rel="noreferrer">undefined</a>', <a href="http://javascript.info/tutorial/variables-and-statements" rel="noreferrer">Variable</a> declaration default value also 'undefined'</p>
+
+<pre><code>Scope with respect to function-block global. 
+Scope with respect to page undefined | not available.
+</code></pre></li>
+</ul>
+
+<p><strong>Function Declaration</strong></p>
+
+<pre><code>function globalAccess() {                                  function globalAccess() {      
+}                                  -------------------     }
+globalAccess();                    |                 |     function globalAccess() { « Re-Defined / overridden.
+localAccess();                     «   Hoisted  As   «         function localAccess() {
+function globalAccess() {          |                 |         }
+     localAccess();                -------------------         localAccess(); « function accessed with in globalAccess() only.
+     function localAccess() {                              }
+     }                                                     globalAccess();
+}                                                          localAccess(); « ReferenceError as the function is not defined
+</code></pre>
+
+<p><strong>Function Expression</strong></p>
+
+<pre><code>        10;                 « literal
+       (10);                « Expression                (10).toString() -&gt; '10'
+var a;                      
+    a = 10;                 « Expression var              a.toString()  -&gt; '10'
+(function invoke() {        « Expression Function
+ console.log('Self Invoking');                      (function () {
+});                                                               }) () -&gt; 'Self Invoking'
+
+var f; 
+    f = function (){        « Expression var Function
+    console.log('var Function');                                   f ()  -&gt; 'var Function'
+    };
+</code></pre>
+
+<p><em>Function assigned to variable Example:</em></p>
+
+<pre><code>(function selfExecuting(){
+    console.log('IIFE - Immediately-Invoked Function Expression');
+}());
+
+var anonymous = function (){
+    console.log('anonymous function Expression');
+};
+
+var namedExpression = function for_InternalUSE(fact){
+    if(fact === 1){
+        return 1;
+    }
+
+    var localExpression = function(){
+        console.log('Local to the parent Function Scope');
+    };
+    globalExpression = function(){ 
+        console.log('creates a new global variable, then assigned this function.');
+    };
+
+    //return; //undefined.
+    return fact * for_InternalUSE( fact - 1);   
+};
+
+namedExpression();
+globalExpression();
+</code></pre>
+
+<p>javascript interpreted as</p>
+
+<pre><code>var anonymous;
+var namedExpression;
+var globalExpression;
+
+anonymous = function (){
+    console.log('anonymous function Expression');
+};
+
+namedExpression = function for_InternalUSE(fact){
+    var localExpression;
+
+    if(fact === 1){
+        return 1;
+    }
+    localExpression = function(){
+        console.log('Local to the parent Function Scope');
+    };
+    globalExpression = function(){ 
+        console.log('creates a new global variable, then assigned this function.');
+    };
+
+    return fact * for_InternalUSE( fact - 1);    // DEFAULT UNDEFINED.
+};
+
+namedExpression(10);
+globalExpression();
+</code></pre>
+
+<p>You can check function declaration, expression test over different browser's using <a href="http://jsperf.com/yashfunctions" rel="noreferrer"><code>jsperf Test Runner</code></a></p>
+
+<hr>
+
+<p><strong><a href="https://stackoverflow.com/a/45759444/5081877">ES5 Constructor Function Classes</a>: Function objects created using Function.prototype.bind</strong></p>
+
+<p>JavaScript treats functions as first-class objects, so being an object, you can assign properties to a function.</p>
+
+<pre><code>function Shape(id) { // Function Declaration
+    this.id = id;
+};
+    // Adding a prototyped method to a function.
+    Shape.prototype.getID = function () {
+        return this.id;
+    };
+    Shape.prototype.setID = function ( id ) {
+        this.id = id;
+    };
+
+var expFn = Shape; // Function Expression
+
+var funObj = new Shape( ); // Function Object
+funObj.hasOwnProperty('prototype'); // false
+funObj.setID( 10 );
+console.log( funObj.getID() ); // 10
+</code></pre>
+
+<hr>
+
+<p>ES6 introduced <strong>Arrow function</strong>: An arrow function expression has a shorter syntax, they are best suited for non-method functions, and they cannot be used as constructors.</p>
+
+<blockquote>
+  <p><a href="http://www.ecma-international.org/ecma-262/6.0/index.html#sec-arrow-function-definitions-static-semantics-early-errors" rel="noreferrer"><code>ArrowFunction : ArrowParameters =&gt; ConciseBody</code></a>.</p>
+
+<pre><code>const fn = (item) =&gt; { return item &amp; 1 ? 'Odd' : 'Even'; };
+console.log( fn(2) ); // Even
+console.log( fn(3) ); // Odd
+</code></pre>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 51 people.</p><div class="s-prose js-post-body"><p>I'm adding my own answer just because everyone else has covered the hoisting part thoroughly.</p>
+
+<p>I've wondered about which way is better for a long while now, and thanks to <a href="http://jsperf.com" rel="noreferrer">http://jsperf.com</a> now I know :)</p>
+
+<p><img src="https://i.stack.imgur.com/bCrSm.png" alt="enter image description here"></p>
+
+<p><strong>Function declarations</strong> are faster, and that's what really matters in web dev right? ;)</p>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><h1>𝗧𝗵𝗲𝗿𝗲 𝗮𝗿𝗲 𝗳𝗼𝘂𝗿 𝗻𝗼𝘁𝗲𝘄𝗼𝗿𝘁𝗵𝘆 𝗰𝗼𝗺𝗽𝗮𝗿𝗶𝘀𝗼𝗻𝘀 𝗯𝗲𝘁𝘄𝗲𝗲𝗻 𝘁𝗵𝗲 𝘁𝘄𝗼 𝗱𝗶𝗳𝗳𝗲𝗿𝗲𝗻𝘁 𝗱𝗲𝗰𝗹𝗮𝗿𝗮𝘁𝗶𝗼𝗻𝘀 𝗼𝗳 𝗳𝘂𝗻𝗰𝘁𝗶𝗼𝗻𝘀 𝗮𝘀 𝗹𝗶𝘀𝘁𝗲𝗱 𝗯𝗲𝗹𝗼𝘄.</h1>
+<ol>
+<li>Availability (scope) of the function</li>
+</ol>
+<p>The following works because <code>function add()</code> is scoped to the nearest block:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  console.log("Success: ", add(1, 1));
+} catch(e) {
+  console.log("ERROR: " + e);
+}
+
+function add(a, b){
+  return a + b;
+}</code></pre>
+</div>
+</div>
+</p>
+<p>The following does not work because the variable is called before a function value is assigned to the variable <code>add</code>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  console.log("Success: ", add(1, 1));
+} catch(e) {
+  console.log("ERROR: " + e);
+}
+
+var add=function(a, b){
+  return a + b;
+}</code></pre>
+</div>
+</div>
+</p>
+<p>The above code is identical in functionality to the code below. Note that explicitly assigning <code>add = undefined</code> is superfluous because simply doing <code>var add;</code> is the exact same as <code>var add=undefined</code>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var add = undefined;
+
+try {
+  console.log("Success: ", add(1, 1));
+} catch(e) {
+  console.log("ERROR: " + e);
+}
+
+add = function(a, b){
+  return a + b;
+}</code></pre>
+</div>
+</div>
+</p>
+<p>The following does not work because <code>var add=</code> begins an expression and causes the following <code>function add()</code> to be an expression instead of a block. Named functions are only visible to themselves and their surrounding block. As <code>function add()</code> is an expression here, it has no surrounding block, so it is only visible to itself.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  console.log("Success: ", add(1, 1));
+} catch(e) {
+  console.log("ERROR: " + e);
+}
+
+var add=function add(a, b){
+  return a + b;
+}</code></pre>
+</div>
+</div>
+</p>
+<ol start="2">
+<li><em>(function)</em>.name</li>
+</ol>
+<p>The name of a function <code>function thefuncname(){}</code> is <em>thefuncname</em> when it is declared this way.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function foobar(a, b){}
+
+console.log(foobar.name);</code></pre>
+</div>
+</div>
+</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = function foobar(){};
+
+console.log(a.name);</code></pre>
+</div>
+</div>
+</p>
+<p>Otherwise, if a function is declared as <code>function(){}</code>, the <em>function</em>.name is the first variable used to store the function.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = function(){};
+var b = (function(){ return function(){} });
+
+console.log(a.name);
+console.log(b.name);</code></pre>
+</div>
+</div>
+</p>
+<p>If there are no variables set to the function, then the functions name is the empty string (<code>&quot;&quot;</code>).</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>console.log((function(){}).name === "");</code></pre>
+</div>
+</div>
+</p>
+<p>Lastly, while the variable the function is assigned to initially sets the name, successive variables set to the function do not change the name.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = function(){};
+var b = a;
+var c = b;
+
+console.log(a.name);
+console.log(b.name);
+console.log(c.name);</code></pre>
+</div>
+</div>
+</p>
+<ol start="3">
+<li>Performance</li>
+</ol>
+<p>In Google's V8 and Firefox's Spidermonkey there might be a few microsecond JIT compilation difference, but ultimately the result is the exact same. To prove this, let's examine the efficiency of JSPerf at micro-benchmarks by comparing the speed of two blank code snippets. The <a href="https://jsperf.com/microbenchmark-analysis/1" rel="noreferrer">JSPerf tests are found here</a>. And, the <a href="http://jsben.ch/Ov6eJ" rel="noreferrer">jsben.ch tests are  found here</a>. As you can see, there is a noticeable difference when there should be none. If you are really a performance freak like me, then it might be more worth your while trying to reduce the number of variables and functions in the scope and especially eliminating polymorphism (such as using the same variable to store two different types).</p>
+<ol start="4">
+<li>Variable Mutability</li>
+</ol>
+<p>When you use the <code>var</code> keyword to declare a variable, you can then reassign a different value to the variable like so.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>(function(){
+    "use strict";
+    var foobar = function(){}; // initial value
+    try {
+        foobar = "Hello World!"; // new value
+        console.log("[no error]");
+    } catch(error) {
+        console.log("ERROR: " + error.message);
+    }
+    console.log(foobar, window.foobar);
+})();</code></pre>
+</div>
+</div>
+</p>
+<p>However, when we use the const-statement, the variable reference becomes immutable. This means that we cannot assign a new value to the variable. Please note, however, that this does not make the contents of the variable immutable: if you do <code>const arr = []</code>, then you can still do <code>arr[10] = &quot;example&quot;</code>. Only doing something like <code>arr = &quot;new value&quot;</code> or <code>arr = []</code> would throw an error as seen below.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>(function(){
+    "use strict";
+    const foobar = function(){}; // initial value
+    try {
+        foobar = "Hello World!"; // new value
+        console.log("[no error]");
+    } catch(error) {
+        console.log("ERROR: " + error.message);
+    }
+    console.log(foobar, window.foobar);
+})();</code></pre>
+</div>
+</div>
+</p>
+<p>Interestingly, if we declare the variable as <code>function funcName(){}</code>, then the immutability of the variable is the same as declaring it with <code>var</code>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>(function(){
+    "use strict";
+    function foobar(){}; // initial value
+    try {
+        foobar = "Hello World!"; // new value
+        console.log("[no error]");
+    } catch(error) {
+        console.log("ERROR: " + error.message);
+    }
+    console.log(foobar, window.foobar);
+})();</code></pre>
+</div>
+</div>
+</p>
+<h2>𝗪𝗵𝗮𝘁 𝗜𝘀 𝗧𝗵𝗲 &quot;𝗡𝗲𝗮𝗿𝗲𝘀𝘁 𝗕𝗹𝗼𝗰𝗸&quot;</h2>
+<p>The &quot;nearest block&quot; is the nearest &quot;function,&quot; (including asynchronous functions, generator functions, and asynchronous generator functions). However, interestingly, a <code>function functionName() {}</code> behaves like a <code>var functionName = function() {}</code> when in a non-closure block to items outside said closure. Observe.</p>
+<ul>
+<li>Normal <code>var add=function(){}</code></li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  // typeof will simply return "undefined" if the variable does not exist
+  if (typeof add !== "undefined") {
+    add(1, 1); // just to prove it
+    console.log("Not a block");
+  }else if(add===undefined){ // this throws an exception if add doesn't exist
+    console.log('Behaves like var add=function(a,b){return a+b}');
+  }
+} catch(e) {
+  console.log("Is a block");
+}
+var add=function(a, b){return a + b}</code></pre>
+</div>
+</div>
+</p>
+<ul>
+<li>Normal <code>function add(){}</code></li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  // typeof will simply return "undefined" if the variable does not exist
+  if (typeof add !== "undefined") {
+    add(1, 1); // just to prove it
+    console.log("Not a block");
+  }else if(add===undefined){ // this throws an exception if add doesn't exist
+    console.log('Behaves like var add=function(a,b){return a+b}')
+  }
+} catch(e) {
+  console.log("Is a block");
+}
+function add(a, b){
+  return a + b;
+}</code></pre>
+</div>
+</div>
+</p>
+<ul>
+<li>Function</li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  // typeof will simply return "undefined" if the variable does not exist
+  if (typeof add !== "undefined") {
+    add(1, 1); // just to prove it
+    console.log("Not a block");
+  }else if(add===undefined){ // this throws an exception if add doesn't exist
+    console.log('Behaves like var add=function(a,b){return a+b}')
+  }
+} catch(e) {
+  console.log("Is a block");
+}
+(function () {
+    function add(a, b){
+      return a + b;
+    }
+})();</code></pre>
+</div>
+</div>
+</p>
+<ul>
+<li>Statement (such as <code>if</code>, <code>else</code>, <code>for</code>, <code>while</code>, <code>try</code>/<code>catch</code>/<code>finally</code>, <code>switch</code>, <code>do</code>/<code>while</code>, <code>with</code>)</li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  // typeof will simply return "undefined" if the variable does not exist
+  if (typeof add !== "undefined") {
+    add(1, 1); // just to prove it
+    console.log("Not a block");
+  }else if(add===undefined){ // this throws an exception if add doesn't exist
+    console.log('Behaves like var add=function(a,b){return a+b}')
+  }
+} catch(e) {
+  console.log("Is a block");
+}
+{
+    function add(a, b){
+      return a + b;
+    }
+}</code></pre>
+</div>
+</div>
+</p>
+<ul>
+<li>Arrow Function with <code>var add=function()</code></li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  // typeof will simply return "undefined" if the variable does not exist
+  if (typeof add !== "undefined") {
+    add(1, 1); // just to prove it
+    console.log("Not a block");
+  }else if(add===undefined){ // this throws an exception if add doesn't exist
+    console.log('Behaves like var add=function(a,b){return a+b}')
+  }
+} catch(e) {
+  console.log("Is a block");
+}
+(() =&gt; {
+    var add=function(a, b){
+      return a + b;
+    }
+})();</code></pre>
+</div>
+</div>
+</p>
+<ul>
+<li>Arrow Function With <code>function add()</code></li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {
+  // typeof will simply return "undefined" if the variable does not exist
+  if (typeof add !== "undefined") {
+    add(1, 1); // just to prove it
+    console.log("Not a block");
+  }else if(add===undefined){ // this throws an exception if add doesn't exist
+    console.log('Behaves like var add=function(a,b){return a+b}')
+  }
+} catch(e) {
+  console.log("Is a block");
+}
+(() =&gt; {
+    function add(a, b){
+      return a + b;
+    }
+})();</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 41 people.</p><div class="s-prose js-post-body"><p>A function declaration and a function expression assigned to a variable behave the same once the binding is established.</p>
+
+<p>There is a difference however at <em>how</em> and <em>when</em> the function object is actually associated with its variable. This difference is due to the mechanism called <em>variable hoisting</em> in JavaScript.</p>
+
+<p>Basically, all function declarations and variable declarations are hoisted to the top of the <em>function</em> in which the declaration occurs (this is why we say that JavaScript has <em>function scope</em>).</p>
+
+<ul>
+<li><p>When a function declaration is hoisted, the function body "follows"
+so when the function body is evaluated, the variable will immediately
+be bound to a function object.</p></li>
+<li><p>When a variable declaration is hoisted, the initialization does <em>not</em>
+follow, but is "left behind". The variable is initialized to
+<code>undefined</code> at the start of the function body, and will be <em>assigned</em>
+a value at its original location in the code. (Actually, it will be assigned a value at <em>every</em> location where a declaration of a variable with the same name occurs.)</p></li>
+</ul>
+
+<p>The order of hoisting is also important: function declarations take precedence over variable declarations with the same name, and the last function declaration takes precedence over previous function declarations with the same name.</p>
+
+<p>Some examples...</p>
+
+<pre><code>var foo = 1;
+function bar() {
+  if (!foo) {
+    var foo = 10 }
+  return foo; }
+bar() // 10
+</code></pre>
+
+<p>Variable <code>foo</code> is hoisted to the top of the function, initialized to <code>undefined</code>, so that <code>!foo</code> is <code>true</code>, so <code>foo</code> is assigned <code>10</code>. The <code>foo</code> outside of <code>bar</code>'s scope plays no role and is untouched. </p>
+
+<pre><code>function f() {
+  return a; 
+  function a() {return 1}; 
+  var a = 4;
+  function a() {return 2}}
+f()() // 2
+
+function f() {
+  return a;
+  var a = 4;
+  function a() {return 1};
+  function a() {return 2}}
+f()() // 2
+</code></pre>
+
+<p>Function declarations take precedence over variable declarations, and the last function declaration "sticks".</p>
+
+<pre><code>function f() {
+  var a = 4;
+  function a() {return 1}; 
+  function a() {return 2}; 
+  return a; }
+f() // 4
+</code></pre>
+
+<p>In this example <code>a</code> is initialized with the function object resulting from evaluating the second function declaration, and then is assigned <code>4</code>.</p>
+
+<pre><code>var a = 1;
+function b() {
+  a = 10;
+  return;
+  function a() {}}
+b();
+a // 1
+</code></pre>
+
+<p>Here the function declaration is hoisted first, declaring and initializing variable <code>a</code>. Next, this variable is assigned <code>10</code>. In other words: the assignment does not assign to outer variable <code>a</code>.</p>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>The first example is a function declaration:</p>
+
+<pre><code>function abc(){}
+</code></pre>
+
+<p>The second example is a function expression:</p>
+
+<pre><code>var abc = function() {};
+</code></pre>
+
+<p>The main difference is how they are hoisted (lifted and declared). In the first example, the whole function declaration is hoisted. In the second example only the var 'abc' is hoisted, its value (the function) will be undefined, and the function itself remains at the position that it is declared.</p>
+
+<p>To put it simply:</p>
+
+<pre><code>//this will work
+abc(param);
+function abc(){}
+
+//this would fail
+abc(param);
+var abc = function() {}
+</code></pre>
+
+<p>To study more about this topic I strongly recommend you this
+<a href="http://javascriptweblog.wordpress.com/2010/07/06/function-declarations-vs-function-expressions/#comment-43792">link</a></p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>In terms of code maintenance cost, named functions are more preferable:</p>
+
+<ul>
+<li>Independent from the place where they are declared (but still limited by scope).</li>
+<li>More resistant to mistakes like conditional initialization (you are still able to override if wanted to).</li>
+<li>The code becomes more readable by allocating local functions separately of scope functionality. Usually in the scope the functionality goes first, followed by declarations of local functions.</li>
+<li>In a debugger you will clearly see the function name on the call stack instead of an "anonymous/evaluated" function.</li>
+</ul>
+
+<p>I suspect more PROS for named functions are follow. And what is listed as an advantage of named functions is a disadvantage for anonymous ones.</p>
+
+<p>Historically, anonymous functions appeared from the inability of JavaScript as a language to list members with named functions:</p>
+
+<pre><code>{
+    member:function() { /* How do I make "this.member" a named function? */
+    }
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>In computer science terms, we talk about anonymous functions and named functions. I think the most important difference is that an anonymous function is not bound to a name, hence the name anonymous function. In JavaScript it is a first class object dynamically declared at runtime.</p>
+<p>For more information on anonymous functions and lambda calculus, Wikipedia is a good start: <a href="http://en.wikipedia.org/wiki/Anonymous_function" rel="noreferrer">Anonymous Functions</a>.</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>I use the variable approach in my code for a very specific reason, the theory of which has been covered in an abstract way above, but an example might help some people like me, with limited JavaScript expertise.</p>
+
+<p>I have code that I need to run with 160 independently-designed brandings. Most of the code is in shared files, but branding-specific stuff is in a separate file, one for each branding.</p>
+
+<p>Some brandings require specific functions, and some do not. Sometimes I have to add new functions to do new branding-specific things. I am happy to change the shared coded, but I don't want to have to change all 160 sets of branding files.</p>
+
+<p>By using the variable syntax, I can declare the variable (a function pointer essentially) in the shared code and either assign a trivial stub function, or set to null.</p>
+
+<p>The one or two brandings that need a specific implementation of the function can then define their version of the function and assign this to the variable if they want, and the rest do nothing. I can test for a null function before I execute it in the shared code.</p>
+
+<p>From people's comments above, I gather it may be possible to redefine a static function too, but I think the variable solution is nice and clear.</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p><a href="https://stackoverflow.com/a/336868/2730064">Greg's Answer</a> is good enough, but I still would like to add something to it that I learned just now watching <a href="https://en.wikipedia.org/wiki/Douglas_Crockford" rel="noreferrer">Douglas Crockford's</a> videos.</p>
+
+<p><strong>Function expression:</strong></p>
+
+<pre><code>var foo = function foo() {};
+</code></pre>
+
+<p><strong>Function statement:</strong></p>
+
+<pre><code>function foo() {};
+</code></pre>
+
+<p>The function statement is just a shorthand for <code>var</code> statement with a <code>function</code> value.</p>
+
+<p>So</p>
+
+<pre><code>function foo() {};
+</code></pre>
+
+<p>expands to</p>
+
+<pre><code>var foo = function foo() {};
+</code></pre>
+
+<p>Which expands further to:</p>
+
+<pre><code>var foo = undefined;
+foo = function foo() {};
+</code></pre>
+
+<p>And they are both hoisted to the top of the code.</p>
+
+<p><img src="https://i.stack.imgur.com/6TVZL.jpg" alt="Screenshot from video"></p>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p><a href="https://stackoverflow.com/users/26394/eugene-lazutkin">@EugeneLazutkin</a> gives an example where he <a href="https://stackoverflow.com/a/338053/">names an assigned function to be able to use <code>shortcut()</code></a> as an internal reference to itself. <a href="http://ejohn.org/" rel="nofollow noreferrer">John Resig</a> gives another example - <em>copying a recursive function assigned to another object</em> in his <a href="http://ejohn.org/apps/learn/" rel="nofollow noreferrer">Learning Advanced Javascript</a> tutorial. While assigning functions to properties isn't strictly the question here, I recommend actively trying the tutorial out - run the code by clicking the button in the upper right corner, and double click the code to edit to your liking.</p>
+<p>Examples from the tutorial: recursive calls in <code>yell()</code>:</p>
+<p><a href="http://ejohn.org/apps/learn/#13" rel="nofollow noreferrer">Tests fail when the original ninja object is removed.</a> (page 13)</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function assert(predicate, message) { if(!predicate) { throw new Error(message); } }
+
+var ninja = {
+  yell: function(n){
+return n &gt; 0 ? ninja.yell(n-1) + "a" : "hiy";
+  }
+};
+assert( ninja.yell(4) == "hiyaaaa", "A single object isn't too bad, either." ); 
+
+var samurai = { yell: ninja.yell };
+var ninja = null;
+
+try {
+  samurai.yell(4);
+} catch(e){
+  assert( false, "Uh, this isn't good! Where'd ninja.yell go?" );
+}</code></pre>
+</div>
+</div>
+</p>
+<p><a href="http://ejohn.org/apps/learn/#14" rel="nofollow noreferrer">If you name the function that will be called recursively, the tests will pass.</a> (page 14)</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function assert(predicate, message) { if(!predicate) { throw new Error(message); } }
+
+var ninja = {
+  yell: function yell(n){
+return n &gt; 0 ? yell(n-1) + "a" : "hiy";
+  }
+};
+assert( ninja.yell(4) == "hiyaaaa", "Works as we would expect it to!" );
+ 
+var samurai = { yell: ninja.yell };
+var ninja = {};
+assert( samurai.yell(4) == "hiyaaaa", "The method correctly calls itself." );
+
+console.log(samurai.yell(4));</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>Another difference that is not mentioned in the other answers is that if you use the anonymous function</p>
+
+<pre><code>var functionOne = function() {
+    // Some code
+};
+</code></pre>
+
+<p>and use that as a constructor as in</p>
+
+<pre><code>var one = new functionOne();
+</code></pre>
+
+<p>then <code>one.constructor.name</code> will not be defined. <code>Function.name</code> is non-standard but is supported by Firefox, Chrome, other Webkit-derived browsers and IE 9+.</p>
+
+<p>With </p>
+
+<pre><code>function functionTwo() {
+    // Some code
+}
+two = new functionTwo();
+</code></pre>
+
+<p>it is possible to retrieve the name of the constructor as a string with <code>two.constructor.name</code>.</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>The first one (function doSomething(x)) should be part of an object notation.</p>
+
+<p>The second one (<code>var doSomething = function(x){ alert(x);}</code>) is simply creating an anonymous function and assigning it to a variable, <code>doSomething</code>. So doSomething() will call the function.</p>
+
+<p>You may want to know what a <em>function declaration</em> and <em>function expression</em> is.</p>
+
+<p>A function declaration defines a named function variable without requiring variable assignment. Function declarations occur as standalone constructs and cannot be nested within non-function blocks.</p>
+
+<pre><code>function foo() {
+    return 3;
+}
+</code></pre>
+
+<blockquote>
+  <p>ECMA 5 (13.0) defines the syntax as <br/>
+  function Identifier ( FormalParameterList<sub>opt</sub> ) { FunctionBody }</p>
+</blockquote>
+
+<p>In above condition the function name is visible within its scope and the scope of its parent (otherwise it would be unreachable).</p>
+
+<p>And in a function expression</p>
+
+<p>A function expression defines a function as a part of a larger expression syntax (typically a variable assignment ). Functions defined via functions expressions can be named or anonymous. Function expressions should not start with “function”.</p>
+
+<pre><code>// Anonymous function expression
+var a = function() {
+    return 3;
+}
+
+// Named function expression
+var a = function foo() {
+    return 3;
+}
+
+// Self-invoking function expression
+(function foo() {
+    alert("hello!");
+})();
+</code></pre>
+
+<blockquote>
+  <p>ECMA 5 (13.0) defines the syntax as <br/>
+  function Identifier<sub>opt</sub> ( FormalParameterList<sub>opt</sub> ) { FunctionBody }</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I'm listing out the differences below:</p>
+
+<ol>
+<li><p>A function declaration can be placed anywhere in the code. Even if it is invoked before the definition appears in code, it gets executed as function declaration is committed to memory or in a way it is hoisted up, before any other code in the page starts execution.</p>
+
+<p>Take a look at the function below:</p>
+
+<pre><code>function outerFunction() {
+    function foo() {
+       return 1;
+    }
+    return foo();
+    function foo() {
+       return 2;
+    }
+}
+alert(outerFunction()); // Displays 2
+</code></pre>
+
+<p>This is because, during execution, it looks like:-</p>
+
+<pre><code>function foo() {  // The first function declaration is moved to top
+    return 1;
+}
+function foo() {  // The second function declaration is moved to top
+    return 2;
+}
+function outerFunction() {
+    return foo();
+}
+alert(outerFunction()); //So executing from top to bottom,
+                        //the last foo() returns 2 which gets displayed
+</code></pre>
+
+<p>A function expression, if not defined before calling it, will result in an error. Also, here the function definition itself is not moved to the top or committed to memory like in the function declarations. But the variable to which we assign the function gets hoisted up and <strong>undefined</strong> gets assigned to it.</p>
+
+<p>Same function using function expressions:</p>
+
+<pre><code>function outerFunction() {
+    var foo = function() {
+       return 1;
+    }
+    return foo();
+    var foo = function() {
+       return 2;
+    }
+}
+alert(outerFunction()); // Displays 1
+</code></pre>
+
+<p>This is because during execution, it looks like:</p>
+
+<pre><code>function outerFunction() {
+   var foo = undefined;
+   var foo = undefined;
+
+   foo = function() {
+      return 1;
+   };
+   return foo ();
+   foo = function() {   // This function expression is not reachable
+      return 2;
+   };
+}
+alert(outerFunction()); // Displays 1
+</code></pre></li>
+<li><p>It is not safe to write function declarations in non-function blocks like <strong>if</strong> because they won't be accessible.</p>
+
+<pre><code>if (test) {
+    function x() { doSomething(); }
+}
+</code></pre></li>
+<li><p>Named function expression like the one below, may not work in Internet&nbsp;Explorer browsers prior to version 9.</p>
+
+<pre><code>var today = function today() {return new Date()}
+</code></pre></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p><strong><em>About performance:</em></strong></p>
+
+<p>New versions of <code>V8</code> introduced several under-the-hood optimizations and so did <code>SpiderMonkey</code>.</p>
+
+<p>There is almost no difference now between expression and declaration. <br>Function expression <a href="https://jsperf.com/fdeclaration-vs-fexpression" rel="noreferrer">appears to be faster</a> now.</p>
+
+<p><strong><em>Chrome 62.0.3202</em></strong>
+<a href="https://i.stack.imgur.com/lW91X.png" rel="noreferrer"><img src="https://i.stack.imgur.com/lW91X.png" alt="Chrome test"></a></p>
+
+<p><strong><em>FireFox 55</em></strong>
+<a href="https://i.stack.imgur.com/po3gG.png" rel="noreferrer"><img src="https://i.stack.imgur.com/po3gG.png" alt="Firefox test"></a></p>
+
+<p><strong><em>Chrome Canary 63.0.3225</em></strong>
+<a href="https://i.stack.imgur.com/lcPvN.png" rel="noreferrer"><img src="https://i.stack.imgur.com/lcPvN.png" alt="Chrome Canary test"></a></p>
+
+<p><br></p>
+
+<blockquote>
+  <p><code>Anonymous</code> function expressions <a href="https://jsperf.com/named-vs-anonymous-expressions" rel="noreferrer">appear to have better performance</a>
+  against <code>Named</code> function expression.</p>
+</blockquote>
+
+<p><br></p>
+
+<p><strong><em>Firefox</em></strong>
+<a href="https://i.stack.imgur.com/npaAl.png" rel="noreferrer"><img src="https://i.stack.imgur.com/npaAl.png" alt="Firefox named_anonymous"></a>
+<strong><em>Chrome Canary</em></strong>
+<a href="https://i.stack.imgur.com/6YkeY.png" rel="noreferrer"><img src="https://i.stack.imgur.com/6YkeY.png" alt="Chrome canary named_anonymous"></a>
+<strong><em>Chrome</em></strong>
+<a href="https://i.stack.imgur.com/x9H8J.png" rel="noreferrer"><img src="https://i.stack.imgur.com/x9H8J.png" alt="Chrome named_anonymous"></a></p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>If you would use those functions to create objects, you would get:</p>
+
+<pre><code>var objectOne = new functionOne();
+console.log(objectOne.__proto__); // prints "Object {}" because constructor is an anonymous function
+
+var objectTwo = new functionTwo();
+console.log(objectTwo.__proto__); // prints "functionTwo {}" because constructor is a named function
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>In JavaScript there are two ways to create functions:</p>
+
+<ol>
+<li><p>Function declaration:</p>
+
+<pre><code>function fn(){
+  console.log("Hello");
+}
+fn();
+</code></pre>
+
+<p>This is very basic, self-explanatory, used in many languages and standard across C family of languages. We declared a function defined it and executed it by calling it.</p>
+
+<p>What you should be knowing is that functions are actually objects in JavaScript; internally we have created an object for above function and given it a name called fn or the reference to the object is stored in fn. Functions are objects in JavaScript; an instance of function is actually an object instance.</p></li>
+<li><p>Function expression:</p>
+
+<pre><code>var fn=function(){
+  console.log("Hello");
+}
+fn();
+</code></pre>
+
+<p>JavaScript has first-class functions, that is, create a function and assign it to a variable just like you create a string or number and assign it to a variable. Here, the fn variable is assigned to a function. The reason for this concept is functions are objects in JavaScript; fn is pointing to the object instance of the above function. We have initialized a function and assigned it to a variable. It's not executing the function and assigning the result.</p></li>
+</ol>
+
+<p>Reference: <em><a href="http://jkoder.com/javascript-function-declaration-syntax-var-fn-function-vs-function-fn/" rel="noreferrer">JavaScript function declaration syntax: var fn = function() {} vs function fn() {}</a></em></p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><h1>Named Functions Vs. Anonymous Functions</h1>
+<p>The first function syntax is <strong>Anonymous Function Expression</strong>:</p>
+<pre><code>var functionOne = function() {
+  // do something...
+};
+</code></pre>
+<p>While, the second one is <strong>Function Declaration</strong>:</p>
+<pre><code>function functionTwo () {
+  // do something...
+}
+</code></pre>
+<p>The main difference between both is the function name since <strong>Anonymous Functions</strong> have no name to call.
+Anonymous functions are quick and easy to declare, and many libraries and tools tend to encourage this idiomatic style of code. However, anonymous functions have some <strong>drawbacks</strong>:</p>
+<ul>
+<li><p><strong>Readability:</strong> anonymous functions omit a name which could cause less readable code.</p>
+</li>
+<li><p><strong>Debugging:</strong> anonymous functions have no name in stack traces, which can make debugging more difficult.</p>
+</li>
+<li><p><strong>Self-Reference:</strong> what if the function needs to refer to itself, for recursion for example.</p>
+</li>
+</ul>
+<h2>Naming Function Expression</h2>
+<p>Providing a name for your function expression quite effectively addresses all these drawbacks, and has no tangible downsides. The best practice is to always name your function expressions:</p>
+<pre><code>setTimeout(function timeHandler() { // &lt;-- look, a name here!
+  console.log(&quot;I've waited 1 second&quot;);
+}, 1000);
+</code></pre>
+<h2>Naming IIFEs (Immediate Invoked Function Expression)</h2>
+<pre><code>(function IIFE(str) { // &lt;-- look, always name IIFEs!
+  console.log(str); // &quot;Hello!&quot;
+})('Hello!');
+</code></pre>
+<p>For functions assigned to a variable, naming the function, in this case, is not very common and may cause confusion, in this case, the arrow function may be a better choice.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>In light of the "named functions show up in stack traces" argument, modern JavaScript engines are actually quite capable of representing anonymous functions.</p>
+
+<p>As of this writing, V8, SpiderMonkey, Chakra and Nitro always refer to named functions by their names. They almost always refer to an anonymous function by its identifier if it has one.</p>
+
+<p>SpiderMonkey can figure out the name of an anonymous function returned from another function. The rest can't.</p>
+
+<p>If you really, really wanted your iterator and success callbacks to show up in the trace, you could name those too...</p>
+
+<pre><code>[].forEach(function iterator() {});
+</code></pre>
+
+<p>But for the most part it's not worth stressing over.</p>
+
+<h2>Harness (<a href="http://jsfiddle.net/us9dg6y8/">Fiddle</a>)</h2>
+
+<pre><code>'use strict';
+
+var a = function () {
+    throw new Error();
+},
+    b = function b() {
+        throw new Error();
+    },
+    c = function d() {
+        throw new Error();
+    },
+    e = {
+        f: a,
+        g: b,
+        h: c,
+        i: function () {
+            throw new Error();
+        },
+        j: function j() {
+            throw new Error();
+        },
+        k: function l() {
+            throw new Error();
+        }
+    },
+    m = (function () {
+        return function () {
+            throw new Error();
+        };
+    }()),
+    n = (function () {
+        return function n() {
+            throw new Error();
+        };
+    }()),
+    o = (function () {
+        return function p() {
+            throw new Error();
+        };
+    }());
+
+console.log([a, b, c].concat(Object.keys(e).reduce(function (values, key) {
+    return values.concat(e[key]);
+}, [])).concat([m, n, o]).reduce(function (logs, func) {
+
+    try {
+        func();
+    } catch (error) {
+        return logs.concat('func.name: ' + func.name + '\n' +
+                           'Trace:\n' +
+                           error.stack);
+        // Need to manually log the error object in Nitro.
+    }
+
+}, []).join('\n\n'));
+</code></pre>
+
+<h2>V8</h2>
+
+<pre><code>func.name: 
+Trace:
+Error
+    at a (http://localhost:8000/test.js:4:11)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: b
+Trace:
+Error
+    at b (http://localhost:8000/test.js:7:15)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: d
+Trace:
+Error
+    at d (http://localhost:8000/test.js:10:15)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: 
+Trace:
+Error
+    at a (http://localhost:8000/test.js:4:11)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: b
+Trace:
+Error
+    at b (http://localhost:8000/test.js:7:15)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: d
+Trace:
+Error
+    at d (http://localhost:8000/test.js:10:15)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: 
+Trace:
+Error
+    at e.i (http://localhost:8000/test.js:17:19)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: j
+Trace:
+Error
+    at j (http://localhost:8000/test.js:20:19)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: l
+Trace:
+Error
+    at l (http://localhost:8000/test.js:23:19)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: 
+Trace:
+Error
+    at http://localhost:8000/test.js:28:19
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: n
+Trace:
+Error
+    at n (http://localhost:8000/test.js:33:19)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27
+
+func.name: p
+Trace:
+Error
+    at p (http://localhost:8000/test.js:38:19)
+    at http://localhost:8000/test.js:47:9
+    at Array.reduce (native)
+    at http://localhost:8000/test.js:44:27 test.js:42
+</code></pre>
+
+<h2>SpiderMonkey</h2>
+
+<pre><code>func.name: 
+Trace:
+a@http://localhost:8000/test.js:4:5
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: b
+Trace:
+b@http://localhost:8000/test.js:7:9
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: d
+Trace:
+d@http://localhost:8000/test.js:10:9
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: 
+Trace:
+a@http://localhost:8000/test.js:4:5
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: b
+Trace:
+b@http://localhost:8000/test.js:7:9
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: d
+Trace:
+d@http://localhost:8000/test.js:10:9
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: 
+Trace:
+e.i@http://localhost:8000/test.js:17:13
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: j
+Trace:
+j@http://localhost:8000/test.js:20:13
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: l
+Trace:
+l@http://localhost:8000/test.js:23:13
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: 
+Trace:
+m&lt;/&lt;@http://localhost:8000/test.js:28:13
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: n
+Trace:
+n@http://localhost:8000/test.js:33:13
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+
+
+func.name: p
+Trace:
+p@http://localhost:8000/test.js:38:13
+@http://localhost:8000/test.js:47:9
+@http://localhost:8000/test.js:54:1
+</code></pre>
+
+<h2>Chakra</h2>
+
+<pre><code>func.name: undefined
+Trace:
+Error
+   at a (http://localhost:8000/test.js:4:5)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at b (http://localhost:8000/test.js:7:9)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at d (http://localhost:8000/test.js:10:9)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at a (http://localhost:8000/test.js:4:5)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at b (http://localhost:8000/test.js:7:9)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at d (http://localhost:8000/test.js:10:9)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at e.i (http://localhost:8000/test.js:17:13)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at j (http://localhost:8000/test.js:20:13)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at l (http://localhost:8000/test.js:23:13)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at Anonymous function (http://localhost:8000/test.js:28:13)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at n (http://localhost:8000/test.js:33:13)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+
+
+func.name: undefined
+Trace:
+Error
+   at p (http://localhost:8000/test.js:38:13)
+   at Anonymous function (http://localhost:8000/test.js:47:9)
+   at Global code (http://localhost:8000/test.js:42:1)
+</code></pre>
+
+<h2>Nitro</h2>
+
+<pre><code>func.name: 
+Trace:
+a@http://localhost:8000/test.js:4:22
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: b
+Trace:
+b@http://localhost:8000/test.js:7:26
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: d
+Trace:
+d@http://localhost:8000/test.js:10:26
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: 
+Trace:
+a@http://localhost:8000/test.js:4:22
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: b
+Trace:
+b@http://localhost:8000/test.js:7:26
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: d
+Trace:
+d@http://localhost:8000/test.js:10:26
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: 
+Trace:
+i@http://localhost:8000/test.js:17:30
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: j
+Trace:
+j@http://localhost:8000/test.js:20:30
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: l
+Trace:
+l@http://localhost:8000/test.js:23:30
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: 
+Trace:
+http://localhost:8000/test.js:28:30
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: n
+Trace:
+n@http://localhost:8000/test.js:33:30
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+
+func.name: p
+Trace:
+p@http://localhost:8000/test.js:38:30
+http://localhost:8000/test.js:47:13
+reduce@[native code]
+global code@http://localhost:8000/test.js:44:33
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>Both are different ways of defining a function. The difference is how the browser interprets and loads them into an execution context. </p>
+
+<p>The first case is of function expressions which loads only when the interpreter reaches that line of code. So if you do it like the following, you will get an error that the <strong>functionOne is not a function</strong>.</p>
+
+<pre><code>functionOne();
+var functionOne = function() {
+    // Some code
+};
+</code></pre>
+
+<p>The reason is that on the first line no value is assigned to functionOne, and hence it is undefined. We are trying to call it as a function, and hence we are getting an error.</p>
+
+<p>On the second line we are assigning the reference of an anonymous function to functionOne.</p>
+
+<p>The second case is of function declarations that loads before any code is executed. So if you do like the following you won't get any error as the declaration loads before code execution.</p>
+
+<pre><code>functionOne();
+function functionOne() {
+   // Some code
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><p>They are pretty similar with some small differences, first one is a variable which assigned to an anonymous function (Function Declaration) and second one is the normal way to create a function in JavaScript(Anonymous function Declaration), both has usage, cons and pros:</p>
+
+<p><strong>1. Function Expression</strong><br></p>
+
+<pre><code>var functionOne = function() {
+    // Some code
+};
+</code></pre>
+
+<blockquote>
+  <p>A Function Expression defines a function as a part of a larger
+  expression syntax (typically a variable assignment ). Functions
+  defined via Functions Expressions can be named or anonymous. Function
+  Expressions must not start with “function” (hence the parentheses
+  around the self invoking example below).</p>
+</blockquote>
+
+<p>Assign a variable to a function, means no Hoisting, as we know functions in JavaScript can Hoist, means they can be called before they get declared, while variables need to be declared before getting access to them, so means in this case we can not access the function before where it's declared, also it could be a way that you write your functions, for the functions which return another function, this kind of declaration could make sense, also in ECMA6 &amp; above you can assign this to an arrow function which can be used to call anonymous functions, also this way of declaring is a better way to create Constructor functions in JavaScript.</p>
+
+<p><strong>2. Function Declaration</strong><br></p>
+
+<pre><code>function functionTwo() {
+    // Some code
+}
+</code></pre>
+
+<blockquote>
+  <p>A Function Declaration defines a named function variable without
+  requiring variable assignment. Function Declarations occur as
+  standalone constructs and cannot be nested within non-function blocks.
+  It’s helpful to think of them as siblings of Variable Declarations.
+  Just as Variable Declarations must start with “var”, Function
+  Declarations must begin with “function”.</p>
+</blockquote>
+
+<p>This is the normal way of calling a function in JavaScript, this function can be called before you even declare it as in JavaScript all functions get Hoisted, but if you have 'use strict' this won't Hoist as expected, it's a good way to call all normal functions which are not big in lines and neither are a  constructor function.</p>
+
+<p>Also, if you need more info about how hoisting works in JavaScript, visit the link below:</p>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Glossary/Hoisting" rel="noreferrer">https://developer.mozilla.org/en-US/docs/Glossary/Hoisting</a></p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>This is just two possible ways of declaring functions, and in the second way, you can use the function before declaration.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p><code>new Function()</code> can be used to pass the function's body in a string. And hence this can be used to create dynamic functions. Also passing the script without executing the script.</p>
+
+<pre><code>var func = new Function("x", "y", "return x*y;");
+function secondFunction(){
+   var result;
+   result = func(10,20);
+   console.log ( result );
+}
+
+secondFunction()
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>This is called a Function Expression:</p>
+
+<pre><code>var getRectArea = function(width, height) {
+    return width * height;
+};
+
+console.log("Area of Rectangle: " + getRectArea(3,4));
+// This should return the following result in the console: 
+// Area of Rectangle: 12
+</code></pre>
+
+<p>This is called a Function Declaration:</p>
+
+<pre><code>var w = 5;
+var h = 6;
+
+function RectArea(width, height) {  //declaring the function
+  return area = width * height;
+}                                   //note you do not need ; after }
+
+RectArea(w,h);                      //calling or executing the function
+console.log("Area of Rectangle: " + area);
+// This should return the following result in the console: 
+// Area of Rectangle: 30
+</code></pre>
+
+<p>Hope this helps explain what is the difference between Function Expression and Function Declaration and how to use them.  Thanks.</p>
+</div></body></html>

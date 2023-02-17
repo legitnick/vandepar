@@ -1,0 +1,1347 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I remove a specific item from an array in JavaScript?</p><div class="s-prose js-post-body"><p>How do I remove a specific value from an array? Something like:</p>
+<pre class="lang-js prettyprint-override"><code>array.remove(value);
+</code></pre>
+<p>Constraints: I have to use <strong>core</strong> JavaScript. Frameworks are not allowed.</p>
+</div><p class="this-has-helped">This answer has helped 15968 people.</p><div class="s-prose js-post-body"><p>Find the <code>index</code> of the array element you want to remove using <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/indexOf" rel="noreferrer"><code>indexOf</code></a>, and then remove that index with <a href="https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer"><code>splice</code></a>.</p>
+<blockquote>
+<p>The splice() method changes the contents of an array by removing
+existing elements and/or adding new elements.</p>
+</blockquote>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const array = [2, 5, 9];
+
+console.log(array);
+
+const index = array.indexOf(5);
+if (index &gt; -1) { // only splice array when item is found
+  array.splice(index, 1); // 2nd parameter means remove one item only
+}
+
+// array = [2, 9]
+console.log(array); </code></pre>
+</div>
+</div>
+</p>
+<p>The second parameter of <code>splice</code> is the number of elements to remove. Note that <code>splice</code> modifies the array in place and returns a new array containing the elements that have been removed.</p>
+<hr />
+<p>For the reason of completeness, here are functions. The first function removes only a single occurrence (i.e. removing the first match of <code>5</code> from <code>[2,5,9,1,5,8,5]</code>), while the second function removes all occurrences:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function removeItemOnce(arr, value) {
+  var index = arr.indexOf(value);
+  if (index &gt; -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+}
+
+function removeItemAll(arr, value) {
+  var i = 0;
+  while (i &lt; arr.length) {
+    if (arr[i] === value) {
+      arr.splice(i, 1);
+    } else {
+      ++i;
+    }
+  }
+  return arr;
+}
+// Usage
+console.log(removeItemOnce([2,5,9,1,5,8,5], 5))
+console.log(removeItemAll([2,5,9,1,5,8,5], 5))</code></pre>
+</div>
+</div>
+</p>
+<p>In TypeScript, these functions can stay type-safe with a type parameter:</p>
+<pre class="lang-js prettyprint-override"><code>function removeItem&lt;T&gt;(arr: Array&lt;T&gt;, value: T): Array&lt;T&gt; { 
+  const index = arr.indexOf(value);
+  if (index &gt; -1) {
+    arr.splice(index, 1);
+  }
+  return arr;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 2247 people.</p><div class="s-prose js-post-body"><p><strong>Edited on 2016 October</strong></p>
+<ul>
+<li>Do it simple, intuitive and explicit (<a href="https://en.wikipedia.org/wiki/Occam%27s_razor" rel="noreferrer">Occam's razor</a>)</li>
+<li>Do it immutable (original array stays unchanged)</li>
+<li>Do it with standard JavaScript functions, if your browser doesn't support them - <strong>use polyfill</strong></li>
+</ul>
+<p>In this code example I use <strong><code>array.filter(...)</code></strong> function to remove unwanted items from an array. This function doesn't change the original array and creates a new one. If your browser doesn't support this function (e.g. Internet Explorer before version 9, or Firefox before version 1.5), consider <a href="https://github.com/zloirock/core-js#ecmascript-array" rel="noreferrer"><strong>polyfilling with <code>core-js</code></strong></a>.</p>
+<h2>Removing item (ECMA-262 Edition 5 code AKA old style JavaScript)</h2>
+<pre><code>var value = 3
+
+var arr = [1, 2, 3, 4, 5, 3]
+
+arr = arr.filter(function(item) {
+    return item !== value
+})
+
+console.log(arr)
+// [ 1, 2, 4, 5 ]
+</code></pre>
+<h2>Removing item (ECMAScript 6 code)</h2>
+<pre><code>let value = 3
+
+let arr = [1, 2, 3, 4, 5, 3]
+
+arr = arr.filter(item =&gt; item !== value)
+
+console.log(arr)
+// [ 1, 2, 4, 5 ]
+</code></pre>
+<p><strong>IMPORTANT</strong> ECMAScript 6 <code>() =&gt; {}</code> arrow function syntax is not supported in Internet Explorer at all, Chrome before version 45, Firefox before version 22, and Safari before version 10. To use ECMAScript 6 syntax in old browsers you can use <a href="https://babeljs.io/" rel="noreferrer">BabelJS</a>.</p>
+<hr />
+<h2>Removing multiple items (ECMAScript 7 code)</h2>
+<p>An additional advantage of this method is that you can remove multiple items</p>
+<pre><code>let forDeletion = [2, 3, 5]
+
+let arr = [1, 2, 3, 4, 5, 3]
+
+arr = arr.filter(item =&gt; !forDeletion.includes(item))
+// !!! Read below about array.includes(...) support !!!
+
+console.log(arr)
+// [ 1, 4 ]
+</code></pre>
+<p><strong>IMPORTANT</strong> <code>array.includes(...)</code> function is not supported in Internet Explorer at all, Chrome before version 47, Firefox before version 43, Safari before version 9, and Edge before version 14 but you can <a href="https://github.com/zloirock/core-js#ecmascript-array" rel="noreferrer"><strong>polyfill with <code>core-js</code></strong></a>.</p>
+<h2>Removing multiple items (in the future, maybe)</h2>
+<p>If the <a href="https://github.com/tc39/proposal-bind-operator" rel="noreferrer">&quot;This-Binding Syntax&quot;</a> proposal is ever accepted, you'll be able to do this:</p>
+<pre><code>// array-lib.js
+
+export function remove(...forDeletion) {
+    return this.filter(item =&gt; !forDeletion.includes(item))
+}
+
+// main.js
+
+import { remove } from './array-lib.js'
+
+let arr = [1, 2, 3, 4, 5, 3]
+
+// :: This-Binding Syntax Proposal
+// using &quot;remove&quot; function as &quot;virtual method&quot;
+// without extending Array.prototype
+arr = arr::remove(2, 3, 5)
+
+console.log(arr)
+// [ 1, 4 ]
+</code></pre>
+<p><a href="https://babeljs.io/repl/#?browsers=chrome%20%3E%2050&amp;build=&amp;builtIns=false&amp;corejs=3.21&amp;spec=false&amp;loose=false&amp;code_lz=AQ4MwVwOwYwFwJYHsrAE4FMC2SBuGAKAOhLCTQBEMAbDRFASmAG8AoUD9OiNVOACwQBnImATU4GNAQSSswALwA-YAEIylGnWRQiCWNQgATDEJlyGDdqAC-rayFpxgAQzRpFwANoBGADTAAEwBAMwBACwBAKyhALr2HAD0icAAXKnAACqCQgC0AEL6RvoA5sAAygCeUHAuAB7AAApoSAAOSEIu1A7AycAQQqVcOPjg0PA6rkLAAES4CGhwEF3AWHT8SEYzPW4eCq7u6ZgjhMHAYcBRVj0wKEJItETUSCUEu1ZJKV7A_sDhwLEgA&amp;debug=false&amp;forceAllTransforms=false&amp;shippedProposals=false&amp;circleciRepo=&amp;evaluate=true&amp;fileSize=false&amp;timeTravel=false&amp;sourceType=module&amp;lineWrap=false&amp;presets=es2015%2Creact%2Cstage-0%2Cstage-2&amp;prettier=false&amp;targets=&amp;version=7.17.9&amp;externalPlugins=&amp;assumptions=%7B%7D" rel="noreferrer"><strong>Try it yourself in BabelJS :)</strong></a></p>
+<p><strong>Reference</strong></p>
+<ul>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes" rel="noreferrer">Array.prototype.includes</a></li>
+<li><a href="https://vanslaars.io/articles/create-pipe-function" rel="noreferrer">Functional composition</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 1697 people.</p><div class="s-prose js-post-body"><p>I don't know how you are expecting <code>array.remove(int)</code> to behave. There are three possibilities I can think of that you might want.</p>
+<p>To remove an element of an array at an index <code>i</code>:</p>
+<pre class="lang-js prettyprint-override"><code>array.splice(i, 1);
+</code></pre>
+<p>If you want to remove every element with value <code>number</code> from the array:</p>
+<pre class="lang-js prettyprint-override"><code>for (var i = array.length - 1; i &gt;= 0; i--) {
+ if (array[i] === number) {
+  array.splice(i, 1);
+ }
+}
+</code></pre>
+<p>If you just want to make the element at index <code>i</code> no longer exist, but you don't want the indexes of the other elements to change:</p>
+<pre><code>delete array[i];
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 639 people.</p><div class="s-prose js-post-body"><p>It depends on whether you want to keep an empty spot or not.</p>
+
+<p>If you <strong>do</strong> want an empty slot:</p>
+
+<pre><code>array[index] = undefined;
+</code></pre>
+
+<p>If you <strong>don't</strong> want an empty slot:</p>
+
+<pre><code>//To keep the original:
+//oldArray = [...array];
+
+//This modifies the array.
+array.splice(index, 1);
+</code></pre>
+
+<p>And if you need the value of that item, you can just store the returned array's element:</p>
+
+<pre><code>var value = array.splice(index, 1)[0];
+</code></pre>
+
+<p>If you want to remove at either end of the array, you can use <code>array.pop()</code> for the last one or <code>array.shift()</code> for the first one (both return the value of the item as well).</p>
+
+<p>If you don't know the index of the item, you can use <code>array.indexOf(item)</code> to get it (in a <code>if()</code> to get one item or in a <code>while()</code> to get all of them). <code>array.indexOf(item)</code> returns either the index or <code>-1</code> if not found.&nbsp;</p>
+</div><p class="this-has-helped">This answer has helped 397 people.</p><div class="s-prose js-post-body"><p>A friend was having issues in <a href="http://en.wikipedia.org/wiki/Internet_Explorer_8" rel="noreferrer">Internet Explorer 8</a> and showed me what he did. I told him it was wrong, and he told me he got the answer here. The current top answer will not work in all browsers (Internet Explorer 8 for example), and it will only remove the first occurrence of the item.</p>
+<h2>Remove ALL instances from an array</h2>
+<pre><code>function removeAllInstances(arr, item) {
+   for (var i = arr.length; i--;) {
+     if (arr[i] === item) arr.splice(i, 1);
+   }
+}
+</code></pre>
+<p>It loops through the array backwards (since indices and length will change as items are removed) and removes the item if it's found. It works in all browsers.</p>
+</div><p class="this-has-helped">This answer has helped 315 people.</p><div class="s-prose js-post-body"><p><strong>There are two major approaches</strong></p>
+<ol>
+<li><p><strong>splice()</strong>: <code>anArray.splice(index, 1);</code></p>
+<pre><code> let fruits = ['Apple', 'Banana', 'Mango', 'Orange']
+ let removed = fruits.splice(2, 1);
+ // fruits is ['Apple', 'Banana', 'Orange']
+ // removed is ['Mango']
+</code></pre>
+</li>
+<li><p><strong>delete</strong>: <code>delete anArray[index];</code></p>
+<pre><code> let fruits = ['Apple', 'Banana', 'Mango', 'Orange']
+ let removed = delete fruits(2);
+ // fruits is ['Apple', 'Banana', undefined, 'Orange']
+ // removed is true
+</code></pre>
+</li>
+</ol>
+<p>Be careful when you use the <code>delete</code> for an array. It is good for deleting attributes of objects, but not so good for arrays. It is better to use <code>splice</code> for arrays.</p>
+<p>Keep in mind that when you use <code>delete</code> for an array you could get wrong results for <code>anArray.length</code>. In other words, <code>delete</code> would remove the element, but it wouldn't update the value of the length property.</p>
+<p>You can also expect to have holes in index numbers after using delete, e.g. you could end up with having indexes 1, 3, 4, 8, 9, and 11 and length as it was before using delete. In that case, all indexed <code>for</code> loops would crash, since indexes are no longer sequential.</p>
+<p>If you are forced to use <code>delete</code> for some reason, then you should use <a href="https://stackoverflow.com/questions/9329446/for-each-over-an-array-in-javascript"><code>for each</code></a> loops when you need to loop through arrays. As the matter of fact, always avoid using indexed <code>for</code> loops, if possible. That way the code would be more robust and less prone to problems with indexes.</p>
+</div><p class="this-has-helped">This answer has helped 253 people.</p><div class="s-prose js-post-body"><p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>Array.prototype.removeByValue = function (val) {
+  for (var i = 0; i &lt; this.length; i++) {
+    if (this[i] === val) {
+      this.splice(i, 1);
+      i--;
+    }
+  }
+  return this;
+}
+
+var fruits = ['apple', 'banana', 'carrot', 'orange'];
+fruits.removeByValue('banana');
+
+console.log(fruits);
+// -&gt; ['apple', 'carrot', 'orange']</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 180 people.</p><div class="s-prose js-post-body"><p>There isn't any need to use <code>indexOf</code> or <code>splice</code>. However, it performs better if you only want to remove one occurrence of an element.</p>
+<p><strong>Find and move (move):</strong></p>
+<pre><code>function move(arr, val) {
+  var j = 0;
+  for (var i = 0, l = arr.length; i &lt; l; i++) {
+    if (arr[i] !== val) {
+      arr[j++] = arr[i];
+    }
+  }
+  arr.length = j;
+}
+</code></pre>
+<p><strong>Use <code>indexOf</code> and <code>splice</code> (indexof):</strong></p>
+<pre><code>function indexof(arr, val) {
+  var i;
+  while ((i = arr.indexOf(val)) != -1) {
+    arr.splice(i, 1);
+  }
+}
+</code></pre>
+<p><strong>Use only <code>splice</code> (splice):</strong></p>
+<pre><code>function splice(arr, val) {
+  for (var i = arr.length; i--;) {
+    if (arr[i] === val) {
+      arr.splice(i, 1);
+    }
+  }
+}
+</code></pre>
+<p><strong>Run-times on Node.js for an array with 1000 elements (averaged over 10,000 runs):</strong></p>
+<p><em>indexof</em> is approximately 10 times slower than <em>move</em>. Even if improved by removing the call to <code>indexOf</code> in <em>splice</em>, it performs much worse than <em>move</em>.</p>
+<pre class="lang-none prettyprint-override"><code>Remove all occurrences:
+    move 0.0048 ms
+    indexof 0.0463 ms
+    splice 0.0359 ms
+
+Remove first occurrence:
+    move_one 0.0041 ms
+    indexof_one 0.0021 ms
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 157 people.</p><div class="s-prose js-post-body"><p>This provides a predicate instead of a value.</p>
+<p><strong>NOTE:</strong> it will update the given array, and return the affected rows.</p>
+<h2>Usage</h2>
+<pre><code>var removed = helper.remove(arr, row =&gt; row.id === 5 );
+
+var removed = helper.removeAll(arr, row =&gt; row.name.startsWith('BMW'));
+</code></pre>
+<h2>Definition</h2>
+<pre class="lang-js prettyprint-override"><code>var helper = {
+ // Remove and return the first occurrence
+
+ remove: function(array, predicate) {
+  for (var i = 0; i &lt; array.length; i++) {
+   if (predicate(array[i])) {
+    return array.splice(i, 1);
+   }
+  }
+ },
+
+ // Remove and return all occurrences
+
+ removeAll: function(array, predicate) {
+  var removed = [];
+
+  for (var i = 0; i &lt; array.length; ) {
+   if (predicate(array[i])) {
+    removed.push(array.splice(i, 1));
+    continue;
+   }
+   i++;
+  }
+  return removed;
+ },
+};
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 135 people.</p><div class="s-prose js-post-body"><p>You can do it easily with the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" rel="noreferrer">filter</a> method:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function remove(arrOriginal, elementToRemove){
+    return arrOriginal.filter(function(el){return el !== elementToRemove});
+}
+console.log(remove([1, 2, 1, 0, 3, 1, 4], 1));</code></pre>
+</div>
+</div>
+</p>
+<p>This removes all elements from the array and also works faster than a combination of <code>slice</code> and <code>indexOf</code>.</p>
+</div><p class="this-has-helped">This answer has helped 125 people.</p><div class="s-prose js-post-body"><p>Using <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" rel="noreferrer">filter</a> is an elegant way to achieve this requirement.
+<code>filter</code> will not mutate the original array.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const num = 3;
+let arr = [1, 2, 3, 4];
+const arr2 = arr.filter(x =&gt; x !== num);
+console.log(arr); // [1, 2, 3, 4]
+console.log(arr2); // [1, 2, 4]</code></pre>
+</div>
+</div>
+</p>
+<p>You can use <code>filter</code> and then assign the result to the original array if you want to achieve a mutation removal behaviour.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const num = 3;
+let arr = [1, 2, 3, 4];
+arr = arr.filter(x =&gt; x !== num);
+console.log(arr); // [1, 2, 4]</code></pre>
+</div>
+</div>
+</p>
+<p>By the way, <code>filter</code> will remove all of the occurrences matched in the condition (not just the first occurrence) like you can see in the following example</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const num = 3;
+let arr = [1, 2, 3, 3, 3, 4];
+arr = arr.filter(x =&gt; x !== num);
+console.log(arr); // [1, 2, 4]</code></pre>
+</div>
+</div>
+</p>
+<p>In case, you just want to remove the first occurrence, you can use the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer">splice</a> method</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const num = 3;
+let arr = [1, 2, 3, 3, 3, 4];
+const idx = arr.indexOf(num);
+arr.splice(idx, idx !== -1 ? 1 : 0);
+console.log(arr); // [1, 2, 3, 3, 4]</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 123 people.</p><div class="s-prose js-post-body"><p>John Resig <a href="http://ejohn.org/blog/javascript-array-remove/" rel="noreferrer">posted a good implementation</a>:</p>
+<pre><code>// Array Remove - By John Resig (MIT Licensed)
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from &lt; 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+</code></pre>
+<p>If you don’t want to extend a global object, you can do something like the following, instead:</p>
+<pre><code>// Array Remove - By John Resig (MIT Licensed)
+Array.remove = function(array, from, to) {
+    var rest = array.slice((to || from) + 1 || array.length);
+    array.length = from &lt; 0 ? array.length + from : from;
+    return array.push.apply(array, rest);
+};
+</code></pre>
+<p>But the main reason I am posting this is to warn users against the alternative implementation suggested in the comments on that page (Dec 14, 2007):</p>
+<pre><code>Array.prototype.remove = function(from, to) {
+  this.splice(from, (to=[0, from || 1, ++to - from][arguments.length]) &lt; 0 ? this.length + to : to);
+  return this.length;
+};
+</code></pre>
+<p>It seems to work well at first, but through a painful process I discovered it fails when trying to remove the second to last element in an array. For example, if you have a 10-element array and you try to remove the 9th element with this:</p>
+<pre><code>myArray.remove(8);
+</code></pre>
+<p>You end up with an 8-element array. I don't know why, but I confirmed John's original implementation doesn't have this problem.</p>
+</div><p class="this-has-helped">This answer has helped 121 people.</p><div class="s-prose js-post-body"><p>You can use ES6. For example to delete the value '3' in this case:</p>
+
+<pre><code>var array=['1','2','3','4','5','6']
+var newArray = array.filter((value)=&gt;value!='3');
+console.log(newArray);
+</code></pre>
+
+<p>Output : </p>
+
+<pre><code>["1", "2", "4", "5", "6"]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 116 people.</p><div class="s-prose js-post-body"><p><a href="http://underscorejs.org/#without" rel="noreferrer">Underscore.js</a> can be used to solve issues with multiple browsers. It uses in-build browser methods if present. If they are absent like in the case of older Internet&nbsp;Explorer versions it uses its own custom methods.</p>
+
+<p>A simple example to remove elements from array (from the website):</p>
+
+<pre><code>_.without([1, 2, 1, 0, 3, 1, 4], 0, 1); // =&gt; [2, 3, 4]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 107 people.</p><div class="s-prose js-post-body"><p>If you want a new array with the deleted positions removed, you can always delete the specific element and filter out the array. It might need an extension of the <a href="http://www.tutorialspoint.com/javascript/array_filter.htm" rel="noreferrer">array object</a> for browsers that don't implement the filter method, but in the long term it's easier since all you do is this:</p>
+
+<pre><code>var my_array = [1, 2, 3, 4, 5, 6];
+delete my_array[4];
+console.log(my_array.filter(function(a){return typeof a !== 'undefined';}));
+</code></pre>
+
+<p>It should display <code>[1, 2, 3, 4, 6]</code>.</p>
+</div><p class="this-has-helped">This answer has helped 107 people.</p><div class="s-prose js-post-body"><p>Here are a few ways to <strong>remove an item from an array using JavaScript</strong>.</p>
+<p>All the method described <strong>do not mutate the original array</strong>, and instead create a new one.</p>
+<h2>If you know the index of an item</h2>
+<p>Suppose you have an array, and you want to remove an item in position <code>i</code>.</p>
+<p>One method is to use <code>slice()</code>:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = ['a', 'b', 'c', 'd', 'e', 'f']
+const i = 3
+const filteredItems = items.slice(0, i).concat(items.slice(i+1, items.length))
+
+console.log(filteredItems)</code></pre>
+</div>
+</div>
+</p>
+<p><code>slice()</code> creates a new array with the indexes it receives. We simply create a new array, from start to the index we want to remove, and concatenate another array from the first position following the one we removed to the end of the array.</p>
+<h2>If you know the value</h2>
+<p>In this case, one good option is to use <code>filter()</code>, which offers a more <em>declarative</em> approach:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = ['a', 'b', 'c', 'd', 'e', 'f']
+const valueToRemove = 'c'
+const filteredItems = items.filter(item =&gt; item !== valueToRemove)
+
+console.log(filteredItems)</code></pre>
+</div>
+</div>
+</p>
+<p>This uses the ES6 arrow functions. You can use the traditional functions to support older browsers:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = ['a', 'b', 'c', 'd', 'e', 'f']
+const valueToRemove = 'c'
+const filteredItems = items.filter(function(item) {
+  return item !== valueToRemove
+})
+
+console.log(filteredItems)</code></pre>
+</div>
+</div>
+</p>
+<p>or you can use Babel and transpile the ES6 code back to ES5 to make it more digestible to old browsers, yet write modern JavaScript in your code.</p>
+<h2>Removing multiple items</h2>
+<p>What if instead of a single item, you want to remove many items?</p>
+<p>Let's find the simplest solution.</p>
+<h3>By index</h3>
+<p>You can just create a function and remove items in series:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = ['a', 'b', 'c', 'd', 'e', 'f']
+
+const removeItem = (items, i) =&gt;
+  items.slice(0, i-1).concat(items.slice(i, items.length))
+
+let filteredItems = removeItem(items, 3)
+filteredItems = removeItem(filteredItems, 5)
+//["a", "b", "c", "d"]
+
+console.log(filteredItems)</code></pre>
+</div>
+</div>
+</p>
+<h3>By value</h3>
+<p>You can search for inclusion inside the callback function:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = ['a', 'b', 'c', 'd', 'e', 'f']
+const valuesToRemove = ['c', 'd']
+const filteredItems = items.filter(item =&gt; !valuesToRemove.includes(item))
+// ["a", "b", "e", "f"]
+
+console.log(filteredItems)</code></pre>
+</div>
+</div>
+</p>
+<h2>Avoid mutating the original array</h2>
+<p><code>splice()</code> (not to be confused with <code>slice()</code>) mutates the original array, and should be avoided.</p>
+<p>(originally posted on my site <a href="https://flaviocopes.com/how-to-remove-item-from-array/" rel="noreferrer">https://flaviocopes.com/how-to-remove-item-from-array/</a>)</p>
+</div><p class="this-has-helped">This answer has helped 94 people.</p><div class="s-prose js-post-body"><p>Check out this code. It works in every <strong>major browser</strong>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>remove_item = function(arr, value) {
+ var b = '';
+ for (b in arr) {
+  if (arr[b] === value) {
+   arr.splice(b, 1);
+   break;
+  }
+ }
+ return arr;
+};
+
+var array = [1,3,5,6,5,9,5,3,55]
+var res = remove_item(array,5);
+console.log(res)</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 81 people.</p><div class="s-prose js-post-body"><p><strong>Removing a particular element/string from an array can be done in a one-liner:</strong></p>
+<pre><code>theArray.splice(theArray.indexOf(&quot;stringToRemoveFromArray&quot;), 1);
+</code></pre>
+<p>where:</p>
+<p><em>theArray</em>: the array you want to remove something particular from</p>
+<p><em>stringToRemoveFromArray</em>: the string you want to be removed and 1 is the number of elements you want to remove.</p>
+<p><em>NOTE</em>: If &quot;stringToRemoveFromArray&quot; is not located in the array, this will remove the last element of the array.</p>
+<p>It's always good practice to check if the element exists in your array first, before removing it.</p>
+<pre><code>if (theArray.indexOf(&quot;stringToRemoveFromArray&quot;) &gt;= 0){
+   theArray.splice(theArray.indexOf(&quot;stringToRemoveFromArray&quot;), 1);
+}
+</code></pre>
+<hr />
+<p>Depending if you have newer or older version of Ecmascript running on your client's computers:</p>
+<pre><code>var array=['1','2','3','4','5','6']
+var newArray = array.filter((value)=&gt;value!='3');
+</code></pre>
+<p>OR</p>
+<pre><code>var array = ['1','2','3','4','5','6'];
+var newArray = array.filter(function(item){ return item !== '3' });
+</code></pre>
+<p>Where '3' is the value you want to be removed from the array.
+The array would then become : <code>['1','2','4','5','6']</code></p>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><h1>ES10</h1>
+<p>This post summarizes common approaches to element removal from an array as of <a href="https://en.wikipedia.org/wiki/ECMAScript#10th_Edition_%E2%80%93_ECMAScript_2019" rel="noreferrer">ECMAScript 2019</a> (ES10).</p>
+<h2>1. General cases</h2>
+<h3>1.1. Removing Array element by value using <code>.splice()</code></h3>
+<p>| <strong>In-place</strong>: Yes | <br/>
+| <strong>Removes duplicates</strong>: Yes(loop), No(indexOf) | <br/>
+| <strong>By value / index</strong>: By index |</p>
+<p>If you know the value you want to remove from an array you can use the splice method. First, you must identify the index of the target item. You then use the index as the start element and remove just one element.</p>
+<pre class="lang-js prettyprint-override"><code>// With a 'for' loop
+const arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+for( let i = 0; i &lt; arr.length; i++){
+  if ( arr[i] === 5) {
+    arr.splice(i, 1);
+  }
+} // =&gt; [1, 2, 3, 4, 6, 7, 8, 9, 0]
+
+// With the .indexOf() method
+const arr = [1, 2, 3, 4, 5, 6, 7, 8, 9, 0];
+const i = arr.indexOf(5);
+arr.splice(i, 1); // =&gt; [1, 2, 3, 4, 6, 7, 8, 9, 0]
+</code></pre>
+<h3>1.2. Removing Array element using the <code>.filter()</code> method</h3>
+<p>| <strong>In-place</strong>: No | <br/>
+| <strong>Removes duplicates</strong>: Yes | <br/>
+| <strong>By value / index</strong>: By value | <br/></p>
+<p>The specific element can be <em><strong>filtered out</strong></em> from the array, by providing a filtering function. Such function is then called for every element in the array.</p>
+<pre class="lang-js prettyprint-override"><code>const value = 3
+let arr = [1, 2, 3, 4, 5, 3]
+arr = arr.filter(item =&gt; item !== value)
+console.log(arr)
+// [ 1, 2, 4, 5 ]
+</code></pre>
+<h3>1.3. Removing Array element by extending <code>Array.prototype</code></h3>
+<p>| <strong>In-place</strong>: Yes/No (Depends on implementation) | <br/>
+| <strong>Removes duplicates</strong>: Yes/No (Depends on implementation) | <br/>
+| <strong>By value / index</strong>: By index / By value (Depends on implementation) |</p>
+<p>The prototype of Array can be extended with additional methods. Such methods will be then available to use on created arrays.</p>
+<p><strong>Note:</strong> Extending prototypes of objects from the standard library of JavaScript (like Array) is considered by some as an antipattern.</p>
+<pre class="lang-js prettyprint-override"><code>// In-place, removes all, by value implementation
+Array.prototype.remove = function(item) {
+    for (let i = 0; i &lt; this.length; i++) {
+        if (this[i] === item) {
+            this.splice(i, 1);
+        }
+    }
+}
+const arr1 = [1,2,3,1];
+arr1.remove(1) // arr1 equals [2,3]
+
+// Non-stationary, removes first, by value implementation
+Array.prototype.remove = function(item) {
+    const arr = this.slice();
+    for (let i = 0; i &lt; this.length; i++) {
+        if (arr[i] === item) {
+            arr.splice(i, 1);
+            return arr;
+        }
+    }
+    return arr;
+}
+let arr2 = [1,2,3,1];
+arr2 = arr2.remove(1) // arr2 equals [2,3,1]
+</code></pre>
+<h3>1.4. Removing Array element using the <code>delete</code> operator</h3>
+<p>| <strong>In-place</strong>: Yes | <br/>
+| <strong>Removes duplicates</strong>: No | <br/>
+| <strong>By value / index</strong>: By index |</p>
+<p>Using the delete operator does not affect the length property. Nor does it affect the indexes of subsequent elements. The array becomes sparse, which is a fancy way of saying the deleted item is not removed but becomes undefined.</p>
+<pre class="lang-js prettyprint-override"><code>const arr = [1, 2, 3, 4, 5, 6];
+delete arr[4]; // Delete element with index 4
+console.log( arr ); // [1, 2, 3, 4, undefined, 6]
+</code></pre>
+<p>The delete operator is designed to remove properties from JavaScript objects, which arrays are objects.</p>
+<h3>1.5. Removing Array element using <code>Object</code> utilities (&gt;= ES10)</h3>
+<p>| <strong>In-place</strong>: No | <br/>
+| <strong>Removes duplicates</strong>: Yes | <br/>
+| <strong>By value / index</strong>: By value |</p>
+<p>ES10 introduced <code>Object.fromEntries</code>, which can be used to create the desired Array from any Array-like object and filter unwanted elements during the process.</p>
+<pre class="lang-js prettyprint-override"><code>const object = [1,2,3,4];
+const valueToRemove = 3;
+const arr = Object.values(Object.fromEntries(
+  Object.entries(object)
+  .filter(([ key, val ]) =&gt; val !== valueToRemove)
+));
+console.log(arr); // [1,2,4]
+</code></pre>
+<h2>2. Special cases</h2>
+<h3>2.1 Removing element if it's at the end of the Array</h3>
+<h4><strong>2.1.1. Changing Array <code>length</code></strong></h4>
+<p>| <strong>In-place</strong>: Yes | <br/>
+| <strong>Removes duplicates</strong>: No | <br/>
+| <strong>By value / index</strong>: N/A |</p>
+<p>JavaScript Array elements can be removed from the end of an array by setting the length property to a value less than the current value. Any element whose index is greater than or equal to the new length will be removed.</p>
+<pre class="lang-js prettyprint-override"><code>const arr = [1, 2, 3, 4, 5, 6];
+arr.length = 5; // Set length to remove element
+console.log( arr ); // [1, 2, 3, 4, 5]
+</code></pre>
+<h4><strong>2.1.2. Using <code>.pop()</code> method</strong></h4>
+<p>| <strong>In-place</strong>: Yes | <br/>
+| <strong>Removes duplicates</strong>: No | <br/>
+| <strong>By value / index</strong>: N/A |</p>
+<p>The pop method removes the last element of the array, returns that element, and updates the length property. The pop method modifies the array on which it is invoked, This means unlike using delete the last element is removed completely and the array length reduced.</p>
+<pre class="lang-js prettyprint-override"><code>const arr = [1, 2, 3, 4, 5, 6];
+arr.pop(); // returns 6
+console.log( arr ); // [1, 2, 3, 4, 5]
+</code></pre>
+<h3>2.2. Removing element if it's at the beginning of the Array</h3>
+<p>| <strong>In-place</strong>: Yes | <br/>
+| <strong>Removes duplicates</strong>: No | <br/>
+| <strong>By value / index</strong>: N/A |</p>
+<p>The <code>.shift()</code> method works much like the pop method except it removes the first element of a JavaScript array instead of the last. When the element is removed the remaining elements are shifted down.</p>
+<pre class="lang-js prettyprint-override"><code>const arr = [1, 2, 3, 4];
+arr.shift(); // returns 1
+console.log( arr ); // [2, 3, 4]
+</code></pre>
+<h3>2.3. Removing element if it's the only element in the Array</h3>
+<p>| <strong>In-place</strong>: Yes | <br/>
+| <strong>Removes duplicates</strong>: N/A | <br/>
+| <strong>By value / index</strong>: N/A |</p>
+<p>The fastest technique is to set an array variable to an empty array.</p>
+<pre class="lang-js prettyprint-override"><code>let arr = [1];
+arr = []; //empty array
+</code></pre>
+<p>Alternatively technique from 2.1.1 can be used by setting length to 0.</p>
+</div><p class="this-has-helped">This answer has helped 77 people.</p><div class="s-prose js-post-body"><p>You can use lodash <a href="https://lodash.com/docs#pull" rel="noreferrer">_.pull</a> (mutate array), <a href="https://lodash.com/docs#pullAt" rel="noreferrer">_.pullAt</a> (mutate array) or <a href="https://lodash.com/docs#without" rel="noreferrer">_.without</a> (does't mutate array), </p>
+
+<pre><code>var array1 = ['a', 'b', 'c', 'd']
+_.pull(array1, 'c')
+console.log(array1) // ['a', 'b', 'd']
+
+var array2 = ['e', 'f', 'g', 'h']
+_.pullAt(array2, 0)
+console.log(array2) // ['f', 'g', 'h']
+
+var array3 = ['i', 'j', 'k', 'l']
+var newArray = _.without(array3, 'i') // ['j', 'k', 'l']
+console.log(array3) // ['i', 'j', 'k', 'l']
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 76 people.</p><div class="s-prose js-post-body"><p><strong>ES6 &amp; without mutation:  (October 2016)</strong></p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const removeByIndex = (list, index) =&gt;
+      [
+        ...list.slice(0, index),
+        ...list.slice(index + 1)
+      ];
+         
+output = removeByIndex([33,22,11,44],1) //=&gt; [33,11,44]
+      
+console.log(output)</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 71 people.</p><div class="s-prose js-post-body"><h2>Performance</h2>
+<p>Today (2019-12-09) I conduct performance tests on macOS v10.13.6 (High Sierra) for chosen solutions. I show <code>delete</code> (A), but I do not use it in comparison with other methods, because it left empty space in the array.</p>
+<p>The conclusions</p>
+<ul>
+<li>the fastest solution is <code>array.splice</code> (C) (except Safari for small arrays where it has the second time)</li>
+<li>for big arrays, <code>array.slice+splice</code> (H) is the fastest immutable solution for Firefox and Safari; <code>Array.from</code> (B) is fastest in Chrome</li>
+<li>mutable solutions are usually 1.5x-6x faster than immutable</li>
+<li>for small tables on Safari, surprisingly the mutable solution (C) is slower than the immutable solution (G)</li>
+</ul>
+<h2>Details</h2>
+<p>In tests, I remove the middle element from the array in different ways. The <strong>A, C</strong> solutions are in-place. The <strong>B, D, E, F, G, H</strong> solutions are immutable.</p>
+<p><strong>Results for an array with 10 elements</strong></p>
+<p><a href="https://i.stack.imgur.com/foNhq.png" rel="noreferrer"><img src="https://i.stack.imgur.com/foNhq.png" alt="Enter image description here" /></a></p>
+<p>In Chrome the <code>array.splice</code> (C) is the fastest in-place solution. The <code>array.filter</code> (D) is the fastest immutable solution. The slowest is <code>array.slice</code> (F). You can perform the test on your machine <a href="https://jsperf.com/small-array-remove-element" rel="noreferrer">here</a>.</p>
+<p><strong>Results for an array with 1.000.000 elements</strong></p>
+<p><a href="https://i.stack.imgur.com/7zCJt.png" rel="noreferrer"><img src="https://i.stack.imgur.com/7zCJt.png" alt="Enter image description here" /></a></p>
+<p>In Chrome the <code>array.splice</code> (C) is the fastest in-place solution (the <code>delete</code> (C) is similar fast - but it left an empty slot in the array (so it does not perform a 'full remove')). The <code>array.slice-splice</code> (H) is the fastest immutable solution. The slowest is <code>array.filter</code> (D and E). You can perform the test on your machine <a href="https://jsperf.com/big-array-remove-element" rel="noreferrer">here</a>.</p>
+<p><div class="snippet" data-lang="js" data-hide="true" data-console="true" data-babel="false">
+<div class="snippet-code snippet-currently-hidden">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+var log = (letter,array) =&gt; console.log(letter, array.join `,`);
+
+function A(array) {
+  var index = array.indexOf(5);
+  delete array[index];
+  log('A', array);
+}
+
+function B(array) {
+  var index = array.indexOf(5);
+  var arr = Array.from(array);
+  arr.splice(index, 1)
+  log('B', arr);
+}
+
+function C(array) {
+  var index = array.indexOf(5);
+  array.splice(index, 1);
+  log('C', array);
+}
+
+function D(array) {
+  var arr = array.filter(item =&gt; item !== 5)
+  log('D', arr);
+}
+
+function E(array) {
+  var index = array.indexOf(5);
+  var arr = array.filter((item, i) =&gt; i !== index)
+  log('E', arr);
+}
+
+function F(array) {
+  var index = array.indexOf(5);
+  var arr = array.slice(0, index).concat(array.slice(index + 1))
+  log('F', arr);
+}
+
+function G(array) {
+  var index = array.indexOf(5);
+  var arr = [...array.slice(0, index), ...array.slice(index + 1)]
+  log('G', arr);
+}
+
+function H(array) {
+  var index = array.indexOf(5);
+  var arr = array.slice(0);
+  arr.splice(index, 1);
+  log('H', arr);
+}
+
+A([...a]);
+B([...a]);
+C([...a]);
+D([...a]);
+E([...a]);
+F([...a]);
+G([...a]);
+H([...a]);</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>This snippet only presents code used in performance tests - it does not perform tests itself.</code></pre>
+</div>
+</div>
+</p>
+<p>Comparison for browsers: Chrome v78.0.0, Safari v13.0.4, and Firefox v71.0.0</p>
+<p><a href="https://i.stack.imgur.com/Ct9DN.png" rel="noreferrer"><img src="https://i.stack.imgur.com/Ct9DN.png" alt="Enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><p><strong>OK,</strong> for example you have the array below:</p>
+
+<pre><code>var num = [1, 2, 3, 4, 5];
+</code></pre>
+
+<p>And we want to delete number 4. You can simply use the below code:</p>
+
+<pre><code>num.splice(num.indexOf(4), 1); // num will be [1, 2, 3, 5];
+</code></pre>
+
+<p>If you are reusing this function, you write a reusable function which will be attached to the <em>native</em> array function like below:</p>
+
+<pre><code>Array.prototype.remove = Array.prototype.remove || function(x) {
+  const i = this.indexOf(x);
+  if(i===-1)
+      return;
+  this.splice(i, 1); // num.remove(5) === [1, 2, 3];
+}
+</code></pre>
+
+<p>But how about if you have the below array instead with a few [5]s in the array?</p>
+
+<pre><code>var num = [5, 6, 5, 4, 5, 1, 5];
+</code></pre>
+
+<p>We need a loop to check them all, but an easier and more efficient way is using built-in JavaScript functions, so we write a function which use a filter like below instead:</p>
+
+<pre><code>const _removeValue = (arr, x) =&gt; arr.filter(n =&gt; n!==x);
+//_removeValue([1, 2, 3, 4, 5, 5, 6, 5], 5) // Return [1, 2, 3, 4, 6]
+</code></pre>
+
+<p>Also there are third-party libraries which do help you to do this, like Lodash or Underscore. For more information, look at lodash _.pull, _.pullAt or _.without.</p>
+</div><p class="this-has-helped">This answer has helped 51 people.</p><div class="s-prose js-post-body"><p>I'm pretty new to JavaScript and needed this functionality. I merely wrote this:</p>
+
+<pre><code>function removeFromArray(array, item, index) {
+  while((index = array.indexOf(item)) &gt; -1) {
+    array.splice(index, 1);
+  }
+}
+</code></pre>
+
+<p>Then when I want to use it:</p>
+
+<pre><code>//Set-up some dummy data
+var dummyObj = {name:"meow"};
+var dummyArray = [dummyObj, "item1", "item1", "item2"];
+
+//Remove the dummy data
+removeFromArray(dummyArray, dummyObj);
+removeFromArray(dummyArray, "item2");
+</code></pre>
+
+<p>Output - As expected.
+["item1", "item1"]</p>
+
+<p>You may have different needs than I, so you can easily modify it to suit them. I hope this helps someone.</p>
+</div><p class="this-has-helped">This answer has helped 51 people.</p><div class="s-prose js-post-body"><p>I want to answer based on <a href="https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_%E2%80%93_ECMAScript_2015" rel="noreferrer">ECMAScript 6</a>. Assume you have an array like below:</p>
+<pre><code>let arr = [1,2,3,4];
+</code></pre>
+<p>If you want to delete at a special index like <code>2</code>, write the below code:</p>
+<pre><code>arr.splice(2, 1); //=&gt; arr became [1,2,4]
+</code></pre>
+<p>But if you want to delete a special item like <code>3</code> and you don't know its index, do like below:</p>
+<pre><code>arr = arr.filter(e =&gt; e !== 3); //=&gt; arr became [1,2,4]
+</code></pre>
+<p><strong>Hint</strong>: please use an arrow function for filter callback unless you will get an empty array.</p>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p><strong>Update:</strong> This method is recommended only if you cannot use ECMAScript 2015 (formerly known as ES6). If you can use it, other answers here provide much neater implementations.</p>
+
+<hr>
+
+<p><a href="https://gist.github.com/zykadelic/5069236" rel="noreferrer">This gist here</a> will solve your problem, and also deletes all occurrences of the argument instead of just 1 (or a specified value).</p>
+
+<pre><code>Array.prototype.destroy = function(obj){
+    // Return null if no objects were found and removed
+    var destroyed = null;
+
+    for(var i = 0; i &lt; this.length; i++){
+
+        // Use while-loop to find adjacent equal objects
+        while(this[i] === obj){
+
+            // Remove this[i] and store it within destroyed
+            destroyed = this.splice(i, 1)[0];
+        }
+    }
+
+    return destroyed;
+}
+</code></pre>
+
+<p>Usage:</p>
+
+<pre><code>var x = [1, 2, 3, 3, true, false, undefined, false];
+
+x.destroy(3);         // =&gt; 3
+x.destroy(false);     // =&gt; false
+x;                    // =&gt; [1, 2, true, undefined]
+
+x.destroy(true);      // =&gt; true
+x.destroy(undefined); // =&gt; undefined
+x;                    // =&gt; [1, 2]
+
+x.destroy(3);         // =&gt; null
+x;                    // =&gt; [1, 2]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>If you have complex objects in the array you can use filters? 
+In situations where $.inArray or array.splice is not as easy to use. Especially if the objects are perhaps shallow in the array.</p>
+
+<p>E.g. if you have an object with an Id field and you want the object removed from an array:</p>
+
+<pre><code>this.array = this.array.filter(function(element, i) {
+    return element.id !== idToRemove;
+});
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>You should never mutate your array as this is against the functional programming pattern. You can create a new array without referencing the one you want to change data of using the ECMAScript 6 method <code>filter</code>;</p>
+<pre><code>var myArray = [1, 2, 3, 4, 5, 6];
+</code></pre>
+<p>Suppose you want to remove <code>5</code> from the array, you can simply do it like this:</p>
+<pre><code>myArray = myArray.filter(value =&gt; value !== 5);
+</code></pre>
+<p>This will give you a new array without the value you wanted to remove. So the result will be:</p>
+<pre><code> [1, 2, 3, 4, 6]; // 5 has been removed from this array
+</code></pre>
+<p>For further understanding you can read the MDN documentation on <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" rel="noreferrer">Array.filter</a>.</p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>A more modern, <a href="https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_%E2%80%93_ECMAScript_2015" rel="nofollow noreferrer">ECMAScript 2015</a> (formerly known as Harmony or ES 6) approach. Given:</p>
+<pre><code>const items = [1, 2, 3, 4];
+const index = 2;
+</code></pre>
+<p>Then:</p>
+<pre><code>items.filter((x, i) =&gt; i !== index);
+</code></pre>
+<p>Yielding:</p>
+<pre><code>[1, 2, 4]
+</code></pre>
+<p>You can use <a href="https://babeljs.io/" rel="nofollow noreferrer">Babel</a> and a <a href="https://cdn.polyfill.io/v3/" rel="nofollow noreferrer">polyfill service</a> to ensure this is well supported across browsers.</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>You can do a backward loop to make sure not to screw up the indexes, if there are multiple instances of the element.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var myElement = "chocolate";
+var myArray = ['chocolate', 'poptart', 'poptart', 'poptart', 'chocolate', 'poptart', 'poptart', 'chocolate'];
+
+/* Important code */
+for (var i = myArray.length - 1; i &gt;= 0; i--) {
+  if (myArray[i] == myElement) myArray.splice(i, 1);
+}
+console.log(myArray);</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>You have 1 to 9 in the array, and you want remove 5. Use the below code:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+var newNumberArray = numberArray.filter(m =&gt; {
+  return m !== 5;
+});
+
+console.log("new Array, 5 removed", newNumberArray);</code></pre>
+</div>
+</div>
+</p>
+
+<hr>
+
+<p>If you want to multiple values. Example:- 1,7,8</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+var newNumberArray = numberArray.filter(m =&gt; {
+  return (m !== 1) &amp;&amp; (m !== 7) &amp;&amp; (m !== 8);
+});
+
+console.log("new Array, 1,7 and 8 removed", newNumberArray);</code></pre>
+</div>
+</div>
+</p>
+
+<hr>
+
+<p>If you want to remove an array value in an array. Example: [3,4,5]</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var numberArray = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+var removebleArray = [3,4,5];
+
+var newNumberArray = numberArray.filter(m =&gt; {
+    return !removebleArray.includes(m);
+});
+
+console.log("new Array, [3,4,5] removed", newNumberArray);</code></pre>
+</div>
+</div>
+</p>
+
+<p>Includes supported browser is <a href="https://www.w3schools.com/jsref/jsref_includes_array.asp" rel="noreferrer">link</a>.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>An immutable and one-liner way:</p>
+<pre class="lang-js prettyprint-override"><code>const newArr = targetArr.filter(e =&gt; e !== elementToDelete);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 29 people.</p><div class="s-prose js-post-body"><pre><code>Array.prototype.removeItem = function(a) {
+    for (i = 0; i &lt; this.length; i++) {
+        if (this[i] == a) {
+            for (i2 = i; i2 &lt; this.length - 1; i2++) {
+                this[i2] = this[i2 + 1];
+            }
+            this.length = this.length - 1
+            return;
+        }
+    }
+}
+
+var recentMovies = ['Iron Man', 'Batman', 'Superman', 'Spiderman'];
+recentMovies.removeItem('Superman');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p><a href="https://i.stack.imgur.com/Nmcnb.jpg" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/Nmcnb.jpg" alt="Screenshot of demo" /></a></p>
+<h1>2021 UPDATE</h1>
+<p>Your question is about how to remove a specific item from an array. By specific item you are referring to a number eg. remove number 5 from array. From what I understand you are looking for something like:</p>
+<pre><code>// PSEUDOCODE, SCROLL FOR COPY-PASTE CODE
+[1,2,3,4,5,6,8,5].remove(5) // result: [1,2,3,4,6,8]
+</code></pre>
+<p>As for 2021 the best way to achieve it is to use array filter function:</p>
+<pre><code>const input = [1,2,3,4,5,6,8,5];
+const removeNumber = 5;
+const result = input.filter(
+    item =&gt; item != removeNumber
+);
+</code></pre>
+<p>The above example uses <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" rel="nofollow noreferrer">array.prototype.filter</a> function. It iterates over all array items, and returns only those satisfying the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions" rel="nofollow noreferrer">arrow function</a>. As a result, the old array stays intact, while a new array called <code>result</code> contains all items that are not equal to five. You can test it yourself <a href="https://jsfiddle.net/ngtkd7ua/" rel="nofollow noreferrer">online</a>.</p>
+<p>You can visualize <a href="https://web.archive.org/web/20210507092204/https://summonthejson.com/blogs/news/array-prototype-filter" rel="nofollow noreferrer">array.prototype.filter</a> like this:</p>
+<p><a href="https://i.stack.imgur.com/TePmK.gif" rel="nofollow noreferrer"><img src="https://i.stack.imgur.com/TePmK.gif" alt="Animation visualizing array.prototype.filter" /></a></p>
+<h2>Considerations</h2>
+<p><strong>Code quality</strong></p>
+<p><code>Array.prototype.filter</code> is far the most readable method to remove a number in this case. It leaves little place for mistakes and uses core JS functionality.</p>
+<p><strong>Why not <code>array.prototype.map</code>?</strong></p>
+<p><code>Array.prototype.map</code> is sometimes considered as an alternative for <code>array.prototype.filter</code> for that use case. But it should not be used. The reason is that <strong>array.prototype.filter</strong> is conceptually used to <strong>filter items</strong> that satisfy an arrow function (exactly what we need), while <strong>array.prototype.map</strong> is used to <strong>transform</strong> items. Since we don't change items while iterating over them, the proper function to use is <code>array.prototype.filter</code>.</p>
+<p><strong>Support</strong></p>
+<p>As of today (11.4.2022) 94,08% of Internet users' <a href="https://caniuse.com/mdn-javascript_builtins_array_filter" rel="nofollow noreferrer">browsers support</a> array.prototype.filter. So generally speaking it is safe to use. However, IE6 - 8 does not support it. So if your use case requires support for these browsers there is a nice <a href="https://vanillajstoolkit.com/polyfills/arrayfilter/" rel="nofollow noreferrer">polyfill</a> made by Chris Ferdinanti.</p>
+<p><strong>Performance</strong></p>
+<p><code>Array.prototype.filter</code> is great for most use cases. However if you are looking for some performance improvements for advanced data processing you can explore some <a href="https://stackoverflow.com/questions/31459395/why-using-for-is-faster-than-some-or-filter/31471843">other options</a> like using pure <code>for</code>. Another great option is to rethink if the array you are processing really has to be so big. It may be a sign that the JavaScript should receive a reduced array for processing from the data source.</p>
+<p>A benchmark of the different possibilities: <a href="https://jsben.ch/C5MXz" rel="nofollow noreferrer">https://jsben.ch/C5MXz</a></p>
+</div><p class="this-has-helped">This answer has helped 27 people.</p><div class="s-prose js-post-body"><p>An immutable way of removing an element from an array using the <a href="https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_%E2%80%93_ECMAScript_2015" rel="noreferrer">ES6</a> spread operator.</p>
+<p>Let's say you want to remove 4.</p>
+<pre><code>let array = [1,2,3,4,5]
+const index = array.indexOf(4)
+let new_array = [...array.slice(0,index), ...array.slice(index+1, array.length)]
+console.log(new_array)
+=&gt; [1, 2, 3, 5]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>I know there are a lot of answers already, but many of them seem to over complicate the problem.  Here is a simple, recursive way of removing all instances of a key - calls self until index isn't found.  Yes, it only works in browsers with <code>indexOf</code>, but it's simple and can be easily polyfilled.</p>
+
+<p><strong>Stand-alone function</strong></p>
+
+<pre><code>function removeAll(array, key){
+    var index = array.indexOf(key);
+
+    if(index === -1) return;
+
+    array.splice(index, 1);
+    removeAll(array,key);
+}
+</code></pre>
+
+<p><strong>Prototype method</strong></p>
+
+<pre><code>Array.prototype.removeAll = function(key){
+    var index = this.indexOf(key);
+
+    if(index === -1) return;
+
+    this.splice(index, 1);
+    this.removeAll(key);
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>I like this one-liner:</p>
+<pre><code>arr.includes(val) &amp;&amp; arr.splice(arr.indexOf(val), 1)
+</code></pre>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_%E2%80%93_ECMAScript_2015" rel="nofollow noreferrer">ES6</a> (no <a href="https://en.wikipedia.org/wiki/Internet_Explorer" rel="nofollow noreferrer">Internet Explorer</a> support)</li>
+<li>Removal in done in-place.</li>
+<li>Fast: no redundant iterations or duplications are made.</li>
+<li>Support removing values such <code>null</code> or <code>undefined</code></li>
+</ul>
+<p>As a prototype</p>
+<pre><code>// remove by value. return true if value found and removed, false otherwise
+Array.prototype.remove = function(val)
+{
+    return this.includes(val) &amp;&amp; !!this.splice(this.indexOf(val), 1);
+}
+</code></pre>
+<p>(Yes, I read all other answers and couldn't find one that combines <code>includes</code> and <code>splice</code> in the same line.)</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>I have another good solution for removing from an array:</p>
+
+<pre><code>var words = ['spray', 'limit', 'elite', 'exuberant', 'destruction', 'present'];
+
+const result = words.filter(word =&gt; word.length &gt; 6);
+
+console.log(result);
+// expected output: Array ["exuberant", "destruction", "present"]
+</code></pre>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" rel="noreferrer">https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter</a></p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>Using the array <em>filter</em> method:</p>
+<pre><code>let array = [1, 2, 3, 4, 511, 34, 511, 78, 88];
+
+let value = 511;
+array = array.filter(element =&gt; element !== value);
+console.log(array)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p><strong>Create new array:</strong></p>
+
+<pre><code>var my_array = new Array();
+</code></pre>
+
+<p><strong>Add elements to this array:</strong></p>
+
+<pre><code>my_array.push("element1");
+</code></pre>
+
+<p><strong>The function indexOf (returns index or -1 when not found):</strong></p>
+
+<pre><code>var indexOf = function(needle)
+{
+    if (typeof Array.prototype.indexOf === 'function') // Newer browsers
+    {
+        indexOf = Array.prototype.indexOf;
+    }
+    else // Older browsers
+    {
+        indexOf = function(needle)
+        {
+            var index = -1;
+
+            for (var i = 0; i &lt; this.length; i++)
+            {
+                if (this[i] === needle)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            return index;
+        };
+    }
+
+    return indexOf.call(this, needle);
+};
+</code></pre>
+
+<p><strong>Check index of this element (tested with Firefox and Internet&nbsp;Explorer&nbsp;8 (and later)):</strong></p>
+
+<pre><code>var index = indexOf.call(my_array, "element1");
+</code></pre>
+
+<p><strong>Remove 1 element located at index from the array</strong></p>
+
+<pre><code>my_array.splice(index, 1);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>Based on all the answers which were mainly correct and taking into account the best practices suggested (especially not using Array.prototype directly), I came up with the below code:</p>
+
+<pre><code>function arrayWithout(arr, values) {
+  var isArray = function(canBeArray) {
+    if (Array.isArray) {
+      return Array.isArray(canBeArray);
+    }
+    return Object.prototype.toString.call(canBeArray) === '[object Array]';
+  };
+
+  var excludedValues = (isArray(values)) ? values : [].slice.call(arguments, 1);
+  var arrCopy = arr.slice(0);
+
+  for (var i = arrCopy.length - 1; i &gt;= 0; i--) {
+    if (excludedValues.indexOf(arrCopy[i]) &gt; -1) {
+      arrCopy.splice(i, 1);
+    }
+  }
+
+  return arrCopy;
+}
+</code></pre>
+
+<p>Reviewing the above function, despite the fact that it works fine, I realised there could be some performance improvement. Also using ES6 instead of ES5 is a much better approach. To that end, this is the improved code:</p>
+
+<pre><code>const arrayWithoutFastest = (() =&gt; {
+  const isArray = canBeArray =&gt; ('isArray' in Array) 
+    ? Array.isArray(canBeArray) 
+    : Object.prototype.toString.call(canBeArray) === '[object Array]';
+
+  let mapIncludes = (map, key) =&gt; map.has(key);
+  let objectIncludes = (obj, key) =&gt; key in obj;
+  let includes;
+
+  function arrayWithoutFastest(arr, ...thisArgs) {
+    let withoutValues = isArray(thisArgs[0]) ? thisArgs[0] : thisArgs;
+
+    if (typeof Map !== 'undefined') {
+      withoutValues = withoutValues.reduce((map, value) =&gt; map.set(value, value), new Map());
+      includes = mapIncludes;
+    } else {
+      withoutValues = withoutValues.reduce((map, value) =&gt; { map[value] = value; return map; } , {}); 
+      includes = objectIncludes;
+    }
+
+    const arrCopy = [];
+    const length = arr.length;
+
+    for (let i = 0; i &lt; length; i++) {
+      // If value is not in exclude list
+      if (!includes(withoutValues, arr[i])) {
+        arrCopy.push(arr[i]);
+      }
+    }
+
+    return arrCopy;
+  }
+
+  return arrayWithoutFastest;  
+})();
+</code></pre>
+
+<p>How to use:</p>
+
+<pre><code>const arr = [1,2,3,4,5,"name", false];
+
+arrayWithoutFastest(arr, 1); // will return array [2,3,4,5,"name", false]
+arrayWithoutFastest(arr, 'name'); // will return [2,3,4,5, false]
+arrayWithoutFastest(arr, false); // will return [2,3,4,5]
+arrayWithoutFastest(arr,[1,2]); // will return [3,4,5,"name", false];
+arrayWithoutFastest(arr, {bar: "foo"}); // will return the same array (new copy)
+</code></pre>
+
+<p>I am currently writing a blog post in which I have benchmarked several solutions for Array without problem and compared the time it takes to run. I will update this answer with the link once I finish that post. Just to let you know, I have compared the above against lodash's without and in case the browser supports <code>Map</code>, it beats lodash! Notice that I am not using <code>Array.prototype.indexOf</code> or <code>Array.prototype.includes</code> as wrapping the exlcudeValues in a <code>Map</code> or <code>Object</code> makes querying faster!</p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>I tested <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer"><code>splice</code></a> and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/filter" rel="noreferrer"><code>filter</code></a> to see which is faster:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>let someArr = [...Array(99999).keys()] 
+
+console.time('filter')
+someArr.filter(x =&gt; x !== 6666)
+console.timeEnd('filter')
+
+console.time('splice by indexOf')
+someArr.splice(someArr.indexOf(6666), 1)
+console.timeEnd('splice by indexOf')</code></pre>
+</div>
+</div>
+</p>
+<p>On my machine, <code>splice</code> is faster. This makes sense, as <code>splice</code> merely edits an existing array, whereas <code>filter</code> creates a new array.</p>
+<p>That said, <code>filter</code> is logically cleaner (easier to read) and fits better into a coding style that uses immutable state. So it's up to you whether you want to make that trade-off.</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>I also ran into the situation where I had to remove an element from <code>Array</code>. <code>.indexOf</code> was not working in Internet&nbsp;Explorer, so I am sharing my working <code>jQuery.inArray()</code> solution:</p>
+
+<pre><code>var index = jQuery.inArray(val, arr);
+if (index &gt; -1) {
+    arr.splice(index, 1);
+    //console.log(arr);
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p><strong>Remove by Index</strong></p>
+
+<p>A function that returns a copy of array without the element at index:</p>
+
+<pre><code>/**
+* removeByIndex
+* @param {Array} array
+* @param {Number} index
+*/
+function removeByIndex(array, index){
+      return array.filter(function(elem, _index){
+          return index != _index;
+    });
+}
+l = [1,3,4,5,6,7];
+console.log(removeByIndex(l, 1));
+
+$&gt; [ 1, 4, 5, 6, 7 ]
+</code></pre>
+
+<p><strong>Remove by Value</strong></p>
+
+<p>Function that return a copy of array without the Value.</p>
+
+<pre><code>/**
+* removeByValue
+* @param {Array} array
+* @param {Number} value
+*/
+function removeByValue(array, value){
+      return array.filter(function(elem, _index){
+          return value != elem;
+    });
+}
+l = [1,3,4,5,6,7];
+console.log(removeByValue(l, 5));
+
+$&gt; [ 1, 3, 4, 6, 7]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>You can iterate over each <code>array</code>-item and <code>splice</code> it if it exists in your <code>array</code>.</p>
+<pre><code>function destroy(arr, val) {
+    for (var i = 0; i &lt; arr.length; i++) if (arr[i] === val) arr.splice(i, 1);
+    return arr;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>Oftentimes it's better to just create a new array with the <code>filter</code> function.</p>
+
+<pre><code>let array = [1,2,3,4];
+array = array.filter(i =&gt; i !== 4); // [1,2,3]
+</code></pre>
+
+<p>This also improves readability IMHO. I'm not a fan of <code>slice</code>, although it know sometimes you should go for it.</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>I think many of the JavaScript instructions are not well thought out for functional programming. Splice returns the deleted element where most of the time you need the reduced array. This is bad.</p>
+
+<p>Imagine you are doing a recursive call and have to pass an array with one less item, probably without the current indexed item. Or imagine you are doing another recursive call and has to pass an array with an element pushed.</p>
+
+<p>In neither of these cases you can do <code>myRecursiveFunction(myArr.push(c))</code> or <code>myRecursiveFunction(myArr.splice(i,1))</code>. The first idiot will in fact pass the length of the array and the second idiot will pass the deleted element as a parameter.</p>
+
+<p>So what I do in fact... For deleting an array element and passing the resulting to a function as a parameter at the same time I do as follows</p>
+
+<pre><code>myRecursiveFunction(myArr.slice(0,i).concat(a.slice(i+1)))
+</code></pre>
+
+<p>When it comes to push that's more silly... I do like,</p>
+
+<pre><code>myRecursiveFunction((myArr.push(c),myArr))
+</code></pre>
+
+<p>I believe in a proper functional language a method mutating the object it's called upon must return a reference to the very object as a result.</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p><strong>2017-05-08</strong></p>
+
+<p>Most of the given answers work for strict comparison, meaning that both objects reference the exact same object in memory (or are primitive types), but often you want to remove a non-primitive object from an array that has a certain value. For instance, if you make a call to a server and want to check a retrieved object against a local object.</p>
+
+<pre><code>const a = {'field': 2} // Non-primitive object
+const b = {'field': 2} // Non-primitive object with same value
+const c = a            // Non-primitive object that reference the same object as "a"
+
+assert(a !== b) // Don't reference the same item, but have same value
+assert(a === c) // Do reference the same item, and have same value (naturally)
+
+//Note: there are many alternative implementations for valuesAreEqual
+function valuesAreEqual (x, y) {
+   return  JSON.stringify(x) === JSON.stringify(y)
+}
+
+
+//filter will delete false values
+//Thus, we want to return "false" if the item
+// we want to delete is equal to the item in the array
+function removeFromArray(arr, toDelete){
+    return arr.filter(target =&gt; {return !valuesAreEqual(toDelete, target)})
+}
+
+const exampleArray = [a, b, b, c, a, {'field': 2}, {'field': 90}];
+const resultArray = removeFromArray(exampleArray, a);
+
+//resultArray = [{'field':90}]
+</code></pre>
+
+<p>There are alternative/faster implementations for valuesAreEqual, but this does the job. You can also use a custom comparator if you have a specific field to check (for example, some retrieved UUID vs a local UUID).</p>
+
+<p>Also note that this is a functional operation, meaning that it does not mutate the original array.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>In <a href="http://en.wikipedia.org/wiki/CoffeeScript" rel="noreferrer">CoffeeScript</a>:</p>
+
+<pre><code>my_array.splice(idx, 1) for ele, idx in my_array when ele is this_value
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Remove element at index i, without mutating the original array:</p>
+
+<pre><code>/**
+* removeElement
+* @param {Array} array
+* @param {Number} index
+*/
+function removeElement(array, index) {
+   return Array.from(array).splice(index, 1);
+}
+
+// Another way is
+function removeElement(array, index) {
+   return array.slice(0).splice(index, 1);
+}
+</code></pre>
+</div></body></html>

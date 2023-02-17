@@ -1,0 +1,1185 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I merge two dictionaries in a single expression in Python?</p><div class="s-prose js-post-body"><p>I want to merge two dictionaries into a new dictionary.</p>
+<pre><code>x = {'a': 1, 'b': 2}
+y = {'b': 3, 'c': 4}
+z = merge(x, y)
+
+&gt;&gt;&gt; z
+{'a': 1, 'b': 3, 'c': 4}
+</code></pre>
+<p>Whenever a key <code>k</code> is present in both dictionaries, only the value <code>y[k]</code> should be kept.</p>
+</div><p class="this-has-helped">This answer has helped 8626 people.</p><div class="s-prose js-post-body"><h2>How can I merge two Python dictionaries in a single expression?</h2>
+<p>For dictionaries <code>x</code> and <code>y</code>, their shallowly-merged dictionary <code>z</code> takes values from <code>y</code>, replacing those from <code>x</code>.</p>
+<ul>
+<li><p>In Python 3.9.0 or greater (released 17 October 2020, <a href="https://www.python.org/dev/peps/pep-0584/" rel="noreferrer"><code>PEP-584</code></a>, <a href="https://bugs.python.org/issue36144" rel="noreferrer">discussed here</a>):</p>
+<pre class="lang-py prettyprint-override"><code>z = x | y
+</code></pre>
+</li>
+<li><p>In Python 3.5 or greater:</p>
+<pre class="lang-py prettyprint-override"><code>z = {**x, **y}
+</code></pre>
+</li>
+<li><p>In Python 2, (or 3.4 or lower) write a function:</p>
+<pre class="lang-py prettyprint-override"><code>def merge_two_dicts(x, y):
+    z = x.copy()   # start with keys and values of x
+    z.update(y)    # modifies z with keys and values of y
+    return z
+</code></pre>
+<p>and now:</p>
+<pre class="lang-py prettyprint-override"><code>z = merge_two_dicts(x, y)
+</code></pre>
+</li>
+</ul>
+<h3>Explanation</h3>
+<p>Say you have two dictionaries and you want to merge them into a new dictionary without altering the original dictionaries:</p>
+<pre class="lang-py prettyprint-override"><code>x = {'a': 1, 'b': 2}
+y = {'b': 3, 'c': 4}
+</code></pre>
+<p>The desired result is to get a new dictionary (<code>z</code>) with the values merged, and the second dictionary's values overwriting those from the first.</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; z
+{'a': 1, 'b': 3, 'c': 4}
+</code></pre>
+<p>A new syntax for this, proposed in <a href="https://www.python.org/dev/peps/pep-0448" rel="noreferrer">PEP 448</a> and <a href="https://mail.python.org/pipermail/python-dev/2015-February/138564.html" rel="noreferrer">available as of Python 3.5</a>, is</p>
+<pre class="lang-py prettyprint-override"><code>z = {**x, **y}
+</code></pre>
+<p>And it is indeed a single expression.</p>
+<p>Note that we can merge in with literal notation as well:</p>
+<pre class="lang-py prettyprint-override"><code>z = {**x, 'foo': 1, 'bar': 2, **y}
+</code></pre>
+<p>and now:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; z
+{'a': 1, 'b': 3, 'foo': 1, 'bar': 2, 'c': 4}
+</code></pre>
+<p>It is now showing as implemented in the <a href="https://www.python.org/dev/peps/pep-0478/#features-for-3-5" rel="noreferrer">release schedule for 3.5, PEP 478</a>, and it has now made its way into the <a href="https://docs.python.org/dev/whatsnew/3.5.html#pep-448-additional-unpacking-generalizations" rel="noreferrer">What's New in Python 3.5</a> document.</p>
+<p>However, since many organizations are still on Python 2, you may wish to do this in a backward-compatible way. The classically Pythonic way, available in Python 2 and Python 3.0-3.4, is to do this as a two-step process:</p>
+<pre class="lang-py prettyprint-override"><code>z = x.copy()
+z.update(y) # which returns None since it mutates z
+</code></pre>
+<p>In both approaches, <code>y</code> will come second and its values will replace <code>x</code>'s values, thus <code>b</code> will point to <code>3</code> in our final result.</p>
+<h2>Not yet on Python 3.5, but want a <em>single expression</em></h2>
+<p>If you are not yet on Python 3.5 or need to write backward-compatible code, and you want this in a <em>single expression</em>, the most performant while the correct approach is to put it in a function:</p>
+<pre class="lang-py prettyprint-override"><code>def merge_two_dicts(x, y):
+    &quot;&quot;&quot;Given two dictionaries, merge them into a new dict as a shallow copy.&quot;&quot;&quot;
+    z = x.copy()
+    z.update(y)
+    return z
+</code></pre>
+<p>and then you have a single expression:</p>
+<pre class="lang-py prettyprint-override"><code>z = merge_two_dicts(x, y)
+</code></pre>
+<p>You can also make a function to merge an arbitrary number of dictionaries, from zero to a very large number:</p>
+<pre class="lang-py prettyprint-override"><code>def merge_dicts(*dict_args):
+    &quot;&quot;&quot;
+    Given any number of dictionaries, shallow copy and merge into a new dict,
+    precedence goes to key-value pairs in latter dictionaries.
+    &quot;&quot;&quot;
+    result = {}
+    for dictionary in dict_args:
+        result.update(dictionary)
+    return result
+</code></pre>
+<p>This function will work in Python 2 and 3 for all dictionaries. e.g. given dictionaries <code>a</code> to <code>g</code>:</p>
+<pre class="lang-py prettyprint-override"><code>z = merge_dicts(a, b, c, d, e, f, g) 
+</code></pre>
+<p>and key-value pairs in <code>g</code> will take precedence over dictionaries <code>a</code> to <code>f</code>, and so on.</p>
+<h2>Critiques of Other Answers</h2>
+<p>Don't use what you see in the formerly accepted answer:</p>
+<pre class="lang-py prettyprint-override"><code>z = dict(x.items() + y.items())
+</code></pre>
+<p>In Python 2, you create two lists in memory for each dict, create a third list in memory with length equal to the length of the first two put together, and then discard all three lists to create the dict. <strong>In Python 3, this will fail</strong> because you're adding two <code>dict_items</code> objects together, not two lists -</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; c = dict(a.items() + b.items())
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+TypeError: unsupported operand type(s) for +: 'dict_items' and 'dict_items'
+</code></pre>
+<p>and you would have to explicitly create them as lists, e.g. <code>z = dict(list(x.items()) + list(y.items()))</code>. This is a waste of resources and computation power.</p>
+<p>Similarly, taking the union of <code>items()</code> in Python 3 (<code>viewitems()</code> in Python 2.7) will also fail when values are unhashable objects (like lists, for example). Even if your values are hashable, <strong>since sets are semantically unordered, the behavior is undefined in regards to precedence. So don't do this:</strong></p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; c = dict(a.items() | b.items())
+</code></pre>
+<p>This example demonstrates what happens when values are unhashable:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; x = {'a': []}
+&gt;&gt;&gt; y = {'b': []}
+&gt;&gt;&gt; dict(x.items() | y.items())
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+TypeError: unhashable type: 'list'
+</code></pre>
+<p>Here's an example where <code>y</code> should have precedence, but instead the value from <code>x</code> is retained due to the arbitrary order of sets:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; x = {'a': 2}
+&gt;&gt;&gt; y = {'a': 1}
+&gt;&gt;&gt; dict(x.items() | y.items())
+{'a': 2}
+</code></pre>
+<p>Another hack you should not use:</p>
+<pre class="lang-py prettyprint-override"><code>z = dict(x, **y)
+</code></pre>
+<p>This uses the <code>dict</code> constructor and is very fast and memory-efficient (even slightly more so than our two-step process) but unless you know precisely what is happening here (that is, the second dict is being passed as keyword arguments to the dict constructor), it's difficult to read, it's not the intended usage, and so it is not Pythonic.</p>
+<p>Here's an example of the usage being <a href="https://code.djangoproject.com/attachment/ticket/13357/django-pypy.2.diff" rel="noreferrer">remediated in django</a>.</p>
+<p>Dictionaries are intended to take hashable keys (e.g. <code>frozenset</code>s or tuples), but <strong>this method fails in Python 3 when keys are not strings.</strong></p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; c = dict(a, **b)
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+TypeError: keyword arguments must be strings
+</code></pre>
+<p>From the <a href="https://mail.python.org/pipermail/python-dev/2010-April/099459.html" rel="noreferrer">mailing list</a>, Guido van Rossum, the creator of the language, wrote:</p>
+<blockquote>
+<p>I am fine with
+declaring dict({}, **{1:3}) illegal, since after all it is abuse of
+the ** mechanism.</p>
+</blockquote>
+<p>and</p>
+<blockquote>
+<p>Apparently dict(x, **y) is going around as &quot;cool hack&quot; for &quot;call
+x.update(y) and return x&quot;. Personally, I find it more despicable than
+cool.</p>
+</blockquote>
+<p>It is my understanding (as well as the understanding of the <a href="https://mail.python.org/pipermail/python-dev/2010-April/099485.html" rel="noreferrer">creator of the language</a>) that the intended usage for <code>dict(**y)</code> is for creating dictionaries for readability purposes, e.g.:</p>
+<pre class="lang-py prettyprint-override"><code>dict(a=1, b=10, c=11)
+</code></pre>
+<p>instead of</p>
+<pre class="lang-py prettyprint-override"><code>{'a': 1, 'b': 10, 'c': 11}
+</code></pre>
+<h2>Response to comments</h2>
+<blockquote>
+<p>Despite what Guido says, <code>dict(x, **y)</code> is in line with the dict specification, which btw. works for both Python 2 and 3. The fact that this only works for string keys is a direct consequence of how keyword parameters work and not a short-coming of dict. Nor is using the ** operator in this place an abuse of the mechanism, in fact, ** was designed precisely to pass dictionaries as keywords.</p>
+</blockquote>
+<p>Again, it doesn't work for 3 when keys are not strings. The implicit calling contract is that namespaces take ordinary dictionaries, while users must only pass keyword arguments that are strings. All other callables enforced it. <code>dict</code> broke this consistency in Python 2:</p>
+<pre><code>&gt;&gt;&gt; foo(**{('a', 'b'): None})
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+TypeError: foo() keywords must be strings
+&gt;&gt;&gt; dict(**{('a', 'b'): None})
+{('a', 'b'): None}
+</code></pre>
+<p>This inconsistency was bad given other implementations of Python (PyPy, Jython, IronPython). Thus it was fixed in Python 3, as this usage could be a breaking change.</p>
+<p>I submit to you that it is malicious incompetence to intentionally write code that only works in one version of a language or that only works given certain arbitrary constraints.</p>
+<p>More comments:</p>
+<blockquote>
+<p><code>dict(x.items() + y.items())</code> is still the most readable solution for Python 2. Readability counts.</p>
+</blockquote>
+<p>My response: <code>merge_two_dicts(x, y)</code> actually seems much clearer to me, if we're actually concerned about readability. And it is not forward compatible, as Python 2 is increasingly deprecated.</p>
+<blockquote>
+<p><code>{**x, **y}</code> does not seem to handle nested dictionaries. the contents of nested keys are simply overwritten, not merged [...] I ended up being burnt by these answers that do not merge recursively and I was surprised no one mentioned it. In my interpretation of the word &quot;merging&quot; these answers describe &quot;updating one dict with another&quot;, and not merging.</p>
+</blockquote>
+<p>Yes. I must refer you back to the question, which is asking for a <em>shallow</em> merge of <em><strong>two</strong></em> dictionaries, with the first's values being overwritten by the second's - in a single expression.</p>
+<p>Assuming two dictionaries of dictionaries, one might recursively merge them in a single function, but you should be careful not to modify the dictionaries from either source, and the surest way to avoid that is to make a copy when assigning values. As keys must be hashable and are usually therefore immutable, it is pointless to copy them:</p>
+<pre class="lang-py prettyprint-override"><code>from copy import deepcopy
+
+def dict_of_dicts_merge(x, y):
+    z = {}
+    overlapping_keys = x.keys() &amp; y.keys()
+    for key in overlapping_keys:
+        z[key] = dict_of_dicts_merge(x[key], y[key])
+    for key in x.keys() - overlapping_keys:
+        z[key] = deepcopy(x[key])
+    for key in y.keys() - overlapping_keys:
+        z[key] = deepcopy(y[key])
+    return z
+</code></pre>
+<p>Usage:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; x = {'a':{1:{}}, 'b': {2:{}}}
+&gt;&gt;&gt; y = {'b':{10:{}}, 'c': {11:{}}}
+&gt;&gt;&gt; dict_of_dicts_merge(x, y)
+{'b': {2: {}, 10: {}}, 'a': {1: {}}, 'c': {11: {}}}
+</code></pre>
+<p>Coming up with contingencies for other value types is far beyond the scope of this question, so I will point you at <a href="https://stackoverflow.com/a/24088493/541136">my answer to the canonical question on a &quot;Dictionaries of dictionaries merge&quot;</a>.</p>
+<h2>Less Performant But Correct Ad-hocs</h2>
+<p>These approaches are less performant, but they will provide correct behavior.
+They will be <em>much less</em> performant than <code>copy</code> and <code>update</code> or the new unpacking because they iterate through each key-value pair at a higher level of abstraction, but they <em>do</em> respect the order of precedence (latter dictionaries have precedence)</p>
+<p>You can also chain the dictionaries manually inside a <a href="https://www.python.org/dev/peps/pep-0274/" rel="noreferrer">dict comprehension</a>:</p>
+<pre class="lang-py prettyprint-override"><code>{k: v for d in dicts for k, v in d.items()} # iteritems in Python 2.7
+</code></pre>
+<p>or in Python 2.6 (and perhaps as early as 2.4 when generator expressions were introduced):</p>
+<pre class="lang-py prettyprint-override"><code>dict((k, v) for d in dicts for k, v in d.items()) # iteritems in Python 2
+</code></pre>
+<p><code>itertools.chain</code> will chain the iterators over the key-value pairs in the correct order:</p>
+<pre class="lang-py prettyprint-override"><code>from itertools import chain
+z = dict(chain(x.items(), y.items())) # iteritems in Python 2
+</code></pre>
+<h2>Performance Analysis</h2>
+<p>I'm only going to do the performance analysis of the usages known to behave correctly. (Self-contained so you can copy and paste yourself.)</p>
+<pre class="lang-py prettyprint-override"><code>from timeit import repeat
+from itertools import chain
+
+x = dict.fromkeys('abcdefg')
+y = dict.fromkeys('efghijk')
+
+def merge_two_dicts(x, y):
+    z = x.copy()
+    z.update(y)
+    return z
+
+min(repeat(lambda: {**x, **y}))
+min(repeat(lambda: merge_two_dicts(x, y)))
+min(repeat(lambda: {k: v for d in (x, y) for k, v in d.items()}))
+min(repeat(lambda: dict(chain(x.items(), y.items()))))
+min(repeat(lambda: dict(item for d in (x, y) for item in d.items())))
+</code></pre>
+<p>In Python 3.8.1, NixOS:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; min(repeat(lambda: {**x, **y}))
+1.0804965235292912
+&gt;&gt;&gt; min(repeat(lambda: merge_two_dicts(x, y)))
+1.636518670246005
+&gt;&gt;&gt; min(repeat(lambda: {k: v for d in (x, y) for k, v in d.items()}))
+3.1779992282390594
+&gt;&gt;&gt; min(repeat(lambda: dict(chain(x.items(), y.items()))))
+2.740647904574871
+&gt;&gt;&gt; min(repeat(lambda: dict(item for d in (x, y) for item in d.items())))
+4.266070580109954
+</code></pre>
+<pre class="lang-sh prettyprint-override"><code>$ uname -a
+Linux nixos 4.19.113 #1-NixOS SMP Wed Mar 25 07:06:15 UTC 2020 x86_64 GNU/Linux
+</code></pre>
+<h2>Resources on Dictionaries</h2>
+<ul>
+<li><a href="https://stackoverflow.com/questions/327311/how-are-pythons-built-in-dictionaries-implemented/44509302#44509302">My explanation of Python's <strong>dictionary implementation</strong>, updated for 3.6.</a></li>
+<li><a href="https://stackoverflow.com/questions/1024847/add-new-keys-to-a-dictionary/27208535#27208535">Answer on how to add new keys to a dictionary</a></li>
+<li><a href="https://stackoverflow.com/questions/209840/map-two-lists-into-a-dictionary-in-python/33737067#33737067">Mapping two lists into a dictionary</a></li>
+<li><a href="https://docs.python.org/3/tutorial/datastructures.html#dictionaries" rel="noreferrer">The official Python docs on dictionaries</a></li>
+<li><a href="https://www.youtube.com/watch?v=66P5FMkWoVU" rel="noreferrer">The Dictionary Even Mightier</a> - talk by Brandon Rhodes at Pycon 2017</li>
+<li><a href="https://www.youtube.com/watch?v=npw4s1QTmPg" rel="noreferrer">Modern Python Dictionaries, A Confluence of Great Ideas</a> - talk by Raymond Hettinger at Pycon 2017</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 1788 people.</p><div class="s-prose js-post-body"><p>In your case, you can do:</p>
+<pre class="lang-py prettyprint-override"><code>z = dict(list(x.items()) + list(y.items()))
+</code></pre>
+<p>This will, as you want it, put the final dict in <code>z</code>, and make the value for key <code>b</code> be properly overridden by the second (<code>y</code>) dict's value:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; z = dict(list(x.items()) + list(y.items()))
+&gt;&gt;&gt; z
+{'a': 1, 'c': 11, 'b': 10}
+
+</code></pre>
+<p>If you use Python 2, you can even remove the <code>list()</code> calls. To create z:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; z = dict(x.items() + y.items())
+&gt;&gt;&gt; z
+{'a': 1, 'c': 11, 'b': 10}
+</code></pre>
+<p>If you use Python version 3.9.0a4 or greater, then you can directly use:</p>
+<pre class="lang-py prettyprint-override"><code>x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+z = x | y
+print(z)
+</code></pre>
+<pre class="lang-py prettyprint-override"><code>{'a': 1, 'c': 11, 'b': 10}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 738 people.</p><div class="s-prose js-post-body"><p>An alternative:</p>
+
+<pre><code>z = x.copy()
+z.update(y)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 432 people.</p><div class="s-prose js-post-body"><p>Another, more concise, option:</p>
+
+<pre><code>z = dict(x, **y)
+</code></pre>
+
+<p><strong>Note</strong>: this has become a popular answer, but it is important to point out that if <code>y</code> has any non-string keys, the fact that this works at all is an abuse of a CPython implementation detail, and it does not work in Python 3, or in PyPy, IronPython, or Jython. Also, <a href="http://mail.python.org/pipermail/python-dev/2010-April/099459.html" rel="noreferrer">Guido is not a fan</a>. So I can't recommend this technique for forward-compatible or cross-implementation portable code, which really means it should be avoided entirely.</p>
+</div><p class="this-has-helped">This answer has helped 254 people.</p><div class="s-prose js-post-body"><p>This probably won't be a popular answer, but you almost certainly do not want to do this.  If you want a copy that's a merge, then use copy (or <a href="https://docs.python.org/2/library/copy.html" rel="noreferrer">deepcopy</a>, depending on what you want) and then update.  The two lines of code are much more readable - more Pythonic - than the single line creation with .items() + .items().  Explicit is better than implicit.</p>
+
+<p>In addition, when you use .items() (pre Python 3.0), you're creating a new list that contains the items from the dict.  If your dictionaries are large, then that is quite a lot of overhead (two large lists that will be thrown away as soon as the merged dict is created).  update() can work more efficiently, because it can run through the second dict item-by-item.</p>
+
+<p>In terms of <a href="https://docs.python.org/2/library/timeit.html" rel="noreferrer">time</a>:</p>
+
+<pre><code>&gt;&gt;&gt; timeit.Timer("dict(x, **y)", "x = dict(zip(range(1000), range(1000)))\ny=dict(zip(range(1000,2000), range(1000,2000)))").timeit(100000)
+15.52571702003479
+&gt;&gt;&gt; timeit.Timer("temp = x.copy()\ntemp.update(y)", "x = dict(zip(range(1000), range(1000)))\ny=dict(zip(range(1000,2000), range(1000,2000)))").timeit(100000)
+15.694622993469238
+&gt;&gt;&gt; timeit.Timer("dict(x.items() + y.items())", "x = dict(zip(range(1000), range(1000)))\ny=dict(zip(range(1000,2000), range(1000,2000)))").timeit(100000)
+41.484580039978027
+</code></pre>
+
+<p>IMO the tiny slowdown between the first two is worth it for the readability.  In addition, keyword arguments for dictionary creation was only added in Python 2.3, whereas copy() and update() will work in older versions.</p>
+</div><p class="this-has-helped">This answer has helped 192 people.</p><div class="s-prose js-post-body"><p>In a follow-up answer, you asked about the relative performance of these two alternatives:</p>
+
+<pre><code>z1 = dict(x.items() + y.items())
+z2 = dict(x, **y)
+</code></pre>
+
+<p>On my machine, at least (a fairly ordinary x86_64 running Python 2.5.2), alternative <code>z2</code> is not only shorter and simpler but also significantly faster.  You can verify this for yourself using the <code>timeit</code> module that comes with Python.</p>
+
+<p>Example 1: identical dictionaries mapping 20 consecutive integers to themselves:</p>
+
+<pre><code>% python -m timeit -s 'x=y=dict((i,i) for i in range(20))' 'z1=dict(x.items() + y.items())'
+100000 loops, best of 3: 5.67 usec per loop
+% python -m timeit -s 'x=y=dict((i,i) for i in range(20))' 'z2=dict(x, **y)' 
+100000 loops, best of 3: 1.53 usec per loop
+</code></pre>
+
+<p><code>z2</code> wins by a factor of 3.5 or so.  Different dictionaries seem to yield quite different results, but <code>z2</code> always seems to come out ahead.  (If you get inconsistent results for the <em>same</em> test, try passing in <code>-r</code> with a number larger than the default 3.)</p>
+
+<p>Example 2: non-overlapping dictionaries mapping 252 short strings to integers and vice versa:</p>
+
+<pre><code>% python -m timeit -s 'from htmlentitydefs import codepoint2name as x, name2codepoint as y' 'z1=dict(x.items() + y.items())'
+1000 loops, best of 3: 260 usec per loop
+% python -m timeit -s 'from htmlentitydefs import codepoint2name as x, name2codepoint as y' 'z2=dict(x, **y)'               
+10000 loops, best of 3: 26.9 usec per loop
+</code></pre>
+
+<p><code>z2</code> wins by about a factor of 10.  That's a pretty big win in my book!</p>
+
+<p>After comparing those two, I wondered if <code>z1</code>'s poor performance could be attributed to the overhead of constructing the two item lists, which in turn led me to wonder if this variation might work better:</p>
+
+<pre><code>from itertools import chain
+z3 = dict(chain(x.iteritems(), y.iteritems()))
+</code></pre>
+
+<p>A few quick tests, e.g.</p>
+
+<pre><code>% python -m timeit -s 'from itertools import chain; from htmlentitydefs import codepoint2name as x, name2codepoint as y' 'z3=dict(chain(x.iteritems(), y.iteritems()))'
+10000 loops, best of 3: 66 usec per loop
+</code></pre>
+
+<p>lead me to conclude that <code>z3</code> is somewhat faster than <code>z1</code>, but not nearly as fast as <code>z2</code>.  Definitely not worth all the extra typing.</p>
+
+<p>This discussion is still missing something important, which is a performance comparison of these alternatives with the "obvious" way of merging two lists: using the <code>update</code> method.  To try to keep things on an equal footing with the expressions, none of which modify x or y, I'm going to make a copy of x instead of modifying it in-place, as follows:</p>
+
+<pre><code>z0 = dict(x)
+z0.update(y)
+</code></pre>
+
+<p>A typical result:</p>
+
+<pre><code>% python -m timeit -s 'from htmlentitydefs import codepoint2name as x, name2codepoint as y' 'z0=dict(x); z0.update(y)'
+10000 loops, best of 3: 26.9 usec per loop
+</code></pre>
+
+<p>In other words, <code>z0</code> and <code>z2</code> seem to have essentially identical performance.  Do you think this might be a coincidence?  I don't....</p>
+
+<p>In fact, I'd go so far as to claim that it's impossible for pure Python code to do any better than this.  And if you can do significantly better in a C extension module, I imagine the Python folks might well be interested in incorporating your code (or a variation on your approach) into the Python core.  Python uses <code>dict</code> in lots of places; optimizing its operations is a big deal.</p>
+
+<p>You could also write this as</p>
+
+<pre><code>z0 = x.copy()
+z0.update(y)
+</code></pre>
+
+<p>as Tony does, but (not surprisingly) the difference in notation turns out not to have any measurable effect on performance.  Use whichever looks right to you.  Of course, he's absolutely correct to point out that the two-statement version is much easier to understand.</p>
+</div><p class="this-has-helped">This answer has helped 186 people.</p><div class="s-prose js-post-body"><p><strong>In Python 3.0 and later</strong>, you can use <a href="http://docs.python.org/3/library/collections.html#collections.ChainMap" rel="noreferrer"><code>collections.ChainMap</code></a> which groups multiple dicts or other mappings together to create a single, updateable view:</p>
+<pre><code>&gt;&gt;&gt; from collections import ChainMap
+&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; z = dict(ChainMap({}, y, x))
+&gt;&gt;&gt; for k, v in z.items():
+        print(k, '--&gt;', v)
+    
+a --&gt; 1
+b --&gt; 10
+c --&gt; 11
+</code></pre>
+<p><strong>Update for Python 3.5 and later</strong>: You can use <a href="https://www.python.org/dev/peps/pep-0448/" rel="noreferrer">PEP 448</a> extended dictionary packing and unpacking.  This is fast and easy:</p>
+<pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; {**x, **y}
+{'a': 1, 'b': 10, 'c': 11}
+</code></pre>
+<p><strong>Update for Python 3.9 and later</strong>:  You can use the <a href="https://www.python.org/dev/peps/pep-0584/" rel="noreferrer">PEP 584</a> union operator:</p>
+<pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; x | y
+{'a': 1, 'b': 10, 'c': 11}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 152 people.</p><div class="s-prose js-post-body"><p>I wanted something similar, but with the ability to specify how the values on duplicate keys were merged, so I hacked this out (but did not heavily test it).  Obviously this is not a single expression, but it is a single function call.</p>
+
+<pre><code>def merge(d1, d2, merge_fn=lambda x,y:y):
+    """
+    Merges two dictionaries, non-destructively, combining 
+    values on duplicate keys as defined by the optional merge
+    function.  The default behavior replaces the values in d1
+    with corresponding values in d2.  (There is no other generally
+    applicable merge strategy, but often you'll have homogeneous 
+    types in your dicts, so specifying a merge technique can be 
+    valuable.)
+
+    Examples:
+
+    &gt;&gt;&gt; d1
+    {'a': 1, 'c': 3, 'b': 2}
+    &gt;&gt;&gt; merge(d1, d1)
+    {'a': 1, 'c': 3, 'b': 2}
+    &gt;&gt;&gt; merge(d1, d1, lambda x,y: x+y)
+    {'a': 2, 'c': 6, 'b': 4}
+
+    """
+    result = dict(d1)
+    for k,v in d2.iteritems():
+        if k in result:
+            result[k] = merge_fn(result[k], v)
+        else:
+            result[k] = v
+    return result
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 124 people.</p><div class="s-prose js-post-body"><h1>Recursively/deep update a dict</h1>
+
+<pre><code>def deepupdate(original, update):
+    """
+    Recursively update a dict.
+    Subdict's won't be overwritten but also updated.
+    """
+    for key, value in original.iteritems(): 
+        if key not in update:
+            update[key] = value
+        elif isinstance(value, dict):
+            deepupdate(value, update[key]) 
+    return update</code></pre>
+
+<p>Demonstration:</p>
+
+<pre><code>pluto_original = {
+    'name': 'Pluto',
+    'details': {
+        'tail': True,
+        'color': 'orange'
+    }
+}
+
+pluto_update = {
+    'name': 'Pluutoo',
+    'details': {
+        'color': 'blue'
+    }
+}
+
+print deepupdate(pluto_original, pluto_update)</code></pre>
+
+<p>Outputs:</p>
+
+<pre><code>{
+    'name': 'Pluutoo',
+    'details': {
+        'color': 'blue',
+        'tail': True
+    }
+}</code></pre>
+
+<p>Thanks rednaw for edits.</p>
+</div><p class="this-has-helped">This answer has helped 99 people.</p><div class="s-prose js-post-body"><p>Python 3.5 (PEP 448) allows a nicer syntax option:</p>
+
+<pre><code>x = {'a': 1, 'b': 1}
+y = {'a': 2, 'c': 2}
+final = {**x, **y} 
+final
+# {'a': 2, 'b': 1, 'c': 2}
+</code></pre>
+
+<p>Or even </p>
+
+<pre><code>final = {'a': 1, 'b': 1, **x, **y}
+</code></pre>
+
+<p>In Python 3.9 you also use | and |= with the below example from PEP 584</p>
+
+<pre><code>d = {'spam': 1, 'eggs': 2, 'cheese': 3}
+e = {'cheese': 'cheddar', 'aardvark': 'Ethel'}
+d | e
+# {'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 'aardvark': 'Ethel'}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 95 people.</p><div class="s-prose js-post-body"><pre><code>x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+z = dict(x.items() + y.items())
+print z
+</code></pre>
+
+<p>For items with keys in both dictionaries ('b'), you can control which one ends up in the output by putting that one last.</p>
+</div><p class="this-has-helped">This answer has helped 95 people.</p><div class="s-prose js-post-body"><p>The best version I could think while not using copy would be:</p>
+
+<pre><code>from itertools import chain
+x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+dict(chain(x.iteritems(), y.iteritems()))
+</code></pre>
+
+<p>It's faster than <code>dict(x.items() + y.items())</code> but not as fast as <code>n = copy(a); n.update(b)</code>, at least on CPython. This version also works in Python 3 if you change <code>iteritems()</code> to <code>items()</code>, which is automatically done by the 2to3 tool.</p>
+
+<p>Personally I like this version best because it describes fairly good what I want in a single  functional syntax. The only minor problem is that it doesn't make completely obvious that values from y takes precedence over values from x, but I don't believe it's difficult to figure that out.</p>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><p>I benchmarked the suggested with <a href="https://github.com/nschloe/perfplot" rel="noreferrer">perfplot</a> and found that</p>
+<pre class="lang-py prettyprint-override"><code>x | y   # Python 3.9+
+</code></pre>
+<p>is the fastest solution together with the good old</p>
+<pre><code>{**x, **y}
+</code></pre>
+<p>and</p>
+<pre><code>temp = x.copy()
+temp.update(y)
+</code></pre>
+<p><a href="https://i.stack.imgur.com/TsI4P.png" rel="noreferrer"><img src="https://i.stack.imgur.com/TsI4P.png" alt="enter image description here" /></a></p>
+<hr />
+<p>Code to reproduce the plot:</p>
+<pre class="lang-py prettyprint-override"><code>from collections import ChainMap
+from itertools import chain
+import perfplot
+
+
+def setup(n):
+    x = dict(zip(range(n), range(n)))
+    y = dict(zip(range(n, 2 * n), range(n, 2 * n)))
+    return x, y
+
+
+def copy_update(x, y):
+    temp = x.copy()
+    temp.update(y)
+    return temp
+
+
+def add_items(x, y):
+    return dict(list(x.items()) + list(y.items()))
+
+
+def curly_star(x, y):
+    return {**x, **y}
+
+
+def chain_map(x, y):
+    return dict(ChainMap({}, y, x))
+
+
+def itertools_chain(x, y):
+    return dict(chain(x.items(), y.items()))
+
+
+def python39_concat(x, y):
+    return x | y
+
+
+b = perfplot.bench(
+    setup=setup,
+    kernels=[
+        copy_update,
+        add_items,
+        curly_star,
+        chain_map,
+        itertools_chain,
+        python39_concat,
+    ],
+    labels=[
+        &quot;copy_update&quot;,
+        &quot;dict(list(x.items()) + list(y.items()))&quot;,
+        &quot;{**x, **y}&quot;,
+        &quot;chain_map&quot;,
+        &quot;itertools.chain&quot;,
+        &quot;x | y&quot;,
+    ],
+    n_range=[2 ** k for k in range(18)],
+    xlabel=&quot;len(x), len(y)&quot;,
+    equality_check=None,
+)
+b.save(&quot;out.png&quot;)
+b.show()
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 72 people.</p><div class="s-prose js-post-body"><p>While the question has already been answered several times,
+this simple solution to the problem has not been listed yet.</p>
+
+<pre><code>x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+z4 = {}
+z4.update(x)
+z4.update(y)
+</code></pre>
+
+<p>It is as fast as z0 and the evil z2 mentioned above, but easy to understand and change.</p>
+</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><pre><code>def dict_merge(a, b):
+  c = a.copy()
+  c.update(b)
+  return c
+
+new = dict_merge(old, extras)
+</code></pre>
+
+<p>Among such shady and dubious answers, this shining example is the one and only good way to merge dicts in Python, endorsed by dictator for life <em>Guido van Rossum</em> himself!  Someone else suggested half of this, but did not put it in a function.</p>
+
+<pre><code>print dict_merge(
+      {'color':'red', 'model':'Mini'},
+      {'model':'Ferrari', 'owner':'Carl'})
+</code></pre>
+
+<p>gives:</p>
+
+<pre><code>{'color': 'red', 'owner': 'Carl', 'model': 'Ferrari'}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 59 people.</p><div class="s-prose js-post-body"><p>Be Pythonic. Use a <a href="https://docs.python.org/2/tutorial/datastructures.html#dictionaries" rel="nofollow noreferrer">comprehension</a>:</p>
+<pre><code>z={k: v for d in [x,y] for k, v in d.items()}
+
+&gt;&gt;&gt; print z
+{'a': 1, 'c': 11, 'b': 10}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 58 people.</p><div class="s-prose js-post-body"><p>If you think lambdas are evil then read no further.
+As requested, you can write the fast and memory-efficient solution with one expression:</p>
+
+<pre><code>x = {'a':1, 'b':2}
+y = {'b':10, 'c':11}
+z = (lambda a, b: (lambda a_copy: a_copy.update(b) or a_copy)(a.copy()))(x, y)
+print z
+{'a': 1, 'c': 11, 'b': 10}
+print x
+{'a': 1, 'b': 2}
+</code></pre>
+
+<p>As suggested above, using two lines or writing a function is probably a better way to go.</p>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p>In python3, the <code>items</code> method <a href="http://docs.python.org/dev/whatsnew/3.0.html#views-and-iterators-instead-of-lists" rel="noreferrer">no longer returns a list</a>, but rather a <em>view</em>, which acts like a set. In this case you'll need to take the set union since concatenating with <code>+</code> won't work:</p>
+
+<pre><code>dict(x.items() | y.items())
+</code></pre>
+
+<p>For python3-like behavior in version 2.7, the <code>viewitems</code> method should work in place of <code>items</code>:</p>
+
+<pre><code>dict(x.viewitems() | y.viewitems())
+</code></pre>
+
+<p>I prefer this notation anyways since it seems more natural to think of it as a set union operation rather than concatenation (as the title shows).</p>
+
+<p><strong>Edit:</strong></p>
+
+<p>A couple more points for python 3. First, note that the <code>dict(x, **y)</code> trick won't work in python 3 unless the keys in <code>y</code> are strings.</p>
+
+<p>Also, Raymond Hettinger's Chainmap <a href="https://stackoverflow.com/a/16259217/386279">answer</a> is pretty elegant, since it can take an arbitrary number of dicts as arguments, but <a href="http://docs.python.org/dev/library/collections" rel="noreferrer">from the docs</a> it looks like it sequentially looks through a list of all the dicts for each lookup:</p>
+
+<blockquote>
+  <p>Lookups search the underlying mappings successively until a key is found.</p>
+</blockquote>
+
+<p>This can slow you down if you have a lot of lookups in your application:</p>
+
+<pre><code>In [1]: from collections import ChainMap
+In [2]: from string import ascii_uppercase as up, ascii_lowercase as lo; x = dict(zip(lo, up)); y = dict(zip(up, lo))
+In [3]: chainmap_dict = ChainMap(y, x)
+In [4]: union_dict = dict(x.items() | y.items())
+In [5]: timeit for k in union_dict: union_dict[k]
+100000 loops, best of 3: 2.15 µs per loop
+In [6]: timeit for k in chainmap_dict: chainmap_dict[k]
+10000 loops, best of 3: 27.1 µs per loop
+</code></pre>
+
+<p>So about an order of magnitude slower for lookups. I'm a fan of Chainmap, but looks less practical where there may be many lookups.</p>
+</div><p class="this-has-helped">This answer has helped 35 people.</p><div class="s-prose js-post-body"><p><strong>Two dictionaries</strong></p>
+
+<pre><code>def union2(dict1, dict2):
+    return dict(list(dict1.items()) + list(dict2.items()))
+</code></pre>
+
+<p><strong><em>n</em> dictionaries</strong></p>
+
+<pre><code>def union(*dicts):
+    return dict(itertools.chain.from_iterable(dct.items() for dct in dicts))
+</code></pre>
+
+<p><code>sum</code> has bad performance. See <a href="https://mathieularose.com/how-not-to-flatten-a-list-of-lists-in-python/" rel="noreferrer">https://mathieularose.com/how-not-to-flatten-a-list-of-lists-in-python/</a></p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>Simple solution using itertools that preserves order (latter dicts have precedence)</p>
+<pre><code># py2
+from itertools import chain, imap
+merge = lambda *args: dict(chain.from_iterable(imap(dict.iteritems, args)))
+
+# py3
+from itertools import chain
+merge = lambda *args: dict(chain.from_iterable(map(dict.items, args)))
+</code></pre>
+<p>And it's usage:</p>
+<pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; merge(x, y)
+{'a': 1, 'b': 10, 'c': 11}
+
+&gt;&gt;&gt; z = {'c': 3, 'd': 4}
+&gt;&gt;&gt; merge(x, y, z)
+{'a': 1, 'b': 10, 'c': 3, 'd': 4}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>Abuse leading to a one-expression solution for <a href="https://stackoverflow.com/a/39437/15055">Matthew's answer</a>:</p>
+
+<pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; z = (lambda f=x.copy(): (f.update(y), f)[1])()
+&gt;&gt;&gt; z
+{'a': 1, 'c': 11, 'b': 10}
+</code></pre>
+
+<p>You said you wanted one expression, so I abused <code>lambda</code> to bind a name, and tuples to override lambda's one-expression limit. Feel free to cringe.</p>
+
+<p>You could also do this of course if you don't care about copying it:</p>
+
+<pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; z = (x.update(y), x)[1]
+&gt;&gt;&gt; z
+{'a': 1, 'b': 10, 'c': 11}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>If you don't mind mutating <code>x</code>,</p>
+<pre><code>x.update(y) or x
+</code></pre>
+<p>Simple, readable, performant. You <em>know</em> <code>update()</code> always returns <code>None</code>, which is a false value. So the above expression will always evaluate to <code>x</code>, after updating it.</p>
+<p>Most mutating methods in the standard library (like <code>.update()</code>) return <code>None</code> by convention, so this kind of pattern will work on those too. However, if you're using a dict subclass or some other method that doesn't follow this convention, then <code>or</code> may return its left operand, which may not be what you want. Instead, you can use a tuple display and index, which works regardless of what the first element evaluates to (although it's not quite as pretty):</p>
+<pre><code>(x.update(y), x)[-1]
+</code></pre>
+<p>If you don't have <code>x</code> in a variable yet, you can use <code>lambda</code> to make a local without using an assignment statement. This amounts to using <code>lambda</code> as a <em>let expression</em>, which is a common technique in functional languages, but is maybe unpythonic.</p>
+<pre><code>(lambda x: x.update(y) or x)({'a': 1, 'b': 2})
+</code></pre>
+<p>Although it's not that different from the following use of the new walrus operator (Python 3.8+ only),</p>
+<pre><code>(x := {'a': 1, 'b': 2}).update(y) or x
+</code></pre>
+<p>especially if you use a default argument:</p>
+<pre><code>(lambda x={'a': 1, 'b': 2}: x.update(y) or x)()
+</code></pre>
+<p>If you do want a copy, <a href="https://www.python.org/dev/peps/pep-0584/" rel="noreferrer">PEP 584</a> style <code>x | y</code> is the most Pythonic on 3.9+. If you must support older versions, <a href="https://www.python.org/dev/peps/pep-0448/" rel="noreferrer">PEP 448</a> style <code>{**x, **y}</code> is easiest for 3.5+. But if that's not available in your (even older) Python version, the <em>let expression</em> pattern works here too.</p>
+<pre><code>(lambda z=x.copy(): z.update(y) or z)()
+</code></pre>
+<p>(That is, of course, nearly equivalent to <code>(z := x.copy()).update(y) or z</code>, but if your Python version is new enough for that, then the PEP 448 style will be available.)</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>Drawing on ideas here and elsewhere I've comprehended a function:</p>
+
+<pre><code>def merge(*dicts, **kv): 
+      return { k:v for d in list(dicts) + [kv] for k,v in d.items() }
+</code></pre>
+
+<p>Usage (tested in python 3):</p>
+
+<pre><code>assert (merge({1:11,'a':'aaa'},{1:99, 'b':'bbb'},foo='bar')==\
+    {1: 99, 'foo': 'bar', 'b': 'bbb', 'a': 'aaa'})
+
+assert (merge(foo='bar')=={'foo': 'bar'})
+
+assert (merge({1:11},{1:99},foo='bar',baz='quux')==\
+    {1: 99, 'foo': 'bar', 'baz':'quux'})
+
+assert (merge({1:11},{1:99})=={1: 99})
+</code></pre>
+
+<p>You could use a lambda instead.</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p><strong><a href="https://www.python.org/dev/peps/pep-0584/#specification" rel="noreferrer">New</a> in Python 3.9:</strong> Use the union operator (<code>|</code>) to merge <code>dict</code>s similar to <code>set</code>s:</p>
+<pre><code>&gt;&gt;&gt; d = {'a': 1, 'b': 2}
+&gt;&gt;&gt; e = {'a': 9, 'c': 3}
+&gt;&gt;&gt; d | e
+{'a': 9, 'b': 2, 'c': 3}
+</code></pre>
+<p>For matching keys, the <strong>right <code>dict</code> takes precedence</strong>.</p>
+<p>This also works for <code>|=</code> to modify a <code>dict</code> in-place:</p>
+<pre><code>&gt;&gt;&gt; e |= d    # e = e | d
+&gt;&gt;&gt; e
+{'a': 1, 'c': 3, 'b': 2}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>It's so silly that <code>.update</code> returns nothing.<br>
+I just use a simple helper function to solve the problem:</p>
+
+<pre><code>def merge(dict1,*dicts):
+    for dict2 in dicts:
+        dict1.update(dict2)
+    return dict1
+</code></pre>
+
+<p>Examples:</p>
+
+<pre><code>merge(dict1,dict2)
+merge(dict1,dict2,dict3)
+merge(dict1,dict2,dict3,dict4)
+merge({},dict1,dict2)  # this one returns a new copy
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>(For Python 2.7* only; there are simpler solutions for Python 3*.)</p>
+<p>If you're not averse to importing a standard library module, you can do</p>
+<pre><code>from functools import reduce
+
+def merge_dicts(*dicts):
+    return reduce(lambda a, d: a.update(d) or a, dicts, {})
+</code></pre>
+<p>(The <code>or a</code> bit in the <code>lambda</code> is necessary because <code>dict.update</code> always returns <code>None</code> on success.)</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>The problem I have with solutions listed to date is that, in the merged dictionary, the value for key "b" is 10 but, to my way of thinking, it should be 12.
+In that light, I present the following:</p>
+
+<pre><code>import timeit
+
+n=100000
+su = """
+x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+"""
+
+def timeMerge(f,su,niter):
+    print "{:4f} sec for: {:30s}".format(timeit.Timer(f,setup=su).timeit(n),f)
+
+timeMerge("dict(x, **y)",su,n)
+timeMerge("x.update(y)",su,n)
+timeMerge("dict(x.items() + y.items())",su,n)
+timeMerge("for k in y.keys(): x[k] = k in x and x[k]+y[k] or y[k] ",su,n)
+
+#confirm for loop adds b entries together
+x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+for k in y.keys(): x[k] = k in x and x[k]+y[k] or y[k]
+print "confirm b elements are added:",x
+</code></pre>
+
+<h1>Results:</h1>
+
+<pre><code>0.049465 sec for: dict(x, **y)
+0.033729 sec for: x.update(y)                   
+0.150380 sec for: dict(x.items() + y.items())   
+0.083120 sec for: for k in y.keys(): x[k] = k in x and x[k]+y[k] or y[k]
+
+confirm b elements are added: {'a': 1, 'c': 11, 'b': 12}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>There will be a new option when Python 3.8 releases (<a href="https://www.python.org/dev/peps/pep-0569/#release-schedule" rel="noreferrer">scheduled for 20 October, 2019</a>), thanks to <a href="https://www.python.org/dev/peps/pep-0572/" rel="noreferrer">PEP 572: Assignment Expressions</a>. The new assignment expression operator <code>:=</code> allows you to assign the result of the <code>copy</code> and still use it to call <code>update</code>, leaving the combined code a single expression, rather than two statements, changing:</p>
+
+<pre><code>newdict = dict1.copy()
+newdict.update(dict2)
+</code></pre>
+
+<p>to:</p>
+
+<pre><code>(newdict := dict1.copy()).update(dict2)
+</code></pre>
+
+<p>while behaving identically in every way. If you must also return the resulting <code>dict</code> (you asked for an expression returning the <code>dict</code>; the above creates and assigns to <code>newdict</code>, but doesn't return it, so you couldn't use it to pass an argument to a function as is, a la <code>myfunc((newdict := dict1.copy()).update(dict2))</code>), then just add <code>or newdict</code> to the end (since <code>update</code> returns <code>None</code>, which is falsy, it will then evaluate and return <code>newdict</code> as the result of the expression):</p>
+
+<pre><code>(newdict := dict1.copy()).update(dict2) or newdict
+</code></pre>
+
+<p><strong>Important caveat:</strong> In general, I'd discourage this approach in favor of:</p>
+
+<pre><code>newdict = {**dict1, **dict2}
+</code></pre>
+
+<p>The unpacking approach is clearer (to anyone who knows about generalized unpacking in the first place, <a href="https://www.python.org/dev/peps/pep-0448/" rel="noreferrer">which you should</a>), doesn't require a name for the result at all (so it's much more concise when constructing a temporary that is immediately passed to a function or included in a <code>list</code>/<code>tuple</code> literal or the like), and is almost certainly faster as well, being (on CPython) roughly equivalent to:</p>
+
+<pre><code>newdict = {}
+newdict.update(dict1)
+newdict.update(dict2)
+</code></pre>
+
+<p>but done at the C layer, using the concrete <code>dict</code> API, so no dynamic method lookup/binding or function call dispatch overhead is involved (where <code>(newdict := dict1.copy()).update(dict2)</code> is unavoidably identical to the original two-liner in behavior, performing the work in discrete steps, with dynamic lookup/binding/invocation of methods.</p>
+
+<p>It's also more extensible, as merging three <code>dict</code>s is obvious:</p>
+
+<pre><code> newdict = {**dict1, **dict2, **dict3}
+</code></pre>
+
+<p>where using assignment expressions won't scale like that; the closest you could get would be:</p>
+
+<pre><code> (newdict := dict1.copy()).update(dict2), newdict.update(dict3)
+</code></pre>
+
+<p>or without the temporary tuple of <code>None</code>s, but with truthiness testing of each <code>None</code> result:</p>
+
+<pre><code> (newdict := dict1.copy()).update(dict2) or newdict.update(dict3)
+</code></pre>
+
+<p>either of which is obviously much uglier, and includes further inefficiencies (either a wasted temporary <code>tuple</code> of <code>None</code>s for comma separation, or pointless truthiness testing of each <code>update</code>'s <code>None</code> return for <code>or</code> separation).</p>
+
+<p><strong>The only real advantage to the assignment expression approach occurs if:</strong></p>
+
+<ol>
+<li><strong>You have generic code that needs handle both <code>set</code>s and <code>dict</code>s</strong> (both of them support <code>copy</code> and <code>update</code>, so the code works roughly as you'd expect it to)</li>
+<li><strong>You expect to receive arbitrary dict-like objects</strong>, not just <code>dict</code> itself, <strong>and must preserve the type and semantics of the left hand side</strong> (rather than ending up with a plain <code>dict</code>). While <code>myspecialdict({**speciala, **specialb})</code> might work, it would involve an extra temporary <code>dict</code>, and if <code>myspecialdict</code> has features plain <code>dict</code> can't preserve (e.g. regular <code>dict</code>s now preserve order based on the first appearance of a key, and value based on the last appearance of a key; you might want one that preserves order based on the <em>last</em> appearance of a key so updating a value also moves it to the end), then the semantics would be wrong. Since the assignment expression version uses the named methods (which are presumably overloaded to behave appropriately), it never creates a <code>dict</code> at all (unless <code>dict1</code> was already a <code>dict</code>), preserving the original type (and original type's semantics), all while avoiding any temporaries.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><pre><code>from collections import Counter
+dict1 = {'a':1, 'b': 2}
+dict2 = {'b':10, 'c': 11}
+result = dict(Counter(dict1) + Counter(dict2))
+</code></pre>
+
+<p>This should solve your problem.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>This can be done with a single dict comprehension:</p>
+
+<pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; { key: y[key] if key in y else x[key]
+      for key in set(x) + set(y)
+    }
+</code></pre>
+
+<p>In my view the best answer for the 'single expression' part as no extra functions are needed, and it is short.</p>
+</div><p class="this-has-helped">This answer has helped 11 people.</p><div class="s-prose js-post-body"><pre><code>&gt;&gt;&gt; x = {'a':1, 'b': 2}
+&gt;&gt;&gt; y = {'b':10, 'c': 11}
+&gt;&gt;&gt; x, z = dict(x), x.update(y) or x
+&gt;&gt;&gt; x
+{'a': 1, 'b': 2}
+&gt;&gt;&gt; y
+{'c': 11, 'b': 10}
+&gt;&gt;&gt; z
+{'a': 1, 'c': 11, 'b': 10}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p><strong>Python 3.9+ only</strong></p>
+
+<p>Merge (|) and update (|=) operators have been added to the built-in <code>dict</code> class.</p>
+
+<pre><code>&gt;&gt;&gt; d = {'spam': 1, 'eggs': 2, 'cheese': 3}
+&gt;&gt;&gt; e = {'cheese': 'cheddar', 'aardvark': 'Ethel'}
+&gt;&gt;&gt; d | e
+{'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 'aardvark': 'Ethel'}
+</code></pre>
+
+<p>The augmented assignment version operates in-place:</p>
+
+<pre><code>&gt;&gt;&gt; d |= e
+&gt;&gt;&gt; d
+{'spam': 1, 'eggs': 2, 'cheese': 'cheddar', 'aardvark': 'Ethel'}
+</code></pre>
+
+<p>See <a href="https://www.python.org/dev/peps/pep-0584/" rel="noreferrer">PEP 584</a></p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>I know this does not really fit the specifics of the questions ("one liner"), but since <em>none</em> of the answers above went into this direction while lots and lots of answers addressed the performance issue, I felt I should contribute my thoughts.</p>
+
+<p>Depending on the use case it might not be necessary to create a "real" merged dictionary of the given input dictionaries.  A <em>view</em> which does this might be sufficient in many cases, i. e. an object which acts <em>like</em> the merged dictionary would without computing it completely.  A lazy version of the merged dictionary, so to speak.</p>
+
+<p>In Python, this is rather simple and can be done with the code shown at the end of my post.  This given, the answer to the original question would be:</p>
+
+<pre><code>z = MergeDict(x, y)
+</code></pre>
+
+<p>When using this new object, it will behave like a merged dictionary but it will have constant creation time and constant memory footprint while leaving the original dictionaries untouched.  Creating it is way cheaper than in the other solutions proposed.</p>
+
+<p>Of course, if you use the result a lot, then you will at some point reach the limit where creating a real merged dictionary would have been the faster solution.  As I said, it depends on your use case.</p>
+
+<p>If you ever felt you would prefer to have a real merged <code>dict</code>, then calling <code>dict(z)</code> would produce it (but way more costly than the other solutions of course, so this is just worth mentioning).</p>
+
+<p>You can also use this class to make a kind of copy-on-write dictionary:</p>
+
+<pre><code>a = { 'x': 3, 'y': 4 }
+b = MergeDict(a)  # we merge just one dict
+b['x'] = 5
+print b  # will print {'x': 5, 'y': 4}
+print a  # will print {'y': 4, 'x': 3}
+</code></pre>
+
+<p>Here's the straight-forward code of <code>MergeDict</code>:</p>
+
+<pre><code>class MergeDict(object):
+  def __init__(self, *originals):
+    self.originals = ({},) + originals[::-1]  # reversed
+
+  def __getitem__(self, key):
+    for original in self.originals:
+      try:
+        return original[key]
+      except KeyError:
+        pass
+    raise KeyError(key)
+
+  def __setitem__(self, key, value):
+    self.originals[0][key] = value
+
+  def __iter__(self):
+    return iter(self.keys())
+
+  def __repr__(self):
+    return '%s(%s)' % (
+      self.__class__.__name__,
+      ', '.join(repr(original)
+          for original in reversed(self.originals)))
+
+  def __str__(self):
+    return '{%s}' % ', '.join(
+        '%r: %r' % i for i in self.iteritems())
+
+  def iteritems(self):
+    found = set()
+    for original in self.originals:
+      for k, v in original.iteritems():
+        if k not in found:
+          yield k, v
+          found.add(k)
+
+  def items(self):
+    return list(self.iteritems())
+
+  def keys(self):
+    return list(k for k, _ in self.iteritems())
+
+  def values(self):
+    return list(v for _, v in self.iteritems())
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p><strong>In Python 3.9</strong></p>
+<p>Based on <a href="https://www.python.org/dev/peps/pep-0584/" rel="nofollow noreferrer">PEP 584</a>, the new version of Python introduces two new operators for dictionaries: union (|) and in-place union (|=). You can use | to merge two dictionaries, while |= will update a dictionary in place:</p>
+<pre><code>&gt;&gt;&gt; pycon = {2016: &quot;Portland&quot;, 2018: &quot;Cleveland&quot;}
+&gt;&gt;&gt; europython = {2017: &quot;Rimini&quot;, 2018: &quot;Edinburgh&quot;, 2019: &quot;Basel&quot;}
+
+&gt;&gt;&gt; pycon | europython
+{2016: 'Portland', 2018: 'Edinburgh', 2017: 'Rimini', 2019: 'Basel'}
+
+&gt;&gt;&gt; pycon |= europython
+&gt;&gt;&gt; pycon
+{2016: 'Portland', 2018: 'Edinburgh', 2017: 'Rimini', 2019: 'Basel'}
+
+</code></pre>
+<p>If d1 and d2 are two dictionaries, then <code>d1 | d2</code> does the same as <code>{**d1, **d2}</code>. The | operator is used for calculating the <a href="https://docs.python.org/3/library/stdtypes.html#frozenset.union" rel="nofollow noreferrer">union of sets</a>, so the notation may already be familiar to you.</p>
+<p>One advantage of using <code>|</code> is that it works on different dictionary-like types and keeps the type through the merge:</p>
+<pre><code>&gt;&gt;&gt; from collections import defaultdict
+&gt;&gt;&gt; europe = defaultdict(lambda: &quot;&quot;, {&quot;Norway&quot;: &quot;Oslo&quot;, &quot;Spain&quot;: &quot;Madrid&quot;})
+&gt;&gt;&gt; africa = defaultdict(lambda: &quot;&quot;, {&quot;Egypt&quot;: &quot;Cairo&quot;, &quot;Zimbabwe&quot;: &quot;Harare&quot;})
+
+&gt;&gt;&gt; europe | africa
+defaultdict(&lt;function &lt;lambda&gt; at 0x7f0cb42a6700&gt;,
+  {'Norway': 'Oslo', 'Spain': 'Madrid', 'Egypt': 'Cairo', 'Zimbabwe': 'Harare'})
+
+&gt;&gt;&gt; {**europe, **africa}
+{'Norway': 'Oslo', 'Spain': 'Madrid', 'Egypt': 'Cairo', 'Zimbabwe': 'Harare'}
+</code></pre>
+<p>You can use a defaultdict when you want to effectively handle missing keys. Note that <code>|</code> preserves the defaultdict, while <code>{**europe, **africa}</code> does not.</p>
+<p>There are some similarities between how <code>|</code> works for dictionaries and how <code>+</code> works for lists. In fact, the <code>+</code> operator was <a href="https://www.python.org/dev/peps/pep-0584/#use-the-addition-operator" rel="nofollow noreferrer">originally proposed</a> to merge dictionaries as well. This correspondence becomes even more evident when you look at the in-place operator.</p>
+<p>The basic use of <code>|=</code> is to update a dictionary in place, similar to <code>.update()</code>:</p>
+<pre><code>&gt;&gt;&gt; libraries = {
+...     &quot;collections&quot;: &quot;Container datatypes&quot;,
+...     &quot;math&quot;: &quot;Mathematical functions&quot;,
+... }
+&gt;&gt;&gt; libraries |= {&quot;zoneinfo&quot;: &quot;IANA time zone support&quot;}
+&gt;&gt;&gt; libraries
+{'collections': 'Container datatypes', 'math': 'Mathematical functions',
+ 'zoneinfo': 'IANA time zone support'}
+</code></pre>
+<p>When you merge dictionaries with <code>|</code>, both dictionaries need to be of a proper dictionary type. On the other hand, the in-place operator (<code>|=</code>) is happy to work with any dictionary-like data structure:</p>
+<pre><code>&gt;&gt;&gt; libraries |= [(&quot;graphlib&quot;, &quot;Functionality for graph-like structures&quot;)]
+&gt;&gt;&gt; libraries
+{'collections': 'Container datatypes', 'math': 'Mathematical functions',
+ 'zoneinfo': 'IANA time zone support',
+ 'graphlib': 'Functionality for graph-like structures'}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>Using  a dict comprehension, you may</p>
+
+<pre><code>x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+
+dc = {xi:(x[xi] if xi not in list(y.keys()) 
+           else y[xi]) for xi in list(x.keys())+(list(y.keys()))}
+</code></pre>
+
+<p>gives</p>
+
+<pre><code>&gt;&gt;&gt; dc
+{'a': 1, 'c': 11, 'b': 10}
+</code></pre>
+
+<p>Note the syntax for <code>if else</code> in comprehension </p>
+
+<pre><code>{ (some_key if condition else default_key):(something_if_true if condition 
+          else something_if_false) for key, value in dict_.items() }
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>This is an expression for Python 3.5 or greater that merges dictionaries using <code>reduce</code>:</p>
+<pre><code>&gt;&gt;&gt; from functools import reduce
+&gt;&gt;&gt; l = [{'a': 1}, {'b': 2}, {'a': 100, 'c': 3}]
+&gt;&gt;&gt; reduce(lambda x, y: {**x, **y}, l, {})
+{'a': 100, 'b': 2, 'c': 3}
+</code></pre>
+<p>Note: this works even if the dictionary list is empty or contains only one element.</p>
+<p>For a more efficient merge on Python 3.9 or greater, the <code>lambda</code> can be replaced directly by <code>operator.ior</code>:</p>
+<pre><code>&gt;&gt;&gt; from functools import reduce
+&gt;&gt;&gt; from operator import ior
+&gt;&gt;&gt; l = [{'a': 1}, {'b': 2}, {'a': 100, 'c': 3}]
+&gt;&gt;&gt; reduce(ior, l, {})
+{'a': 100, 'b': 2, 'c': 3}
+</code></pre>
+<p>For Python 3.8 or less, the following can be used as an alternative to <code>ior</code>:</p>
+<pre><code>&gt;&gt;&gt; from functools import reduce
+&gt;&gt;&gt; l = [{'a': 1}, {'b': 2}, {'a': 100, 'c': 3}]
+&gt;&gt;&gt; reduce(lambda x, y: x.update(y) or x, l, {})
+{'a': 100, 'b': 2, 'c': 3}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>A union of the OP's two dictionaries would be something like:</p>
+
+<pre><code>{'a': 1, 'b': 2, 10, 'c': 11}
+</code></pre>
+
+<p>Specifically, the union of two entities(<code>x</code> and <code>y</code>) contains all the elements of <code>x</code> and/or <code>y</code>.
+Unfortunately, what the OP asks for is not a union, despite the title of the post.</p>
+
+<p>My code below is neither elegant nor a one-liner, but I believe it is consistent with the meaning of union.</p>
+
+<p>From the OP's example:</p>
+
+<pre><code>x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+
+z = {}
+for k, v in x.items():
+    if not k in z:
+        z[k] = [(v)]
+    else:
+        z[k].append((v))
+for k, v in y.items():
+    if not k in z:
+        z[k] = [(v)]
+    else:
+        z[k].append((v))
+
+{'a': [1], 'b': [2, 10], 'c': [11]}
+</code></pre>
+
+<p>Whether one wants lists could be changed, but the above will work if a dictionary contains lists (and nested lists) as values in either dictionary.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>You can use <a href="http://toolz.readthedocs.io/en/latest/api.html#toolz.dicttoolz.merge" rel="nofollow noreferrer"><code>toolz.merge([x, y])</code></a> for this.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>I was curious if I could beat the accepted answer's time with a one line stringify approach:</p>
+
+<p>I tried 5 methods, none previously mentioned - all one liner - all producing correct answers - and I couldn't come close.</p>
+
+<p>So... to save you the trouble and perhaps fulfill curiosity:</p>
+
+<pre><code>import json
+import yaml
+import time
+from ast import literal_eval as literal
+
+def merge_two_dicts(x, y):
+    z = x.copy()   # start with x's keys and values
+    z.update(y)    # modifies z with y's keys and values &amp; returns None
+    return z
+
+x = {'a':1, 'b': 2}
+y = {'b':10, 'c': 11}
+
+start = time.time()
+for i in range(10000):
+    z = yaml.load((str(x)+str(y)).replace('}{',', '))
+elapsed = (time.time()-start)
+print (elapsed, z, 'stringify yaml')
+
+start = time.time()
+for i in range(10000):
+    z = literal((str(x)+str(y)).replace('}{',', '))
+elapsed = (time.time()-start)
+print (elapsed, z, 'stringify literal')
+
+start = time.time()
+for i in range(10000):
+    z = eval((str(x)+str(y)).replace('}{',', '))
+elapsed = (time.time()-start)
+print (elapsed, z, 'stringify eval')
+
+start = time.time()
+for i in range(10000):
+    z = {k:int(v) for k,v in (dict(zip(
+            ((str(x)+str(y))
+            .replace('}',' ')
+            .replace('{',' ')
+            .replace(':',' ')
+            .replace(',',' ')
+            .replace("'",'')
+            .strip()
+            .split('  '))[::2], 
+            ((str(x)+str(y))
+            .replace('}',' ')
+            .replace('{',' ').replace(':',' ')
+            .replace(',',' ')
+            .replace("'",'')
+            .strip()
+            .split('  '))[1::2]
+             ))).items()}
+elapsed = (time.time()-start)
+print (elapsed, z, 'stringify replace')
+
+start = time.time()
+for i in range(10000):
+    z = json.loads(str((str(x)+str(y)).replace('}{',', ').replace("'",'"')))
+elapsed = (time.time()-start)
+print (elapsed, z, 'stringify json')
+
+start = time.time()
+for i in range(10000):
+    z = merge_two_dicts(x, y)
+elapsed = (time.time()-start)
+print (elapsed, z, 'accepted')
+</code></pre>
+
+<p>results:</p>
+
+<pre><code>7.693928956985474 {'c': 11, 'b': 10, 'a': 1} stringify yaml
+0.29134678840637207 {'c': 11, 'b': 10, 'a': 1} stringify literal
+0.2208399772644043 {'c': 11, 'b': 10, 'a': 1} stringify eval
+0.1106564998626709 {'c': 11, 'b': 10, 'a': 1} stringify replace
+0.07989692687988281 {'c': 11, 'b': 10, 'a': 1} stringify json
+0.005082368850708008 {'c': 11, 'b': 10, 'a': 1} accepted
+</code></pre>
+
+<p>What I did learn from this is that JSON approach is the fastest way (of those attempted) to return a dictionary from string-of-dictionary; much faster (about 1/4th of the time) of what I considered to be the normal method using <code>ast</code>.  I also learned that, the YAML approach should be avoided at all cost.</p>
+
+<p>Yes, I understand that this is not the best/correct way. I was curious if it was faster, and it isn't; I posted to prove it so.</p>
+</div></body></html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I make Git forget about a file that was tracked, but is now in .gitignore?</p><div class="s-prose js-post-body"><p>I put a file that was previously being tracked by Git onto the <code>.gitignore</code> list. However, the file still shows up in <code>git status</code> after it is edited. How do I force Git to completely forget the file?</p>
+</div><p class="this-has-helped">This answer has helped 8200 people.</p><div class="s-prose js-post-body"><p><code>.gitignore</code> will prevent untracked files from being added (without an <code>add -f</code>) to the set of files tracked by Git. However, Git will continue to track any files that are already being tracked.</p>
+<p>To stop tracking a file, we must remove it from the index:</p>
+<pre><code>git rm --cached &lt;file&gt;
+</code></pre>
+<p>To remove a folder and all files in the folder recursively:</p>
+<pre><code>git rm -r --cached &lt;folder&gt;
+</code></pre>
+<p>The removal of the file from the head revision will happen on the next commit.</p>
+<p><strong>WARNING: While this will not remove the physical file from your local machine, it will remove the files from other developers' machines on their next <code>git pull</code>.</strong></p>
+</div><p class="this-has-helped">This answer has helped 3285 people.</p><div class="s-prose js-post-body"><p>The series of commands below will remove all of the items from the Git index (not from the working directory or local repository), and then will update the Git index, while respecting Git ignores. <em>PS. Index = Cache</em></p>
+<p><strong>First:</strong></p>
+<pre><code>git rm -r --cached .
+git add .
+</code></pre>
+<p><strong>Then:</strong></p>
+<pre><code>git commit -am &quot;Remove ignored files&quot;
+</code></pre>
+<hr />
+<p>Or as a one-liner:</p>
+<pre><code>git rm -r --cached . &amp;&amp; git add . &amp;&amp; git commit -am &quot;Remove ignored files&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1667 people.</p><div class="s-prose js-post-body"><p><a href="https://www.git-scm.com/docs/git-update-index" rel="noreferrer"><code>git update-index</code></a> does the job for me:</p>
+<pre><code>git update-index --assume-unchanged &lt;file&gt;
+</code></pre>
+<p><strong>Note:</strong> This solution is actually independent of <code>.gitignore</code> as gitignore is only for untracked files.</p>
+<hr />
+<h1>Update, a better option</h1>
+<p>Since this answer was posted, a new option has been created and that should be preferred.  You should use <code>--skip-worktree</code> which is for modified tracked files that the user don't want to commit anymore and keep <code>--assume-unchanged</code> for performance to prevent git to check status of big tracked files. See <a href="https://stackoverflow.com/a/13631525/717372">https://stackoverflow.com/a/13631525/717372</a> for more details...</p>
+<pre><code>git update-index --skip-worktree &lt;file&gt;
+</code></pre>
+<p>To cancel</p>
+<pre><code>git update-index --no-skip-worktree &lt;file&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 364 people.</p><div class="s-prose js-post-body"><pre><code>git ls-files -c --ignored --exclude-standard -z | xargs -0 git rm --cached
+git commit -am &quot;Remove ignored files&quot;
+</code></pre>
+<p>This takes the list of the ignored files, removes them from the index, and commits the changes.</p>
+</div><p class="this-has-helped">This answer has helped 113 people.</p><div class="s-prose js-post-body"><p>Move it out, commit, and then move it back in.</p>
+<p>This has worked for me in the past, but there is probably a 'gittier' way to accomplish this.</p>
+</div><p class="this-has-helped">This answer has helped 104 people.</p><div class="s-prose js-post-body"><p>I always use this command to remove those untracked files.
+One-line, Unix-style, clean output:</p>
+<pre><code>git ls-files --ignored --exclude-standard | sed 's/.*/&quot;&amp;&quot;/' | xargs git rm -r --cached
+</code></pre>
+<p>It lists all your ignored files, replaces every output line with a quoted line instead to handle paths with spaces inside, and passes everything to <code>git rm -r --cached</code> to remove the paths/files/directories from the index.</p>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>The copy/paste (one-liner) answer is:</p>
+<pre><code>git rm --cached -r .; git add .; git status; git commit -m &quot;Ignore unwanted files&quot;
+</code></pre>
+<p>This command will NOT change the content of the <code>.gitignore</code> file. It will just ignore the files that have already been committed to a Git repository, but now we have added them to <code>.gitignore</code>.</p>
+<p>The command <code>git status;</code> is to review the changes and could be dropped.</p>
+<p>Ultimately, it will immediately commit the changes with the message &quot;<em>Ignore unwanted files</em>&quot;.</p>
+<p>If you don't want to commit the changes, drop the last part of the command (<code>git commit -m &quot;Ignore unwanted files&quot;</code>)</p>
+</div><p class="this-has-helped">This answer has helped 88 people.</p><div class="s-prose js-post-body"><h2 id="use-this-when-prx8">Use this when:</h2>
+<ol>
+<li>You want to untrack a lot of files, or</li>
+<li>You updated your <em>.gitignore</em> file</li>
+</ol>
+<p>Source: <em><a href="http://www.codeblocq.com/2016/01/Untrack-files-already-added-to-git-repository-based-on-gitignore/" rel="noreferrer">Untrack files already added to Git repository based on .gitignore</a></em></p>
+<p>Let’s say you have already added/committed some files to your Git repository and you then add them to your <em>.gitignore</em> file; these files will still be present in your repository index. This article we will see how to get rid of them.</p>
+<h3 id="step-1-commit-all-your-changes-2cno">Step 1: Commit all your changes</h3>
+<p>Before proceeding, make sure all your changes are committed, including your <em>.gitignore</em> file.</p>
+<h3 id="step-2-remove-everything-from-the-repository-x8vb">Step 2: Remove everything from the repository</h3>
+<p>To clear your repository, use:</p>
+<pre><code>git rm -r --cached .
+</code></pre>
+<ul>
+<li><a href="https://git-scm.com/docs/git-rm" rel="noreferrer">rm</a> is the remove command</li>
+<li><strong>-r</strong> will allow recursive removal</li>
+<li><strong>–cached</strong> will only remove files from the index. Your files will still be there.</li>
+</ul>
+<p>The <code>rm</code> command can be unforgiving. If you wish to try what it does beforehand, add the <code>-n</code> or <code>--dry-run</code> flag to test things out.</p>
+<h3 id="step-3-readd-everything-ac9b">Step 3: Readd everything</h3>
+<pre><code>git add .
+</code></pre>
+<h3 id="step-4-commit-y1uy">Step 4: Commit</h3>
+<pre><code>git commit -m &quot;.gitignore fix&quot;
+</code></pre>
+<p>Your repository is clean :)</p>
+<p>Push the changes to your remote to see the changes effective there as well.</p>
+</div><p class="this-has-helped">This answer has helped 73 people.</p><div class="s-prose js-post-body"><p>If you cannot <code>git rm</code> a tracked file because other people might need it (warning, even if <em>you</em> <code>git rm --cached</code>, when someone else gets this change, their files will be deleted in their filesystem).  These are often done due to config file overrides, authentication credentials, etc. Please look at <a href="https://gist.github.com/1423106" rel="noreferrer">https://gist.github.com/1423106</a> for ways people have worked around the problem.</p>
+
+<p>To summarize:</p>
+
+<ul>
+<li>Have your application look for an ignored file config-overide.ini and use that over the committed file config.ini (or alternately, look for ~/.config/myapp.ini, or $MYCONFIGFILE)</li>
+<li>Commit file config-sample.ini and ignore file config.ini, have a script or similar copy the file as necessary if necessary.</li>
+<li>Try to use gitattributes clean/smudge magic to apply and remove the changes for you, for instance smudge the config file as a checkout from an alternate branch and clean the config file as a checkout from HEAD.  This is tricky stuff, I don't recommend it for the novice user.</li>
+<li>Keep the config file on a deploy branch dedicated to it that is never merged to master.  When you want to deploy/compile/test you merge to that branch and get that file.  This is essentially the smudge/clean approach except using human merge policies and extra-git modules.</li>
+<li>Anti-recommentation: Don't use assume-unchanged, it will only end in tears (because having git lie to itself will cause bad things to happen, like your change being lost forever).</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 63 people.</p><div class="s-prose js-post-body"><p>I accomplished this by using <a href="http://git-scm.com/docs/git-filter-branch" rel="noreferrer">git filter-branch</a>. The exact command I used was taken from the man page:</p>
+
+<p><strong>WARNING</strong>: this will delete the file from your entire history</p>
+
+<pre><code>git filter-branch --index-filter 'git rm --cached --ignore-unmatch filename' HEAD
+</code></pre>
+
+<p>This command will recreate the entire commit history, executing <code>git rm</code> before each commit and so will get rid of the specified file. Don't forget to back it up before running the command as it <em>will</em> be lost.</p>
+</div><p class="this-has-helped">This answer has helped 55 people.</p><div class="s-prose js-post-body"><h3>What didn't work for me</h3>
+<p>(Under Linux), I wanted to use the posts here suggesting the <code>ls-files --ignored --exclude-standard | xargs git rm -r --cached</code> approach.  However, (some of) the files to be removed had an embedded newline/LF/<code>\n</code> in their names.  Neither of the solutions:</p>
+<pre><code>git ls-files --ignored --exclude-standard | xargs -d&quot;\n&quot; git rm --cached
+git ls-files --ignored --exclude-standard | sed 's/.*/&quot;&amp;&quot;/' | xargs git rm -r --cached
+</code></pre>
+<p>cope with this situation (get errors about files not found).</p>
+<h3>So I offer</h3>
+<pre><code>git ls-files -z --ignored --exclude-standard | xargs -0 git rm -r --cached
+git commit -am &quot;Remove ignored files&quot;
+</code></pre>
+<p>This uses the <code>-z</code> argument to <strong>ls-files</strong>, and the <code>-0</code> argument to <strong>xargs</strong> to cater safely/correctly for &quot;nasty&quot; characters in filenames.</p>
+<p>In the manual page <strong>git-ls-files(1)</strong>, it states:</p>
+<blockquote>
+<p>When -z option is not used, TAB, LF, and backslash characters in
+pathnames are represented as \t, \n, and \\, respectively.</p>
+</blockquote>
+<p>so I think my solution is needed if filenames have any of these characters in them.</p>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>Do the following steps for a file/folder:</p>
+<p><strong>Remove a File:</strong></p>
+<ol>
+<li>need to add that file to .gitignore.</li>
+<li>need to remove that file using the command (<strong>git rm --cached file name</strong>).</li>
+<li>need to run (<strong>git add .</strong>).</li>
+<li>need to (<strong>commit -m</strong>) &quot;file removed&quot;.</li>
+<li>and finally, (<strong>git push</strong>).</li>
+</ol>
+<p><strong>For example:</strong></p>
+<p>I want to delete the <em>test.txt</em> file. I accidentally pushed to GitHub and want to remove it. Commands will be as follows:</p>
+<p><strong>First, add &quot;test.txt&quot; in file <em>.gitignore</em></strong></p>
+<pre><code>git rm --cached test.txt
+git add .
+git commit -m &quot;test.txt removed&quot;
+git push
+</code></pre>
+<p><strong>Remove Folder:</strong></p>
+<ol>
+<li>need to add that folder to file <em>.gitignore</em>.</li>
+<li>need to remove that folder using the command (<strong>git rm -r --cached folder name</strong>).</li>
+<li>need to run (<strong>git add .</strong>).</li>
+<li>need to (<strong>commit -m</strong>) &quot;folder removed&quot;.</li>
+<li>and finally, (<strong>git push</strong>).</li>
+</ol>
+<p><strong>For example:</strong></p>
+<p>I want to delete the <em>.idea</em> folder/directory. I accidentally pushed to GitHub and want to remove it. The commands will be as follows:</p>
+<p><strong>First, add <em>.idea</em> in file <em>.gitignore</em></strong></p>
+<pre><code>git rm -r --cached .idea
+git add .
+git commit -m &quot;.idea removed&quot;
+git push
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 31 people.</p><div class="s-prose js-post-body"><ol>
+<li><p>Update your <code>.gitignore</code> file – for instance, add a folder you don't want to track to <code>.gitignore</code>.</p></li>
+<li><p><code>git rm -r --cached .</code> – Remove all tracked files, including wanted and unwanted. Your code will be safe as long as you have saved locally.</p></li>
+<li><p><code>git add .</code> – All files will be added back in, except those in <code>.gitignore</code>.</p></li>
+</ol>
+
+<hr>
+
+<p>Hat tip to @AkiraYamamoto for pointing us in the right direction.</p>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>Do the following steps serially, and you will be fine.</p>
+<ol>
+<li><p><strong>Remove</strong> the mistakenly added files <strong>from the directory/storage</strong>. You can use the &quot;rm -r&quot; (for Linux) command or delete them by browsing the directories. Or move them to another location on your PC. (You maybe need to close the IDE if running for <strong>moving/removing</strong>.)</p>
+</li>
+<li><p>Add the files / directories to the <em>.gitignore</em> file now and save it.</p>
+</li>
+<li><p>Now <strong>remove</strong> them from the <strong>Git cache</strong> by using these commands (if there is more than one directory, remove them one by one by repeatedly issuing this command)</p>
+<pre><code> git rm -r --cached path-to-those-files
+</code></pre>
+</li>
+<li><p>Now <strong>do</strong> a <strong>commit and push</strong> by using the following commands. This will <em>remove those files from Git remote</em> and make Git <em>stop tracking</em> those files.</p>
+<pre><code> git add .
+ git commit -m &quot;removed unnecessary files from Git&quot;
+ git push origin
+</code></pre>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I think, that maybe Git can't totally forget about a file because of its conception (<a href="https://git-scm.com/book/en/v2/Getting-Started-Git-Basics" rel="nofollow noreferrer">section &quot;Snapshots, Not Differences&quot;</a>).</p>
+<p>This problem is absent, for example, when using <a href="https://en.wikipedia.org/wiki/Concurrent_Versions_System" rel="nofollow noreferrer">CVS</a>. CVS stores information as a list of file-based changes. Information for CVS is a set of files and the changes made to each file over time.</p>
+<p>But in Git every time you commit, or save the state of your project, it basically takes a picture of what <em><strong>all your files</strong></em> look like at that moment and stores a reference to that snapshot. So, if you added file once, it will always be present  in that snapshot.</p>
+<p>These two articles were helpful for me:</p>
+<p><a href="http://fallengamer.livejournal.com/93321.html" rel="nofollow noreferrer">git assume-unchanged vs skip-worktree</a> and <a href="http://blog.stephan-partzsch.de/how-to-ignore-changes-in-tracked-files-with-git/" rel="nofollow noreferrer">How to ignore changes in tracked files with Git</a></p>
+<p>Basing on it I do the following, if the file is already tracked:</p>
+<pre><code>git update-index --skip-worktree &lt;file&gt;
+</code></pre>
+<p>From this moment all local changes in this file will be ignored and will not go to remote. If the file is changed on remote, conflict will occur, when <code>git pull</code>. Stash won't work. To resolve it, <em>copy the file content to the safe place</em> and follow these steps:</p>
+<pre><code>git update-index --no-skip-worktree &lt;file&gt;
+git stash
+git pull
+</code></pre>
+<p>The file content will be replaced by the remote content. Paste your changes from the safe place to the file and perform again:</p>
+<pre><code>git update-index --skip-worktree &lt;file&gt;
+</code></pre>
+<p>If everyone, who works with the project, will perform <code>git update-index --skip-worktree &lt;file&gt;</code>, problems with <code>pull</code> should be absent. This solution is OK for configurations files, when every developer has their own project configuration.</p>
+<p>It is not very convenient to do this every time, when the file has been changed on remote, but it can protect it from overwriting by remote content.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Using the <code>git rm --cached</code> command does not answer the original question:</p>
+<blockquote>
+<p>How do you force <code>git</code> to completely forget about [a file]?</p>
+</blockquote>
+<p>In fact, this solution will cause the file to be <strong>deleted</strong> in every other instance of the repository when executing a <code>git pull</code>!</p>
+<p>The correct way to force Git to forget about a file is documented by GitHub <a href="https://help.github.com/en/articles/removing-sensitive-data-from-a-repository" rel="nofollow noreferrer">here</a>.</p>
+<p>I recommend reading the documentation, but basically:</p>
+<pre><code>git fetch --all
+git filter-branch --force --index-filter 'git rm --cached --ignore-unmatch full/path/to/file' --prune-empty --tag-name-filter cat -- --all
+git push origin --force --all
+git push origin --force --tags
+git for-each-ref --format='delete %(refname)' refs/original | git update-ref --stdin
+git reflog expire --expire=now --all
+git gc --prune=now
+</code></pre>
+<p>Just replace <code>full/path/to/file</code> with the full path of the file. Make sure you've added the file to your <code>.gitignore</code> file.</p>
+<p>You'll also need to (temporarily) <a href="https://stackoverflow.com/a/10544328/4901390">allow non-fast-forward pushes to your repository</a>, since you're changing your Git history.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>Move or copy the file to a safe location, so you don't lose it. Then 'git rm' the file and commit.</p>
+<p>The file will still show up if you revert to one of those earlier commits, or another branch where it has not been removed. However, in all future commits, you will not see the file again. If the file is in the Git ignore, then you can move it back into the folder, and Git won't see it.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>The <a href="https://stackoverflow.com/questions/1274057/how-can-i-make-git-forget-about-a-file-that-was-tracked-but-is-now-in-gitign/19095988#19095988">answer from Matt Frear</a> was the most effective IMHO. The following is just a PowerShell script for those on Windows to only remove files from their Git repository that matches their exclusion list.</p>
+<pre><code># Get files matching exclusionsfrom .gitignore
+# Excluding comments and empty lines
+$ignoreFiles =  gc .gitignore | ?{$_ -notmatch  &quot;#&quot;} |  ?{$_ -match  &quot;\S&quot;} | % {
+                    $ignore = &quot;*&quot; + $_ + &quot;*&quot;
+                    (gci -r -i $ignore).FullName
+                }
+$ignoreFiles = $ignoreFiles| ?{$_ -match  &quot;\S&quot;}
+
+# Remove each of these file from Git
+$ignoreFiles | % { git rm $_}
+
+git add .
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>The accepted answer does not &quot;make Git <strong>&quot;forget&quot;</strong> about a file...&quot; (historically).  It only makes Git <strong>ignore</strong> the file in the present/future.</p>
+<p>This method makes Git <strong>completely forget</strong> ignored files (<strong>past</strong>/present/future), but it does <strong>not</strong> delete anything from the working directory (even when re-pulled from remote).</p>
+<p>This method requires usage of file <code>/.git/info/exclude</code> (preferred) <strong>or</strong> a <strong>pre-existing</strong> <code>.gitignore</code> in <strong>all</strong> the commits that have files to be ignored/forgotten. <sup>1</sup></p>
+<p>All methods of enforcing Git ignore behavior after-the-fact effectively rewrite history and thus have <a href="https://stackoverflow.com/q/1491001">significant ramifications</a> for any public/shared/collaborative repositories that might be pulled after this process. <sup>2</sup></p>
+<p>General advice: <strong>start with a clean repository</strong> - everything committed, nothing pending in working directory or index, <strong>and make a backup</strong>!</p>
+<p>Also, the comments/<a href="https://stackoverflow.com/posts/57454176/revisions">revision history</a> of <a href="https://stackoverflow.com/a/57454176">this answer</a> (<a href="https://stackoverflow.com/posts/57418769/revisions">and revision history</a> of <a href="https://stackoverflow.com/posts/57418769">this question</a>) may be useful/enlightening.</p>
+<pre class="lang-sh prettyprint-override"><code>#Commit up-to-date .gitignore (if not already existing)
+#This command must be run on each branch
+
+git add .gitignore
+git commit -m &quot;Create .gitignore&quot;
+
+#Apply standard Git ignore behavior only to the current index, not the working directory (--cached)
+#If this command returns nothing, ensure /.git/info/exclude AND/OR .gitignore exist
+#This command must be run on each branch
+
+git ls-files -z --ignored --exclude-standard | xargs -0 git rm --cached
+
+#Commit to prevent working directory data loss!
+#This commit will be automatically deleted by the --prune-empty flag in the following command
+#This command must be run on each branch
+
+git commit -m &quot;ignored index&quot;
+
+#Apply standard git ignore behavior RETROACTIVELY to all commits from all branches (--all)
+#This step WILL delete ignored files from working directory UNLESS they have been dereferenced from the index by the commit above
+#This step will also delete any &quot;empty&quot; commits.  If deliberate &quot;empty&quot; commits should be kept, remove --prune-empty and instead run git reset HEAD^ immediately after this command
+
+git filter-branch --tree-filter 'git ls-files -z --ignored --exclude-standard | xargs -0 git rm -f --ignore-unmatch' --prune-empty --tag-name-filter cat -- --all
+
+#List all still-existing files that are now ignored properly
+#If this command returns nothing, it's time to restore from backup and start over
+#This command must be run on each branch
+
+git ls-files --other --ignored --exclude-standard
+</code></pre>
+<hr />
+<p>Finally, follow the rest of this <a href="https://help.github.com/en/articles/removing-sensitive-data-from-a-repository" rel="noreferrer">GitHub guide</a> (starting at step 6) <strong>which includes important warnings/information about the commands below</strong>.</p>
+<pre class="lang-sh prettyprint-override"><code>git push origin --force --all
+git push origin --force --tags
+git for-each-ref --format=&quot;delete %(refname)&quot; refs/original | git update-ref --stdin
+git reflog expire --expire=now --all
+git gc --prune=now
+</code></pre>
+<hr />
+<p>Other developers that pull from the now-modified remote repository should make a backup and then:</p>
+<pre class="lang-sh prettyprint-override"><code>#fetch modified remote
+
+git fetch --all
+
+#&quot;Pull&quot; changes WITHOUT deleting newly-ignored files from working directory
+#This will overwrite local tracked files with remote - ensure any local modifications are backed-up/stashed
+
+git reset FETCH_HEAD
+</code></pre>
+<hr />
+<h2 id="footnotes-6jhk">Footnotes</h2>
+<p><sup>1</sup> Because <code>/.git/info/exclude</code> can be applied to all historical commits using the instructions above, perhaps details about getting a <code>.gitignore</code> file <em>into</em> the historical commit(s) that need it is beyond the scope of this answer.  I wanted a proper <code>.gitignore</code> file to be in the root commit, as if it was the first thing I did.  Others may not care since <code>/.git/info/exclude</code> can accomplish the same thing regardless where the <code>.gitignore</code> file exists in the commit history, and clearly rewriting history is a <strong>very</strong> touchy subject, even when aware of the <a href="https://stackoverflow.com/q/1491001">ramifications</a>.</p>
+<p>FWIW, potential methods may include <code>git rebase</code> or a <code>git filter-branch</code> that copies an <em>external</em> <code>.gitignore</code> into each commit, like the answers to <a href="https://stackoverflow.com/q/43463687">this question</a>.</p>
+<p><sup>2</sup> Enforcing Git ignore behavior after-the-fact by committing the results of a stand-alone <code>git rm --cached</code> command may result in newly-ignored file <strong>deletion</strong> in future pulls from the force-pushed remote. The <code>--prune-empty</code> flag in the following <code>git filter-branch</code> command avoids this problem by automatically removing the previous &quot;delete all ignored files&quot; index-only commit.  Rewriting Git history also changes commit hashes, which will <a href="https://stackoverflow.com/q/1491001">wreak havoc</a> on future pulls from public/shared/collaborative repositories.  Please understand the <a href="https://stackoverflow.com/q/1491001">ramifications</a> fully before doing this to such a repository. <a href="https://help.github.com/en/articles/removing-sensitive-data-from-a-repository" rel="noreferrer">This GitHub guide</a> specifies the following:</p>
+<blockquote>
+<p>Tell your collaborators to <a href="https://git-scm.com/book/en/Git-Branching-Rebasing" rel="noreferrer">rebase</a>, <em>not</em> merge, any branches they created off of your old (tainted) repository history. One merge commit could reintroduce some or all of the tainted history that you just went to the trouble of purging.</p>
+</blockquote>
+<p>Alternative solutions that <strong>do not</strong> affect the remote repository are <code>git update-index --assume-unchanged &lt;/path/file&gt;</code> or <code>git update-index --skip-worktree &lt;file&gt;</code>, examples of which can be found <a href="https://stackoverflow.com/a/20241145">here</a>.</p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>In my case I needed to put &quot;<code>.envrc</code>&quot; in the <em>.gitignore</em> file.</p>
+<p>And then I used:</p>
+<pre><code>git update-index --skip-worktree .envrc
+git rm --cached .envrc
+</code></pre>
+<p>And the file was removed.</p>
+<p>Then I committed again, telling that the file was removed.</p>
+<p>But when I used the command <code>git log -p</code>, the content of the file (which was secret credentials of the <a href="https://en.wikipedia.org/wiki/Amazon_S3" rel="noreferrer">Amazon S3</a>) was showing the content which was removed and I don't want to show this content ever on the history of the Git repository.</p>
+<p>Then I used this command:</p>
+<pre><code>git filter-branch --index-filter 'git rm --cached --ignore-unmatch .envrc' HEAD
+</code></pre>
+<p>And I don't see the content again.</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>I liked <a href="https://stackoverflow.com/questions/1274057/how-can-i-make-git-forget-about-a-file-that-was-tracked-but-is-now-in-gitign/34511442#34511442">JonBrave's answer</a>, but I have messy enough working directories that <code>commit -a</code> scares me a bit, so here's what I've done:</p>
+<pre><code>git config --global alias.exclude-ignored '!git ls-files -z --ignored --exclude-standard | xargs -0 git rm -r --cached &amp;&amp;  git ls-files -z --ignored --exclude-standard | xargs -0 git stage &amp;&amp;  git stage .gitignore &amp;&amp; git commit -m &quot;new gitignore and remove ignored files from index&quot;'
+</code></pre>
+<p>Breaking it down:</p>
+<pre><code>git ls-files -z --ignored --exclude-standard | xargs -0 git rm -r --cached
+git ls-files -z --ignored --exclude-standard | xargs -0 git stage
+git stage .gitignore
+git commit -m &quot;new gitignore and remove ignored files from index&quot;
+</code></pre>
+<ul>
+<li>remove ignored files from the index</li>
+<li>stage .gitignore and the files you just removed</li>
+<li>commit</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>The <a href="https://rtyley.github.io/bfg-repo-cleaner/" rel="nofollow noreferrer">BFG</a> is specifically designed for removing unwanted data like big files or passwords from Git repositories, so it has a simple flag that will remove any large historical (not-in-your-current-commit) files: '--strip-blobs-bigger-than'</p>
+<pre><code>java -jar bfg.jar --strip-blobs-bigger-than 100M
+</code></pre>
+<p>If you'd like to specify files by name, you can do that too:</p>
+<pre><code>java -jar bfg.jar --delete-files *.mp4
+</code></pre>
+<p>The BFG is 10-1000x faster than <code>git filter-branch</code> and is generally much easier to use - check the <a href="https://rtyley.github.io/bfg-repo-cleaner/#usage" rel="nofollow noreferrer">full usage instructions</a> and <a href="https://rtyley.github.io/bfg-repo-cleaner/#examples" rel="nofollow noreferrer">examples</a> for more details.</p>
+<p>Source: <em><a href="https://confluence.atlassian.com/bitbucket/reduce-repository-size-321848262.html" rel="nofollow noreferrer">Reduce repository size</a></em></p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>If you don't want to use the CLI and are working on Windows, a very simple solution is to use <a href="https://tortoisegit.org/" rel="nofollow noreferrer">TortoiseGit</a>. It has the &quot;Delete (keep local)&quot; Action in the menu which works fine.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p><strong>This is no longer an issue in the latest Git</strong> (v2.17.1 at the time of writing).</p>
+<p>The <em>.gitignore</em> file finally ignores tracked-but-deleted files. You can test this for yourself by running the following script. The final <code>git status</code> statement should report &quot;nothing to commit&quot;.</p>
+<pre><code># Create an empty repository
+mkdir gitignore-test
+cd gitignore-test
+git init
+
+# Create a file and commit it
+echo &quot;hello&quot; &gt; file
+git add file
+git commit -m initial
+
+# Add the file to gitignore and commit
+echo &quot;file&quot; &gt; .gitignore
+git add .gitignore
+git commit -m gitignore
+
+# Remove the file and commit
+git rm file
+git commit -m &quot;removed file&quot;
+
+# Reintroduce the file and check status.
+# .gitignore is now respected - status reports &quot;nothing to commit&quot;.
+echo &quot;hello&quot; &gt; file
+git status
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>This is how I solved my issue:</p>
+<p><code>git filter-branch --tree-filter 'rm -rf path/to/your/file' HEAD</code>
+<br> <code>git push</code></p>
+<p>In this, we are basically trying to rewrite the history of that particular file in previous commits also.</p>
+<p>For more information, you can refer to the <a href="https://en.wikipedia.org/wiki/Man_page" rel="noreferrer">man page</a> of filter-branch <a href="https://git-scm.com/docs/git-filter-branch" rel="noreferrer">here</a>.</p>
+<p>Source: <em><a href="https://docs.github.com/en/github/authenticating-to-github/removing-sensitive-data-from-a-repository#using-filter-branch" rel="noreferrer">Removing sensitive data from a repository - using filter-branch</a></em></p>
+<p>Source: <em><a href="https://thomas-cokelaer.info/blog/2018/02/git-how-to-remove-a-big-file-wrongly-committed/" rel="noreferrer">Git: How to remove a big file wrongly committed</a></em></p>
+</div></body></html>

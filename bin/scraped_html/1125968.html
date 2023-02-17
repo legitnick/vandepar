@@ -1,0 +1,527 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I force &quot;git pull&quot; to overwrite local files?</p><div class="s-prose js-post-body"><p>How do I force an overwrite of local files on a <code>git pull</code>? My local repository contains a file of the same filename as on the server.</p>
+<blockquote>
+<p>error: Untracked working tree file 'example.txt' would be overwritten by merge</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 12651 people.</p><div class="s-prose js-post-body"><blockquote>
+<h2>⚠ Warning:</h2>
+<p>Any uncommitted local changes to tracked files will be lost.</p>
+<p>Any local files that are <em>not</em> tracked by Git will not be affected.</p>
+</blockquote>
+<hr />
+<p>First, update all <code>origin/&lt;branch&gt;</code> refs to latest:</p>
+<pre class="lang-bash prettyprint-override"><code>git fetch --all
+</code></pre>
+<p>Backup your current branch (e.g. <code>master</code>):</p>
+<pre><code>git branch backup-master
+</code></pre>
+<p>Jump to the latest commit on <code>origin/master</code> and checkout those files:</p>
+<pre><code>git reset --hard origin/master
+</code></pre>
+<h3>Explanation:</h3>
+<p><code>git fetch</code> downloads the latest from remote without trying to merge or rebase anything.</p>
+<p><code>git reset</code> resets the master branch to what you just fetched. The <code>--hard</code> option changes all the files in your working tree to match the files in <code>origin/master</code>.</p>
+<hr />
+<h3>Maintain current local commits</h3>
+<p><sup>[*]</sup>: It's worth noting that it is possible to maintain current local commits by creating a branch from <code>master</code> before resetting:</p>
+<pre class="lang-bash prettyprint-override"><code>git checkout master
+git branch new-branch-to-save-current-commits
+git fetch --all
+git reset --hard origin/master
+</code></pre>
+<p>After this, all of the old commits will be kept in <code>new-branch-to-save-current-commits</code>.</p>
+<h3>Uncommitted changes</h3>
+<p>Uncommitted changes, however (even staged), will be lost. Make sure to stash and commit anything you need. For that you can run the following:</p>
+<pre><code>git stash
+</code></pre>
+<p>And then to reapply these uncommitted changes:</p>
+<pre><code>git stash pop
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1275 people.</p><div class="s-prose js-post-body"><p>This will remove all uncommitted changes and then pull:</p>
+<pre><code>git reset --hard HEAD
+git pull
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 569 people.</p><div class="s-prose js-post-body"><p><strong>WARNING: <code>git clean</code> deletes all your untracked files/directories and can't be undone.</strong></p>
+
+<hr>
+
+<p>Sometimes just <code>clean -f</code> does not help. In case you have untracked DIRECTORIES, -d option also needed:</p>
+
+<pre><code># WARNING: this can't be undone!
+
+git reset --hard HEAD
+git clean -f -d
+git pull
+</code></pre>
+
+<p><strong>WARNING: <code>git clean</code> deletes all your untracked files/directories and can't be undone.</strong></p>
+
+<p>Consider using <code>-n</code> (<code>--dry-run</code>) flag first. This will show you what will be deleted without actually deleting anything:</p>
+
+<pre><code>git clean -n -f -d
+</code></pre>
+
+<p>Example output:</p>
+
+<pre><code>Would remove untracked-file-1.txt
+Would remove untracked-file-2.txt
+Would remove untracked/folder
+...
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 476 people.</p><div class="s-prose js-post-body"><p>Like Hedgehog I think the answers are terrible. But though Hedgehog's answer might be better, I don't think it is as elegant as it could be.  The way I found to do this is by using <code>fetch</code> and <code>merge</code> with a defined strategy. Which should make it so that your local changes are preserved as long as they are not one of the files that you are trying to force an overwrite with.</p>
+<h3>First do a commit of your changes</h3>
+<pre><code> git add *
+ git commit -a -m &quot;local file server commit message&quot;
+</code></pre>
+<h3>Then fetch the changes and overwrite if there is a conflict</h3>
+<pre><code> git fetch origin master
+ git merge -s recursive -X theirs origin/master
+</code></pre>
+<p><code>-X</code> is an option name, and <code>theirs</code> is the value for that option. You're choosing to use <code>their</code> changes (the other option is <code>ours</code> changes) if there is a conflict.</p>
+</div><p class="this-has-helped">This answer has helped 394 people.</p><div class="s-prose js-post-body"><p>Instead of doing:</p>
+
+<pre><code>git fetch --all
+git reset --hard origin/master
+</code></pre>
+
+<p>I'd advise doing the following:</p>
+
+<pre><code>git fetch origin master
+git reset --hard origin/master
+</code></pre>
+
+<p>No need to fetch all remotes and branches if you're going to reset to the origin/master branch right?</p>
+</div><p class="this-has-helped">This answer has helped 154 people.</p><div class="s-prose js-post-body"><p>It looks like the best way is to first do:</p>
+
+<pre><code>git clean
+</code></pre>
+
+<p>To delete all untracked files and then continue with the usual <code>git pull</code>...</p>
+</div><p class="this-has-helped">This answer has helped 128 people.</p><div class="s-prose js-post-body"><p><a href="http://blog.icefusion.co.uk/git-stash-can-delete-ignored-files-git-stash-u/" rel="noreferrer"><strong>Warning, doing this will permanently delete your files if you have any directory/* entries in your gitignore file.</strong></a></p>
+
+<p>Some answers seem to be terrible. Terrible in the sense of what happened to @Lauri by following David Avsajanishvili suggestion.</p>
+
+<p>Rather (git > v1.7.6):</p>
+
+<pre><code>git stash --include-untracked
+git pull
+</code></pre>
+
+<p>Later you can clean the stash history.</p>
+
+<p>Manually, one-by-one:</p>
+
+<pre><code>$ git stash list
+stash@{0}: WIP on &lt;branch&gt;: ...
+stash@{1}: WIP on &lt;branch&gt;: ...
+
+$ git stash drop stash@{0}
+$ git stash drop stash@{1}
+</code></pre>
+
+<p>Brutally, all-at-once:</p>
+
+<pre><code>$ git stash clear
+</code></pre>
+
+<p>Of course if you want to go back to what you stashed:</p>
+
+<pre><code>$ git stash list
+...
+$ git stash apply stash@{5}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 111 people.</p><div class="s-prose js-post-body"><p>You might find this command helpful to throw away local changes:</p>
+
+<pre><code>git checkout &lt;your-branch&gt; -f
+</code></pre>
+
+<p>And then do a cleanup (removes untracked files from the working tree):</p>
+
+<pre><code>git clean -f
+</code></pre>
+
+<p>If you want to remove untracked directories in addition to untracked files:</p>
+
+<pre><code>git clean -fd
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 102 people.</p><div class="s-prose js-post-body"><p>Instead of merging with <code>git pull</code>, try this:  </p>
+
+<p><code>git fetch --all</code></p>
+
+<p>followed by:</p>
+
+<p><code>git reset --hard origin/master</code>.</p>
+</div><p class="this-has-helped">This answer has helped 73 people.</p><div class="s-prose js-post-body"><p>The only thing that worked for me was:</p>
+
+<pre><code>git reset --hard HEAD~5
+</code></pre>
+
+<p>This will take you back five commits and then with</p>
+
+<pre><code>git pull
+</code></pre>
+
+<p>I found that by looking up <a href="https://stackoverflow.com/questions/2389361/git-undo-a-merge">how to undo a Git merge</a>.</p>
+</div><p class="this-has-helped">This answer has helped 68 people.</p><div class="s-prose js-post-body"><p>The problem with all these solutions is that they are all either too complex or, an even bigger problem, is that they remove all untracked files from the webserver, which we don't want since there are always needed configuration files which are on the server and not in the Git repository.</p>
+<p>Here is the cleanest solution which we are using:</p>
+<pre class="lang-bash prettyprint-override"><code># Fetch the newest code
+git fetch
+
+# Delete all files which are being added, so there
+# are no conflicts with untracked files
+for file in `git diff HEAD..origin/master --name-status | awk '/^A/ {print $2}'`
+do
+    rm -f -- &quot;$file&quot;
+done
+
+# Checkout all files which were locally modified
+for file in `git diff --name-status | awk '/^[CDMRTUX]/ {print $2}'`
+do
+    git checkout -- &quot;$file&quot;
+done
+
+# Finally pull all the changes
+# (you could merge as well e.g. 'merge origin/master')
+git pull
+</code></pre>
+<ul>
+<li><p>The first command fetches the newest data.</p>
+</li>
+<li><p>The second command checks if there are any files that are being added to the repository and deletes those untracked files from the local repository which would cause conflicts.</p>
+</li>
+<li><p>The third command checks-out all the files which were locally modified.</p>
+</li>
+<li><p>Finally, we do a pull to update to the newest version, but this time without any conflicts, since untracked files which are in the repo don't exist anymore and all the locally modified files are already the same as in the repository.</p>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 64 people.</p><div class="s-prose js-post-body"><p>First of all, try the standard way:</p>
+
+<pre><code>git reset HEAD --hard # To remove all not committed changes!
+git clean -fd         # To remove all untracked (non-git) files and folders!
+</code></pre>
+
+<p><sup><strong>Warning</strong>: Above commands can results in data/files loss only if you don't have them committed! If you're not sure, make the backup first of your whole repository folder.</sup></p>
+
+<p>Then pull it again.</p>
+
+<p>If above won't help and you don't care about your untracked files/directories (make the backup first just in case), try the following simple steps:</p>
+
+<pre><code>cd your_git_repo  # where 'your_git_repo' is your git repository folder
+rm -rfv *         # WARNING: only run inside your git repository!
+git pull          # pull the sources again
+</code></pre>
+
+<p>This will REMOVE all git files (excempt <code>.git/</code> dir, where you have all commits) and pull it again.</p>
+
+<hr>
+
+<p>Why <code>git reset HEAD --hard</code> could fail in some cases?</p>
+
+<ol>
+<li><p>Custom rules in <code>.gitattributes file</code></p>
+
+<p>Having <code>eol=lf</code> rule in .gitattributes could cause git to modify some file changes by converting CRLF line-endings into LF in some text files.</p>
+
+<p>If that's the case, you've to commit these CRLF/LF changes (by reviewing them in <code>git status</code>), or try: <code>git config core.autcrlf false</code> to temporary ignore them.</p></li>
+<li><p>File system incompability</p>
+
+<p>When you're using file-system which doesn't support permission attributes.
+In example you have two repositories, one on Linux/Mac (<code>ext3</code>/<code>hfs+</code>) and another one on FAT32/NTFS based file-system.</p>
+
+<p>As you notice, there are two different kind of file systems, so the one which doesn't support Unix permissions basically can't reset file permissions on system which doesn't support that kind of permissions, so no matter how <code>--hard</code> you try, git always detect some "changes".</p></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 56 people.</p><div class="s-prose js-post-body"><p>I had the same problem. No one gave me this solution, but it worked for me.</p>
+
+<p>I solved it by:</p>
+
+<ol>
+<li>Delete all the files. Leave just the <code>.git</code> directory.</li>
+<li><code>git reset --hard HEAD</code></li>
+<li><code>git pull</code></li>
+<li><code>git push</code></li>
+</ol>
+
+<p>Now it works.</p>
+</div><p class="this-has-helped">This answer has helped 55 people.</p><div class="s-prose js-post-body"><h3>Bonus:</h3>
+<p>In speaking of pull/fetch/merge in the previous answers, I would like to share an interesting and productive trick,</p>
+<h1><strong><code>git pull --rebase</code></strong></h1>
+<p>This above command is the most useful command in my Git life which saved a lot of time.</p>
+<p>Before pushing your newly commit to server, try this command and it will automatically synchronise the latest server changes (with a fetch + merge) and will place your commit at the top in the Git log. There isn't any need to worry about manual pull/merge.</p>
+<p>Find details in <em><a href="http://gitolite.com/git-pull--rebase" rel="noreferrer">What does &quot;git pull --rebase&quot; do?</a></em>.</p>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>Here is a <strong>generic solution</strong> if you do not always want to paste the branch name or you want to <strong>automate this within a script</strong></p>
+<pre><code>git fetch
+git reset --keep origin/$(git rev-parse --abbrev-ref HEAD)
+</code></pre>
+<p>If you want to reset your local changes too:</p>
+<pre><code>git fetch
+git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+</code></pre>
+<p>You also could add a bash alias using this command:</p>
+<pre><code>alias gplf='git fetch &amp;&amp; echo &quot;HEAD was at $(git rev-parse --short HEAD)&quot; &amp;&amp; git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>I had a similar problem.  I had to do this:</p>
+
+<pre><code>git reset --hard HEAD
+git clean -f
+git pull
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 33 people.</p><div class="s-prose js-post-body"><p>I summarized other answers. You can execute <code>git pull</code> without errors:</p>
+
+<pre><code>git fetch --all
+git reset --hard origin/master
+git reset --hard HEAD
+git clean -f -d
+git pull
+</code></pre>
+
+<p><strong>Warning</strong>: This script is very powerful, so you could lose your changes.</p>
+</div><p class="this-has-helped">This answer has helped 29 people.</p><div class="s-prose js-post-body"><p>Based on my own similar experiences, the solution offered by Strahinja Kustudic above is by far the best.  As others have pointed out, simply doing hard reset will remove <strong>all</strong> the untracked files which could include lots of things that you don't want removed, such as config files.  What is safer, is to remove only the files that are about to be added, and for that matter, you'd likely also want to checkout any locally-modified files that are about to be updated.</p>
+
+<p>That in mind, I updated Kustudic's script to do just that.  I also fixed a typo (a missing ' in the original).</p>
+
+<pre class="lang-bash prettyprint-override"><code>#/bin/sh
+
+# Fetch the newest code
+git fetch
+
+# Delete all files which are being added,
+# so there are no conflicts with untracked files
+for file in `git diff HEAD..origin/master --name-status | awk '/^A/ {print $2}'`
+do
+    echo "Deleting untracked file $file..."
+    rm -vf "$file"
+done
+
+# Checkout all files which have been locally modified
+for file in `git diff HEAD..origin/master --name-status | awk '/^M/ {print $2}'`
+do
+    echo "Checking out modified file $file..."
+    git checkout $file
+done
+
+# Finally merge all the changes (you could use merge here as well)
+git pull
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>It seems like most answers here are focused on the <code>master</code> branch; however, there are times when I'm working on the same feature branch in two different places and I want a rebase in one to be reflected in the other without a lot of jumping through hoops.</p>
+
+<p>Based on a combination of <a href="https://stackoverflow.com/a/8888015/1103543">RNA's answer</a> and <a href="https://stackoverflow.com/a/19961461/1103543">torek's answer to a similar question</a>, I've come up with this which works splendidly:</p>
+
+<pre><code>git fetch
+git reset --hard @{u}
+</code></pre>
+
+<p>Run this from a branch and it'll only reset your local branch to the upstream version.</p>
+
+<p>This can be nicely put into a git alias (<code>git forcepull</code>) as well:</p>
+
+<p><code>git config alias.forcepull "!git fetch ; git reset --hard @{u}"</code></p>
+
+<p>Or, in your <code>.gitconfig</code> file:</p>
+
+<pre><code>[alias]
+  forcepull = "!git fetch ; git reset --hard @{u}"
+</code></pre>
+
+<p>Enjoy!</p>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>I had the same problem and for some reason, even a <code>git clean -f -d</code> would not do it. Here is why: For some reason, if your file is ignored by Git (via a .gitignore entry, I assume), it still bothers about overwriting this with a later <em>pull</em>, but a <em>clean</em> will not remove it, unless you add <code>-x</code>.</p>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>I believe there are two possible causes of conflict, which must be solved separately, and as far as I can tell none of the above answers deals with both:</p>
+
+<ul>
+<li><p>Local files that are untracked need to be deleted, either manually (safer) or as suggested in other answers, by <code>git clean -f -d</code></p></li>
+<li><p>Local commits that are not on the remote branch need to be deleted as well. IMO the easiest way to achieve this is with: <code>git reset --hard origin/master</code> (replace 'master' by whatever branch you are working on, and run a <code>git fetch origin</code> first)</p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>An easier way would be to:</p>
+
+<pre><code>git checkout --theirs /path/to/file.extension
+git pull origin master
+</code></pre>
+
+<p>This will override your local file with the file on git</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>I have a strange situation that neither <code>git clean</code> or <code>git reset</code> works. I have to remove the conflicting file from <code>git index</code> by using the following script on every untracked file:</p>
+
+<pre><code>git rm [file]
+</code></pre>
+
+<p>Then I am able to pull just fine.</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I just solved this myself by:</p>
+
+<pre class="lang-bash prettyprint-override"><code>git checkout -b tmp # "tmp" or pick a better name for your local changes branch
+git add -A
+git commit -m 'tmp'
+git pull
+git checkout master # Or whatever branch you were on originally
+git pull
+git diff tmp
+</code></pre>
+
+<p>where the last command gives a list of what your local changes were. Keep modifying the "tmp" branch until it is acceptable and then merge back onto master with: </p>
+
+<pre><code>git checkout master &amp;&amp; git merge tmp
+</code></pre>
+
+<p>For next time, you can probably handle this in a cleaner way by looking up "git stash branch" though stash is likely to cause you trouble on the first few tries, so do first experiment on a non-critical project...</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I know of a much easier and less painful method:</p>
+
+<pre><code>$ git branch -m [branch_to_force_pull] tmp
+$ git fetch
+$ git checkout [branch_to_force_pull]
+$ git branch -D tmp
+</code></pre>
+
+<p>That's it!</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>I am not sure why anyone did not talk about <code>FETCH_HEAD</code> yet.</p>
+<pre><code>git fetch origin master &amp;&amp; git reset --hard FETCH_HEAD
+</code></pre>
+<p>If you want to put it in an alias, the command would be:</p>
+<pre><code>git config --global alias.fpull '!git fetch origin master &amp;&amp; git reset --hard FETCH_HEAD'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>Requirements:</p>
+
+<ol>
+<li>Track local changes so no-one here ever loses them.</li>
+<li>Make the local repository match the remote origin repository.</li>
+</ol>
+
+<p>Solution:</p>
+
+<ol>
+<li><strong>Stash</strong> the local changes.</li>
+<li><p><strong>Fetch</strong> with a <strong>clean</strong> of <strong>files</strong> and <strong>directories</strong> ignoring <strong>.gitignore</strong> and <strong>hard reset</strong> to <strong>origin</strong>.</p>
+
+<pre><code>git stash --include-untracked
+git fetch --all
+git clean -fdx
+git reset --hard origin/master
+</code></pre></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>Just do</p>
+
+<pre><code>git fetch origin branchname
+git checkout -f origin/branchname // This will overwrite ONLY new included files
+git checkout branchname
+git merge origin/branchname
+</code></pre>
+
+<p>So you avoid all unwanted side effects, like deleting files or directories you wanted to keep, etc.</p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>Despite the original question, the top answers can cause problems for people who have a similar problem, but don't want to lose their local files. For example, see Al-Punk and crizCraig's comments. </p>
+
+<p>The following version commits your local changes to a temporary branch (<code>tmp</code>), checks out the original branch (which I'm assuming is <code>master</code>) and merges the updates. You could do this with <code>stash</code>, but I've found it's usually easier to simply use the branch / merge approach.</p>
+
+<pre><code>git checkout -b tmp
+git add *; git commit -am "my temporary files"
+git checkout master
+
+git fetch origin master
+git merge -s recursive -X theirs origin master
+</code></pre>
+
+<p>where we assume the <strong>other repository</strong> is <code>origin master</code>.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>Reset the index and the head to <code>origin/master</code>, but do not reset the working tree:</p>
+
+<pre><code>git reset origin/master
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>These four commands work for me.</p>
+
+<pre><code>git reset --hard HEAD
+git checkout origin/master
+git branch -D master
+git checkout -b master
+</code></pre>
+
+<p>To check/pull after executing these commands</p>
+
+<pre><code>git pull origin master
+</code></pre>
+
+<p>I tried a lot but finally got success with these commands.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>I read through all the answers but I was looking for a single command to do this. Here is what I did. Added a git alias to .gitconfig</p>
+
+<pre><code>[alias]
+      fp = "!f(){ git fetch ${1} ${2} &amp;&amp; git reset --hard ${1}/${2};};f"
+</code></pre>
+
+<p>Run your command as </p>
+
+<pre><code>git fp origin master
+</code></pre>
+
+<p>equivalent to</p>
+
+<pre><code>git fetch origin master
+git reset --hard origin/master
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>Don't use <code>git reset --hard</code>. That will wipe their changes which may well be completely undesirable. Instead:</p>
+
+<pre><code>git pull
+git reset origin/master
+git checkout &lt;file1&gt; &lt;file2&gt; ...
+</code></pre>
+
+<p>You can of course use <code>git fetch</code> instead of <code>git pull</code> since it clearly isn't going to merge, but if you usually pull it makes sense to continue to pull here.</p>
+
+<p>So what happens here is that <code>git pull</code> <strong>updates your origin/master reference</strong>; <code>git reset</code> <strong>updates your local branch reference</strong> on to be the same as origin/master without updating any files, so your checked-out state is unchanged; then <code>git checkout</code> <strong>reverts files to your local branch index state</strong> as needed. In cases where exactly the same file has been added on live and on upstream master, the index already matches the file following the reset, so in the common case you don't need to do <code>git checkout</code> at all.</p>
+
+<p>If the upstream branch also contains commits which you want to apply automatically, you can follow a subtle variation on the process:</p>
+
+<pre><code>git pull
+git merge &lt;commit before problem commit&gt;
+git reset &lt;problem commit&gt;
+git checkout &lt;file1&gt; &lt;file2&gt; ...
+git pull
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>This is the best practice for reverting changes:</p>
+
+<ul>
+<li><code>git commit</code> Commit your staged changes so they will be saved in the <strong><a href="https://git-scm.com/docs/git-reflog" rel="noreferrer">reflog</a></strong> ( see below )</li>
+<li><code>git fetch</code> Fetch the latest upstream changes</li>
+<li><code>git reset --hard origin/master</code> Hard reset to the origin master branch</li>
+</ul>
+
+<p>The <a href="https://git-scm.com/docs/git-reflog" rel="noreferrer">reflog</a> <em>records branches and other references being updated in the local repository</em>. Or simply put - the <strong>reflog</strong> is the <strong>history of your changes</strong>.</p>
+
+<p>So it's always a great practice to commit. Commits are appended to the reflog which ensures you will always have a way to retrieve the deleted code.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>On Windows, do this single command:</p>
+
+<pre><code>git fetch --all &amp; git reset --hard origin/master
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>I used this command to get rid of the local files preventing me from doing a pull/merge. But be careful! Run <code>git merge …</code> first to see whether there are only those files you really want to remove.</p>
+
+<pre><code>git merge origin/master 2&gt;&amp;1 &gt;/dev/null | grep ^[[:space:]] | sed s/^[[:space:]]//g | xargs -L1 rm
+</code></pre>
+
+<ul>
+<li><code>git merge</code> lists among other things all those files. They are prepended by some white-space.</li>
+<li><code>2&gt;&amp;1 &gt;/dev/null</code> redirects the error output to the standard one so it is picked up by <code>grep</code>.</li>
+<li><code>grep ^[[:space:]]</code> filters only the lines with file names.</li>
+<li><code>sed s/^[[:space:]]//g</code> trims the white-space from the beginning.</li>
+<li><code>xargs -L1 rm</code> calls <code>rm</code> on each of those files, deleting them.</li>
+</ul>
+
+<p>Handle with care: Whatever <code>git merge</code> outputs, the <code>rm</code> will be called for <strong>every</strong> line beginning with a white-space.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>I was trying to use the Material2 branch on the Angular2-Webpack-Starter and had a heck of a time. This was the only way I could download and use that branch.</p>
+
+<pre><code>git clone --depth 1 https://github.com/angularclass/angular2-webpack-starter.git
+
+cd angular2-webpack-starter/
+
+git checkout -b material2
+</code></pre>
+
+<p>Open the project folder and delete all non-hidden files and folders. Leave all the hidden ones.</p>
+
+<pre><code>git add .
+
+git commit -m "pokemon go"
+
+git reset --hard
+
+git pull origin material2
+</code></pre>
+
+<p>(When the editor pops up, hit ':wq', and then press <kbd>Enter</kbd>)</p>
+
+<p>Now you are ready.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>If you are working on your code and find the new changes a huge mistake or unwanted you can simply use an alternative like:</p>
+<pre><code>git restore .
+</code></pre>
+<p>where . means all the files present in the directory.</p>
+</div></body></html>

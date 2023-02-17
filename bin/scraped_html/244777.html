@@ -1,0 +1,676 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Can comments be used in JSON?</p><div class="s-prose js-post-body"><p>Can I use comments inside a <a href="https://en.wikipedia.org/wiki/JSON" rel="noreferrer">JSON</a> file? If so, how?</p>
+</div><p class="this-has-helped">This answer has helped 6897 people.</p><div class="s-prose js-post-body"><p>No.</p>
+<p>JSON is data-only. If you include a comment, then it must be data too.</p>
+<p>You could have a designated data element called <code>&quot;_comment&quot;</code> (or something) that should be ignored by apps that use the JSON data.</p>
+<p>You would probably be better having the comment in the processes that generates/receives the JSON, as they are supposed to know what the JSON data will be in advance, or at least the structure of it.</p>
+<p>But if you decided to:</p>
+<pre><code>{
+   &quot;_comment&quot;: &quot;comment text goes here...&quot;,
+   &quot;glossary&quot;: {
+      &quot;title&quot;: &quot;example glossary&quot;,
+      &quot;GlossDiv&quot;: {
+         &quot;title&quot;: &quot;S&quot;,
+         &quot;GlossList&quot;: {
+            &quot;GlossEntry&quot;: {
+               &quot;ID&quot;: &quot;SGML&quot;,
+               &quot;SortAs&quot;: &quot;SGML&quot;,
+               &quot;GlossTerm&quot;: &quot;Standard Generalized Markup Language&quot;,
+               &quot;Acronym&quot;: &quot;SGML&quot;,
+               &quot;Abbrev&quot;: &quot;ISO 8879:1986&quot;,
+               &quot;GlossDef&quot;: {
+                  &quot;para&quot;: &quot;A meta-markup language, used to create markup languages such as DocBook.&quot;,
+                  &quot;GlossSeeAlso&quot;: [&quot;GML&quot;, &quot;XML&quot;]
+               },
+               &quot;GlossSee&quot;: &quot;markup&quot;
+            }
+         }
+      }
+   }
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 2116 people.</p><div class="s-prose js-post-body"><p><strong>No</strong>, comments of the form <code>//…</code> or <code>/*…*/</code> are not allowed in JSON. This answer is based on:</p>
+<ul>
+<li><a href="https://www.json.org" rel="noreferrer">https://www.json.org</a></li>
+<li><a href="http://www.ietf.org/rfc/rfc4627.txt" rel="noreferrer">RFC 4627</a>:
+The <code>application/json</code> Media Type for JavaScript Object Notation (JSON)</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc8259" rel="noreferrer">RFC 8259</a> The JavaScript Object Notation (JSON) Data Interchange Format (supercedes RFCs 4627, 7158, 7159)</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 978 people.</p><div class="s-prose js-post-body"><p><strong>Include comments if you choose; strip them out with a minifier before parsing or transmitting.</strong></p>
+<p>I just released <strong><a href="http://github.com/getify/JSON.minify" rel="nofollow noreferrer">JSON.minify()</a></strong> which strips out comments and whitespace from a block of JSON and makes it valid JSON that can be parsed. So, you might use it like:</p>
+<pre><code>JSON.parse(JSON.minify(my_str));
+</code></pre>
+<p>When I released it, I got a huge backlash of people disagreeing with even the idea of it, so I decided that I'd write a comprehensive blog post on why <a href="http://web.archive.org/web/20100629021329/http://blog.getify.com/2010/06/json-comments/" rel="nofollow noreferrer">comments make sense in JSON</a>. It includes this notable comment from the creator of JSON:</p>
+<blockquote>
+<p>Suppose you are using JSON to keep configuration files, which you would like to annotate. Go ahead and insert all the comments you like. Then pipe it through JSMin before handing it to your JSON parser. - <a href="https://web.archive.org/web/20190112173904/https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="nofollow noreferrer">Douglas Crockford, 2012</a></p>
+</blockquote>
+<p>Hopefully that's helpful to those who disagree with why <strong>JSON.minify()</strong> could be useful.</p>
+</div><p class="this-has-helped">This answer has helped 547 people.</p><div class="s-prose js-post-body"><p>Comments were removed from JSON by design.</p>
+<blockquote>
+<p>I removed comments from JSON because I saw people were using them to hold parsing directives, a practice which would have destroyed interoperability. I know that the lack of comments makes some people sad, but it shouldn't.</p>
+<p>Suppose you are using JSON to keep configuration files, which you would like to annotate. Go ahead and insert all the comments you like. Then pipe it through JSMin before handing it to your JSON parser.</p>
+</blockquote>
+<p>Source: <a href="https://web.archive.org/web/20120507093915/https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="noreferrer">Public statement by Douglas Crockford on G+</a></p>
+</div><p class="this-has-helped">This answer has helped 360 people.</p><div class="s-prose js-post-body"><p>JSON does not support comments. It was also never intended to be used for configuration files where comments would be needed.</p>
+<p>Hjson is a configuration file format for humans. Relaxed syntax, fewer mistakes, more comments.</p>
+<p><a href="https://i.stack.imgur.com/u2E8q.gif" rel="noreferrer"><img src="https://i.stack.imgur.com/u2E8q.gif" alt="Hjson intro" /></a></p>
+<p>See <a href="https://hjson.github.io/" rel="noreferrer">hjson.github.io</a> for JavaScript, Java, Python, PHP, Rust, Go, Ruby, C++ and C# libraries.</p>
+</div><p class="this-has-helped">This answer has helped 240 people.</p><div class="s-prose js-post-body"><p>DISCLAIMER: YOUR WARRANTY IS VOID</p>
+
+<p>As has been pointed out, this hack takes advantage of the implementation of the spec. Not all JSON parsers will understand this sort of JSON. Streaming parsers in particular will choke.</p>
+
+<p>It's an interesting curiosity, but you <strong>should really not be using it for anything at all</strong>. Below is the original answer.</p>
+
+<hr>
+
+<p>I've found a little hack that allows you to place comments in a JSON file that will not affect the parsing, or alter the data being represented in any way.</p>
+
+<p>It appears that when declaring an object literal you can specify two values with the same key, and the last one takes precedence. Believe it or not, it turns out that JSON parsers work the same way. So we can use this to create comments in the source JSON that will not be present in a parsed object representation. </p>
+
+<pre><code>({a: 1, a: 2});
+// =&gt; Object {a: 2}
+Object.keys(JSON.parse('{"a": 1, "a": 2}')).length; 
+// =&gt; 1
+</code></pre>
+
+<p>If we apply this technique, your commented JSON file might look like this:</p>
+
+<pre><code>{
+  "api_host" : "The hostname of your API server. You may also specify the port.",
+  "api_host" : "hodorhodor.com",
+
+  "retry_interval" : "The interval in seconds between retrying failed API calls",
+  "retry_interval" : 10,
+
+  "auth_token" : "The authentication token. It is available in your developer dashboard under 'Settings'",
+  "auth_token" : "5ad0eb93697215bc0d48a7b69aa6fb8b",
+
+  "favorite_numbers": "An array containing my all-time favorite numbers",
+  "favorite_numbers": [19, 13, 53]
+}
+</code></pre>
+
+<p>The above code is <a href="http://jsonlint.com/" rel="noreferrer">valid JSON</a>. If you parse it, you'll get an object like this:</p>
+
+<pre><code>{
+    "api_host": "hodorhodor.com",
+    "retry_interval": 10,
+    "auth_token": "5ad0eb93697215bc0d48a7b69aa6fb8b",
+    "favorite_numbers": [19,13,53]
+}
+</code></pre>
+
+<p>Which means there is no trace of the comments, and they won't have weird side-effects.</p>
+
+<p>Happy hacking!</p>
+</div><p class="this-has-helped">This answer has helped 190 people.</p><div class="s-prose js-post-body"><p>Consider using <a href="https://yaml.org/" rel="noreferrer">YAML</a>. It's nearly a superset of JSON (virtually all valid JSON is valid YAML) and it allows comments.</p>
+</div><p class="this-has-helped">This answer has helped 142 people.</p><div class="s-prose js-post-body"><p>You can't. At least that's my experience from a quick glance at <a href="http://json.org" rel="noreferrer">json.org</a>.</p>
+
+<p>JSON has its syntax visualized on that page. There isn't any note about comments.</p>
+</div><p class="this-has-helped">This answer has helped 119 people.</p><div class="s-prose js-post-body"><p>Comments are not an official standard, although some parsers support C++-style comments. One that I use is <a href="https://github.com/open-source-parsers/jsoncpp" rel="noreferrer">JsonCpp</a>. In the examples there is this one:</p>
+<pre><code>// Configuration options
+{
+    // Default encoding for text
+    &quot;encoding&quot; : &quot;UTF-8&quot;,
+
+    // Plug-ins loaded at start-up
+    &quot;plug-ins&quot; : [
+        &quot;python&quot;,
+        &quot;c++&quot;,
+        &quot;ruby&quot;
+        ],
+
+    // Tab indent size
+    &quot;indent&quot; : { &quot;length&quot; : 3, &quot;use_space&quot;: true }
+}
+</code></pre>
+<p><a href="http://www.jsonlint.com" rel="noreferrer">jsonlint</a> does not validate this. So comments are a parser specific extension and not standard.</p>
+<p>Another parser is <a href="https://json5.org/" rel="noreferrer">JSON5</a>.</p>
+<p>An alternative to JSON <a href="https://github.com/toml-lang/toml" rel="noreferrer">TOML</a>.</p>
+<p>A further alternative is <a href="https://www.npmjs.com/package/jsonc" rel="noreferrer">jsonc</a>.</p>
+<p>The latest version of <a href="https://github.com/nlohmann/json#comments-in-json" rel="noreferrer">nlohmann/json</a> has optional support for ignoring comments on parsing.</p>
+</div><p class="this-has-helped">This answer has helped 99 people.</p><div class="s-prose js-post-body"><p>Here is what I found in the <a href="https://web.archive.org/web/20170517210432/https://firebase.google.com/docs/cloud-messaging/js/client#configure_the_browser_to_receive_messages" rel="noreferrer">Google Firebase documentation</a> that allows you to put comments in JSON:</p>
+<pre class="lang-json prettyprint-override"><code>{
+  &quot;//&quot;: &quot;Some browsers will use this to enable push notifications.&quot;,
+  &quot;//&quot;: &quot;It is the same for all projects, this is not your project's sender ID&quot;,
+  &quot;gcm_sender_id&quot;: &quot;1234567890&quot;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 89 people.</p><div class="s-prose js-post-body"><p>You should write a <a href="http://json-schema.org/" rel="nofollow noreferrer">JSON schema</a> instead. JSON schema is currently a proposed Internet draft specification. Besides documentation, the schema can also be used for validating your JSON data.</p>
+<p>Example:</p>
+<pre><code>{
+  &quot;description&quot;: &quot;A person&quot;,
+  &quot;type&quot;: &quot;object&quot;,
+  &quot;properties&quot;: {
+    &quot;name&quot;: {
+      &quot;type&quot;: &quot;string&quot;
+    },
+    &quot;age&quot;: {
+      &quot;type&quot;: &quot;integer&quot;,
+      &quot;maximum&quot;: 125
+    }
+  }
+}
+</code></pre>
+<p>You can provide documentation by using the <strong>description</strong> schema attribute.</p>
+</div><p class="this-has-helped">This answer has helped 84 people.</p><div class="s-prose js-post-body"><p>If you are using <a href="https://github.com/FasterXML/jackson" rel="noreferrer">Jackson</a> as your JSON parser then this is how you enable it to allow comments:</p>
+
+<pre><code>ObjectMapper mapper = new ObjectMapper().configure(Feature.ALLOW_COMMENTS, true);
+</code></pre>
+
+<p>Then you can have comments like this:</p>
+
+<pre><code>{
+  key: "value" // Comment
+}
+</code></pre>
+
+<p>And you can also have comments starting with <code>#</code> by setting:</p>
+
+<pre><code>mapper.configure(Feature.ALLOW_YAML_COMMENTS, true);
+</code></pre>
+
+<p>But in general (as answered before) the specification does not allow comments.</p>
+</div><p class="this-has-helped">This answer has helped 83 people.</p><div class="s-prose js-post-body"><p><strong>NO</strong>. JSON used to support comments but they were abused and removed from the standard.</p>
+<p>From the creator of JSON:</p>
+<blockquote>
+<p>I removed comments from JSON because I saw people were using them to hold parsing directives, a practice which would have destroyed interoperability.  I know that the lack of comments makes some people sad, but it shouldn't.  - <a href="https://web.archive.org/web/20120506232618/https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="noreferrer">Douglas Crockford, 2012</a></p>
+</blockquote>
+<p>The official JSON site is at <a href="http://json.org" rel="noreferrer">JSON.org</a>. JSON is defined as a <a href="http://ecma-international.org/publications/standards/Ecma-404.htm" rel="noreferrer">standard</a> by ECMA International. There is always a petition process to have standards revised. It is unlikely that annotations will be added to the JSON standard for several reasons.</p>
+<p>JSON by design is an easily reverse-engineered (human parsed) alternative to XML. It is simplified even to the point that annotations are unnecessary. It is not even a markup language. The goal is stability and  interoperablilty.</p>
+<p>Anyone who understands the &quot;has-a&quot; relationship of object orientation can understand any JSON structure - that is the whole point. It is just a  directed acyclic graph (DAG) with node tags (key/value pairs), which is a near universal data structure.</p>
+<p>This only annotation required might be &quot;//These are DAG tags&quot;. The key names can be as informative as required, allowing arbitrary semantic arity.</p>
+<p>Any platform can parse JSON with just a few lines of code. XML requires complex OO libraries that are not viable on many platforms.</p>
+<p>Annotations would just make JSON less interoperable. There is simply nothing else to add unless what you really need is a markup language (XML), and don't care if your persisted data is easily parsed.</p>
+<p><strong>BUT</strong> as the creator of JSON also observed, there has always been JS pipeline support for comments:</p>
+<blockquote>
+<p>Go ahead and insert all the comments you like.
+Then pipe it through JSMin before handing it to your JSON parser. - <a href="https://web.archive.org/web/20120506232618/https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="noreferrer">Douglas Crockford, 2012</a></p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 54 people.</p><div class="s-prose js-post-body"><p>If you are using the Newtonsoft.Json library with ASP.NET to read/deserialize you can use comments in the JSON content:</p>
+<blockquote>
+<p>//&quot;name&quot;: &quot;string&quot;</p>
+<p>//&quot;id&quot;: int</p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p>/* This is a</p>
+<p>comment example */</p>
+</blockquote>
+<p><strong>PS:</strong> Single-line comments are only supported with 6+ versions of Newtonsoft Json.</p>
+<p><strong>Additional note for people who can't think out of the box:</strong> I use the JSON format for basic settings in an ASP.NET web application I made. I read the file, convert it into the settings object with the Newtonsoft library and use it when necessary.</p>
+<p>I prefer writing comments about each individual setting in the JSON file itself, and I really don't care about the integrity of the JSON format as long as the library I use is OK with it.</p>
+<p>I think this is an 'easier to use/understand' way than creating a separate 'settings.README' file and explaining the settings in it.</p>
+<p>If you have a problem with this kind of usage; sorry, the genie is out of the lamp. People would find other usages for JSON format, and there is nothing you can do about it.</p>
+</div><p class="this-has-helped">This answer has helped 50 people.</p><div class="s-prose js-post-body"><p>If your text file, which is a JSON string, is going to be read by some program, how difficult would it be to strip out either C or C++ style comments before using it?</p>
+
+<p><strong>Answer:</strong> It would be a one liner. If you do that then JSON files could be used as configuration files.</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>The idea behind JSON is to provide simple data exchange between applications. These are typically web based and the language is JavaScript.</p>
+
+<p>It doesn't really allow for comments as such, however, passing a comment as one of the name/value pairs in the data would certainly work, although that data would obviously need to be ignored or handled specifically by the parsing code.</p>
+
+<p>All that said, it's not the intention that the JSON file should contain comments in the traditional sense. It should just be the data.</p>
+
+<p>Have a look at the <a href="http://www.json.org/" rel="noreferrer">JSON website</a> for more detail.</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>JSON does not support comments natively, but you can make your own decoder or at least preprocessor to strip out comments, that's perfectly fine (as long as you just ignore comments and don't use them to guide how your application should process the JSON data).</p>
+<blockquote>
+<p>JSON does not have comments. A JSON encoder MUST NOT output comments.
+A JSON decoder MAY accept and ignore comments.</p>
+</blockquote>
+<blockquote>
+<p>Comments should never be used to transmit anything meaningful. That is
+what JSON is for.</p>
+</blockquote>
+<p>Cf: <a href="https://web.archive.org/web/20130101004216/http://tech.groups.yahoo.com/group/json/message/152" rel="nofollow noreferrer">Douglas Crockford, author of JSON spec</a>.</p>
+</div><p class="this-has-helped">This answer has helped 37 people.</p><div class="s-prose js-post-body"><p>I just encountering this for configuration files. I don't want to use <strong>XML</strong> (verbose, graphically, ugly, hard to read), or "ini" format (no hierarchy, no real standard, etc.) or Java "Properties" format (like .ini).</p>
+
+<p>JSON can do all they can do, but it is way less verbose and more human readable - and parsers are easy and ubiquitous in many languages. It's just a tree of data. But out-of-band comments are a necessity often to document "default" configurations and the like. Configurations are never to be "full documents", but trees of saved data that can be human readable when needed.</p>
+
+<p>I guess one could use <code>"#": "comment"</code>, for "valid" JSON.</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>It depends on your JSON library. <a href="https://github.com/JamesNK/Newtonsoft.Json" rel="noreferrer">Json.NET</a> supports JavaScript-style comments, <code>/* commment */</code>.</p>
+
+<p>See <a href="https://stackoverflow.com/a/10325432/166286">another Stack&nbsp;Overflow question</a>.</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>JSON makes a lot of sense for config files and other local usage because it's ubiquitous and because it's much simpler than XML.</p>
+<p>If people have strong reasons against having comments in JSON when communicating data (whether valid or not), then possibly JSON could be split into two:</p>
+<ul>
+<li>JSON-COM: JSON on the wire, or rules that apply when communicating JSON data.</li>
+<li>JSON-DOC: JSON document, or JSON in files or locally. Rules that define a valid JSON document.</li>
+</ul>
+<p>JSON-DOC will allow comments, and other minor differences might exist such as handling whitespace. Parsers can easily convert from one spec to the other.</p>
+<p>With regards to the <a href="https://web.archive.org/web/20190112173904/https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="nofollow noreferrer">remark</a> made by Douglas Crockford on this issues (referenced by @Artur Czajka)</p>
+<blockquote>
+<p>Suppose you are using JSON to keep configuration files, which you would like to annotate. Go ahead and insert all the comments you like. Then pipe it through JSMin before handing it to your JSON parser.</p>
+</blockquote>
+<p>We're talking about a generic config file issue (cross language/platform), and he's answering with a JS specific utility!</p>
+<p>Sure a JSON specific minify can be implemented in any language,
+but standardize this so it becomes ubiquitous across parsers in all languages and platforms so people stop wasting their time lacking the feature because they have good use-cases for it, looking the issue up in online forums, and getting people telling them it's a bad idea or suggesting it's easy to implement stripping comments out of text files.</p>
+<p>The other issue is interoperability. Suppose you have a library or API or any kind of subsystem which has some config or data files associated with it. And this subsystem is
+to be accessed from different languages.  Then do you go about telling people: by the way
+don't forget to strip out the comments from the JSON files before passing them to the parser!</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p><strong>Yes</strong>, the new standard, <a href="https://spec.json5.org/#comments" rel="noreferrer">JSON5</a> allows the C++ style comments, among many <a href="https://spec.json5.org/#introduction" rel="noreferrer">other extensions</a>:</p>
+<pre><code>// A single line comment.
+
+/* A multi-
+   line comment. */
+</code></pre>
+<p>The JSON5 Data Interchange Format (JSON5) is a superset of JSON that aims to alleviate some of the limitations of JSON. It is fully backwards compatible, and using it is probably better than writing the custom non standard parser, turning non standard features on for the existing one or using various hacks like string fields for commenting. Or, if the parser in use supports, simply agree <em>we are using JSON 5 subset that is JSON and C++ style comments</em>. It is much better than <em>we tweak JSON standard the way we see fit</em>.</p>
+<p>There is already <a href="https://www.npmjs.com/package/json5" rel="noreferrer">npm package</a>, <a href="https://pypi.org/project/json5/" rel="noreferrer">Python package</a>, <a href="https://github.com/falkreon/Jankson" rel="noreferrer">Java package</a> and <a href="https://gist.github.com/inlife/b54a0d9228e428284e1d8eccbed97e35" rel="noreferrer">C library</a> available. It is backwards compatible. I see no reason to stay with the &quot;official&quot; JSON restrictions.</p>
+<p>I think that removing comments from JSON has been driven by the same reasons as removing the operator overloading in Java: can be used the wrong way yet some clearly legitimate use cases were overlooked. For operator overloading, it is matrix algebra and complex numbers. For JSON comments, its is configuration files and other documents that may be written, edited or read by humans and not just by parser.</p>
+</div><p class="this-has-helped">This answer has helped 34 people.</p><div class="s-prose js-post-body"><p>If you use <a href="http://json5.org/" rel="noreferrer">JSON5</a> you can include comments.</p>
+
+<hr>
+
+<p><strong>JSON5 is a proposed extension to JSON</strong> that aims to make it easier for humans to write and maintain by hand. It does this by adding some minimal syntax features directly from ECMAScript&nbsp;5.</p>
+</div><p class="this-has-helped">This answer has helped 28 people.</p><div class="s-prose js-post-body"><p>The Dojo Toolkit JavaScript toolkit (at least as of version 1.4), allows you to include comments in your JSON. The comments can be of <code>/* */</code> format. Dojo Toolkit consumes the JSON via the <code>dojo.xhrGet()</code> call.</p>
+
+<p>Other JavaScript toolkits may work similarly.</p>
+
+<p>This can be helpful when experimenting with alternate data structures (or even data lists) before choosing a final option.</p>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p>You <em>can</em> have comments in <a href="https://en.wikipedia.org/wiki/JSONP" rel="nofollow noreferrer">JSONP</a>, but not in pure JSON. I've just spent an hour trying to make my program work with <a href="https://web.archive.org/web/20200131214417/http://www.highcharts.com/samples/data/jsonp.php?filename=aapl-c.json&amp;callback=?" rel="nofollow noreferrer">this example from Highcharts</a>.</p>
+<p>If you follow the link, you will see</p>
+<pre><code>?(/* AAPL historical OHLC data from the Google Finance API */
+[
+/* May 2006 */
+[1147651200000,67.79],
+[1147737600000,64.98],
+...
+[1368057600000,456.77],
+[1368144000000,452.97]
+]);
+</code></pre>
+<p>Since I had a similar file in my local folder, there were no issues with the <a href="https://en.wikipedia.org/wiki/Same-origin_policy" rel="nofollow noreferrer">Same-origin policy</a>, so I decided to use pure JSON… and, of course, <code>$.getJSON</code> was failing silently because of the comments.</p>
+<p>Eventually I just sent a manual HTTP request to the address above and realized that the content-type was <code>text/javascript</code> since, well, JSONP returns pure JavaScript. In this case comments <em>are allowed</em>. But my application returned content-type <code>application/json</code>, so I had to remove the comments.</p>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p><strong>JSON is not a framed protocol</strong>. It is a <em>language free format</em>. So a comment's format is not defined for JSON.</p>
+
+<p>As many people have suggested, there are some tricks, for example, duplicate keys or a specific key <code>_comment</code> that you can use. It's up to you.</p>
+</div><p class="this-has-helped">This answer has helped 26 people.</p><div class="s-prose js-post-body"><p><em><strong>Disclaimer: This is silly</strong></em></p>
+<p>There is actually a way to add comments, and stay within the specification (no additional parser needed). It will not result into human-readable comments without any sort of parsing though.</p>
+<p>You could abuse the following:</p>
+<blockquote>
+<p>Insignificant whitespace is allowed before or after any token.
+Whitespace is any sequence of one or more of the following code
+points: character tabulation (U+0009), line feed (U+000A), carriage
+return (U+000D), and space (U+0020).</p>
+</blockquote>
+<p>In a hacky way, you can abuse this to add a comment. For instance: start and end your comment with a tab. Encode the comment in base3 and use the other whitespace characters to represent them. For instance.</p>
+<pre><code>010212 010202 011000 011000 011010 001012 010122 010121 011021 010202 001012 011022 010212 011020 010202 010202
+</code></pre>
+<p>(<code>hello base three</code> in ASCII) But instead of 0 use space, for 1 use line feed and for 2 use carriage return.</p>
+<p>This will just leave you with a lot of unreadable whitespace (unless you make an IDE plugin to encode/decode it on the fly).</p>
+<p>I never even tried this, for obvious reasons and neither should you.</p>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>This is a <strong>&quot;can you&quot;</strong> question. And here is a <strong>&quot;yes&quot;</strong> answer.</p>
+<p>No, you shouldn't use duplicative object members to stuff side channel data into a JSON encoding. (See &quot;The names within an object SHOULD be unique&quot; <a href="https://www.rfc-editor.org/rfc/rfc8259" rel="nofollow noreferrer">in the RFC</a>).</p>
+<p>And yes, you could <a href="https://web.archive.org/web/20190112173904/https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="nofollow noreferrer">insert comments <em>around</em> the JSON</a>, which you could parse out.</p>
+<p>But if you want a way of inserting and extracting arbitrary side-channel data to a valid JSON, here is an answer. We take advantage of the non-unique representation of data in a JSON encoding. This is allowed<sup>*</sup> in section two of the RFC under &quot;whitespace is allowed before or after any of the six structural characters&quot;.</p>
+<p><i><sup>*</sup>The RFC only states &quot;whitespace is allowed before or after any of the six structural characters&quot;, not explicitly mentioning strings, numbers, &quot;false&quot;, &quot;true&quot;, and &quot;null&quot;. This omission is ignored in ALL implementations.</i></p>
+<hr />
+<p>First, canonicalize your JSON by minifying it:</p>
+<pre><code>$jsonMin = json_encode(json_decode($json));
+</code></pre>
+<p>Then encode your comment in binary:</p>
+<pre><code>$hex = unpack('H*', $comment);
+$commentBinary = base_convert($hex[1], 16, 2);
+</code></pre>
+<p>Then steg your binary:</p>
+<pre><code>$steg = str_replace('0', ' ', $commentBinary);
+$steg = str_replace('1', &quot;\t&quot;, $steg);
+</code></pre>
+<p>Here is your output:</p>
+<pre><code>$jsonWithComment = $steg . $jsonMin;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>JSON doesn't allow comments, per se. The reasoning is utterly foolish, because you can use JSON <em>itself</em> to create comments, which obviates the reasoning entirely, <em>and</em> loads the parser data space for no good reason at all for <em>exactly</em> the same result and potential issues, such as they are: a JSON file with comments.</p>
+<blockquote>
+<p><strong>If you try to put comments in (using <code>//</code> or <code>/* */</code> or <code>#</code> for instance), then some parsers will fail because this is strictly not
+within the JSON specification. So you should <em>never</em> do that.</strong></p>
+</blockquote>
+<p>Here, for instance, where my <a href="https://fyngyrz.com/?page_id=3622" rel="nofollow noreferrer">image manipulation system</a> has saved image notations and some basic formatted (comment) information relating to them (at the bottom):</p>
+<pre><code>{
+    &quot;Notations&quot;: [
+        {
+            &quot;anchorX&quot;: 333,
+            &quot;anchorY&quot;: 265,
+            &quot;areaMode&quot;: &quot;Ellipse&quot;,
+            &quot;extentX&quot;: 356,
+            &quot;extentY&quot;: 294,
+            &quot;opacity&quot;: 0.5,
+            &quot;text&quot;: &quot;Elliptical area on top&quot;,
+            &quot;textX&quot;: 333,
+            &quot;textY&quot;: 265,
+            &quot;title&quot;: &quot;Notation 1&quot;
+        },
+        {
+            &quot;anchorX&quot;: 87,
+            &quot;anchorY&quot;: 385,
+            &quot;areaMode&quot;: &quot;Rectangle&quot;,
+            &quot;extentX&quot;: 109,
+            &quot;extentY&quot;: 412,
+            &quot;opacity&quot;: 0.5,
+            &quot;text&quot;: &quot;Rect area\non bottom&quot;,
+            &quot;textX&quot;: 98,
+            &quot;textY&quot;: 385,
+            &quot;title&quot;: &quot;Notation 2&quot;
+        },
+        {
+            &quot;anchorX&quot;: 69,
+            &quot;anchorY&quot;: 104,
+            &quot;areaMode&quot;: &quot;Polygon&quot;,
+            &quot;extentX&quot;: 102,
+            &quot;extentY&quot;: 136,
+            &quot;opacity&quot;: 0.5,
+            &quot;pointList&quot;: [
+                {
+                    &quot;i&quot;: 0,
+                    &quot;x&quot;: 83,
+                    &quot;y&quot;: 104
+                },
+                {
+                    &quot;i&quot;: 1,
+                    &quot;x&quot;: 69,
+                    &quot;y&quot;: 136
+                },
+                {
+                    &quot;i&quot;: 2,
+                    &quot;x&quot;: 102,
+                    &quot;y&quot;: 132
+                },
+                {
+                    &quot;i&quot;: 3,
+                    &quot;x&quot;: 83,
+                    &quot;y&quot;: 104
+                }
+            ],
+            &quot;text&quot;: &quot;Simple polygon&quot;,
+            &quot;textX&quot;: 85,
+            &quot;textY&quot;: 104,
+            &quot;title&quot;: &quot;Notation 3&quot;
+        }
+    ],
+    &quot;imageXW&quot;: 512,
+    &quot;imageYW&quot;: 512,
+    &quot;imageName&quot;: &quot;lena_std.ato&quot;,
+    &quot;tinyDocs&quot;: {
+        &quot;c01&quot;: &quot;JSON image notation data:&quot;,
+        &quot;c02&quot;: &quot;-------------------------&quot;,
+        &quot;c03&quot;: &quot;&quot;,
+        &quot;c04&quot;: &quot;This data contains image notations and related area&quot;,
+        &quot;c05&quot;: &quot;selection information that provides a means for an&quot;,
+        &quot;c06&quot;: &quot;image gallery to display notations with elliptical,&quot;,
+        &quot;c07&quot;: &quot;rectangular, polygonal or freehand area indications&quot;,
+        &quot;c08&quot;: &quot;over an image displayed to a gallery visitor.&quot;,
+        &quot;c09&quot;: &quot;&quot;,
+        &quot;c10&quot;: &quot;X and Y positions are all in image space. The image&quot;,
+        &quot;c11&quot;: &quot;resolution is given as imageXW and imageYW, which&quot;,
+        &quot;c12&quot;: &quot;you use to scale the notation areas to their proper&quot;,
+        &quot;c13&quot;: &quot;locations and sizes for your display of the image,&quot;,
+        &quot;c14&quot;: &quot;regardless of scale.&quot;,
+        &quot;c15&quot;: &quot;&quot;,
+        &quot;c16&quot;: &quot;For Ellipses, anchor is the  center of the ellipse,&quot;,
+        &quot;c17&quot;: &quot;and the extents are the X and Y radii respectively.&quot;,
+        &quot;c18&quot;: &quot;&quot;,
+        &quot;c19&quot;: &quot;For Rectangles, the anchor is the top left and the&quot;,
+        &quot;c20&quot;: &quot;extents are the bottom right.&quot;,
+        &quot;c21&quot;: &quot;&quot;,
+        &quot;c22&quot;: &quot;For Freehand and Polygon area modes, the pointList&quot;,
+        &quot;c23&quot;: &quot;contains a series of numbered XY points. If the area&quot;,
+        &quot;c24&quot;: &quot;is closed, the last point will be the same as the&quot;,
+        &quot;c25&quot;: &quot;first, so all you have to be concerned with is drawing&quot;,
+        &quot;c26&quot;: &quot;lines between the points in the list. Anchor and extent&quot;,
+        &quot;c27&quot;: &quot;are set to the top left and bottom right of the indicated&quot;,
+        &quot;c28&quot;: &quot;region, and can be used as a simplistic rectangular&quot;,
+        &quot;c29&quot;: &quot;detect for the mouse hover position over these types&quot;,
+        &quot;c30&quot;: &quot;of areas.&quot;,
+        &quot;c31&quot;: &quot;&quot;,
+        &quot;c32&quot;: &quot;The textx and texty positions provide basic positioning&quot;,
+        &quot;c33&quot;: &quot;information to help you locate the text information&quot;,
+        &quot;c34&quot;: &quot;in a reasonable location associated with the area&quot;,
+        &quot;c35&quot;: &quot;indication.&quot;,
+        &quot;c36&quot;: &quot;&quot;,
+        &quot;c37&quot;: &quot;Opacity is a value between 0 and 1, where .5 represents&quot;,
+        &quot;c38&quot;: &quot;a 50% opaque backdrop and 1.0 represents a fully opaque&quot;,
+        &quot;c39&quot;: &quot;backdrop. Recommendation is that regions be drawn&quot;,
+        &quot;c40&quot;: &quot;only if the user hovers the pointer over the image,&quot;,
+        &quot;c41&quot;: &quot;and that the text associated with the regions be drawn&quot;,
+        &quot;c42&quot;: &quot;only if the user hovers the pointer over the indicated&quot;,
+        &quot;c43&quot;: &quot;region.&quot;
+    }
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><p>In my case, I need to use comments for debug purposes just before the output of the JSON. So I put the debug information in the <strong>HTTP header</strong>, to avoid breaking the client:</p>
+<pre><code>header(&quot;My-Json-Comment: Yes, I know it's a workaround ;-) &quot;);
+</code></pre>
+<p><a href="https://i.stack.imgur.com/yMh3J.png" rel="noreferrer"><img src="https://i.stack.imgur.com/yMh3J.png" alt="Enter image description here" /></a></p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>We are using <a href="https://github.com/sindresorhus/strip-json-comments"><code>strip-json-comments</code></a> for our project. It supports something like:</p>
+
+<pre><code>/*
+ * Description 
+*/
+{
+    // rainbows
+    "unicorn": /* ❤ */ "cake"
+}
+</code></pre>
+
+<p>Simply <code>npm install --save strip-json-comments</code> to install and use it like:</p>
+
+<pre><code>var strip_json_comments = require('strip-json-comments')
+var json = '{/*rainbows*/"unicorn":"cake"}';
+JSON.parse(strip_json_comments(json));
+//=&gt; {unicorn: 'cake'}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>To cut a JSON item into parts I add "dummy comment" lines:</p>
+
+<pre><code>{
+
+"#############################" : "Part1",
+
+"data1"             : "value1",
+"data2"             : "value2",
+
+"#############################" : "Part2",
+
+"data4"             : "value3",
+"data3"             : "value4"
+
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>The author of JSON wants us to include comments in the JSON, but strip them out before parsing them (see <a href="https://plus.google.com/118095276221607585885/posts/RK8qyGVaGSr" rel="noreferrer">link</a> provided by Michael Burr). If JSON should have comments, why not standardize them, and let the JSON parser do the job? I don't agree with the logic there, but, alas, that's the standard. Using a YAML solution as suggested by others is good, but it requires a library dependency.</p>
+
+<p>If you want to strip out comments, but don't want to have a library dependency, here is a two-line solution, which works for C++-style comments, but can be adapted to others:</p>
+
+<pre><code>var comments = new RegExp("//.*", 'mg');
+data = JSON.parse(fs.readFileSync(sample_file, 'utf8').replace(comments, ''));
+</code></pre>
+
+<p>Note that this solution can only be used in cases where you can be sure that the JSON data does not contain the comment initiator, e.g. ('//').</p>
+
+<p>Another way to achieve JSON parsing, stripping of comments, and no extra library, is to evaluate the JSON in a JavaScript interpreter. The caveat with that approach, of course, is that you would only want to evaluate untainted data (no untrusted user-input). Here is an example of this approach in Node.js -- another caveat, the following example will only read the data once and then it will be cached:</p>
+
+<pre><code>data = require(fs.realpathSync(doctree_fp));
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>You can use JSON with comments in it, if you load it as a text file, and then remove comments.</p>
+
+<p>For example, you can use <a href="https://www.npmjs.com/package/decomment" rel="nofollow noreferrer">decomment</a> library for that. Below is a complete example.</p>
+
+<p><strong>Input JSON (file input.js):</strong></p>
+
+<pre><code>/*
+* multi-line comments
+**/
+{
+    "value": 123 // one-line comment
+}
+</code></pre>
+
+<p><strong>Test Application:</strong></p>
+
+<pre><code>var decomment = require('decomment');
+var fs = require('fs');
+
+fs.readFile('input.js', 'utf8', function (err, data) {
+    if (err) {
+        console.log(err);
+    } else {
+        var text = decomment(data); // removing comments
+        var json = JSON.parse(text); // parsing JSON
+        console.log(json);
+    }
+});
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>{ value: 123 }
+</code></pre>
+
+<p>See also: <a href="https://github.com/vitaly-t/gulp-decomment" rel="nofollow noreferrer">gulp-decomment</a>, <a href="https://github.com/vitaly-t/grunt-decomment" rel="nofollow noreferrer">grunt-decomment</a></p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>Sigh. Why not just add fields, e.g.</p>
+
+<pre><code>{
+    "note1" : "This demonstrates the provision of annotations within a JSON file",
+    "field1" : 12,
+    "field2" : "some text",
+
+    "note2" : "Add more annotations as necessary"
+}
+</code></pre>
+
+<p>Just make sure your "notex" names don't conflict with any real fields.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>The <a href="https://www.json.org/" rel="noreferrer">JSON specification</a> does not support comments, <code>// or /* */</code> style.</p>
+<p>But some JSON parsing libraries and IDEs support them.</p>
+<p>Like:</p>
+<ol>
+<li><a href="https://json5.org/" rel="noreferrer">JSON5</a></li>
+<li><a href="https://code.visualstudio.com/docs/languages/json#_json-with-comments" rel="noreferrer">Visual Studio Code</a></li>
+<li><a href="https://github.com/vaidik/commentjson" rel="noreferrer">Commentjson</a></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>I just found "<a href="https://www.npmjs.org/package/grunt-strip-json-comments" rel="noreferrer">grunt-strip-json-comments</a>".</p>
+
+<blockquote>
+  <p>“Strip comments from JSON. It lets you use comments in your JSON files!”</p>
+</blockquote>
+
+<pre><code>{
+    // Rainbows
+    "unicorn": /* ❤ */ "cake"
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>As <a href="https://web.archive.org/web/20130101004216/http://tech.groups.yahoo.com:80/group/json/message/152" rel="noreferrer">the inventor of JSON said</a>:</p>
+<blockquote>
+<p>JSON does not have comments. A JSON encoder MUST NOT output comments. A JSON decoder MAY accept and ignore comments.</p>
+</blockquote>
+<p>The utility <a href="/questions/tagged/jq" class="post-tag" title="show questions tagged &#39;jq&#39;" rel="tag">jq</a> includes a decoder that does allow &quot;#&quot;-style comments and so jq is one of several tools that can be used in conjunction with JSON-with-comments files, so long as such files are treated as &quot;jq programs&quot;, rather than as JSON files.  For example:</p>
+<pre><code>$ jq -ncf &lt;(echo $'[1, # one\n2 ] # two') 
+[1,2]
+</code></pre>
+<p>More importantly, jq can handle very large JSON-with-comments files as programs; this can be illustrated using a well-known JSON file:</p>
+<pre><code>$ ls -l JEOPARDY_QUESTIONS1.json
+-rw-r--r--  2 xyzzy  staff  55554625 May 12  2016 JEOPARDY_QUESTIONS1.json
+
+$ jq -nf JEOPARDY_QUESTIONS1.json | jq length
+216930
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>json specs doesn't support comments BUT you can work around the problem by writing your comment as keys, like this</p>
+<pre><code>{
+  &quot;// my own comment goes here&quot;:&quot;&quot;,
+  &quot;key1&quot;:&quot;value 1&quot;,
+
+  &quot;// another comment goes here&quot;:&quot;&quot;,
+  &quot;key 2&quot;: &quot;value 2 here&quot;
+}
+</code></pre>
+<p>this way we are using the comment texts as keys ensuring (almost) that they are unique and they will not break any parsers. if some of your comments are not unique just add random numbers at the end.</p>
+<p>if you need to parse comments to do any processing like stripping them you can fill the comment values with text indicating that it is a comment , like so:</p>
+<pre><code>   {
+  &quot;// my own comment goes here&quot; : &quot;_comment&quot;,
+  &quot;key1&quot;:&quot;value 1&quot;,
+
+  &quot;// another comment goes here&quot; : &quot;_comment&quot;,
+  &quot;key 2&quot;: &quot;value 2 here&quot;
+} 
+  
+</code></pre>
+<p>this way a parser can find all comments and process them.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>There is a good solution (hack), which is valid JSON, <strong>but it will not work in all cases</strong> (see comments below).
+Just make the same key twice (or more). For example:</p>
+<pre><code>{
+  &quot;param&quot; : &quot;This is the comment place&quot;,
+  &quot;param&quot; : &quot;This is value place&quot;,
+}
+</code></pre>
+<p>So JSON will understand this as:</p>
+<pre><code>{
+  &quot;param&quot; : &quot;This is value place&quot;,
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>The practical answer for <a href="https://en.wikipedia.org/wiki/Visual_Studio_Code" rel="nofollow noreferrer">Visual Studio Code</a> users in 2019 is to use the 'jsonc' extension.</p>
+<p>It is practical, because that is the extension recognized by Visual Studio Code to indicate &quot;JSON with comments&quot;. Please let me know about other editors/IDEs in the comments below.</p>
+<p>It would be nice if Visual Studio Code and other editors would add native support for JSON5 as well, but for now Visual Studio Code only includes support for 'jsonc'.</p>
+<p>(I searched through all the answers before posting this and none mention 'jsonc'.)</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>The Pure answer is <strong>No</strong>.</p>
+<p>But some editors and platforms use workarounds to add comments to JSON.</p>
+<p><strong>1</strong>.  Today most editors have built-in options and extensions to add comments to JSON documents. (eg:- VS Code also has a JSON with Comments <code>(jsonc) mode</code> / VS Code also has nice extensions for that)</p>
+<p><a href="https://code.visualstudio.com/docs/languages/json#_json-with-comments" rel="noreferrer">Link to activate jsonc mode in VsCode </a></p>
+<p><strong>2</strong>.  Some platforms provide built-in ways to add comments (impure json).
+(eg:- In firebase, I can comment <code>firebase.json</code>s for a while without issue.</p>
+<pre><code>    {
+    &quot;hosting&quot;: {
+        &quot;headers&quot;: [
+            /*{
+              &quot;source&quot;: &quot;*.html&quot;,
+              &quot;headers&quot;: [
+                {
+                  &quot;key&quot;: &quot;Content-Security-Policy&quot;,
+                  &quot;value&quot;: &quot;default-src 'self' ...&quot;
+                }
+              ]
+            },*/
+        ]
+      }
+    }
+</code></pre>
+<p><strong>3</strong>.  In your own JSON parsing method, you can set a predefined key name as a comment.</p>
+<p>eg:-</p>
+<pre><code>     {
+        &quot;comment&quot; : &quot;This is a comment&quot;,
+        &quot;//&quot; :  &quot;This also comment&quot;,
+        &quot;name&quot; : &quot;This is a real value&quot;
+     }
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>If your context is Node.js configuration, you might consider JavaScript via <code>module.exports</code> as an alternative to JSON:</p>
+
+<pre><code>module.exports = {
+    "key": "value",
+
+    // And with comments!
+    "key2": "value2"
+};
+</code></pre>
+
+<p>The <code>require</code> syntax will still be the same. Being JavaScript, the file extension should be <code>.js</code>.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>As many answers have already pointed out, JSON does not natively have comments. Of course sometimes you want them anyway. For <strong>Python</strong>, two ways to do that are with <a href="https://github.com/vaidik/commentjson" rel="noreferrer"><code>commentjson</code></a> (<code>#</code> and <code>//</code> for Python&nbsp;2 only) or <a href="https://github.com/mverleg/pyjson_tricks" rel="noreferrer"><code>json_tricks</code></a> (<code>#</code> or <code>//</code> for Python&nbsp;2 and Python&nbsp;3), which has several other features. Disclaimer: I made <code>json_tricks</code>.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>You can use simple preprocessing via regular expressions. For instance, the following function will decode commented JSON in PHP:</p>
+
+<pre><code>function json_decode_commented ($data, $objectsAsArrays = false, $maxDepth = 512, $opts = 0) {
+  $data = preg_replace('~
+    (" (?:[^"\\\\] | \\\\\\\\ | \\\\")*+ ") | \# [^\v]*+ | // [^\v]*+ | /\* .*? \*/
+  ~xs', '$1', $data);
+
+  return json_decode($data, $objectsAsArrays, $maxDepth, $opts);
+}
+</code></pre>
+
+<p>It supports all PHP-style comments: /*, #, //. String literals are preserved as is.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>Although JSON does not support comments, <strong>JSONC</strong> does.</p>
+<p>Name your file with '.jsonc' extension and use a <strong>jsonc</strong> parser.<br />
+Sorry if this answer was too late.</p>
+<pre><code>jsonWithComments.jsonc
+</code></pre>
+<p>Example:</p>
+<pre class="lang-json prettyprint-override"><code>{
+    // This is a comment!
+    &quot;something&quot;: &quot;idk&quot;
+
+}
+</code></pre>
+<p>If this is unclear, I think the bot is weird.
+Please try before voting this question as unhelpful.</p>
+</div></body></html>

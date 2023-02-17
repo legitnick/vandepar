@@ -1,0 +1,1414 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I include a JavaScript file in another JavaScript file?</p><div class="s-prose js-post-body"><p>How do I include a JavaScript file inside another JavaScript file, similar to <code>@import</code> in CSS?</p>
+</div><p class="this-has-helped">This answer has helped 5325 people.</p><div class="s-prose js-post-body"><p>The old versions of JavaScript had no import, include, or require, so many different approaches to this problem have been developed.</p>
+<p>But since 2015 (ES6), JavaScript has had the <a href="http://exploringjs.com/es6/ch_modules.html" rel="noreferrer">ES6 modules</a> standard to import modules in Node.js, which is also supported by <a href="https://caniuse.com/#feat=es6-module" rel="noreferrer">most modern browsers</a>.</p>
+<p>For compatibility with older browsers, build tools like <a href="https://webpack.github.io/" rel="noreferrer">Webpack</a> and <a href="https://rollupjs.org/" rel="noreferrer">Rollup</a> and/or transpilation tools like <a href="https://babeljs.io/" rel="noreferrer">Babel</a> can be used.</p>
+<h1>ES6 Modules</h1>
+<p>ECMAScript (ES6) modules have been <a href="https://nodejs.org/api/esm.html" rel="noreferrer">supported in Node.js</a> since v8.5, with the <code>--experimental-modules</code> flag, and since at least Node.js v13.8.0 without the flag. To enable &quot;ESM&quot; (vs. Node.js's previous CommonJS-style module system [&quot;CJS&quot;]) you either use <code>&quot;type&quot;: &quot;module&quot;</code> in <code>package.json</code> or give the files the extension <code>.mjs</code>. (Similarly, modules written with Node.js's previous CJS module can be named <code>.cjs</code> if your default is ESM.)</p>
+<p>Using <code>package.json</code>:</p>
+<pre class="lang-json prettyprint-override"><code>{
+    &quot;type&quot;: &quot;module&quot;
+}
+</code></pre>
+<p>Then <code>module.js</code>:</p>
+<pre class="lang-javascript prettyprint-override"><code>export function hello() {
+  return &quot;Hello&quot;;
+}
+</code></pre>
+<p>Then <code>main.js</code>:</p>
+<pre><code>import { hello } from './module.js';
+let val = hello();  // val is &quot;Hello&quot;;
+</code></pre>
+<p>Using <code>.mjs</code>, you'd have <code>module.mjs</code>:</p>
+<pre><code>export function hello() {
+  return &quot;Hello&quot;;
+}
+</code></pre>
+<p>Then <code>main.mjs</code>:</p>
+<pre><code>import { hello } from './module.mjs';
+let val = hello();  // val is &quot;Hello&quot;;
+</code></pre>
+<h2>ECMAScript modules in browsers</h2>
+<p>Browsers have had support for loading ECMAScript modules directly (no tools like Webpack required) <a href="https://jakearchibald.com/2017/es-modules-in-browsers/" rel="noreferrer">since</a> Safari 10.1, Chrome 61, Firefox 60, and Edge 16. Check the current support at <a href="https://caniuse.com/#feat=es6-module" rel="noreferrer">caniuse</a>. There is no need to use Node.js' <code>.mjs</code> extension; browsers completely ignore file extensions on modules/scripts.</p>
+<pre class="lang-javascript prettyprint-override"><code>&lt;script type=&quot;module&quot;&gt;
+  import { hello } from './hello.mjs'; // Or the extension could be just `.js`
+  hello('world');
+&lt;/script&gt;
+</code></pre>
+<pre class="lang-javascript prettyprint-override"><code>// hello.mjs -- or the extension could be just `.js`
+export function hello(text) {
+  const div = document.createElement('div');
+  div.textContent = `Hello ${text}`;
+  document.body.appendChild(div);
+}
+</code></pre>
+<p>Read more at <a href="https://jakearchibald.com/2017/es-modules-in-browsers/" rel="noreferrer">https://jakearchibald.com/2017/es-modules-in-browsers/</a></p>
+<h3>Dynamic imports in browsers</h3>
+<p>Dynamic imports let the script load other scripts as needed:</p>
+<pre class="lang-javascript prettyprint-override"><code>&lt;script type=&quot;module&quot;&gt;
+  import('hello.mjs').then(module =&gt; {
+      module.hello('world');
+    });
+&lt;/script&gt;
+</code></pre>
+<p>Read more at <a href="https://developers.google.com/web/updates/2017/11/dynamic-import" rel="noreferrer">https://developers.google.com/web/updates/2017/11/dynamic-import</a></p>
+<h1>Node.js require</h1>
+<p>The older CJS module style, still widely used in Node.js, is the <a href="https://nodejs.org/api/modules.html" rel="noreferrer"><code>module.exports</code>/<code>require</code></a> system.</p>
+<pre class="lang-javascript prettyprint-override"><code>// mymodule.js
+module.exports = {
+   hello: function() {
+      return &quot;Hello&quot;;
+   }
+}
+</code></pre>
+<pre class="lang-javascript prettyprint-override"><code>// server.js
+const myModule = require('./mymodule');
+let val = myModule.hello(); // val is &quot;Hello&quot;   
+</code></pre>
+<p>There are other ways for JavaScript to include external JavaScript contents in browsers that do not require preprocessing.</p>
+<h1>AJAX Loading</h1>
+<p>You could load an additional script with an AJAX call and then use <code>eval</code> to run it. This is the most straightforward way, but it is limited to your domain because of the JavaScript sandbox security model. Using <code>eval</code> also opens the door to bugs, hacks and security issues.</p>
+<h1>Fetch Loading</h1>
+<p>Like Dynamic Imports you can load one or many scripts with a <code>fetch</code> call using promises to control order of execution for script dependencies using the <a href="https://www.npmjs.com/package/fetch-inject" rel="noreferrer">Fetch Inject</a> library:</p>
+<pre><code>fetchInject([
+  'https://cdn.jsdelivr.net/momentjs/2.17.1/moment.min.js'
+]).then(() =&gt; {
+  console.log(`Finish in less than ${moment().endOf('year').fromNow(true)}`)
+})
+</code></pre>
+<h1>jQuery Loading</h1>
+<p>The <a href="http://jquery.com/" rel="noreferrer">jQuery</a> library provides loading functionality <a href="http://api.jquery.com/jQuery.getScript/" rel="noreferrer">in one line</a>:</p>
+<pre class="lang-javascript prettyprint-override"><code>$.getScript(&quot;my_lovely_script.js&quot;, function() {
+   alert(&quot;Script loaded but not necessarily executed.&quot;);
+});
+</code></pre>
+<h1>Dynamic Script Loading</h1>
+<p>You could add a script tag with the script URL into the HTML. To avoid the overhead of jQuery, this is an ideal solution.</p>
+<p>The script can even reside on a different server. Furthermore, the browser evaluates the code. The <code>&lt;script&gt;</code> tag can be injected into either the web page <code>&lt;head&gt;</code>, or inserted just before the closing <code>&lt;/body&gt;</code> tag.</p>
+<p>Here is an example of how this could work:</p>
+<pre class="lang-javascript prettyprint-override"><code>function dynamicallyLoadScript(url) {
+    var script = document.createElement(&quot;script&quot;);  // create a script DOM node
+    script.src = url;  // set its src to the provided URL
+   
+    document.head.appendChild(script);  // add it to the end of the head section of the page (could change 'head' to 'body' to add it to the end of the body section instead)
+}
+</code></pre>
+<p>This function will add a new <code>&lt;script&gt;</code> tag to the end of the head section of the page, where the <code>src</code> attribute is set to the URL which is given to the function as the first parameter.</p>
+<p>Both of these solutions are discussed and illustrated in <a href="http://unixpapa.com/js/dyna.html" rel="noreferrer">JavaScript Madness: Dynamic Script Loading</a>.</p>
+<h1>Detecting when the script has been executed</h1>
+<p>Now, there is a big issue you must know about. Doing that implies that <em>you remotely load the code</em>. Modern web browsers will load the file and keep executing your current script because they load everything asynchronously to improve performance. (This applies to both the jQuery method and the manual dynamic script loading method.)</p>
+<p>It means that if you use these tricks directly, <em>you won't be able to use your newly loaded code the next line after you asked it to be loaded</em>, because it will be still loading.</p>
+<p>For example: <code>my_lovely_script.js</code> contains <code>MySuperObject</code>:</p>
+<pre class="lang-javascript prettyprint-override"><code>var js = document.createElement(&quot;script&quot;);
+
+js.type = &quot;text/javascript&quot;;
+js.src = jsFilePath;
+
+document.body.appendChild(js);
+
+var s = new MySuperObject();
+
+Error : MySuperObject is undefined
+</code></pre>
+<p>Then you reload the page hitting <kbd>F5</kbd>. And it works! Confusing...</p>
+<p><strong>So what to do about it ?</strong></p>
+<p>Well, you can use the hack the author suggests in the link I gave you. In summary, for people in a hurry, he uses an event to run a callback function when the script is loaded. So you can put all the code using the remote library in the callback function. For example:</p>
+<pre class="lang-javascript prettyprint-override"><code>function loadScript(url, callback)
+{
+    // Adding the script tag to the head as suggested before
+    var head = document.head;
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+
+    // Then bind the event to the callback function.
+    // There are several events for cross browser compatibility.
+    script.onreadystatechange = callback;
+    script.onload = callback;
+
+    // Fire the loading
+    head.appendChild(script);
+}
+</code></pre>
+<p>Then you write the code you want to use AFTER the script is loaded in a <a href="http://en.wikipedia.org/wiki/Anonymous_function" rel="noreferrer">lambda function</a>:</p>
+<pre class="lang-javascript prettyprint-override"><code>var myPrettyCode = function() {
+   // Here, do whatever you want
+};
+</code></pre>
+<p>Then you run all that:</p>
+<pre class="lang-javascript prettyprint-override"><code>loadScript(&quot;my_lovely_script.js&quot;, myPrettyCode);
+</code></pre>
+<p>Note that the script may execute after the DOM has loaded, or before, depending on the browser and whether you included the line <code>script.async = false;</code>. There's a <a href="http://www.html5rocks.com/en/tutorials/speed/script-loading/" rel="noreferrer">great article on Javascript loading in general</a> which discusses this.</p>
+<h1>Source Code Merge/Preprocessing</h1>
+<p>As mentioned at the top of this answer, many developers use build/transpilation tool(s) like Parcel, Webpack, or Babel in their projects, allowing them to use upcoming JavaScript syntax, provide backward compatibility for older browsers, combine files, minify, perform code splitting etc.</p>
+</div><p class="this-has-helped">This answer has helped 625 people.</p><div class="s-prose js-post-body"><p>If anyone is looking for something more advanced, try out <a href="http://requirejs.org/" rel="noreferrer">RequireJS</a>. You'll get added benefits such as dependency management, better concurrency, and avoid duplication (that is, retrieving a script more than once).</p>
+
+<p>You can write your JavaScript files in "modules" and then reference them as dependencies in other scripts. Or you can use RequireJS as a simple "go get this script" solution.</p>
+
+<p>Example:</p>
+
+<p>Define dependencies as modules:</p>
+
+<p><strong>some-dependency.js</strong></p>
+
+<pre><code>define(['lib/dependency1', 'lib/dependency2'], function (d1, d2) {
+
+     //Your actual script goes here.   
+     //The dependent scripts will be fetched if necessary.
+
+     return libraryObject;  //For example, jQuery object
+});
+</code></pre>
+
+<p><strong>implementation.js</strong> is your "main" JavaScript file that depends on <strong>some-dependency.js</strong></p>
+
+<pre><code>require(['some-dependency'], function(dependency) {
+
+    //Your script goes here
+    //some-dependency.js is fetched.   
+    //Then your script is executed
+});
+</code></pre>
+
+<p>Excerpt from the <a href="https://github.com/jrburke/requirejs" rel="noreferrer">GitHub</a> README:</p>
+
+<blockquote>
+  <p>RequireJS loads plain JavaScript files as well as more defined
+  modules. It is optimized for in-browser use, including in a Web
+  Worker, but it can be used in other JavaScript environments, like
+  Rhino and Node. It implements the Asynchronous Module API.</p>
+  
+  <p>RequireJS uses plain script tags to load modules/files, so it should
+  allow for easy debugging. It can be used simply to load existing
+  JavaScript files, so <strong>you can add it to your existing project without
+  having to re-write your JavaScript files.</strong></p>
+  
+  <p>... </p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 236 people.</p><div class="s-prose js-post-body"><p>There actually <em>is</em> a way to load a JavaScript file <em>not</em> asynchronously, so you could use the functions included in your newly loaded file right after loading it, and I think it works in all browsers.</p>
+<p>You need to use <code>jQuery.append()</code> on the <code>&lt;head&gt;</code> element of your page, that is:</p>
+<pre><code>$(&quot;head&quot;).append($(&quot;&lt;script&gt;&lt;/script&gt;&quot;).attr(&quot;src&quot;, url));
+
+/* Note that following line of code is incorrect because it doesn't escape the
+ * HTML attribute src correctly and will fail if `url` contains special characters:
+ * $(&quot;head&quot;).append('&lt;script src=&quot;' + url + '&quot;&gt;&lt;/script&gt;');
+ */
+</code></pre>
+<p>However, this method also has a problem: if an error happens in the imported JavaScript file, <a href="http://en.wikipedia.org/wiki/Firebug_%28software%29" rel="noreferrer">Firebug</a> (and also Firefox Error Console and <a href="https://developers.google.com/chrome-developer-tools/" rel="noreferrer">Chrome Developer Tools</a> as well) will report its place incorrectly, which is a big problem if you use Firebug to track JavaScript errors down a lot (I do). Firebug simply doesn't know about the newly loaded file for some reason, so if an error occurs in that file, it reports that it occurred in your main <a href="http://en.wikipedia.org/wiki/HTML" rel="noreferrer">HTML</a> file, and you will have trouble finding out the real reason for the error.</p>
+<p>But if that is not a problem for you, then this method should work.</p>
+<p>I have actually written a jQuery plugin called <em>$.import_js()</em> which uses this method:</p>
+<pre><code>(function($)
+{
+    /*
+     * $.import_js() helper (for JavaScript importing within JavaScript code).
+     */
+    var import_js_imported = [];
+    
+    $.extend(true,
+    {
+        import_js : function(script)
+        {
+            var found = false;
+            for (var i = 0; i &lt; import_js_imported.length; i++)
+                if (import_js_imported[i] == script) {
+                    found = true;
+                    break;
+                }
+            
+            if (found == false) {
+                $(&quot;head&quot;).append($('&lt;script&gt;&lt;/script').attr('src', script));
+                import_js_imported.push(script);
+            }
+        }
+    });
+    
+})(jQuery);
+</code></pre>
+<p>So all you would need to do to import JavaScript is:</p>
+<pre><code>$.import_js('/path_to_project/scripts/somefunctions.js');
+</code></pre>
+<p>I also made a simple test for this at <a href="http://www.kipras.com/dev/import_js_test/" rel="noreferrer">Example</a>.</p>
+<p>It includes a <code>main.js</code> file in the main HTML and then the script in <code>main.js</code> uses <code>$.import_js()</code> to import an additional file called <code>included.js</code>, which defines this function:</p>
+<pre><code>function hello()
+{
+    alert(&quot;Hello world!&quot;);
+}
+</code></pre>
+<p>And right after including <code>included.js</code>, the <code>hello()</code> function is called, and you get the alert.</p>
+<p>(This answer is in response to e-satis' comment).</p>
+</div><p class="this-has-helped">This answer has helped 176 people.</p><div class="s-prose js-post-body"><p>Another way, that in my opinion is much cleaner, is to make a synchronous Ajax request instead of using a <code>&lt;script&gt;</code> tag. Which is also how <a href="http://en.wikipedia.org/wiki/Node.js">Node.js</a> handles includes.</p>
+
+<p>Here's an example using jQuery:</p>
+
+<pre><code>function require(script) {
+    $.ajax({
+        url: script,
+        dataType: "script",
+        async: false,           // &lt;-- This is the key
+        success: function () {
+            // all good...
+        },
+        error: function () {
+            throw new Error("Could not load script " + script);
+        }
+    });
+}
+</code></pre>
+
+<p>You can then use it in your code as you'd usually use an include:</p>
+
+<pre><code>require("/scripts/subscript.js");
+</code></pre>
+
+<p>And be able to call a function from the required script in the next line:</p>
+
+<pre><code>subscript.doSomethingCool(); 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 129 people.</p><div class="s-prose js-post-body"><p>It is possible to dynamically generate a JavaScript tag and append it to HTML document from inside other JavaScript code. This will load targeted JavaScript file.</p>
+
+<pre><code>function includeJs(jsFilePath) {
+    var js = document.createElement("script");
+
+    js.type = "text/javascript";
+    js.src = jsFilePath;
+
+    document.body.appendChild(js);
+}
+
+includeJs("/path/to/some/file.js");
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 112 people.</p><div class="s-prose js-post-body"><p>There is a good news for you. Very soon you will be able to load JavaScript code easily. It will become a standard way of importing modules of JavaScript code and will be part of core JavaScript itself. </p>
+
+<p>You simply have to write <code>import cond from 'cond.js';</code> to load a macro named <code>cond</code> from a file <code>cond.js</code>.</p>
+
+<p>So you don't have to rely upon any JavaScript framework nor do you have to explicitly make <a href="http://en.wikipedia.org/wiki/Ajax_%28programming%29">Ajax</a> calls.</p>
+
+<p>Refer to:</p>
+
+<ul>
+<li><p><em><a href="http://calculist.org/blog/2012/06/29/static-module-resolution/">Static module resolution</a></em></p></li>
+<li><p><em><a href="http://wiki.ecmascript.org/doku.php?id=harmony:module_loaders">Module loaders</a></em></p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 90 people.</p><div class="s-prose js-post-body"><p>Statement <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import" rel="noreferrer"><code>import</code></a> is in ECMAScript 6.</p>
+
+<p>Syntax</p>
+
+<pre><code>import name from "module-name";
+import { member } from "module-name";
+import { member as alias } from "module-name";
+import { member1 , member2 } from "module-name";
+import { member1 , member2 as alias2 , [...] } from "module-name";
+import name , { member [ , [...] ] } from "module-name";
+import "module-name" as name;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 69 people.</p><div class="s-prose js-post-body"><p>Maybe you can use this function that I found on this page <em><a href="http://forums.digitalpoint.com/showthread.php?t=146094" rel="noreferrer">How do I include a JavaScript file in a JavaScript file?</a></em>:</p>
+
+<pre><code>function include(filename)
+{
+    var head = document.getElementsByTagName('head')[0];
+
+    var script = document.createElement('script');
+    script.src = filename;
+    script.type = 'text/javascript';
+
+    head.appendChild(script)
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 61 people.</p><div class="s-prose js-post-body"><p>Here is a <strong>synchronous</strong> version <strong>without jQuery</strong>:</p>
+
+<pre><code>function myRequire( url ) {
+    var ajax = new XMLHttpRequest();
+    ajax.open( 'GET', url, false ); // &lt;-- the 'false' makes it synchronous
+    ajax.onreadystatechange = function () {
+        var script = ajax.response || ajax.responseText;
+        if (ajax.readyState === 4) {
+            switch( ajax.status) {
+                case 200:
+                    eval.apply( window, [script] );
+                    console.log("script loaded: ", url);
+                    break;
+                default:
+                    console.log("ERROR: script not loaded: ", url);
+            }
+        }
+    };
+    ajax.send(null);
+}
+</code></pre>
+
+<p>Note that to get this working cross-domain, the server will need to set <code>allow-origin</code> header in its response.</p>
+</div><p class="this-has-helped">This answer has helped 53 people.</p><div class="s-prose js-post-body"><p>I just wrote this JavaScript code (using <a href="http://en.wikipedia.org/wiki/Prototype_JavaScript_Framework" rel="noreferrer">Prototype</a> for <a href="http://en.wikipedia.org/wiki/Document_Object_Model" rel="noreferrer">DOM</a> manipulation):</p>
+
+<pre><code>var require = (function() {
+    var _required = {};
+    return (function(url, callback) {
+        if (typeof url == 'object') {
+            // We've (hopefully) got an array: time to chain!
+            if (url.length &gt; 1) {
+                // Load the nth file as soon as everything up to the
+                // n-1th one is done.
+                require(url.slice(0, url.length - 1), function() {
+                    require(url[url.length - 1], callback);
+                });
+            } else if (url.length == 1) {
+                require(url[0], callback);
+            }
+            return;
+        }
+        if (typeof _required[url] == 'undefined') {
+            // Haven't loaded this URL yet; gogogo!
+            _required[url] = [];
+
+            var script = new Element('script', {
+                src: url,
+                type: 'text/javascript'
+            });
+            script.observe('load', function() {
+                console.log("script " + url + " loaded.");
+                _required[url].each(function(cb) {
+                    cb.call(); // TODO: does this execute in the right context?
+                });
+                _required[url] = true;
+            });
+
+            $$('head')[0].insert(script);
+        } else if (typeof _required[url] == 'boolean') {
+            // We already loaded the thing, so go ahead.
+            if (callback) {
+                callback.call();
+            }
+            return;
+        }
+
+        if (callback) {
+            _required[url].push(callback);
+        }
+    });
+})();
+</code></pre>
+
+<p>Usage:</p>
+
+<pre><code>&lt;script src="prototype.js"&gt;&lt;/script&gt;
+&lt;script src="require.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+    require(['foo.js','bar.js'], function () {
+        /* Use foo.js and bar.js here */
+    });
+&lt;/script&gt;
+</code></pre>
+
+<p>Gist: <a href="http://gist.github.com/284442" rel="noreferrer">http://gist.github.com/284442</a>.</p>
+</div><p class="this-has-helped">This answer has helped 53 people.</p><div class="s-prose js-post-body"><p>If you want it in pure JavaScript, you can use <code>document.write</code>.</p>
+<pre><code>document.write('&lt;script src=&quot;myscript.js&quot; type=&quot;text/javascript&quot;&gt;&lt;/script&gt;');
+</code></pre>
+<p>If you use the jQuery library, you can use the <code>$.getScript</code> method.</p>
+<pre><code>$.getScript(&quot;another_script.js&quot;);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 52 people.</p><div class="s-prose js-post-body"><p>Here's the generalized version of how Facebook does it for their ubiquitous Like button:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false">
+<div class="snippet-code">
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;script&gt;
+  var firstScript = document.getElementsByTagName('script')[0],
+      js = document.createElement('script');
+  js.src = 'https://cdnjs.cloudflare.com/ajax/libs/Snowstorm/20131208/snowstorm-min.js';
+  js.onload = function () {
+    // do stuff with your dynamically loaded script
+    snowStorm.snowColor = '#99ccff';
+  };
+  firstScript.parentNode.insertBefore(js, firstScript);
+&lt;/script&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>If it works for Facebook, it will work for you.</p>
+
+<p>The reason why we look for the first <code>script</code> element instead of <code>head</code> or <code>body</code> is because some browsers don't create one if missing, but we're guaranteed to have a <code>script</code> element - this one. Read more at <a href="http://www.jspatterns.com/the-ridiculous-case-of-adding-a-script-element/">http://www.jspatterns.com/the-ridiculous-case-of-adding-a-script-element/</a>.</p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>You can also assemble your scripts using <a href="http://en.wikipedia.org/wiki/PHP" rel="noreferrer">PHP</a>:</p>
+
+<p>File <code>main.js.php</code>:</p>
+
+<pre><code>&lt;?php
+    header('Content-type:text/javascript; charset=utf-8');
+    include_once("foo.js.php");
+    include_once("bar.js.php");
+?&gt;
+
+// Main JavaScript code goes here
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 33 people.</p><div class="s-prose js-post-body"><p>Most of solutions shown here imply dynamical loading. I was searching instead for a compiler which assemble all the depended files into a single output file. The same as <a href="http://en.wikipedia.org/wiki/Less_%28stylesheet_language%29">Less</a>/<a href="http://en.wikipedia.org/wiki/Sass_%28stylesheet_language%29">Sass</a> preprocessors deal with the CSS <code>@import</code> at-rule. Since I didn't find anything decent of this sort, I wrote a simple tool solving the issue.</p>
+
+<p>So here is the compiler, <a href="https://github.com/dsheiko/jsic">https://github.com/dsheiko/jsic</a>, which replaces <code>$import("file-path")</code> with the requested file content securely. Here is the corresponding <a href="http://gruntjs.com/">Grunt</a> plugin: <a href="https://github.com/dsheiko/grunt-jsic">https://github.com/dsheiko/grunt-jsic</a>.</p>
+
+<p>On the jQuery master branch, they simply concatenate atomic source files into a single one starting with <code>intro.js</code> and ending with <code>outtro.js</code>. That doesn't suits me as it provides no flexibility on the source code design. Check out how it works with jsic:</p>
+
+<p><em>src/main.js</em></p>
+
+<pre><code>var foo = $import("./Form/Input/Tel");
+</code></pre>
+
+<p><em>src/Form/Input/Tel.js</em></p>
+
+<pre><code>function() {
+    return {
+          prop: "",
+          method: function(){}
+    }
+}
+</code></pre>
+
+<p>Now we can run the compiler:</p>
+
+<pre><code>node jsic.js src/main.js build/mail.js
+</code></pre>
+
+<p>And get the combined file</p>
+
+<p><em>build/main.js</em></p>
+
+<pre><code>var foo = function() {
+    return {
+          prop: "",
+          method: function(){}
+    }
+};
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 29 people.</p><div class="s-prose js-post-body"><p>If your intention to load the JavaScript file is <strong>using the functions from the imported/included file</strong>, you can also define a global object and set the functions as object items. For instance:</p>
+
+<h3>global.js</h3>
+
+<pre><code>A = {};
+</code></pre>
+
+<h3>file1.js</h3>
+
+<pre><code>A.func1 = function() {
+  console.log("func1");
+}
+</code></pre>
+
+<h3>file2.js</h3>
+
+<pre><code>A.func2 = function() {
+  console.log("func2");
+}
+</code></pre>
+
+<h3>main.js</h3>
+
+<pre><code>A.func1();
+A.func2();
+</code></pre>
+
+<p>You just need to be careful when you are including scripts in an HTML file. The order should be as in below:</p>
+
+<pre><code>&lt;head&gt;
+  &lt;script type="text/javascript" src="global.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="file1.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="file2.js"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript" src="main.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 25 people.</p><div class="s-prose js-post-body"><p>This should do:</p>
+
+<pre><code>xhr = new XMLHttpRequest();
+xhr.open("GET", "/soap/ajax/11.0/connection.js", false);
+xhr.send();
+eval(xhr.responseText);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 24 people.</p><div class="s-prose js-post-body"><p>Or rather than including at run time, use a script to concatenate prior to upload.</p>
+<p>I use <a href="https://github.com/rails/sprockets" rel="nofollow noreferrer">Sprockets</a> (I don't know if there are others). You build your JavaScript code in separate files and include comments that are processed by the Sprockets engine as includes. For development you can include files sequentially, then for production to merge them...</p>
+<p>See also:</p>
+<ul>
+<li><em><a href="http://37signals.com/svn/posts/1587-introducing-sprockets-javascript-dependency-management-and-concatenation" rel="nofollow noreferrer">Introducing Sprockets: JavaScript dependency management and concatenation</a></em></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 23 people.</p><div class="s-prose js-post-body"><p>I had a simple issue, but I was baffled by responses to this question.</p>
+
+<p>I had to use a variable (myVar1) defined in one JavaScript file (myvariables.js) in another JavaScript file (main.js).</p>
+
+<p>For this I did as below:</p>
+
+<p>Loaded the JavaScript code in the HTML file, in the correct order, myvariables.js first, then main.js:</p>
+
+<pre><code>&lt;html&gt;
+    &lt;body onload="bodyReady();" &gt;
+
+        &lt;script src="myvariables.js" &gt; &lt;/script&gt;
+        &lt;script src="main.js" &gt; &lt;/script&gt;
+
+        &lt;!-- Some other code --&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>File: myvariables.js</p>
+
+<pre><code>var myVar1 = "I am variable from myvariables.js";
+</code></pre>
+
+<p>File: main.js</p>
+
+<pre><code>// ...
+function bodyReady() {
+    // ...
+    alert (myVar1);    // This shows "I am variable from myvariables.js", which I needed
+    // ...
+}
+// ...
+</code></pre>
+
+<p>As you saw, I had use a variable in one JavaScript file in another JavaScript file, but I didn't need to include one in another. I just needed to ensure that the first JavaScript file loaded before the second JavaScript file, and, the first JavaScript file's variables are accessible in the second JavaScript file, automatically.</p>
+
+<p>This saved my day. I hope this helps.</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>The <code>@import</code> syntax for achieving CSS-like JavaScript importing is possible using a tool such as Mixture via their special <code>.mix</code> file type (see <a href="http://docs.mixture.io/preprocessors#mix" rel="nofollow noreferrer">here</a>). I assume the application does this via one of above-mentioned methods.</p>
+<p>From the Mixture documentation on <code>.mix</code> files:</p>
+<blockquote>
+<p>Mix files are simply .js or .css files with .mix. in the file name. A
+mix file simply     extends the functionality of a normal style or
+script file and allows you to import and combine.</p>
+</blockquote>
+<p>Here's an example <code>.mix</code> file that combines multiple <code>.js</code> files into one:</p>
+<pre><code>// scripts-global.mix.js
+// Plugins - Global
+
+@import &quot;global-plugins/headroom.js&quot;;
+@import &quot;global-plugins/retina-1.1.0.js&quot;;
+@import &quot;global-plugins/isotope.js&quot;;
+@import &quot;global-plugins/jquery.fitvids.js&quot;;
+</code></pre>
+<p>Mixture outputs this as <code>scripts-global.js</code> and also as a minified version (<code>scripts-global.min.js</code>).</p>
+<p>Note: I'm not in any way affiliated with Mixture, other than using it as a front-end development tool. I came across this question upon seeing a <code>.mix</code> JavaScript file in action (in one of the Mixture boilerplates) and being a bit confused by it (&quot;you can do this?&quot; I thought to myself). Then I realized that it was an application-specific file type (somewhat disappointing, agreed). Nevertheless, figured the knowledge might be helpful for others.</p>
+<p><strong>Note:</strong> Mixture was discontinued on 2016/07/26 (after being open sourced on 2015/04/12).</p>
+</div><p class="this-has-helped">This answer has helped 19 people.</p><div class="s-prose js-post-body"><p>In a modern language with the check if script has already been loaded, it would be:</p>
+<pre><code>function loadJs( url ){
+  return new Promise(( resolve, reject ) =&gt; {
+    if (document.querySelector( `head &gt; script[ src = &quot;${url}&quot; ]`) !== null ){
+        console.warn( `script already loaded: ${url}` );
+        resolve();
+    }
+    const script = document.createElement( &quot;script&quot; );
+    script.src = url;
+    script.onload = resolve;
+    script.onerror = function( reason ){
+        // This can be useful for your error-handling code
+        reason.message = `error trying to load script ${url}`;
+        reject( reason );
+    };
+    document.head.appendChild( script );
+  });
+}
+</code></pre>
+<p>Usage (async/await):</p>
+<pre><code>try { await loadJs(&quot;https://.../script.js&quot;); }
+catch(error) { console.log(error); }
+</code></pre>
+<p>or</p>
+<pre><code>await loadJs( &quot;https://.../script.js&quot; ).catch( err =&gt; {} );
+</code></pre>
+<p>Usage (Promise):</p>
+<pre><code>loadJs( &quot;https://.../script.js&quot; ).then( res =&gt; {} ).catch( err =&gt; {} );
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>In case you are using <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/basic_usage" rel="noreferrer">Web Workers</a> and want to include additional scripts in the scope of the worker, the other answers provided about adding scripts to the <code>head</code> tag, etc. will not work for you.</p>
+
+<p>Fortunately, <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/basic_usage#Importing_scripts_and_libraries" rel="noreferrer">Web Workers have their own <code>importScripts</code> function</a> which is a global function in the scope of the Web Worker, native to the browser itself as it <a href="https://html.spec.whatwg.org/multipage/workers.html#importing-scripts-and-libraries" rel="noreferrer">is part of the specification</a>.</p>
+
+<p>Alternatively, <a href="https://stackoverflow.com/a/10939737/1676444">as the second highest voted answer to your question highlights</a>, <a href="http://www.requirejs.org/" rel="noreferrer">RequireJS</a> can also handle including scripts inside a Web Worker (likely calling <code>importScripts</code> itself, but with a few other useful features).</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>Although these answers are great, there is a simple "solution" that has been around since script loading existed, and it will cover 99.999% of most people's use cases. Just include the script you need before the script that requires it. For most projects it does not take long to determine which scripts are needed and in what order.</p>
+
+<pre><code>&lt;!DOCTYPE HTML&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;script src="script1.js"&gt;&lt;/script&gt;
+        &lt;script src="script2.js"&gt;&lt;/script&gt;
+    &lt;/head&gt;
+    &lt;body&gt;&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>If script2 requires script1, this really is the absolute easiest way to do something like this. I'm very surprised no-one has brought this up, as it's the most obvious and simplest answer that will apply in nearly every single case.</p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><h1>ES6 Modules</h1>
+<p><em>Yes</em>, use type=&quot;module&quot; in a script tag (<a href="https://caniuse.com/#search=type%3D%22module%22" rel="nofollow noreferrer">support</a>):</p>
+<pre><code>&lt;script type=&quot;module&quot; src=&quot;script.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p>And in a <code>script.js</code> file include another file like this:</p>
+<pre><code>import { hello } from './module.js';
+...
+// alert(hello());
+</code></pre>
+<p>In 'module.js' you must <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export" rel="nofollow noreferrer">export the function/class</a> that you will import:</p>
+<pre><code>export function hello() {
+    return &quot;Hello World&quot;;
+}
+</code></pre>
+<p>A working <a href="http://plnkr.co/edit/ln6J7wfdsJPUNzaEi3u6" rel="nofollow noreferrer">example is here</a>.</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><pre><code>var js = document.createElement("script");
+
+js.type = "text/javascript";
+js.src = jsFilePath;
+
+document.body.appendChild(js);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>My usual method is:</p>
+
+<pre><code>var require = function (src, cb) {
+    cb = cb || function () {};
+
+    var newScriptTag = document.createElement('script'),
+        firstScriptTag = document.getElementsByTagName('script')[0];
+    newScriptTag.src = src;
+    newScriptTag.async = true;
+    newScriptTag.onload = newScriptTag.onreadystatechange = function () {
+        (!this.readyState || this.readyState === 'loaded' || this.readyState === 'complete') &amp;&amp; (cb());
+    };
+    firstScriptTag.parentNode.insertBefore(newScriptTag, firstScriptTag);
+}
+</code></pre>
+
+<p>It works great and uses no page-reloads for me. I've tried the AJAX method (one of the other answers) but it doesn't seem to work as nicely for me.</p>
+
+<p>Here's an explanation of how the code works for those that are curious: essentially, it creates a new script tag (after the first one) of the URL. It sets it to asynchronous mode so it doesn't block the rest of the code, but calls a callback when the readyState (the state of the content to be loaded) changes to 'loaded'.</p>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>I wrote a simple module that automates the job of importing/including module scripts in JavaScript. For detailed explanation of the code, refer to the blog post <em><a href="http://stamat.wordpress.com/2013/04/12/javascript-require-import-include-modules/" rel="noreferrer">JavaScript require / import / include modules</a></em>.</p>
+
+<pre><code>// ----- USAGE -----
+
+require('ivar.util.string');
+require('ivar.net.*');
+require('ivar/util/array.js');
+require('http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js');
+
+ready(function(){
+    //Do something when required scripts are loaded
+});
+
+    //--------------------
+
+var _rmod = _rmod || {}; //Require module namespace
+_rmod.LOADED = false;
+_rmod.on_ready_fn_stack = [];
+_rmod.libpath = '';
+_rmod.imported = {};
+_rmod.loading = {
+    scripts: {},
+    length: 0
+};
+
+_rmod.findScriptPath = function(script_name) {
+    var script_elems = document.getElementsByTagName('script');
+    for (var i = 0; i &lt; script_elems.length; i++) {
+        if (script_elems[i].src.endsWith(script_name)) {
+            var href = window.location.href;
+            href = href.substring(0, href.lastIndexOf('/'));
+            var url = script_elems[i].src.substring(0, script_elems[i].length - script_name.length);
+            return url.substring(href.length+1, url.length);
+        }
+    }
+    return '';
+};
+
+_rmod.libpath = _rmod.findScriptPath('script.js'); //Path of your main script used to mark
+                                                   //the root directory of your library, any library.
+
+
+_rmod.injectScript = function(script_name, uri, callback, prepare) {
+
+    if(!prepare)
+        prepare(script_name, uri);
+
+    var script_elem = document.createElement('script');
+    script_elem.type = 'text/javascript';
+    script_elem.title = script_name;
+    script_elem.src = uri;
+    script_elem.async = true;
+    script_elem.defer = false;
+
+    if(!callback)
+        script_elem.onload = function() {
+            callback(script_name, uri);
+        };
+    document.getElementsByTagName('head')[0].appendChild(script_elem);
+};
+
+_rmod.requirePrepare = function(script_name, uri) {
+    _rmod.loading.scripts[script_name] = uri;
+    _rmod.loading.length++;
+};
+
+_rmod.requireCallback = function(script_name, uri) {
+    _rmod.loading.length--;
+    delete _rmod.loading.scripts[script_name];
+    _rmod.imported[script_name] = uri;
+
+    if(_rmod.loading.length == 0)
+        _rmod.onReady();
+};
+
+_rmod.onReady = function() {
+    if (!_rmod.LOADED) {
+        for (var i = 0; i &lt; _rmod.on_ready_fn_stack.length; i++){
+            _rmod.on_ready_fn_stack[i]();
+        });
+        _rmod.LOADED = true;
+    }
+};
+
+_.rmod = namespaceToUri = function(script_name, url) {
+    var np = script_name.split('.');
+    if (np.getLast() === '*') {
+        np.pop();
+        np.push('_all');
+    }
+
+    if(!url)
+        url = '';
+
+    script_name = np.join('.');
+    return  url + np.join('/')+'.js';
+};
+
+//You can rename based on your liking. I chose require, but it
+//can be called include or anything else that is easy for you
+//to remember or write, except "import", because it is reserved
+//for future use.
+var require = function(script_name) {
+    var uri = '';
+    if (script_name.indexOf('/') &gt; -1) {
+        uri = script_name;
+        var lastSlash = uri.lastIndexOf('/');
+        script_name = uri.substring(lastSlash+1, uri.length);
+    } 
+    else {
+        uri = _rmod.namespaceToUri(script_name, ivar._private.libpath);
+    }
+
+    if (!_rmod.loading.scripts.hasOwnProperty(script_name)
+     &amp;&amp; !_rmod.imported.hasOwnProperty(script_name)) {
+        _rmod.injectScript(script_name, uri,
+            _rmod.requireCallback,
+                _rmod.requirePrepare);
+    }
+};
+
+var ready = function(fn) {
+    _rmod.on_ready_fn_stack.push(fn);
+};
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>This script will add a JavaScript file to the top of any other <code>&lt;script&gt;</code> tag:</p>
+<pre><code>(function () {
+    var li = document.createElement('script'); 
+    li.type = 'text/javascript'; 
+    li.src = &quot;http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js&quot;; 
+    li.async = true; 
+    var s = document.getElementsByTagName('script')[0]; 
+    s.parentNode.insertBefore(li, s);
+})();
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>Keep it nice, short, simple, and maintainable! :]</p>
+<pre><code>// Third-party plugins / script (don't forget the full path is necessary)
+var FULL_PATH = '', s =
+[
+    FULL_PATH + 'plugins/script.js'      // Script example
+    FULL_PATH + 'plugins/jquery.1.2.js', // jQuery Library
+    FULL_PATH + 'plugins/crypto-js/hmac-sha1.js',      // CryptoJS
+    FULL_PATH + 'plugins/crypto-js/enc-base64-min.js'  // CryptoJS
+];
+
+function load(url)
+{
+    var ajax = new XMLHttpRequest();
+    ajax.open('GET', url, false);
+    ajax.onreadystatechange = function ()
+    {
+        var script = ajax.response || ajax.responseText;
+        if (ajax.readyState === 4)
+        {
+            switch(ajax.status)
+            {
+                case 200:
+                    eval.apply( window, [script] );
+                    console.log(&quot;library loaded: &quot;, url);
+                    break;
+                default:
+                    console.log(&quot;ERROR: library not loaded: &quot;, url);
+            }
+        }
+    };
+    ajax.send(null);
+}
+
+// Initialize a single load
+load('plugins/script.js');
+
+// Initialize a full load of scripts
+if (s.length &gt; 0)
+{
+    for (i = 0; i &lt; s.length; i++)
+    {
+        load(s[i]);
+    }
+}
+</code></pre>
+<p>This code is simply a short functional example that <em>could</em> require additional feature functionality for full support on any (or given) platform.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>I came to this question because I was looking for a simple way to maintain a collection of useful JavaScript plugins. After seeing some of the solutions here, I came up with this:</p>
+
+<ol>
+<li><p>Set up a file called "plugins.js" (or extensions.js or whatever you want). Keep your plugin files together with that one master file.</p></li>
+<li><p>plugins.js will have an array called <code>pluginNames[]</code> that we will iterate over <code>each()</code>,
+then append a <code>&lt;script&gt;</code> tag to the head for each plugin</p></li>
+</ol>
+
+<pre class="lang-js prettyprint-override"><code>//set array to be updated when we add or remove plugin files
+var pluginNames = ["lettering", "fittext", "butterjam", etc.];
+
+//one script tag for each plugin
+$.each(pluginNames, function(){
+    $('head').append('&lt;script src="js/plugins/' + this + '.js"&gt;&lt;/script&gt;');
+});
+</code></pre>
+
+<ol start="3">
+<li>Manually call just the one file in your head:<br>
+<code>&lt;script src="js/plugins/plugins.js"&gt;&lt;/script&gt;</code></li>
+</ol>
+
+<p>BUT:</p>
+
+<p>Even though all of the plugins get dropped into the head tag the way they ought to, they don't always get run by the browser when you click into the page or refresh.</p>
+
+<p>I've found it's more reliable to just write the script tags in a PHP include. You only have to write it once and that's just as much work as calling the plugin using JavaScript.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p><strong>Yes,</strong> there is...</p>
+<p>Keep reading. In <strong>ES6</strong>, we can <code>export</code> and <code>import</code> part or whole JavaScript file into another one...</p>
+<p>But wait, <strong>ES6</strong> is not supported in all the browsers, so you need to transpile it using <code>babel.js</code> for example...</p>
+<p>So you create a class like below:</p>
+<pre><code>class Person {
+  constructor(name) {
+    this.name = name;
+  }
+
+  build() {
+    return new Person(this);
+  }
+}
+
+module.exports = Person;
+</code></pre>
+<p>In <em>another</em> JavaScript file, do the import like:</p>
+<pre><code>import { Person } from 'Person';
+</code></pre>
+<p>You also can require the file like:</p>
+<pre><code>const Person = require('./Person');
+</code></pre>
+<p>If you are using an older JavaScript version you can use <strong>requirejs</strong>:</p>
+<pre><code>requirejs([&quot;helper/util&quot;], function(util) {
+    // This function is called when scripts/helper/util.js is loaded.
+    // If util.js calls define(), then this function is not fired until
+    // util's dependencies have loaded, and the util argument will hold
+    // the module value for &quot;helper/util&quot;.
+});
+</code></pre>
+<p>If you want to stick to older version of stuff, like <strong>jQuery</strong>, you can also use something like <strong>getScript</strong>:</p>
+<pre><code>jQuery.getScript('./another-script.js', function() {
+    // Call back after another-script loaded
+});
+</code></pre>
+<p>Last, but not the least, don't forget you can do the traditional way of putting a script together using the <code>&lt;script&gt;</code> tag...</p>
+<pre><code>&lt;script src=&quot;./first-script.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./second-script.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;./third-script.js&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p>There are also the <strong>async</strong> and <strong>defer</strong> attributes which I should mention here...</p>
+<blockquote>
+<p><strong>Note:</strong> There are several ways an external script can be executed:</p>
+<ul> <li>If async is present: The script is executed asynchronously
+with the rest of the page (the script will be executed while the page
+continues the parsing)</li>   <li>If async is not present and defer is
+present: The script is executed when the page has finished
+parsing</li>   <li>If neither async or defer is present: The script is
+fetched and executed immediately, before the browser  continues
+parsing the page</li> </ul>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>There are several ways to implement modules in JavaScript. Here are the two most popular ones:</p>
+<h2><strong>ES6 Modules</strong></h2>
+<p>Browsers do not support this moduling system yet, so in order for you to use this syntax you must use a bundler like <a href="https://en.wikipedia.org/wiki/Webpack" rel="nofollow noreferrer">Webpack</a>. Using a bundler is better anyway because this can combine all of your different files into a single (or a couple of related) files. This will serve the files from the server to the client faster because each HTTP request has some associated overhead accompanied with it. Thus by reducing the overall HTTP request we improve the performance. Here is an example of ES6 modules:</p>
+<pre><code>// main.js file
+
+export function add (a, b) {
+  return a + b;
+}
+
+export default function multiply (a, b) {
+  return a * b;
+}
+
+
+// test.js file
+
+import {add}, multiply from './main';   // For named exports between curly braces {export1, export2}
+                                        // For default exports without {}
+
+console.log(multiply(2, 2));  // logs 4
+
+console.log(add(1, 2));  // logs 3
+</code></pre>
+<h2><strong>CommonJS</strong> (used in Node.js)</h2>
+<p>This moduling system is used in Node.js. You basically add your exports to an object which is called <code>module.exports</code>. You then can access this object via a <code>require('modulePath')</code>. Important here is to realize that these modules are being cached, so if you <code>require()</code> a certain module twice it will return the already created module.</p>
+<pre><code>// main.js file
+
+function add (a, b) {
+  return a + b;
+}
+
+module.exports = add;  // Here we add our 'add' function to the exports object
+
+
+// test.js file
+
+const add = require('./main');
+
+console.log(add(1,2));  // logs 3
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>There is also <a href="http://headjs.com/" rel="noreferrer">Head.js</a>. It is very easy to deal with:</p>
+
+<pre><code>head.load("js/jquery.min.js",
+          "js/jquery.someplugin.js",
+          "js/jquery.someplugin.css", function() {
+  alert("Everything is ok!");
+});
+</code></pre>
+
+<p>As you see, it's easier than Require.js and as convenient as jQuery's <code>$.getScript</code> method. It also has some advanced features, like conditional loading, feature detection and <a href="http://headjs.com/site/api/v1.00.html" rel="noreferrer">much more</a>.</p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>There are a lot of potential answers for this question. My answer is obviously based on a number of them. This is what I ended up with after reading through all the answers.</p>
+<p>The problem with <code>$.getScript</code> and really any other solution that requires a callback when loading is complete is that if you have multiple files that use it and depend on each other you no longer have a way to know when all scripts have been loaded (once they are nested in multiple files).</p>
+<h3>Example:</h3>
+<p>file3.js</p>
+<pre><code>var f3obj = &quot;file3&quot;;
+
+// Define other stuff
+</code></pre>
+<p>file2.js:</p>
+<pre><code>var f2obj = &quot;file2&quot;;
+$.getScript(&quot;file3.js&quot;, function(){
+
+    alert(f3obj);
+
+    // Use anything defined in file3.
+});
+</code></pre>
+<p>file1.js:</p>
+<pre><code>$.getScript(&quot;file2.js&quot;, function(){
+    alert(f3obj); //This will probably fail because file3 is only guaranteed to have loaded inside the callback in file2.
+    alert(f2obj);
+
+    // Use anything defined in the loaded script...
+});
+</code></pre>
+<p>You are right when you say that you could specify Ajax to run synchronously or use <a href="http://en.wikipedia.org/wiki/XMLHttpRequest" rel="nofollow noreferrer">XMLHttpRequest</a>, but the current trend appears to be to deprecate synchronous requests, so you may not get full browser support now or in the future.</p>
+<p>You could try to use <code>$.when</code> to check an array of deferred objects, but now you are doing this in every file and file2 will be considered loaded as soon as the <code>$.when</code> is executed not when the callback is executed, so file1 still continues execution before file3 is loaded. This really still has the same problem.</p>
+<p>I decided to go backwards instead of forwards. Thank you <code>document.writeln</code>. I know it's taboo, but as long as it is used correctly this works well. You end up with code that can be debugged easily, shows in the DOM correctly and can ensure the order the dependencies are loaded correctly.</p>
+<p>You can of course use $ (&quot;body&quot;).append(), but then you can no longer debug correctly any more.</p>
+<p>NOTE: You must use this only while the page is loading, otherwise you get a blank screen. In other words, <strong>always place this before / outside of document.ready</strong>. I have not tested using this after the page is loaded in a click event or anything like that, but I am pretty sure it'll fail.</p>
+<p>I liked the idea of extending jQuery, but obviously you don't need to.</p>
+<p>Before calling <code>document.writeln</code>, it checks to make sure the script has not already been loading by evaluating all the script elements.</p>
+<p>I assume that a script is not fully executed until its <code>document.ready</code> event has been executed. (I know using <code>document.ready</code> is not required, but many people use it, and handling this is a safeguard.)</p>
+<p>When the additional files are loaded the <code>document.ready</code> callbacks will get executed in the wrong order. To address this when a script is actually loaded, the script that imported it is re-imported itself and execution halted. This causes the originating file to now have its <code>document.ready</code> callback executed after any from any scripts that it imports.</p>
+<p>Instead of this approach you could attempt to modify the jQuery <code>readyList</code>, but this seemed like a worse solution.</p>
+<p>Solution:</p>
+<pre><code>$.extend(true,
+{
+    import_js : function(scriptpath, reAddLast)
+    {
+        if (typeof reAddLast === &quot;undefined&quot; || reAddLast === null)
+        {
+            reAddLast = true; // Default this value to true. It is not used by the end user, only to facilitate recursion correctly.
+        }
+
+        var found = false;
+        if (reAddLast == true) // If we are re-adding the originating script we do not care if it has already been added.
+        {
+            found = $('script').filter(function () {
+                return ($(this).attr('src') == scriptpath);
+            }).length != 0; // jQuery to check if the script already exists. (replace it with straight JavaScript if you don't like jQuery.
+        }
+
+        if (found == false) {
+
+            var callingScriptPath = $('script').last().attr(&quot;src&quot;); // Get the script that is currently loading. Again this creates a limitation where this should not be used in a button, and only before document.ready.
+
+            document.writeln(&quot;&lt;script type='text/javascript' src='&quot; + scriptpath + &quot;'&gt;&lt;/script&gt;&quot;); // Add the script to the document using writeln
+
+            if (reAddLast)
+            {
+                $.import_js(callingScriptPath, false); // Call itself with the originating script to fix the order.
+                throw 'Readding script to correct order: ' + scriptpath + ' &lt; ' + callingScriptPath; // This halts execution of the originating script since it is getting reloaded. If you put a try / catch around the call to $.import_js you results will vary.
+            }
+            return true;
+        }
+        return false;
+    }
+});
+</code></pre>
+<p>Usage:</p>
+<p>File3:</p>
+<pre><code>var f3obj = &quot;file3&quot;;
+
+// Define other stuff
+$(function(){
+    f3obj = &quot;file3docready&quot;;
+});
+</code></pre>
+<p>File2:</p>
+<pre><code>$.import_js('js/file3.js');
+var f2obj = &quot;file2&quot;;
+$(function(){
+    f2obj = &quot;file2docready&quot;;
+});
+</code></pre>
+<p>File1:</p>
+<pre><code>$.import_js('js/file2.js');
+
+// Use objects from file2 or file3
+alert(f3obj); // &quot;file3&quot;
+alert(f2obj); // &quot;file2&quot;
+
+$(function(){
+    // Use objects from file2 or file3 some more.
+    alert(f3obj); //&quot;file3docready&quot;
+    alert(f2obj); //&quot;file2docready&quot;
+});
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>I have created a function that will allow you to use similar verbiage to C#/Java to include a JavaScript file. I've tested it a little bit even from inside of <em>another</em> JavaScript file and it seems to work. It does require jQuery though for a bit of "magic" at the end.</p>
+
+<p>I put this code in a file at the root of my script directory (I named it <code>global.js</code>, but you can use whatever you want. Unless I'm mistaken this and jQuery should be the only required scripts on a given page. Keep in mind this is largely untested beyond some basic usage, so there may or may not be any issues with the way I've done it; use at your own risk yadda yadda I am not responsible if you screw anything up yadda yadda:</p>
+
+<pre><code>/**
+* @fileoverview This file stores global functions that are required by other libraries.
+*/
+
+if (typeof(jQuery) === 'undefined') {
+    throw 'jQuery is required.';
+}
+
+/** Defines the base script directory that all .js files are assumed to be organized under. */
+var BASE_DIR = 'js/';
+
+/**
+* Loads the specified file, outputting it to the &lt;head&gt; HTMLElement.
+*
+* This method mimics the use of using in C# or import in Java, allowing
+* JavaScript files to "load" other JavaScript files that they depend on
+* using a familiar syntax.
+*
+* This method assumes all scripts are under a directory at the root and will
+* append the .js file extension automatically.
+*
+* @param {string} file A file path to load using C#/Java "dot" syntax.
+*
+* Example Usage:
+* imports('core.utils.extensions');
+* This will output: &lt;script type="text/javascript" src="/js/core/utils/extensions.js"&gt;&lt;/script&gt;
+*/
+function imports(file) {
+    var fileName = file.substr(file.lastIndexOf('.') + 1, file.length);
+
+    // Convert PascalCase name to underscore_separated_name
+    var regex = new RegExp(/([A-Z])/g);
+    if (regex.test(fileName)) {
+        var separated = fileName.replace(regex, ",$1").replace(',', '');
+        fileName = separated.replace(/[,]/g, '_');
+    }
+
+    // Remove the original JavaScript file name to replace with underscore version
+    file = file.substr(0, file.lastIndexOf('.'));
+
+    // Convert the dot syntax to directory syntax to actually load the file
+    if (file.indexOf('.') &gt; 0) {
+        file = file.replace(/[.]/g, '/');
+    }
+
+    var src = BASE_DIR + file + '/' + fileName.toLowerCase() + '.js';
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = src;
+
+    $('head').find('script:last').append(script);
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p>Here's a workaround <strong>for browsers</strong> (not Node.js) using HTML imports.</p>
+
+<p>First, all JavaScript classes and scripts are not in <code>.js</code> files, but in <code>.js.html</code> files (the <strong>.js</strong>.<code>html</code> is just to recognize between HTML pages and complete JavaScript script/classes), inside <code>&lt;script&gt;</code> tags, like this:</p>
+
+<p><code>MyClass.js.html</code>:</p>
+
+<pre><code>&lt;script&gt;
+   class MyClass {
+
+      // Your code here..
+
+   }
+
+&lt;/script&gt;
+</code></pre>
+
+<p>Then if you wish to import your class, you just need to use HTML imports:</p>
+
+<pre><code>&lt;link rel="import" href="relative/path/to/MyClass.js.html"/&gt;
+
+&lt;script&gt;
+   var myClass = new MyClass();
+   // Your code here..
+&lt;/script&gt;
+</code></pre>
+
+<h1>EDIT : HTML imports will be dropped</h1>
+
+<p>HTML imports are dropped, in favor of ES6 modules. 
+<strong>You should use ES6 modules.</strong></p>
+</div><p class="this-has-helped">This answer has helped 9 people.</p><div class="s-prose js-post-body"><p><strong>For Node.js only, this worked for me the best!</strong></p>
+<p>I've tried most solutions here, but none helped me about just being able to load another file without changing scope. Finally I used this. Which preserves the scope and everything. It is as good as your code is in that point.</p>
+<pre><code>const fs = require('fs');
+eval(fs.readFileSync('file.js') + '');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>Better use the <a href="http://en.wikipedia.org/wiki/JQuery" rel="noreferrer">jQuery</a> way. To delay the ready event, first call <code>$.holdReady(true)</code>.
+Example (<a href="http://jqapi.com/#p=jQuery.holdReady" rel="noreferrer">source</a>):</p>
+
+<pre><code>$.holdReady(true);
+$.getScript("myplugin.js", function() {
+    $.holdReady(false);
+});
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>I basically do it like the following, creating a new element and attach that to head:</p>
+
+<pre><code>var x = document.createElement('script');
+x.src = 'http://example.com/test.js';
+document.getElementsByTagName("head")[0].appendChild(x);
+</code></pre>
+
+<p>In <a href="http://en.wikipedia.org/wiki/JQuery" rel="noreferrer">jQuery</a>:</p>
+
+<pre><code>// jQuery
+$.getScript('/path/to/imported/script.js', function()
+{
+    // Script is now loaded and executed.
+    // Put your dependent JavaScript code here.
+});
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>Here is a <a href="http://gruntjs.com/" rel="noreferrer">Grunt</a> plugin allowing you to use <code>@import "path/to/file.js";</code> syntax in any file including JavaScript files. It can be paired with uglify or watch or any other plugin.</p>
+
+<p>It can be installed with npm install: <a href="https://npmjs.org/package/grunt-import" rel="noreferrer">https://npmjs.org/package/grunt-import</a></p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>In a past project I had quite a bit of success using <a href="http://ajile.net/" rel="noreferrer">ajile</a> to do imports of reusable JavaScript files. I always wished there was a feature for this built into JavaScript itself.</p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>I have the requirement to asynchronously load an array of JavaScript files and at the final make a callback. Basically my best approach is the following:</p>
+
+<pre><code>// Load a JavaScript file from other JavaScript file
+function loadScript(urlPack, callback) {
+    var url = urlPack.shift();
+    var subCallback;
+
+    if (urlPack.length == 0) subCallback = callback;
+    else subCallback = function () {
+        console.log("Log script: " + new Date().getTime());
+        loadScript(urlPack, callback);
+    }
+
+    // Adding the script tag to the head as suggested before
+    var head = document.getElementsByTagName('head')[0];
+    var script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+
+    // Then bind the event to the callback function.
+    // There are several events for cross browser compatibility.
+    script.onreadystatechange = subCallback;
+    script.onload = subCallback;
+
+    // Fire the loading
+    head.appendChild(script);
+}
+</code></pre>
+
+<p>Example:</p>
+
+<pre><code>loadScript(
+[
+    "js/DataTable/jquery.dataTables.js",
+    "js/DataTable/dataTables.bootstrap.js",
+    "js/DataTable/dataTables.buttons.min.js",
+    "js/DataTable/dataTables.colReorder.min.js",
+    "js/DataTable/dataTables.fixedHeader.min.js",
+    "js/DataTable/buttons.bootstrap.min.js",
+    "js/DataTable/buttons.colVis.min.js",
+    "js/DataTable/buttons.html5.min.js"
+], function() { gpLoad(params); });
+</code></pre>
+
+<p>The second script will not load until the first is completely loaded, and so...</p>
+
+<p>Results:</p>
+
+<p><a href="https://i.stack.imgur.com/6Y3vU.png" rel="noreferrer"><img src="https://i.stack.imgur.com/6Y3vU.png" alt="Result"></a></p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><h1>Here is maybe another way!</h1>
+<p>In Node.js you can do that just like the following code shows!</p>
+<p><strong>sub.js</strong></p>
+<pre class="lang-js prettyprint-override"><code>    module.exports = {
+      log: function(string) {
+        if(console) console.log(string);
+      }
+      mylog: function(){
+        console.log('just for log test!');
+      }
+    }
+</code></pre>
+<p><strong>main.js</strong></p>
+<pre class="lang-js prettyprint-override"><code>    const mylog = require('./sub');
+
+    mylog.log('Hurray, it works! :)');
+    mylog.mylog();
+
+</code></pre>
+<h2>refs</h2>
+<p><a href="http://requirejs.org/docs/node.html" rel="nofollow noreferrer">http://requirejs.org/docs/node.html</a></p>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><p>If you use Angular, then a plugin module <a href="https://oclazyload.readme.io/docs/getting-started" rel="nofollow noreferrer">$ocLazyLoad</a> can help you to do that. </p>
+
+<p>Here are some quotes from its documentation:</p>
+
+<blockquote>
+  <p>Load one or more modules &amp; components with multiple files:</p>
+
+<pre><code>$ocLazyLoad.load(['testModule.js', 'testModuleCtrl.js', 'testModuleService.js']);
+</code></pre>
+  
+  <p>Load one or more modules with multiple files and specify a type where necessary:
+  Note: When using the requireJS style formatting (with js! at the beginning for example), do not specify a file extension. Use one or the other.</p>
+
+<pre><code>$ocLazyLoad.load([
+  'testModule.js',
+   {type: 'css', path: 'testModuleCtrl'},
+   {type: 'html', path: 'testModuleCtrl.html'},
+   {type: 'js', path: 'testModuleCtrl'},
+   'js!testModuleService',
+   'less!testModuleLessFile'
+]);
+</code></pre>
+  
+  <p>You can load external libs (not angular):</p>
+
+<pre><code>$ocLazyLoad.load(['testModule.js', 
+   'bower_components/bootstrap/dist/js/bootstrap.js', 'anotherModule.js']);
+</code></pre>
+  
+  <p>You can also load css and template files:</p>
+
+<pre><code> $ocLazyLoad.load([
+     'bower_components/bootstrap/dist/js/bootstrap.js',
+     'bower_components/bootstrap/dist/css/bootstrap.css',
+     'partials/template1.html'
+ ]);
+</code></pre>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 6 people.</p><div class="s-prose js-post-body"><h1>Import and export modules using ES6 that work with Node.js</h1>
+
+<p>Name files with <code>.mjs</code> extension instead of <code>.js</code></p>
+
+<h3>Create files</h3>
+
+<pre><code>touch main.mjs lib.mjs
+</code></pre>
+
+<h3>main.js</h3>
+
+<pre><code>import { add } from './lib.mjs';
+console.log(add(40, 2));
+</code></pre>
+
+<h3>lib.mjs</h3>
+
+<pre><code>export let add = (x,y) =&gt; {
+  return x + y
+}
+</code></pre>
+
+<h3>Run</h3>
+
+<pre><code>node --experimental-modules main.js
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>Don't forget to check out <a href="http://labjs.com" rel="nofollow noreferrer">LAB.js</a>!</p>
+<pre><code>&lt;script type=&quot;text/javascript&quot;&gt;
+  $LAB.script(&quot;jquery-1.8.3.js&quot;).wait().script(&quot;scripts/clientscript.js&quot;);      
+&lt;/script&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>Now, I may be totally misguided, but here's what I've recently started doing... 
+Start and end your JavaScript files with a carriage return, place in the PHP script, followed by one more carriage return.
+The JavaScript comment "//" is ignored by PHP so the inclusion happens anyway. The purpose for the carriage returns is so that the first line of your included JavaScript isn't commented out.</p>
+
+<p>Technically, you don't need the comment, but it posts errors in <a href="http://en.wikipedia.org/wiki/Adobe_Dreamweaver" rel="noreferrer">Dreamweaver</a> that annoy me. If you're scripting in an IDE that doesn't post errors, you shouldn't need the comment or the carriage returns.</p>
+
+<pre><code>\n
+//&lt;?php require_once("path/to/javascript/dependency.js"); ?&gt;
+
+function myFunction(){
+    // stuff
+}
+\n
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><pre><code>var s=["Hscript.js","checkRobert.js","Hscript.js"];
+for(i=0;i&lt;s.length;i++){
+  var script=document.createElement("script");
+  script.type="text/javascript";
+  script.src=s[i];
+  document.getElementsByTagName("head")[0].appendChild(script)
+};
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>It's very simple. Suppose you want to import file A.js in file B.js.</p>
+
+<p><strong>Now it's sure you have linked B.js in an HTML file, then just link A.js before B.js in that HTML file. Then the public variables of A.js will be available inside the B.js</strong></p>
+
+<p>This does not require a complicated answer.</p>
+</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>I tried this problem with another approach,</p>
+
+<p>Ordering of script importing, has no effect in here.</p>
+
+<p><strong>index.html</strong></p>
+
+<pre><code>&lt;!doctype html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="utf-8"&gt;
+    &lt;title&gt;Trials&lt;/title&gt;
+    &lt;meta name="viewport" content="width=device-width, initial-scale=1"&gt;
+    &lt;script src="main.js"&gt;&lt;/script&gt;
+    &lt;script src="scriptA.js"&gt;&lt;/script&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;h3&gt;testing js in js (check console logs)&lt;/h3&gt;
+&lt;button onclick="fnClick()"&gt;TEST&lt;/button&gt;
+&lt;/body&gt;
+
+&lt;/html&gt;
+</code></pre>
+
+<p><strong>main.js</strong></p>
+
+<pre><code>function fnClick() {
+  console.log('From\tAAAAA');
+  var pro = myExpo.hello();
+  console.log(pro);
+}
+</code></pre>
+
+<p><strong>scriptA.js</strong></p>
+
+<pre><code>myExpo = {
+    hello: function () {
+        console.log('From\tBBBBB');
+        return "Hello";
+    }
+}
+</code></pre>
+
+<p>and the <strong>result</strong> is</p>
+
+<pre><code>From    AAAAA
+From    BBBBB
+Hello
+</code></pre>
+</div></body></html>
