@@ -1,7 +1,6 @@
 //setup modules
 const Bottleneck = require('bottleneck');
 const axios = require('axios');
-const cheerio = require('cheerio');
 const fs = require('fs');
 
 //setup src files
