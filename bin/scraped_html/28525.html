@@ -1,0 +1,23 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Can I tell Steam which monitor to open a game on?</p><div class="s-prose js-post-body"><p>I have two monitors and Windows 7. Is it possible to tell Steam to open a game on my second monitor instead of the main monitor?</p>
+
+<p>If that's not possible through Steam itself, is there some other way for me to control what monitor a particular game starts on? Switching to windowed mode and dragging the game over isn't always an option and I'm looking for a more robust solution.</p>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>With Steam's Big Picture mode you can now choose on which monitor games should be running from the settings menu in BP. Also very handy if you're playing in stereo 3D, since that also only works if the display used is the primary one.</p>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>I've written <a href="http://sourceforge.net/projects/tvgamelauncher/">TvGameLauncher</a>, a small program that lets you run any game (including Steam) on your secondary monitor. Here's what it can do:</p>
+
+<ul>
+<li>Toggle primary monitor (so that the game runs on your other monitor fullscreen)</li>
+<li>Set HDMI audio playback (so that audio comes out of your TV)</li>
+<li>Prevent computer sleep (so that you can play with a gamepad whose input doesn't stop sleep)</li>
+<li>Darken non-game displays (so that the immersion atmosphere is maximized) </li>
+<li>Launch any game executable (including Steam)</li>
+<li>Revert all changes once the game exits</li>
+</ul>
+
+<p><img src="https://i.stack.imgur.com/88PNM.png" alt="TvGameLauncherGUI"></p>
+</div><p class="this-has-helped">This answer has helped 15 people.</p><div class="s-prose js-post-body"><p>When the game is first starting, press <strong>shift+WinKey</strong> and then an <strong>arrow key</strong> left or right.  It'll move the window to the adjacent monitor.  You have to do it every time the game starts, but it works perfectly for me.</p>
+</div><p class="this-has-helped">This answer has helped 12 people.</p><div class="s-prose js-post-body"><p>I recently learned of an apparently recently added launch option: <code>-sdl_displayindex &lt;int&gt;</code>.  In my case, adding <code>-sdl_displayindex 1</code> to my Dota launch options has changed which monitor the game launch on to my secondary monitor.  (Presumably my primary monitor is <code>0</code>.)</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>Looks like there's a piece of software called <a href="http://gwr.orekaria.com/" rel="nofollow noreferrer">Gamers Window Relocator</a> that allows you to effectively do a -noborder (to do "fake fullscreen") on any game.  There is also <a href="https://gaming.stackexchange.com/questions/17306/how-to-force-maximized-fullscreen-mode-in-any-game">How to force Maximized Fullscreen mode in any game?</a>.</p>
+
+<p>With the game technically in windowed mode, you should be able to alter what monitor it is displaying on fairly easily (and possibly even use multiple monitor keyboard shortcuts and the like).</p>
+</div><p class="this-has-helped">This answer has helped 7 people.</p><div class="s-prose js-post-body"><p>I know this is a little late, but if anyone else pops in here is my two pence worth. All i do is switch my second monitor to the main display before starting the game then switch it back after I have finished. That way the game opens on my TV which is the usual second monitor.</p>
+</div></body></html>

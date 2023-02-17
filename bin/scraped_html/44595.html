@@ -1,4 +1,39 @@
 <!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Is Angry Birds deterministic?</p><div class="s-prose js-post-body"><p>While trying to get 3 stars on the more complex levels (the ones with a lot of destructible entities) I noticed that even after playing the same level over 50 times, doing always the same thing, I've never seen the same final result. Something always goes differently.</p>
 
 <p>Does the same input always result in the same output, or is there a random factor in there?</p>
-</div[object Promise]</body></html>
+</div><p class="this-has-helped">This answer has helped 479 people.</p><div class="s-prose js-post-body"><p>The <em>algorithm</em> is deterministic, but it's arguable that the overall result of launching a bird is <em>effectively non-deterministic</em> because it relies on (extraordinarily sensitive) user input.</p>
+
+<p>To test the algorithm and the effect user input has on it, I used the following procedure:</p>
+
+<ul>
+<li>Load the Google Chrome version of <a href="http://chrome.angrybirds.com/">Angry Birds</a></li>
+<li>Load level 1-1</li>
+<li>Pull the mouse back to a specific X-Y coordinate.  (This was past the point of "full draw" for the bird.)</li>
+<li>Release the bird, and wait for the game to reach a steady state.</li>
+</ul>
+
+<p>To measure my X-Y coordinate, I opened a background Chrome window, and navigated it to <a href="http://dev-notes.com/code.php?q=33">this page</a>.  I aligned the two windows so that I could see the X and Y positions of the mouse while still able to cause something to happen when I released the bird.  I aligned my mouse cursor with the lower left hand corner of the box around these two numbers, and then released.  I noted the position of my mouse cursor then (as the display only updates when the mouse is not released and the cursor is over that window) and then noted the resulting score in Angry Birds.  If you're having issues with exact mouse positioning, you might try an accessibility option offered by your OS, for instance, <a href="http://windows.microsoft.com/en-US/windows7/Use-Mouse-Keys-to-move-the-mouse-pointer">Mouse Keys</a> on Windows.</p>
+
+<p>I got the same score, so long as my cursor was in the <em>exact same spot</em> as it was on previous iterations.</p>
+
+<p>Prior to coming up with an enhanced test rig that allowed me to measure my cursor's position to the pixel,  I ran this experiment about 10 times, using a reference point in the background image of the game.  I got scores by firing the first bird that varied between 8,000 and 11,000 points.  Using the enhanced testing strategy, if I was off by a single pixel, I could expect score differences of anywhere between 150 and 500 points.  </p>
+
+<p>I will note that the cursor was <strong>beyond the edge of the game area</strong>, outside the browser window, far beyond the maximum distance the bird can be drawn back, and I still noticed differences when moving my cursor <strong>even a single pixel.</strong>  </p>
+
+<p>Further, I took screencaps for an extreme case where my cursor was on a <em>different monitor</em> than the game window, and ran several iterations where I kept my cursor in the same location, or moved it slightly.  By my calculations (based on measuring distance from screencaps) the game was able to create a different result (score 32960 vs 31520) based on a one pixel difference in height (544 vs 545 pixels) over a distance of approximately 1,284 pixels of width.  This works out to be an angular difference of 0.03 degrees.</p>
+
+<p>I'd say that for any practical purposes, you can expect to employ the same general strategy on the same level repeatedly and expect wildly varying results.  The level of sensitivity in the controls is so extreme that there's no practical way to get it to do the same thing twice.  This is exacerbated by the fact that if you're playing on a touchscreen, it would be extraordinarily difficult to reproduce the same movements down to the individual pixel.</p>
+</div><p class="this-has-helped">This answer has helped 205 people.</p><div class="s-prose js-post-body"><p>Angry Birds <a href="http://www.geek.com/articles/mobile/box2d-creator-asks-rovio-for-angry-birds-credit-at-gdc-2011032/" rel="noreferrer">uses Box2D</a> library for physics.</p>
+
+<blockquote>
+  <p>Is Box2D deterministic?
+  For the same input, and same binary, Box2D will reproduce any simulation. Box2D does not use any random numbers nor base any computation on random events (such as timers, etc).</p>
+  
+  <p>However, people often want more stringent determinism. People often want to know if Box2D can produce identical results on different binaries and on different platforms. The answer is no. The reason for this answer has to do with how floating point math is implemented in many compilers and processors. I recommend reading this article if you are curious: <a href="http://www.yosefk.com/blog/consistency-how-to-defeat-the-purpose-of-ieee-floating-point.html" rel="noreferrer">http://www.yosefk.com/blog/consistency-how-to-defeat-the-purpose-of-ieee-floating-point.html</a></p>
+</blockquote>
+
+<p><a href="http://code.google.com/p/box2d/wiki/FAQ#Determinism" rel="noreferrer">http://code.google.com/p/box2d/wiki/FAQ#Determinism</a></p>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>Some levels are subject to random explosions shortly after the level starts, and some bricks can fall on their own before you've ever thrown a bird.  These events occur rarely but, by the time you've three-starred every level in every game (as I have!), you'll probably see it a few times.</p>
+<p>I would expect that this occurs because of timing issues, possibly related to threading.  I'm quite sure that if you loaded every level a dozen times and waited thirty seconds you'd end up with a non-zero score at least once.  In light of Pubby's answer, I can only assume that the Angry Birds app does not always provide the same input to the Box2D functions at the start of a level.</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>I played on Facebook using a macro recorder. I started the recorder, went to angry birds window, then zoomed out, and played the first two birds. I then stopped the recorder. EVERY time, the mouse went to the exact pixels and released with the exact same power etc. It had to, because the mouse movement recorded does the same thing every time, pixel for pixel.  Each and every time I got a different score, and not every time the same number of pigs killed etc. This game IS inconsistent</p>
+</div></body></html>

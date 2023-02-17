@@ -1,4 +1,85 @@
 <!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do GameShark codes work?</p><div class="s-prose js-post-body"><p>This has always boggled me. Obviously GameShark and Game Genie never got inside access to place their own cheats into <em>every game</em>. I don't think any developers gave them the source code to pour over for codes. And I don't think the original development process for these games included placing any of these codes themselves. So, what is a GameShark or Game Genie code, really?</p>
 
 <p>Both of them usually take the form of a relatively short hexadecimal string (or multiple if that is the case) so my intuition tells me they use the same principle. But are they just memory addresses to flip a bit? Or lock it? Or XOR a series of bits with something? What is the code, and what does it do?</p>
-</div[object Promise]</body></html>
+</div><p class="this-has-helped">This answer has helped 190 people.</p><div class="s-prose js-post-body"><h2>How it works</h2>
+<p>When GameShark (and other game enhancer products/homebrew) gets loaded by the console, the enhancer is what launches the actual game. In doing so, it leaves behind a <strong>Code Handler</strong> in the system RAM and &quot;<strong>hooks</strong>&quot; the game's programming.</p>
+<p>Specific locations in a game's programming that get executed roughly every frame (like reading the controller data) are where &quot;hooks&quot; will be placed. (because SDKs are used, this makes finding hooks that work in all games for a system much easier)</p>
+<p>What the hook actually does is redirect the flow of programming to the Code Handler the enhancer left behind. Once the Code Handler is finished executing, it returns the flow of programming back to the point of hijacking.</p>
+<p>If you are familiar with GameShark's &quot;<strong>Master Code</strong>&quot;, that is what sets the hook.
+(other enhancers - like Gecko OS for Wii - don't need master codes because the enhancer itself has a handful of SDK-based hooks that it can &quot;find&quot; in the game while it loads.)</p>
+<h2>Structure of codes</h2>
+<p>Now a code itself is separated into THREE parts:</p>
+<ol>
+<li>The <strong>CodeType</strong> (this is USUALLY the first byte of the code-- the first 2 Hex Characters). CodeTypes are specific to the enhancer.</li>
+<li>The <strong>address</strong> in ram that the CodeType will use.</li>
+<li>The <strong>value</strong> the codetype will use at the specified address.</li>
+</ol>
+<p>The most common CodeTypes are:</p>
+<ol>
+<li><p><strong>RAM Writes</strong> (typical options are 8bit, 16bit, or 32bit)<br/>
+With RAM Write, the CodeHandler will take the value and place it at the address. (changing whatever was there, like setting your health to 100!)</p>
+</li>
+<li><p><strong>Conditionals</strong> (typical options are &gt;, &lt;, =, !=)<br/>
+With Conditionals, the CodeHander reads the value at the code's address and compares it to the value in the code. IF the comparison returns true, then the CodeHander will execute the next line in the code. (how many lines it executes is up to the enhancer and often is an option in the codetype itself!)</p>
+</li>
+</ol>
+<p>There is plenty more info we could dive into, but that should give you a good basis for understanding. =)</p>
+<p><strong>Source:</strong> Game hacker since 1999, founder of <a href="http://GeckoCodes.org" rel="noreferrer">http://GeckoCodes.org</a></p>
+</div><p class="this-has-helped">This answer has helped 81 people.</p><div class="s-prose js-post-body"><p>For the purposes of this, I'm assuming we're talking about the "classic" GameShark/GameGenie devices, which sit between the cartridge and the hardware.  I believe more modern devices follow a similar principle, but are far more advanced.  <a href="https://gaming.stackexchange.com/a/76914/13845">James' answer to this question</a> goes into some detail about the more "modern" approach to this problem.</p>
+
+<p><strong>What's in a ROM?  Well...  the game, essentially.</strong></p>
+
+<p>In a video game system, the data for the game is encoded in a number of Read-Only Memory (ROM) chips, on a circuit board, which we call the cartridge.  Since these ROM chips contain the game, sometimes we use the terms "game program" and "ROM" interchangeably.  </p>
+
+<p>The game program/ROM essentially tells the system how the game is played.  For instance, pressing A in Super Mario Brothers causes a sound to be played, Mario's sprite changes (he puts his hand up) and his sprite moves upwards for a given amount of time, and then he descends back to the ground.  All of this information about how to respond to a button press is encoded in the ROM.</p>
+
+<p>The mechanics of the game also include how other events are considered - such as what happens when Mario loses a life.  There is a value in memory that is accessed to see how many lives Mario has, and that number is decreased by one.</p>
+
+<p><strong>Patching for Fun and Profit!</strong></p>
+
+<p>The way these devices work is, they sit <em>between</em> the console and the ROM.  (Literally - this is why they attach to the cartridge in the way they do.)  In most cases, when the console asks the ROM what to do next, the cheat device simply passes that request on to the ROM, the ROM answers, and the game plays normally.  </p>
+
+<p>When you enter a "cheat code" into the cheat device though, it <em>replaces</em> (or "<a href="http://en.wikipedia.org/wiki/Patch_%28computing%29" rel="noreferrer">patches</a>" to use a common technical term) the instruction from the ROM with the instruction you specify.  In this way, you can change the way the game plays.</p>
+
+<p>For instance, if you wanted infinite lives, you'd want to patch the ROM so that when the game goes to edit the value of the "lives" area of memory, it skips over the "subtract 1" instruction.  If you just wanted Mario to start with more lives, all you'd have to do is go into the area of memory where Mario's lives are initialized, and make it so that instead of setting the initial value to 3, you set it to 4, or 10, or 100 instead.</p>
+
+<p>The end result is that a tiny, sometimes one or two byte change in the game's program radically changes the way the game works.  Suddenly Mario never loses lives, or items are never consumed, or killing a single beast gives you 10 times the experience, or you start the game with the ultimate weapon, etc.</p>
+
+<p>These devices have a limited ability to store codes, and some cheats require that you patch multiple locations in memory - the more complex the cheat, or more places it would have to touch, the more codes you'd need in order to change the program in the way you want.  If you had one with a large enough code space, it would theoretically be possible to change the game completely!  However, since these devices lost their memory when power was removed, you'd essentially be re-writing the ROM from scratch every time you played, which would be...  tedious, to say the least.</p>
+
+<p><strong>Code Encoding</strong></p>
+
+<p>In the simplest case, the codes themselves are typically 2 parts.  The first part is the ROM address to change, and the second is the value to set.  These values are binary or hexadecimal values, and are typically encoded into some "easy to read" format for humans to enter into the system easily.  </p>
+
+<p>More complex codes had a third part, which was a "compare" value - the code would only change the value in the ROM if the existing value of the ROM program matched.  This allowed certain codes to work on multiple versions of a ROM, or on cartridges that were complex enough to require bank switching (which is another topic altogether...)</p>
+
+<p>The original NES GameGenie format encodes 16 bits of address and 8 bits of replacement value in hex format, which is then scrambled and encoded into 6 letters.  If a "compare" value is required as well, this is another 8 bit value that generates 2 more letters, for a total of 8.  <a href="http://nesdev.parodius.com/nesgg.txt" rel="noreferrer">This guide</a>, by Benzene of Digital Emutations, explains the scrambling format and how you can decode a NES GameGenie code.</p>
+
+<p><strong>Finding Codes</strong></p>
+
+<p>I don't know precisely how the people who made the initial GameGenie devices went about determining the codes they used, but the basic idea is to find the specific part of the ROM code that you wish to change.  This could be done on a debug version of the console, which allows a developer to view the instructions as they are executing.  Have the game do whatever it is you want to change, and then watch what part of the ROM is requested by the console.  Then change the value that is read, and voila, the cheat is created.</p>
+
+<p>It could also be done by extracting the data from the ROM, and examining it to determine how it works.  By reading back the ROM, you can see the instructions that are executed and in what order.  After analyzing the program stored in the ROM, (a process termed "<a href="http://en.wikipedia.org/wiki/Reverse_engineering" rel="noreferrer">reverse engineering</a>") it's a matter of determining which instruction is key to the game's behavior, and changing it so that you change that behavior.  This process can be tedious, but it gets easier with practice, knowledge, and skill.</p>
+
+<p>Either of these processes would likely be difficult to neigh impossible for the home user at the time of the first GameGenie devices, although you might be able to determine the pattern of a given cheat given an existing code.  For instance, if the GameGenie shipped with a code that gave Mario 6 lives, a person could probably figure out how to change the value of "6" to "7" or some other arbitrary number.  The hard work is in <em>finding</em> the location to patch, and not the patch itself, in these cases.</p>
+
+<p><strong>The Emulation Effect</strong></p>
+
+<p>In the emulation age, code generation is easier, but also somewhat different.  Emulators aren't limited to patching ROM locations - they can examine the current value of the variables of the game in real-time.  This makes all sorts of interesting things possible.</p>
+
+<p>Instead of just changing the game's <em>ROM</em> - for instance, skipping the "subtract 1 from lives" command, the emulator can change the game's <em>state</em> - for instance, allowing the user to just say "I want 10 lives.  Now."  or "I want my inventory to contain 99 elixirs."  This real-time viewing and editing of the game's state makes game hacks much, much easier and game hackers far more powerful.  </p>
+
+<p><strong>Where's my Xbox 360 Game Genie?</strong></p>
+
+<p>Modern gaming devices have all sorts of copy protection programs that verify and validate the ROM, to prevent piracy and ensure a "fair" multiplayer experience, among other things.  This makes creation of devices similar to the "classic" GameGenie very difficult and/or illegal in some cases.  </p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>I believe a GameShark code has two parts:</p>
+
+<ol>
+<li>The memory address to change, and</li>
+<li>The value to place in that address</li>
+</ol>
+
+<p>By changing the values in these addresses, you get a cheat.</p>
+
+<p>The codes were not placed in the game. After the game is released, with a pretty straightforward method, you can create your own codes for a game if you have a device which can access the RAM of the console, aka, a cheat device. These codes are then published.</p>
+</div></body></html>

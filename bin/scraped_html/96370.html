@@ -3,4 +3,101 @@
 <p>But now as I've got installed the second game (Portal), I can see that it was put on drive <code>C:</code> despite to the choice I've done previously. When I open Steam - Settings - Downloads + Cloud - Steam library folders, I can see both installation places in the list. Can I merge them into one?</p>
 
 <p>I would even agree to use the default drive <code>C:</code> library (as I've replaced it with a symlink already). When I press to remove one library it says it can only remove empty ones.</p>
-</div[object Promise]</body></html>
+</div><p class="this-has-helped">This answer has helped 153 people.</p><div class="s-prose js-post-body"><h1>Before <a href="http://store.steampowered.com/news/26953/" rel="nofollow noreferrer">January 19th 2017</a>, there was no built in method to move games between libraries</h1>
+<p>Here is what I did though:</p>
+<ol>
+<li>Browsed to the <code>steamapps</code> folder that the game is currently installed into</li>
+<li>Copied the game folder for the game I wanted to move into the other Steam library (it's important you <strong>copy</strong> it; don't <strong>move</strong> it)</li>
+<li>Deleted the game within Steam (delete local content)</li>
+<li>Reinstalled the game, selecting the other game library</li>
+</ol>
+<p>This finished &quot;downloading&quot; to the new location instantly, since the files were already present in the new location.</p>
+<p><strong>Important note on the folder structure of the destination library</strong></p>
+<p>It is important to note that as of trying this process on 2/11/2016 you cannot simply paste the folder into the destination &quot;steamapps&quot; folder but instead to a &quot;common&quot; folder within the &quot;steamapps&quot; folder.</p>
+<p>For example if you created a Steam Content Library at &quot;D:\Games\Steam&quot; you will want to paste your game folder into &quot;D:\Games\Steam\steamapps\common&quot; resulting in something like &quot;D:\Games\Steam\steamapps\common\Grand Theft Auto V&quot;</p>
+</div><p class="this-has-helped">This answer has helped 50 people.</p><div class="s-prose js-post-body"><p>I took a more... technical approach.</p>
+
+<p><del>If you're not comfortable with editing files or if you just want a simpler approach, <em>please</em> use one of the other answers. Otherwise, this lets you skip having to "delete" and "reinstall" the game when you relaunch Steam — it's all seamless. It's not actually time-saving or anything, but if you want to feel badass, you can follow what I did:</del></p>
+
+<p>Note that Steam has updated the format of its <code>.acf</code> files since I originally posted this answer, such that you no longer need to edit them. It does still have the benefit of being seamless and not requiring having to "delete" and "reinstall" the game, however. I've updated my answer in the interest of not confusing future readers, but check out <a href="https://gaming.stackexchange.com/questions/96370/how-can-i-move-an-installed-game-from-one-steam-library-folder-to-another/155620#155620">sj26's answer</a> for a summary of basically the same updated process.</p>
+
+<ol>
+<li><p>Find out the game's app ID in the store. (You can easily get to this by viewing the game in your library, and clicking the link that says Store Page, although this won't work for games no longer in the store such as Deadpool; you'll need to use a search function in that case.)</p></li>
+<li><p>Open the <code>SteamApps</code> folder where the game resides. Make sure Steam isn't running.</p></li>
+<li><p>Open the game's manifest file, <code>appmanifest_&lt;app ID&gt;.acf</code>, in a text editor (I did say technical).</p></li>
+<li><p>Find the line that contains the string <code>"installdir"</code>. Here's mine:</p>
+
+<pre><code>"installdir"        "Team Fortress 2"
+</code></pre></li>
+<li><p>This is your game folder. Typically, this folder can be found in the <code>common</code> folder within <code>SteamApps</code>; the main exception are Valve games still under the legacy distribution system and not SteamPipe, but that's out of the scope of this answer.</p>
+
+<p>If you want, back up this folder, as well as the manifest file itself.</p></li>
+<li><p>Move the game's folder. In my case, I moved <code>Team Fortress 2</code> in the <code>common</code> folder from the old library to the new library.</p></li>
+<li><p>Move the manifest file to the new <code>SteamApps</code> folder.</p></li>
+<li><p>Relaunch Steam, and the game should be there without you having to do anything further within the program. You can just launch the game right away.</p>
+
+<p>If you want, you can verify that the game is in its new location. You can do this by right-clicking, choosing <strong>Properties</strong> and going to the <strong>Local Files</strong> tab. If your new library resides on a different drive letter, this drive letter should be reflected. From here, you can click <strong>Browse Local Files...</strong>. You can also <strong>Verify Integrity of Game Cache...</strong> but if you didn't modify any files in the process that should not be necessary.</p></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p>Since <a href="http://store.steampowered.com/news/26953/" rel="noreferrer">January 19<sup>th</sup> 2017</a> it is now possible to use the built-in "Move install folder" function from within the Steam client (even without participating in the beta program). </p>
+
+<p>Simply go to <strong>[Insert Game Name] > Properties > Local Files > Move Install Folder...</strong>, as shown below:</p>
+
+<p><a href="https://i.stack.imgur.com/oDTQO.png" rel="noreferrer"><img src="https://i.stack.imgur.com/oDTQO.png" alt="In the big red circle."></a></p>
+
+<p><a href="https://gaming.stackexchange.com/a/155620/75275">That or you could move the files and the manifests over...</a></p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>Steam's library folder infrastructure means you can simply exit Steam, move the acf and common subdirectory between library folders, and restart Steam.</p>
+
+<p>If you want to move all your games:</p>
+
+<ol>
+<li><p>Exit Steam.</p></li>
+<li><p>Open the old and new libraries' <em>SteamApps</em> directories.</p>
+
+<p>For example, <code>c:\Program Files\Steam\SteamApps</code> and <code>d:\SteamLibrary\SteamApps</code>.</p></li>
+<li><p>Move all the <code>appmanifest_*.acf</code> files and the <code>common</code> directory from the old <em>SteamApps</em> directory to the new <em>SteamApps</em> directory.</p>
+
+<p>For example, <code>appmanifest_220.acf</code> is Half-Life 2's app manifest, and the <code>common</code> directory should contain the <code>Half-Life 2</code> directory.</p></li>
+<li><p>Restart Steam.</p></li>
+</ol>
+
+<p>If you only want to move specific games:</p>
+
+<ol>
+<li><p>Exit Steam.</p></li>
+<li><p>Find out the game's app ID in the store.</p>
+
+<p>Half-Life 2 is <a href="http://store.steampowered.com/app/220/" rel="noreferrer">on the store</a> at <code>http://store.steampowered.com/app/220/</code> so its app ID is <code>220</code></p></li>
+<li><p>Open the old and new libraries' <em>SteamApps</em> directories.</p>
+
+<p>For example, <code>c:\Program Files\Steam\SteamApps</code> and <code>d:\SteamLibrary\SteamApps</code>.</p></li>
+<li><p>Move <code>appmanifest_[app ID].acf</code> from the old <em>SteamApps</em> directory to the new <em>SteamApps</em> directory.</p>
+
+<p>For example, <code>appmanifest_220.acf</code> is Half-Life 2's app manifest.</p></li>
+<li><p>Open the <code>appmanifest_[app ID].acf</code> with Notepad or your favourite text editor and look for <code>"installdir" "[directory name]"</code> where <code>[directory name]</code> is the next directory your need to move.</p>
+
+<p>For example, <code>"installdir" "Half-Life 2"</code>.</p></li>
+<li><p>Open the <em>common</em> directory in both <em>SteamApps</em> directories. </p>
+
+<p>Again, <code>c:\Program Files\Steam\SteamApps\common</code> and <code>d:\SteamLibrary\SteamApps\common</code></p></li>
+<li><p>Move the game directory named as above from the old <em>common</em> directory to the new <em>common</em> directory.</p>
+
+<p>Completing our example, move <code>c:\Program Files\Steam\SteamApps\common\Half-Life 2</code> to <code>d:\SteamLibrary\SteamApps\common\Half-Life 2</code>.</p></li>
+<li><p>Restart Steam.</p></li>
+</ol>
+
+<p>Disclaimer: <em>Back up your library or don't care about the outcome.</em></p>
+</div><p class="this-has-helped">This answer has helped 10 people.</p><div class="s-prose js-post-body"><p>I done something similar few months ago.</p>
+
+<p>As far as I remember I simply turn off Steam then cut and paste game folders from my HDD <code>steamapps</code> to external Drive <code>steamapps</code> folder. After turning on Steam "repaired" games downloading 100-200 MB and that was it.</p>
+
+<p>Here you <a href="https://support.steampowered.com/kb_article.php?ref=7418-YUBN-8129" rel="noreferrer">have tutorial from Valve</a> how to do similar stuff.</p>
+</div><p class="this-has-helped">This answer has helped 8 people.</p><div class="s-prose js-post-body"><p>I have created a video on how to do something like this.</p>
+
+<p><div class="youtube-embed"><div>
+                <iframe width="640px" height="395px" src="https://www.youtube.com/embed/r_fxTy67jRM?start=0"></iframe>
+            </div></div></p>
+
+<p>Basically, you backup the games to a location, then delete the games' local content, then go to <strong>Steam > Backup and Restore Games</strong></p>
+
+<p>Restore your games and pick the new location for them to install to. All from disc; no downloading.</p>
+</div></body></html>

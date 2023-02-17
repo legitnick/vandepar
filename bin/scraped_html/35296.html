@@ -7,4 +7,117 @@
 <p>There have been other situations where my follower has mysteriously disappeared as well.</p>
 
 <p>How can I find my follower when they get up and leave or disappear into thin air?</p>
-</div[object Promise]</body></html>
+</div><p class="this-has-helped">This answer has helped 126 people.</p><div class="s-prose js-post-body"><p>When a follower mysteriously disappears, there are one of three things that have happened:</p>
+
+<ul>
+<li><p><strong>They're dead.</strong> Sorry. If you want your stuff, you'll want to find where they died. If she was with you up to just recently, backtracking shouldn't be too difficult.</p></li>
+<li><p><strong>They bugged out.</strong> This one's pretty easy to resolve: enter a new area or fast travel somewhere. They'll be right behind you.</p></li>
+<li><p><strong>They went home.</strong> This is what the message refers to. Return to where you picked them up originally: in the case of Lydia, that means Breezehome (if you've purchased it) or Dragonsreach in Whiterun.</p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 63 people.</p><div class="s-prose js-post-body"><p>For PC, you can enter console commands (get to the console by pressing the tilde key, which is ` or ~ on your keyboard, usually under the Esc key and to the left of the 1 key): </p>
+
+<pre><code>prid &lt;RefID&gt;
+moveto player
+</code></pre>
+
+<p>They get lost a lot so I do this a lot. I just memorize the RefID. Like for example, Lydia's RefID is <code>a2c94</code> and Iona is <code>a2c93</code></p>
+
+<p>So for example, to move Iona to me, I put in:</p>
+
+<pre><code>prid a2c93
+moveto player
+</code></pre>
+
+<p>Sometimes, you have to enter it twice. Like this:</p>
+
+<pre><code>prid a2c93
+moveto player
+prid a2c93
+moveto player
+</code></pre>
+
+<p>Sometimes, they might have died. then you need to resurrect them. So do this:</p>
+
+<pre><code>resurrect
+prid a2c93
+moveto player
+</code></pre>
+
+<p>NOTE: if you resurrect them it will remove all their inventory! If they had items, it's better to go to a previous save where they have not died!</p>
+
+<blockquote>
+  <p><strong>NOTE: If you press the up-arrow on your keyboard it goes to commands you typed previously. However, when you close the game then your
+  command history is erased.</strong></p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>Followers will wait for you up to <strong>3 days</strong> at the location you instructed them to.</p>
+
+<p>Once your 3 days are up, <em>you'll get the "Your follower tires of waiting and leaves" message</em>, they will return to the location you initially "hired" them from.</p>
+
+<p>In case of <strong>Housecarls</strong>, like Lydia, they will either return to the <strong>keep</strong> in their respective cities, or your <strong>home</strong> in said city (assuming you purchased one).</p>
+
+<p>In case of <strong>mercenaries</strong>, they'll just return to the bar/inn/where-ever you hired them from.</p>
+
+<p><strong>Friends</strong> that become your companions return to their <strong>hometown</strong> and continue their daily NPC cycle.</p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>Nevermind. It seems that the follower simply goes home where you can recruit them again. The follower still has all items.</p>
+
+<p>In case of Lydia:</p>
+
+<blockquote class="spoiler">
+  <p> Lydia will simply go back to Dragonsreach. or Breezehome</p>
+</blockquote>
+
+<p>If you use mods, it seems possible for the follower to end up in other places. After searching for hours I once found Lydia in jail by finally using console command to teleport to her. I believe that this was an effect of Ultimate Follower Overhaul mod for PC.</p>
+</div><p class="this-has-helped">This answer has helped 22 people.</p><div class="s-prose js-post-body"><h3>Console commands (PC)</h3>
+<p>If you're playing on the PC, try teleporting your follower to your location through console commands. This is easier and faster (no loading screens) than going to your follower's location and getting them to follow you again.</p>
+<p>Console commands to teleport your follower to the player's current location:<br />
+<code>prid &lt;RefID&gt;</code><br />
+<code>moveto player</code></p>
+<p><code>prid</code> targets an entity - <a href="https://en.uesp.net/wiki/Skyrim:Followers" rel="nofollow noreferrer">your follower</a> in this case. Search for your follower's RefID at the <a href="https://en.uesp.net/wiki/Skyrim:Followers" rel="nofollow noreferrer">UESP wiki's &quot;<strong>Followers</strong>&quot; article</a>.</p>
+<p><sup>(Another method to target instead of using <code>prid &lt;refID&gt;</code> is to open up the console and then click on an entity. This will automatically do <code>prid &lt;RefID&gt;</code> for the clicked entity. However, this method won't be useful in your situation as the follower is not near your vicinity, and can't be clicked on.)</sup></p>
+<p><code>moveto player</code> moves the targeted entity near the vicinity of the player.</p>
+<p>Your follower should now be near you after doing this.  If for some weird reason, they are dead (which happens sometimes), use the console command <code>resurrect 1</code>. Your follower should go back to life.</p>
+<p>If for another weird reason, your follower is still not near your vicinity after doing this, they may have been &quot;disabled&quot; from the game (might happen with NPCs that are long dead), making them not appear in the game. Type <code>enable</code> in the console to remedy this. If your follower still isn't up, type <code>resurrect 1</code> again.</p>
+<p>More info on console commands at the <a href="https://en.uesp.net/wiki/Skyrim:Console" rel="nofollow noreferrer">UESP wiki's &quot;<strong>Console</strong>&quot; article</a>.</p>
+<hr />
+<h3>Platforms that do not support console commands</h3>
+<p>Look for your followers in their default locations, like where you initially hired them, or their homes, following their default NPC schedules. See their <a href="https://en.uesp.net/wiki/Skyrim:Followers" rel="nofollow noreferrer">respective articles in the UESP wiki</a> for info on their locations and schedules.</p>
+<p>With the <em>Hearthfire</em> DLC, if you've made your follower the <a href="https://en.uesp.net/wiki/Skyrim:Personal_Steward" rel="nofollow noreferrer">personal steward</a> of one of your <a href="https://en.uesp.net/wiki/Skyrim:Houses#Hearthfire_HousesHF" rel="nofollow noreferrer">houses</a>, then look for your follower at that <a href="https://en.uesp.net/wiki/Skyrim:Houses#Hearthfire_HousesHF" rel="nofollow noreferrer">house</a>.</p>
+<p>If you've <a href="https://en.uesp.net/wiki/Skyrim:Rebuilding_the_Blades" rel="nofollow noreferrer">recruited your follower to join the Blades</a>, then look for them at <a href="https://en.uesp.net/wiki/Skyrim:Sky_Haven_Temple" rel="nofollow noreferrer">Sky Haven Temple</a>.</p>
+<p>If you can't find them in their default locations, check the jails of the various cities or holds. An answer in the post, <a href="https://gaming.stackexchange.com/a/286565/4797">Lydia goes to jail</a> suggests that followers can be arrested and jailed. If arrested, they will make the jail their new &quot;home.&quot;</p>
+<hr />
+<h3>Specific followers</h3>
+<h4><a href="https://en.uesp.net/wiki/Skyrim:Derkeethus" rel="nofollow noreferrer">Derkeethus</a></h4>
+<blockquote>
+<p>If married or recruited for the Blades, he will attempt to return to Darkwater Crossing every day, thus making him very hard to get hold of, since all purchasable homes and Sky Haven Temple are quite a long distance away from Darkwater Crossing. This bug is fixed by version 1.1 of the Unofficial Skyrim Patch.</p>
+</blockquote>
+<p><sup>Source: <a href="https://en.uesp.net/wiki/Skyrim:Derkeethus" rel="nofollow noreferrer">&quot;Derkeethus&quot;, UESP Wiki</a></sup></p>
+<h4><a href="https://en.uesp.net/wiki/Skyrim:Jenassa" rel="nofollow noreferrer">Jenassa</a></h4>
+<blockquote>
+<ul>
+<li><p>If you hire her and enter Jorrvaskr, she may disappear. If this
+happens, check the Dragonsreach Dungeon.</p>
+</li>
+<li><p>Sometimes Jenassa may disappear from the Drunken Huntsman and will
+instead be found standing stationary a short way off the main road
+just west of Broken Fang Cave. Hiring her as a follower then
+dismissing her will cause her to walk back to her normal location at
+the Drunken Huntsman.</p>
+</li>
+</ul>
+</blockquote>
+<p><sup>Source: <a href="https://en.uesp.net/wiki/Skyrim:Jenassa" rel="nofollow noreferrer">&quot;Jenassa&quot;, UESP Wiki</a></sup></p>
+<h4><a href="https://en.uesp.net/wiki/Skyrim:Lydia" rel="nofollow noreferrer">Lydia</a></h4>
+<blockquote>
+<p>If she is not following you, she resides in the main hall of <a href="https://en.uesp.net/wiki/Skyrim:Dragonsreach" rel="nofollow noreferrer">Dragonsreach</a>, although if you purchase <a href="https://en.uesp.net/wiki/Skyrim:Breezehome" rel="nofollow noreferrer">Breezehome</a>, she will move there.</p>
+</blockquote>
+<p><sup>Source: <a href="https://en.uesp.net/wiki/Skyrim:Lydia" rel="nofollow noreferrer">&quot;Lydia&quot;, UESP Wiki</a></sup></p>
+</div><p class="this-has-helped">This answer has helped 18 people.</p><div class="s-prose js-post-body"><p>They go back to where they came from, or sometimes if you go there too fast, they are still on their way back (really doubtful they almost teleport) or if you haven't received the message saying they got tired, and you go where you left them, they died.</p>
+</div><p class="this-has-helped">This answer has helped 16 people.</p><div class="s-prose js-post-body"><p>I had an issue with this on PC version.  I told Lydia to wait.  Previously, she had spawned back in Dragonsreach but for some reason this time she did not.  So... I used a console command to move myself to her.  Oddly enough, it ported me right to the keep in Dragonsreach (where I was already when I used the command... and where I expected her to be) and everything seemed fine afterwards.  Seems to me like there is some kind of bug relating to this considering she had not died and she suddenly appeared only after I used the command to move to her.  The command is:
+player.moveto </p>
+
+<p>I suggest you save your game prior to using this command... also... don't use it while mounted... I did... and I think because it ported me inside... it then proceeded to crash not just my game but my computer and had to reboot.  You can find the RefID for NPCs here:</p>
+
+<p><a href="http://www.uesp.net/wiki/Category:Skyrim-NPCs" rel="noreferrer">http://www.uesp.net/wiki/Category:Skyrim-NPCs</a></p>
+
+<p>If you are not on the PC version I would suggest what Mark Trapp mentioned.</p>
+</div></body></html>

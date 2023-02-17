@@ -15,33 +15,36 @@ const limiter = new Bottleneck({
 });
 
 
-//string f(int)
+//string f(obj)
 const getTitle = (question_json)=>{
     return "<p class='question-hyperlink'>"+question_json.title+"</p>";
 }
 
-//string f(int)
+//string f(obj)
 const getQText = (question_json)=>{
-    return '<div class="s-prose js-post-body">'+question_json.body+'</div';
+    return '<div class="s-prose js-post-body">'+question_json.body+'</div>';
 }
 
-//string f(int)
+//string f(obj)
 const getAText = (answer_json)=>{
-    return '<div class="s-prose js-post-body">'+answer_json.body+'</div';
+    return '<div class="s-prose js-post-body">'+answer_json.body+'</div>';
 }
 //this is absolutely same, but I think it's ok to have it in regards to readability
 
-//void f(obj)
+//string f(obj)
 const getATexts = (async (question_json)=>{
     const answers_arr = await exchange_api.getAnswersJSON(question_json.question_id);
-    console.log(answers_arr);
-    answers_arr.map((el)=>{
+    let res_string = "";
+    console.log("id "+question_json.question_id);
+    answers_arr.forEach((el)=>{
         const likes = el.score;
         let doc = "";
         doc+='<p class="this-has-helped">This answer has helped ' + likes + ' people.</p>';
-        doc+=getAText(el.body);
-
-    })
+        doc+=getAText(el);
+        res_string+=doc;
+    });
+    //might wanna do this with a callback
+    return res_string;
 })
 
 // string f(string)
@@ -54,8 +57,10 @@ const getSOText = async (question_json) => {
 
     doc = title + qText;
 
-    doc+=getATexts(question_json);
+    const answers =await getATexts(question_json);
 
+    console.log(answers);
+    doc+=answers;
     doc = mf.toCompleteHTML(doc);
     return doc;
 };
@@ -66,16 +71,14 @@ const wrapped = limiter.wrap(getSOText);
 async function scrape(){
     const link_arr = await exchange_api.getQuestionJSON();
     await link_arr.forEach((el=>{
-        console.log(el.body);
         wrapped(el)
             .then((postTitles) => {
                 if(postTitles){
-                    console.log(postTitles)
 
                     const i = el.question_id;
                     fs.writeFile(mf.html_from_dir + i + ".html",postTitles,(error)=>{
                         if(error)
-                            return console.log(error);
+                            console.log(error);
                     });
                 }
             });

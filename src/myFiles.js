@@ -51,8 +51,8 @@ let html_to_dir = "./bin/processed_html/";
 function ensureAllDirs (){
     console.log("ensured");
     ensureDir("./bin/");
-    ensureDir(video_dir);
     ensureDir(html_from_dir);
+    ensureDir(video_dir);
     ensureDir(html_to_dir);
 }
 
@@ -60,7 +60,8 @@ function ensureAllDirs (){
 function isHtmlUsed(html_string){
     return html_string.charAt(0)=='u';//using filenames, dk what else to do here, except from some real DB
 }
-
+ensureAllDirs();
+//ensure for these 2 readdirSync functions later
     const html_arr_used = fs.readdirSync(video_dir);
     const html_filenames = fs.readdirSync(html_from_dir).filter(el=>!html_arr_used.includes(parseInt(el)+".mp4"));//only parse files w/o used variant
 exports.toCompleteHTML = toCompleteHTML;
