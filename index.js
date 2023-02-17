@@ -4,7 +4,7 @@ const scrape = require("./src/scrape.js");
 const mf = require("./src/myFiles.js");
 
 async function main() {
-    await scrape();
+    scrape();
     await transformAll().catch(console.error);
     main();
 }

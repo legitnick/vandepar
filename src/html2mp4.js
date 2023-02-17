@@ -9,13 +9,14 @@ const mf = require("./myFiles.js");
 
 const configForDynamic = {
     fps: 60,
+    videoCrf: 30,
     videoFrame: {
         width: 1920,
         height: 1080,
     },
     videoCodec: 'libx264',
     videoPreset: 'ultrafast',
-    videoBitrate: 4000,
+    videoBitrate: 2000,
     autopad: {
         color: 'black' | '#35A5FF',
     },

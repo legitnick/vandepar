@@ -8,7 +8,7 @@ const site = "stackoverflow"
 //json f(void)
 async function getQuestionJSON(){
 
-    const url = "https://api.stackexchange.com/2.3/questions?pagesize="+answer_pagesize+"&order=desc&min=20&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site="+site+"&filter=withbody";
+    const url = "https://api.stackexchange.com/2.3/questions?pagesize="+pagesize+"&order=desc&min=50&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=activity&site="+site+"&filter=withbody";
     const resp = await axios.get(url);
 
 
@@ -18,7 +18,7 @@ async function getQuestionJSON(){
 //string[] f(int)
 async function getAnswersJSON(question_id){
 
-    const url = "https://api.stackexchange.com/2.3/questions/"+question_id+"/"+"answers?pagesize="+pagesize+"&key=pwDNoBGQPWPm*rgcdmFBkw((&order=desc&min=5&sort=votes&site="+site+"&filter=withbody";
+    const url = "https://api.stackexchange.com/2.3/questions/"+question_id+"/answers?pagesize="+answer_pagesize+"&key=pwDNoBGQPWPm*rgcdmFBkw((&order=desc&min=10&sort=votes&site="+site+"&filter=withbody";
     const answer_resp  = await axios.get(url);
 
 
