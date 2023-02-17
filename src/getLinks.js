@@ -8,7 +8,7 @@ const site = "stackoverflow"
 //json f(void)
 async function getQuestionJSON(){
 
-    const url = "https://api.stackexchange.com/2.3/questions?pagesize="+pagesize+"&order=desc&min=50&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=activity&site="+site+"&filter=withbody";
+    const url = "https://api.stackexchange.com/2.3/questions?pagesize="+pagesize+"&order=desc&min=50&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site="+site+"&filter=withbody";
     const resp = await axios.get(url);
 
 
