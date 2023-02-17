@@ -64,5 +64,10 @@ pre {
     border-radius:3px;
     padding:1px;
 }
+img {
+    display: block;
+    max-width:100%;
+    margin:0.25em;
+}
 @import "base.css";
 @import "_reset.scss";
