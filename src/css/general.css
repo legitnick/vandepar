@@ -1,3 +1,4 @@
+@import "pico.classless.css";
 @import "fonts.css";
 *{
     padding:0;
@@ -22,7 +23,6 @@ div.pre-q-header {
     height: 100%;
     padding: 0;
     font-size: 56px;
-    color: #F26419;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -31,24 +31,18 @@ div.pre-q-header {
 }
 
 a{
-    color: #6C5CFF;
     text-decoration: inherit;
 }
 .s-prose{
     border-top:  1px solid grey;
     border-bottom:  1px solid grey;
 
-    border-radius: 1rem;
 }
 div{
     margin-bottom:2em;
-    padding:2em;
+    padding:0.25em;
 }
 .s-prose{
-  background-color: #fefefe;
-  -moz-box-shadow: 2px 2px rgba(0,0,0,0.1);
-  -webkit-box-shadow: 2px 2px rgba(0,0,0,0.1);
-  box-shadow: 2px 2px rgba(0,0,0,0.1);
   margin: 20px 0 20px 0;
   overflow: scroll;
 }
@@ -62,7 +56,6 @@ code{
     font-family: Ubuntu Mono;
 }
 pre {
-    background-color:rgb(227, 230, 232);
     border-radius:3px;
     padding:1px;
 }
