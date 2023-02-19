@@ -4,7 +4,9 @@
     font-family: 'Work Sans','Nunito', sans-serif;
     margin:0;
 }
-
+body{
+    margin-bottom:5em; /* so that it does not stop long b4?*/
+}
 body > :nth-child(n){
 /*    min-height:100vmin;*/
 }
