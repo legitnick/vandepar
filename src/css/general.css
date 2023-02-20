@@ -7,6 +7,8 @@
 }
 body{
     margin-bottom:5em; /* so that it does not stop long b4?*/
+    padding-left:5%;
+    padding-right:5%;
 }
 body > :nth-child(n){
 /*    min-height:100vmin;*/
