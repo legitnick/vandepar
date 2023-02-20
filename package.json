@@ -4,6 +4,7 @@
     "bottleneck": "^2.19.5",
     "http-proxy-agent": "^5.0.0",
     "https-proxy-agent": "^5.0.1",
+    "node-persist": "^3.1.0",
     "puppeteer": "^19.6.3",
     "puppeteer-screen-recorder": "^2.1.2"
   },
