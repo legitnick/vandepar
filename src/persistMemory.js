@@ -5,7 +5,7 @@ async function getLatestDate(){
         dir:"bin/node-persist",
     });
     let res = storage.getItem("latest");
-    if (res === undefined)res =(Date.now() -  1000*60*60*24*30*12*14);//14 years ago
+    if (res == undefined  )res =(Date.now() -  1000*60*60*24*30*12*14);//14 years ago
     return res;
 }
 //3.154e+10 ms in a year

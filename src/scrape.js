@@ -1,5 +1,4 @@
 //setup modules
-const Bottleneck = require('bottleneck');
 const axios = require('axios');
 const fs = require('fs');
 
@@ -8,10 +7,6 @@ const html2mp4 = require("./html2mp4.js");
 const mf = require("./myFiles.js");
 const exchange_api = require("./getLinks.js");
 
-const limiter = new Bottleneck({
-    maxConcurrent:4,
-    minTime:250,
-});
 
 
 //string f(obj)
@@ -59,21 +54,22 @@ const getSOText = async (question_json) => {
 
     doc+=answers;
     doc = mf.toCompleteHTML(doc);
+    console.log(doc);
     return doc;
 };
 
-const wrapped = limiter.wrap(getSOText);
 
 
 //void f(void)
 async function scrape(){
-    const link_arr = await exchange_api.getQuestionJSON();
+    const link_arr = await exchange_api.getQuestionJSON().catch(console.error);
     await link_arr.forEach((el=>{
-        wrapped(el)
+        getSOText(el)
             .then((postTitles) => {
                 if(postTitles){
 
                     const i = el.question_id;
+                    console.log(postTitles);
                     fs.writeFile(mf.html_from_dir + i + ".html",postTitles,(error)=>{
                         if(error)
                            console.log(error);

@@ -99,7 +99,7 @@ const transformAll =(async ()=>{
     const promise_arr = [];
     console.log(html_num_arr);
     await html_num_arr.forEach((el,i)=>{
-       if(i<4){
+       if(i<1){
             // 4 is an arbitrary number, should get sys recource info, and cli options
             console.log(el);
             promise_arr.push(transform(el));

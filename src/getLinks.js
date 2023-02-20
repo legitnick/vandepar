@@ -2,7 +2,7 @@ const fs = require ("fs");
 const axios = require("axios");//will this work
 
 const mem = require("./persistMemory.js");
-const pagesize = 4;//will scrape 4 pages at once to optimize ammount of api calls
+const pagesize = 1;//will scrape 4 pages at once to optimize ammount of api calls
 const answer_pagesize = 5;//so, max 5 answers per Q
 const site = "stackoverflow"
 
@@ -10,11 +10,17 @@ const site = "stackoverflow"
 async function getQuestionJSON(){
 
 
-    const dateFro = await mem.getLatestDate();
+    console.log("enter");
+    let dateFro = await mem.getLatestDate();
+    dateFro = dateFro==undefined?(1320969600):dateFro;
     const dateTo = dateFro + 1000*60*60*24*30;//a month, roughly
     mem.setLatestDate(dateTo);
-    const url = "https://api.stackexchange.com/2.3/questions?pagesize="+pagesize+"&order=desc&min=50&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site="+site+"&filter=withbody&"+"fromdate="+dateFro+"&todate="+dateTo;
+    //https://api.stackexchange.com/2.3/questions?pagesize=1&order=desc&min=30&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site=stackoverflow&filter=withbody&fromdate=1320969600&todate=1321660800
+    //works
+    const url = "https://api.stackexchange.com/2.3/questions?pagesize="+pagesize+"&order=desc&min=30&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site="+site+"&filter=withbody&fromdate="+dateFro+"&todate="+dateTo;
+    console.log(url);
     const resp = await axios.get(url);
+    console.log(resp.data.items);
 
 
     return resp.data.items;
