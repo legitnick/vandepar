@@ -25,7 +25,7 @@ const configForDynamic = {
 
 //void f(Page)
 async function look(page){
-    await new Promise(resolve=>setTimeout(resolve,100));
+    await new Promise(resolve=>setTimeout(resolve,2000));
 
     return await scroll(page);//(functionRef, ms, param1)
 
@@ -45,7 +45,7 @@ async function scroll (page) {
                 overall_scrolled+=dist;
                 if(overall_scrolled > document.body.scrollHeight - window.innerHeight){
                     clearInterval(timer);
-                    setTimeout(resolve,100);
+                    setTimeout(resolve,1000);
                 }
 
             },20)//wait, ms
