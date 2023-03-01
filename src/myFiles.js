@@ -44,9 +44,16 @@ export const html_arr_used = ()=> fs.readdirSync(video_dir);
 console.log(html_arr_used());
 export const html_filenames = ()=> fs.readdirSync(html_from_dir).filter(el=>!html_arr_used().includes(parseInt(el)+".mp4"));//only parse files w/o used variant
 console.log(html_filenames());
-export const video_w_mus_arr = ()=>fs.readdirSync(video_complete_dir);
+export const video_w_mus_arr = ()=>fs.readdirSync(video_complete_dir).filter(el=>el.endsWith(".mp4"));
+
+export const video_to_mus_arr = ()=> html_arr_used().filter(el=>!fs.readdirSync(video_complete_dir).includes(el))
 export const video_w_mus_ts_arr = ()=>fs.readdirSync(video_complete_dir).filter(el=>el.endsWith(".ts"));
 
+export const video_to_ts_arr = ()=>video_w_mus_arr().filter(el=>!video_w_mus_ts_arr().includes(parseInt(el)+".mp4"))
+
+Array.prototype.first = (function(){
+     return this.length? this[0]:null;
+})
 
 export const browser_dot_dir = "file://" + process.cwd();
 export const goto_dir = "file://" + process.cwd()+ "/bin/scraped_html/"; //"/bin/processed_html/";//this variable needs full path to work in puppeteers Chromium,also process.cwd more suitable than __dirname in this case

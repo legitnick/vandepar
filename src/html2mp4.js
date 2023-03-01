@@ -49,7 +49,6 @@ async function scroll (page) {
       },20)//wait, ms
     }).catch((e)=>{
       console.error(e);
-      reject(e);;
     });
   });
 };
@@ -74,7 +73,7 @@ const transform = (async (html_number) => {
 
   await page.goto(mf.goto_dir + html_number+ ".html", {waitUntil: ['load', 'domcontentloaded', 'networkidle0', 'networkidle2']}).catch((e)=>console.error(e));
   const recorder = new PuppeteerScreenRecorder(page,configForDynamic);
-  await recorder.start(mf.video_dir + html_number +".mp4").catch((err)=>reject(err));//replace replace with html_number
+  await recorder.start(mf.video_dir + html_number +".mp4").catch(console.error);
   await look(page);
   await recorder.stop();
   browser.close();
