@@ -1,17 +1,31 @@
 import fs from "fs";
+import { readdir } from 'node:fs/promises';
 import path from "path";
 
 //string f(string)
 export const toCompleteHTML = (html_string)=>{
-    let new_string = '<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
-    new_string+=html_string;
-    new_string+='</body></html>';
-    return new_string;
+  let new_string = '<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head>'
+  new_string+=html_string;
+  new_string+='</body></html>';
+  return new_string;
 }
+
+async function getRandomItemAt(folder_string){
+ const files = await fs.readdirSync( folder_string)
+ const len = files.length;
+  return files[Math.floor(Math.random()*len)];
+  //i know it's unoptimized
+}
+
+export async function getRandomMusic(){
+  console.log(await getRandomItemAt("bin/music"));
+  return "bin/music/"+await getRandomItemAt("bin/music");
+}
+
 
 //void f(string)
 export const ensureDir = ((path)=>{
-    if(!fs.existsSync(path))fs.mkdirSync(path);
+  if(!fs.existsSync(path))fs.mkdirSync(path);
 });
 
 export const html_from_dir = "./bin/scraped_html/";//it'll be dot for now
@@ -20,10 +34,10 @@ export const html_to_dir = "./bin/scraped_html/";
 
 //void (void)
 export function ensureAllDirs (){
-    console.log("ensured");
-    ensureDir("./bin/");
-    ensureDir(html_from_dir);
-    ensureDir(video_dir);
+  console.log("ensured");
+  ensureDir("./bin/");
+  ensureDir(html_from_dir);
+  ensureDir(video_dir);
 }
 
 ensureAllDirs();
