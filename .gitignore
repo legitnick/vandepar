@@ -2,3 +2,4 @@
 node_modules/
 bin/processed_html/
 bin/video/
+bin/video_complete/
