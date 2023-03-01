@@ -46,7 +46,7 @@ async function addAssets(){
 
 async function concat(){
   const video_name = mf.video_w_mus_ts_arr().length?  mf.video_w_mus_ts_arr()[0]:null;
-// this piece of code repeated three times, so might wanna make a function 
+  // this piece of code repeated three times, so might wanna make a function 
 
   ffmpeg()
     .on('start', function(cmdline) {
@@ -58,6 +58,6 @@ async function concat(){
     .input(`"concat:bin/video_complete/${video_name.split(".")[0]}.ts|bin/video/assets/intro60.ts"`)
     .outputOption('-strict -2')     // I have an issue with experimental codecs, it is a solution
     .videoCodec('copy')
-  .saveToFile("output2.mp4");
+    .saveToFile("output2.mp4");
 }
 edit();//tmp

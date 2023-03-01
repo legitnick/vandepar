@@ -10,8 +10,8 @@ export const toCompleteHTML = (html_string)=>{
 }
 
 async function getRandomItemAt(folder_string){
- const files = await fs.readdirSync( folder_string)
- const len = files.length;
+  const files = await fs.readdirSync( folder_string)
+  const len = files.length;
   return files[Math.floor(Math.random()*len)];
 }
 
