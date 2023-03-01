@@ -1,31 +1,25 @@
-//setup modules
 import axios from 'axios';
 import fs from 'fs';
 
-//setup src files
 import html2mp4 from "./html2mp4.js";
 import * as mf from "./myFiles.js";
 import * as exchange_api from "./getLinks.js";
 
 
 
-//string f(obj)
 const getTitle = (question_json)=>{
     return "<p class='question-hyperlink'>"+question_json.title+"</p>";
 }
 
-//string f(obj)
 const getQText = (question_json)=>{
     return '<div class="s-prose js-post-body">'+question_json.body+'</div>';
 }
 
-//string f(obj)
 const getAText = (answer_json)=>{
     return '<div class="s-prose js-post-body">'+answer_json.body+'</div>';
 }
 //this is absolutely same, but I think it's ok to have it in regards to readability
 
-//string f(obj)
 const getATexts = (async (question_json)=>{
     const answers_arr = await exchange_api.getAnswersJSON(question_json.question_id);
     let res_string = "";
@@ -40,7 +34,6 @@ const getATexts = (async (question_json)=>{
     return res_string;
 })
 
-// string f(string)
 const getSOText = async (question_json) => {
     if(!question_json.is_answered)
         return null;
@@ -60,7 +53,6 @@ const getSOText = async (question_json) => {
 
 
 
-//void f(void)
 export default async function scrape(){
     const link_arr = await exchange_api.getQuestionJSON().catch(console.error);
     await link_arr.forEach((el=>{
@@ -78,6 +70,5 @@ export default async function scrape(){
             });
 
     }));
-    //getLinks();
 }
 

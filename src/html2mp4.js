@@ -23,7 +23,6 @@ const configForDynamic = {
     aspectRatio: '16:9',
 };
 
-//void f(Page)
 async function look(page){
     await new Promise(resolve=>setTimeout(resolve,2000));
 
@@ -31,7 +30,6 @@ async function look(page){
 
 };
 
-//void f(Page)
 async function scroll (page) {
 
     return await page.evaluate(async ()=>{
@@ -82,17 +80,12 @@ const transform = (async (html_number) => {
     browser.close();
     console.log("recorded");
     return 1;
-    /*return await look(page).then((res,rej)=>{
-            return recorder.stop();
-        }).then((res)=>browser.close()).catch((e)=>console.error(e));*/
 });
 //await everything
 
 
-//void f(void)
 const transformAll =(async ()=>{
     const html_arr = mf.html_filenames();
-    //html_filenames should not be a function, as the value changes each call
 
     const html_num_arr = await html_arr.map(el=>parseInt(el));
 
@@ -100,15 +93,12 @@ const transformAll =(async ()=>{
     console.log(html_num_arr);
     await html_num_arr.forEach((el,i)=>{
        if(i<1){
-            // 4 is an arbitrary number, should get sys recource info, and cli options
             console.log(el);
             promise_arr.push(transform(el));
         }
-    });//think it'll await only to push all the promises into array (and start transforming, so no false positives on promise all)
-
+    });
 
     await Promise.all(promise_arr);
-    //as it is more clear, and I only use el in the function anyways
 
 });
 
