@@ -1,6 +1,6 @@
-const storage = require("node-persist");
+import storage from "node-persist";
 
-async function getLatestDate(){
+export async function getLatestDate(){
     await storage.init({
         dir:"bin/node-persist",
     });
@@ -12,11 +12,9 @@ async function getLatestDate(){
 //2009(StackOverflow creation) - 1970(start of time for js) = 39
 //39*3.154 = 1.23e+12 - first date from
 
-async function setLatestDate(date){
+export async function setLatestDate(date){
     await storage.init({
         dir:"bin/node-persist",
     });
     storage.setItem("latest",date);
 }
-exports.getLatestDate = getLatestDate;
-exports.setLatestDate = setLatestDate;

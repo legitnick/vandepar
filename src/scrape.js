@@ -1,11 +1,11 @@
 //setup modules
-const axios = require('axios');
-const fs = require('fs');
+import axios from 'axios';
+import fs from 'fs';
 
 //setup src files
-const html2mp4 = require("./html2mp4.js");
-const mf = require("./myFiles.js");
-const exchange_api = require("./getLinks.js");
+import html2mp4 from "./html2mp4.js";
+import * as mf from "./myFiles.js";
+import * as exchange_api from "./getLinks.js";
 
 
 
@@ -61,7 +61,7 @@ const getSOText = async (question_json) => {
 
 
 //void f(void)
-async function scrape(){
+export default async function scrape(){
     const link_arr = await exchange_api.getQuestionJSON().catch(console.error);
     await link_arr.forEach((el=>{
         getSOText(el)
@@ -81,4 +81,3 @@ async function scrape(){
     //getLinks();
 }
 
-module.exports = scrape;

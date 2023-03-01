@@ -1,10 +1,10 @@
 'use strict';
 
-const fs = require("fs");
-const puppeteer = require('puppeteer');
-const { PuppeteerScreenRecorder } = require('puppeteer-screen-recorder');
-const process = require('process');
-const mf = require("./myFiles.js");
+import fs from "fs";
+import puppeteer from 'puppeteer';
+import { PuppeteerScreenRecorder } from 'puppeteer-screen-recorder';
+import process from 'process';
+import * as mf from "./myFiles.js";
 
 
 const configForDynamic = {
@@ -112,4 +112,4 @@ const transformAll =(async ()=>{
 
 });
 
-module.exports = transformAll;
+export default  transformAll;
