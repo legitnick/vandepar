@@ -9,7 +9,7 @@ import * as mf from "./myFiles.js";
 
 const configForDynamic = {
   fps: 60,
-  videoCrf: 30,
+  videoCrf: 30,//crf is a cheat smh
   videoFrame: {
     width: 1920,
     height: 1080,

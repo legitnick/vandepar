@@ -9,7 +9,7 @@ export default async function edit(){
 async function stitchVandA(){
   const audio_name = await mf.getRandomMusic();
   const video_name = await  mf.video_to_mus_arr().first();
-  console.log(video_name);
+  console.log("to add mus:\n"+video_name);
 
   console.log(audio_name+"\nv:\n"+video_name);
   if(video_name&&audio_name)
@@ -32,6 +32,7 @@ async function stitchVandA(){
 async function convertToTS(){
 
   const video_name = await  mf.video_to_ts_arr().first();
+  console.log("to_ts:\n"+video_name);
   if(!video_name) return 0;//reject() 
   await ffmpeg()
     .on('start', function(cmdline) {
@@ -39,6 +40,9 @@ async function convertToTS(){
     })
     .on('progress', function(progress) {
       console.info(`Processing : ${progress.percent} % done`);
+    })
+    .on('end',(cmdline)=>{
+      console.info("wrote bin/video_complete/"+video_name.split(".")[0]+".ts");
     })
     .input("bin/video_complete/"+video_name)
     .audioCodec('copy')
@@ -49,12 +53,12 @@ async function convertToTS(){
 
 async function addAssets(){
  await concat();
-  convertToTS();
+ await convertToTS();
 }
 
 async function concat(){
-  const video_name = mf.video_w_mus_ts_arr().first();
-  console.log(video_name);
+  const video_name = mf.video_to_final_arr().first();
+  console.log("final:\n"+video_name);
   if(!video_name) return 0;//reject() 
   // this piece of code repeated three times, so might wanna make a function 
 
@@ -65,10 +69,10 @@ async function concat(){
     .on('progress', function(progress) {
       console.info(`Processing  ${progress.percent} % done`);
     })
-  //.input(`"concat:bin/video/assets/intro60.ts|"concat:bin/video/assets/intro60.ts`)
-    .input(`concat:bin/video_complete/${video_name.split(".")[0]}.ts|bin/video/assets/intro60.ts`)
+    .input(`concat:bin/video/assets/intro60.ts|bin/video_complete/${video_name.split(".")[0]}.ts|bin/video/assets/kupla_kd_blue_asset.ts`)
   .videoCodec('copy')
     .audioCodec('copy')
-    .saveToFile("output2.mp4");
+    .saveToFile(`bin/video_final/${video_name.split(".")[0]}.mp4`);
+  return 1;
 }
 edit();//tmp

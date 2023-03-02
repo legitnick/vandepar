@@ -9,9 +9,7 @@ const site = "stackoverflow"
 export async function getQuestionJSON(){
 
 
-  console.log("enter");
-  let dateFro = await mem.getLatestDate();
-  dateFro = dateFro==undefined?(1320969600):dateFro;
+  const dateFro = await mem.getLatestDate();
   const dateTo = dateFro + 1000*60*60*24*30;//a month, roughly
   mem.setLatestDate(dateTo);
   //https://api.stackexchange.com/2.3/questions?pagesize=1&order=desc&min=30&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site=stackoverflow&filter=withbody&fromdate=1320969600&todate=1321660800

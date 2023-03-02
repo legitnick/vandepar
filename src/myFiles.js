@@ -29,6 +29,7 @@ export const html_from_dir = "./bin/scraped_html/";//it'll be dot for now
 export const video_dir = "./bin/video/";
 export const html_to_dir = "./bin/scraped_html/";
 export const video_complete_dir = "./bin/video_complete/";
+export const video_final_dir = "bin/video_final/";
 
 export function ensureAllDirs (){
   console.log("ensured");
@@ -36,6 +37,7 @@ export function ensureAllDirs (){
   ensureDir(html_from_dir);
   ensureDir(video_dir);
   ensureDir(video_complete_dir);
+  ensureDir(video_final_dir);
 }
 
 ensureAllDirs();
@@ -44,15 +46,23 @@ export const html_arr_used = ()=> fs.readdirSync(video_dir).filter(el=>el.endsWi
 export const html_filenames = ()=> fs.readdirSync(html_from_dir).filter(el=>!html_arr_used().includes(parseInt(el)+".mp4"));//only parse files w/o used variant
 export const video_w_mus_arr = ()=>fs.readdirSync(video_complete_dir).filter(el=>el.endsWith(".mp4"));
 
-export const video_to_mus_arr = ()=> html_arr_used().filter(el=>!fs.readdirSync(video_complete_dir).includes(el))
+export const video_to_mus_arr = ()=> html_arr_used().filter(el=>!fs.readdirSync(video_complete_dir).includes(el)&&el.endsWith(".mp4"))
 export const video_w_mus_ts_arr = ()=>fs.readdirSync(video_complete_dir).filter(el=>el.endsWith(".ts"));
 
-export const video_to_ts_arr = ()=>video_w_mus_arr().filter(el=>!video_w_mus_ts_arr().includes(parseInt(el)+".mp4"))
+export const video_to_ts_arr = ()=>video_w_mus_arr().filter(el=>!video_w_mus_ts_arr().includes(parseInt(el)+".ts"))
+export const video_to_final_arr = ()=>video_w_mus_ts_arr().filter(el=>!fs.readdirSync(video_final_dir).includes(parseInt(el)+".mp4"));
+
+//so repetitive, huh
+//also might wanna do some db?
 
 console.log("vids:\n"+html_arr_used());
-console.log("are already converted:\n"+fs.readdirSync(video_complete_dir));
-console.log("should be converted:\n"+video_to_mus_arr());
+console.log("already has music:\n"+fs.readdirSync(video_complete_dir));
+console.log("should be mixed w music:\n"+video_to_mus_arr());
 
+console.log("already .ts:\n"+video_w_mus_ts_arr());
+console.log("should be converted to .ts:\n"+video_to_ts_arr());
+console.log("final:\n"+fs.readdirSync(video_final_dir));
+console.log("should be converted to final:\n"+video_to_final_arr());
 Array.prototype.first = (function(){
      return this.length? this[0]:null;
 })
