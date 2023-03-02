@@ -2,7 +2,7 @@ import fs from  "fs";
 import axios from "axios";//will this work
 
 import * as mem from "./persistMemory.js";
-const pagesize =  1;//will scrape 4 pages at once to optimize ammount of api calls
+const pagesize =  20;//will scrape 20 pages at once to optimize ammount of api calls
 const answer_pagesize = 5;//so, max 5 answers per Q
 const site = "stackoverflow"
 

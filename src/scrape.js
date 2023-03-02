@@ -54,6 +54,8 @@ const getSOText = async (question_json) => {
 
 
 export default async function scrape(){
+  if(mf.html_arr_used().length-mf.html_filenames > 5)
+    return;//if scraped enough
   const link_arr = await exchange_api.getQuestionJSON().catch(console.error);
   await link_arr.forEach((el=>{
     getSOText(el)
