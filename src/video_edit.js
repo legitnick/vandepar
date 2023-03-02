@@ -2,8 +2,8 @@ import ffmpeg from "fluent-ffmpeg";
 import * as mf from "./myFiles.js";
 
 export default async function edit(){
-  addAssets();
-//  stitchVandA();//this is some weird-case, but I think it's better readability
+  await addAssets();
+  stitchVandA();//this is some weird-case, but I think it's better readability
 }
 
 async function stitchVandA(){
@@ -14,6 +14,12 @@ async function stitchVandA(){
   console.log(audio_name+"\nv:\n"+video_name);
   if(video_name&&audio_name)
     await ffmpeg()
+    .on('start', function(cmdline) {
+      console.log('Command line: ' + cmdline);
+    })
+    .on('progress', function(progress) {
+      console.info(`Processing : ${progress.percent} % done`);
+    })
       .input(audio_name)
       .inputOptions('-stream_loop -1')
       .input("bin/video/"+ video_name)
@@ -42,8 +48,8 @@ async function convertToTS(){
 }
 
 async function addAssets(){
-  concat();
-//  convertToTS();
+ await concat();
+  convertToTS();
 }
 
 async function concat(){
