@@ -1,0 +1,327 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What do &#39;real&#39;, &#39;user&#39; and &#39;sys&#39; mean in the output of time(1)?</p><div class="s-prose js-post-body"><pre><code>$ time foo
+real        0m0.003s
+user        0m0.000s
+sys         0m0.004s
+$
+</code></pre>
+<p>What do <code>real</code>, <code>user</code> and <code>sys</code> mean in the output of time? Which one is meaningful when benchmarking my app?</p>
+</div><p class="this-has-helped">This answer has helped 2554 people.</p><div class="s-prose js-post-body"><p><strong>Real, User and Sys process time statistics</strong></p>
+
+<p>One of these things is not like the other.  Real refers to actual elapsed time; User and Sys refer to CPU time used <em>only by the process.</em></p>
+
+<ul>
+<li><p><strong>Real</strong> is wall clock time - time from start to finish of the call.  This is all elapsed time including time slices used by other processes and time the process spends blocked (for example if it is waiting for I/O to complete).</p></li>
+<li><p><strong>User</strong> is the amount of CPU time spent in user-mode code (outside the kernel) <em>within</em> the process.  This is only actual CPU time used in executing the process.  Other processes and time the process spends blocked do not count towards this figure.</p></li>
+<li><p><strong>Sys</strong> is the amount of CPU time spent in the kernel within the process.  This means executing CPU time spent in system calls <em>within the kernel,</em> as opposed to library code, which is still running in user-space.  Like 'user', this is only CPU time used by the process.  See below for a brief description of kernel mode (also known as 'supervisor' mode) and the system call mechanism.</p></li>
+</ul>
+
+<p><code>User+Sys</code> will tell you how much actual CPU time your process used.  Note that this is across all CPUs, so if the process has multiple threads (and this process is running on a computer with more than one processor) it could potentially exceed the wall clock time reported by <code>Real</code> (which usually occurs).  Note that in the output these figures include the <code>User</code> and <code>Sys</code> time of all child processes (and their descendants) as well when they could have been collected, e.g. by <code>wait(2)</code> or <code>waitpid(2)</code>, although the underlying system calls return the statistics for the process and its children separately.</p>
+
+<p><strong>Origins of the statistics reported by <code>time (1)</code></strong></p>
+
+<p>The statistics reported by <code>time</code> are gathered from various system calls.  'User' and 'Sys' come from <a href="https://docs.oracle.com/cd/E23823_01/html/816-5168/wait-3c.html#scrolltoc" rel="noreferrer"><code>wait (2)</code></a> (<a href="http://pubs.opengroup.org/onlinepubs/9699919799/functions/wait.html" rel="noreferrer">POSIX</a>) or <a href="https://linux.die.net/man/2/times" rel="noreferrer"><code>times (2)</code></a> (<a href="http://pubs.opengroup.org/onlinepubs/9699919799/functions/times.html" rel="noreferrer">POSIX</a>), depending on the particular system.  'Real' is calculated from a start and end time gathered from the <a href="http://pubs.opengroup.org/onlinepubs/9699919799/functions/gettimeofday.html" rel="noreferrer"><code>gettimeofday (2)</code></a> call.  Depending on the version of the system, various other statistics such as the number of context switches may also be gathered by <code>time</code>.</p>
+
+<p>On a multi-processor machine, a multi-threaded process or a process forking children could have an elapsed time smaller than the total CPU time - as different threads or processes may run in parallel.  Also, the time statistics reported come from different origins, so times recorded for very short running tasks may be subject to rounding errors, as the example given by the original poster shows.</p>
+
+<p><strong>A brief primer on Kernel vs. User mode</strong></p>
+
+<p>On Unix, or any protected-memory operating system, <a href="https://en.wikipedia.org/wiki/Kernel_mode#Supervisor_mode" rel="noreferrer">'Kernel' or 'Supervisor'</a> mode refers to a <a href="https://en.wikipedia.org/wiki/Process_management_(computing)#Processor_modes" rel="noreferrer">privileged mode</a> that the CPU can operate in.  Certain privileged actions that could affect security or stability can only be done when the CPU is operating in this mode; these actions are not available to application code.  An example of such an action might be manipulation of the <a href="https://en.wikipedia.org/wiki/Memory_management_unit" rel="noreferrer">MMU</a> to gain access to the address space of another process.  Normally, <a href="https://en.wikipedia.org/wiki/User_space" rel="noreferrer">user-mode</a> code cannot do this (with good reason), although it can request <a href="https://en.wikipedia.org/wiki/Shared_memory" rel="noreferrer">shared memory</a> from the kernel, which <em>could</em> be read or written by more than one process.  In this case, the shared memory is explicitly requested from the kernel through a secure mechanism and both processes have to explicitly attach to it in order to use it.</p>
+
+<p>The privileged mode is usually referred to as 'kernel' mode because the kernel is executed by the CPU running in this mode.  In order to switch to kernel mode you have to issue a specific instruction (often called a <a href="https://en.wikipedia.org/wiki/Trap_(computing)" rel="noreferrer"><em>trap</em></a>) that switches the CPU to running in kernel mode <em>and runs code from a specific location held in a jump table.</em>  For security reasons, you cannot switch to kernel mode and execute arbitrary code - the traps are managed through a table of addresses that cannot be written to unless the CPU is running in supervisor mode.  You trap with an explicit trap number and the address is looked up in the jump table; the kernel has a finite number of controlled entry points.</p>
+
+<p>The 'system' calls in the C library (particularly those described in Section 2 of the man pages) have a user-mode component, which is what you actually call from your C program.  Behind the scenes, they may issue one or more system calls to the kernel to do specific services such as I/O, but they still also have code running in user-mode.  It is also quite possible to directly issue a trap to kernel mode from any user space code if desired, although you may need to write a snippet of assembly language to set up the registers correctly for the call.</p>
+
+<p><strong>More about 'sys'</strong></p>
+
+<p>There are things that your code cannot do from user mode - things like allocating memory or accessing hardware (HDD, network, etc.). These are under the supervision of the kernel, and it alone can do them. Some operations like <code>malloc</code> or<code>fread</code>/<code>fwrite</code> will invoke these kernel functions and that then will count as 'sys' time. Unfortunately it's not as simple as "every call to malloc will be counted in 'sys' time". The call to <code>malloc</code> will do some processing of its own (still counted in 'user' time) and then somewhere along the way it may call the function in kernel (counted in 'sys' time). After returning from the kernel call, there will be some more time in 'user' and then <code>malloc</code> will return to your code. As for when the switch happens, and how much of it is spent in kernel mode... you cannot say. It depends on the implementation of the library. Also, other seemingly innocent functions might also use <code>malloc</code> and the like in the background, which will again have some time in 'sys' then.</p>
+</div><p class="this-has-helped">This answer has helped 356 people.</p><div class="s-prose js-post-body"><p>To expand on the <a href="https://stackoverflow.com/a/556411/1677912">accepted answer</a>, I just wanted to provide another reason why <code>real</code> ≠ <code>user</code> + <code>sys</code>.</p>
+
+<p>Keep in mind that <code>real</code> represents actual elapsed time, while <code>user</code> and <code>sys</code> values represent CPU execution time. As a result, on a multicore system, the <code>user</code> and/or <code>sys</code> time (as well as their sum) can actually <em>exceed</em> the real time. For example, on a Java app I'm running for class I get this set of values:</p>
+
+<pre><code>real    1m47.363s
+user    2m41.318s
+sys     0m4.013s
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p>• <strong>real</strong>: The actual time spent in running the process from start to finish, as if it was measured by a human with a stopwatch</p>
+
+<p>• <strong>user</strong>: The cumulative time spent by all the CPUs during the computation</p>
+
+<p>• <strong>sys</strong>: The cumulative time spent by all the CPUs during system-related tasks such as memory allocation.</p>
+
+<blockquote>
+  <p>Notice that sometimes user + sys might be greater than real, as
+  multiple processors may work in parallel.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 59 people.</p><div class="s-prose js-post-body"><p><strong>Minimal runnable POSIX C examples</strong></p>
+<p>To make things more concrete, I want to exemplify a few extreme cases of <code>time</code> with some minimal C test programs.</p>
+<p>All programs can be compiled and run with:</p>
+<pre><code>gcc -ggdb3 -o main.out -pthread -std=c99 -pedantic-errors -Wall -Wextra main.c
+time ./main.out
+</code></pre>
+<p>and have been tested in Ubuntu 18.10, GCC 8.2.0, glibc 2.28, Linux kernel 4.18, ThinkPad P51 laptop, Intel Core i7-7820HQ CPU (4 cores / 8 threads), 2x Samsung M471A2K43BB1-CRC RAM (2x 16GiB).</p>
+<p><strong><code>sleep</code> syscall</strong></p>
+<p>Non-busy sleep as done by the <code>sleep</code> syscall only counts in <code>real</code>, but not for <code>user</code> or <code>sys</code>.</p>
+<p>For example, a program that sleeps for a second:</p>
+<pre><code>#define _XOPEN_SOURCE 700
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+
+int main(void) {
+    sleep(1);
+    return EXIT_SUCCESS;
+}
+</code></pre>
+<p><a href="https://github.com/cirosantilli/cpp-cheat/tree/164bf9459c519d6c696e4318df62fceab8735320/posix/interactive/sleep_1.c" rel="noreferrer">GitHub upstream</a>.</p>
+<p>outputs something like:</p>
+<pre><code>real    0m1.003s
+user    0m0.001s
+sys     0m0.003s
+</code></pre>
+<p>The same holds for programs blocked on IO becoming available.</p>
+<p>For example, the following program waits for the user to enter a character and press enter:</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void) {
+    printf(&quot;%c\n&quot;, getchar());
+    return EXIT_SUCCESS;
+}
+</code></pre>
+<p><a href="https://github.com/cirosantilli/cpp-cheat/tree/164bf9459c519d6c696e4318df62fceab8735320/c/interactive/getchar.c" rel="noreferrer">GitHub upstream</a>.</p>
+<p>And if you wait for about one second, it outputs just like the sleep example something like:</p>
+<pre><code>real    0m1.003s
+user    0m0.001s
+sys     0m0.003s
+</code></pre>
+<p>For this reason <code>time</code> can help you distinguish between CPU and IO bound programs: <a href="https://stackoverflow.com/questions/868568/what-do-the-terms-cpu-bound-and-i-o-bound-mean/33510470#33510470">What do the terms &quot;CPU bound&quot; and &quot;I/O bound&quot; mean?</a></p>
+<p><strong>Multiple threads</strong></p>
+<p>The following example does <code>niters</code> iterations of useless purely CPU-bound work on <code>nthreads</code> threads:</p>
+<pre><code>#define _XOPEN_SOURCE 700
+#include &lt;assert.h&gt;
+#include &lt;inttypes.h&gt;
+#include &lt;pthread.h&gt;
+#include &lt;stdint.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+
+uint64_t niters;
+
+void* my_thread(void *arg) {
+    uint64_t *argument, i, result;
+    argument = (uint64_t *)arg;
+    result = *argument;
+    for (i = 0; i &lt; niters; ++i) {
+        result = (result * result) - (3 * result) + 1;
+    }
+    *argument = result;
+    return NULL;
+}
+
+int main(int argc, char **argv) {
+    size_t nthreads;
+    pthread_t *threads;
+    uint64_t rc, i, *thread_args;
+
+    /* CLI args. */
+    if (argc &gt; 1) {
+        niters = strtoll(argv[1], NULL, 0);
+    } else {
+        niters = 1000000000;
+    }
+    if (argc &gt; 2) {
+        nthreads = strtoll(argv[2], NULL, 0);
+    } else {
+        nthreads = 1;
+    }
+    threads = malloc(nthreads * sizeof(*threads));
+    thread_args = malloc(nthreads * sizeof(*thread_args));
+
+    /* Create all threads */
+    for (i = 0; i &lt; nthreads; ++i) {
+        thread_args[i] = i;
+        rc = pthread_create(
+            &amp;threads[i],
+            NULL,
+            my_thread,
+            (void*)&amp;thread_args[i]
+        );
+        assert(rc == 0);
+    }
+
+    /* Wait for all threads to complete */
+    for (i = 0; i &lt; nthreads; ++i) {
+        rc = pthread_join(threads[i], NULL);
+        assert(rc == 0);
+        printf(&quot;%&quot; PRIu64 &quot; %&quot; PRIu64 &quot;\n&quot;, i, thread_args[i]);
+    }
+
+    free(threads);
+    free(thread_args);
+    return EXIT_SUCCESS;
+}
+</code></pre>
+<p><a href="https://github.com/cirosantilli/cpp-cheat/blob/4ec6412223bcaeea48128e0dd0e11f9f320aefba/posix/interactive/pthread_cpu_heavy_work.c" rel="noreferrer">GitHub upstream + plot code</a>.</p>
+<p>Then we plot wall, user and sys as a function of the number of threads for a fixed 10^10 iterations on my 8 hyperthread CPU:</p>
+<p><a href="https://i.stack.imgur.com/qAfEe.png" rel="noreferrer"><img src="https://i.stack.imgur.com/qAfEe.png" alt="enter image description here" /></a></p>
+<p><a href="https://gist.github.com/cirosantilli/24a8298a741c3c903a5551aa0740e43c#file-pthread_cpu_heavy_work-dat" rel="noreferrer">Plot data</a>.</p>
+<p>From the graph, we see that:</p>
+<ul>
+<li><p>for a CPU intensive single core application, wall and user are about the same</p>
+</li>
+<li><p>for 2 cores, user is about 2x wall, which means that the user time is counted across all threads.</p>
+<p>user basically doubled, and while wall stayed the same.</p>
+</li>
+<li><p>this continues up to 8 threads, which matches my number of hyperthreads in my computer.</p>
+<p>After 8, wall starts to increase as well, because we don't have any extra CPUs to put more work in a given amount of time!</p>
+<p>The ratio plateaus at this point.</p>
+</li>
+</ul>
+<p>Note that this graph is only so clear and simple because the work is purely CPU-bound: if it were memory bound, then we would get a fall in performance much earlier with less cores because the memory accesses would be a bottleneck as shown at <a href="https://stackoverflow.com/questions/868568/what-do-the-terms-cpu-bound-and-i-o-bound-mean/33510470#33510470">What do the terms &quot;CPU bound&quot; and &quot;I/O bound&quot; mean?</a></p>
+<p>Quickly checking that wall &lt; user is a simple way to determine that a program is multithreaded, and the closer that ratio is to the number of cores, the more effective the parallelization is, e.g.:</p>
+<ul>
+<li>multithreaded linkers: <a href="https://stackoverflow.com/questions/5142753/can-gcc-use-multiple-cores-when-linking/64128746#64128746">Can gcc use multiple cores when linking?</a></li>
+<li>C++ parallel sort: <a href="https://stackoverflow.com/questions/51031060/are-c17-parallel-algorithms-implemented-already/55989883#55989883">Are C++17 Parallel Algorithms implemented already?</a></li>
+</ul>
+<p><strong>Sys heavy work with <code>sendfile</code></strong></p>
+<p>The heaviest sys workload I could come up with was to use the <code>sendfile</code>, which does a file copy operation on kernel space: <a href="https://stackoverflow.com/questions/10195343/copy-a-file-in-a-sane-safe-and-efficient-way">Copy a file in a sane, safe and efficient way</a></p>
+<p>So I imagined that this in-kernel <code>memcpy</code> will be a CPU intensive operation.</p>
+<p>First I initialize a large 10GiB random file with:</p>
+<pre><code>dd if=/dev/urandom of=sendfile.in.tmp bs=1K count=10M
+</code></pre>
+<p>Then run the code:</p>
+<pre><code>#define _GNU_SOURCE
+#include &lt;assert.h&gt;
+#include &lt;fcntl.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;sys/sendfile.h&gt;
+#include &lt;sys/stat.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;unistd.h&gt;
+
+int main(int argc, char **argv) {
+    char *source_path, *dest_path;
+    int source, dest;
+    struct stat stat_source;
+    if (argc &gt; 1) {
+        source_path = argv[1];
+    } else {
+        source_path = &quot;sendfile.in.tmp&quot;;
+    }
+    if (argc &gt; 2) {
+        dest_path = argv[2];
+    } else {
+        dest_path = &quot;sendfile.out.tmp&quot;;
+    }
+    source = open(source_path, O_RDONLY);
+    assert(source != -1);
+    dest = open(dest_path, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+    assert(dest != -1);
+    assert(fstat(source, &amp;stat_source) != -1);
+    assert(sendfile(dest, source, 0, stat_source.st_size) != -1);
+    assert(close(source) != -1);
+    assert(close(dest) != -1);
+    return EXIT_SUCCESS;
+}
+</code></pre>
+<p><a href="https://github.com/cirosantilli/cpp-cheat/tree/164bf9459c519d6c696e4318df62fceab8735320/glibc/sendfile.c" rel="noreferrer">GitHub upstream</a>.</p>
+<p>which gives basically mostly system time as expected:</p>
+<pre><code>real    0m2.175s
+user    0m0.001s
+sys     0m1.476s
+</code></pre>
+<p>I was also curious to see if <code>time</code> would distinguish between syscalls of different processes, so I tried:</p>
+<pre><code>time ./sendfile.out sendfile.in1.tmp sendfile.out1.tmp &amp;
+time ./sendfile.out sendfile.in2.tmp sendfile.out2.tmp &amp;
+</code></pre>
+<p>And the result was:</p>
+<pre><code>real    0m3.651s
+user    0m0.000s
+sys     0m1.516s
+
+real    0m4.948s
+user    0m0.000s
+sys     0m1.562s
+</code></pre>
+<p>The sys time is about the same for both as for a single process, but the wall time is larger because the processes are competing for disk read access likely.</p>
+<p>So it seems that it does in fact account for which process started a given kernel work.</p>
+<p><strong>Bash source code</strong></p>
+<p>When you do just <code>time &lt;cmd&gt;</code> on Ubuntu, it use the Bash keyword as can be seen from:</p>
+<pre><code>type time
+</code></pre>
+<p>which outputs:</p>
+<pre><code>time is a shell keyword
+</code></pre>
+<p>So we grep source in the Bash 4.19 source code for the output string:</p>
+<pre><code>git grep '&quot;user\b'
+</code></pre>
+<p>which leads us to <a href="http://git.savannah.gnu.org/cgit/bash.git/tree/execute_cmd.c?id=b0776d8c49ab4310fa056ce1033985996c5b9807#n1299" rel="noreferrer">execute_cmd.c</a> function <code>time_command</code>, which uses:</p>
+<ul>
+<li><code>gettimeofday()</code> and <code>getrusage()</code> if both are available</li>
+<li><code>times()</code> otherwise</li>
+</ul>
+<p>all of which are <a href="https://github.com/torvalds/linux/blob/v4.19/arch/x86/entry/syscalls/syscall_64.tbl" rel="noreferrer">Linux system calls</a> and <a href="http://pubs.opengroup.org/onlinepubs/9699919799/idx/functions.html" rel="noreferrer">POSIX functions</a>.</p>
+<p><strong>GNU Coreutils source code</strong></p>
+<p>If we call it as:</p>
+<pre><code>/usr/bin/time
+</code></pre>
+<p>then it uses the GNU Coreutils implementation.</p>
+<p>This one is a bit more complex, but the relevant source seems to be at <a href="https://git.savannah.gnu.org/gitweb/?p=time.git;a=blob;f=resuse.c;h=41339418a278f0ef66913117964b6d65e836a8f3;hb=ad3684f72903e3720ef3620a422c7989628f2354#l68" rel="noreferrer">resuse.c</a> and it does:</p>
+<ul>
+<li><p>a non-POSIX BSD <code>wait3</code> call if that is available</p>
+</li>
+<li><p><code>times</code> and <code>gettimeofday</code> otherwise</p>
+<p><a href="https://i.stack.imgur.com/qAfEe.png" rel="noreferrer">1</a>: <a href="https://i.stack.imgur.com/qAfEe.png**Minimal" rel="noreferrer">https://i.stack.imgur.com/qAfEe.png**Minimal</a> runnable POSIX C examples**</p>
+</li>
+</ul>
+<p>To make things more concrete, I want to exemplify a few extreme cases of <code>time</code> with some minimal C test programs.</p>
+<p>All programs can be compiled and run with:</p>
+<pre><code>gcc -ggdb3 -o main.out -pthread -std=c99 -pedantic-errors -Wall -Wextra main.c
+time ./main.out
+</code></pre>
+<p>and have been tested in Ubuntu 18.10, GCC 8.2.0, glibc 2.28, Linux kernel 4.18, ThinkPad P51 laptop, Intel Core i7-7820HQ CPU (4 cores / 8 threads), 2x Samsung M471A2K43BB1-CRC RAM (2x 16GiB).</p>
+<p><strong>sleep</strong></p>
+<p>Non-busy sleep does not count in either <code>user</code> or <code>sys</code>, only <code>real</code>.</p>
+<p>For example, a program that sleeps for a second:</p>
+<pre><code>#define _XOPEN_SOURCE 700
+#include &lt;stdlib.h&gt;
+#include &lt;unistd.h&gt;
+
+int main(void) {
+    sleep(1);
+    return EXIT_SUCCESS;
+}
+</code></pre>
+<p><a href="https://github.com/cirosantilli/cpp-cheat/tree/164bf9459c519d6c696e4318df62fceab8735320/posix/interactive/sleep_1.c" rel="noreferrer">GitHub upstream</a>.</p>
+<p>outputs something like:</p>
+<pre><code>real    0m1.003s
+user    0m0.001s
+sys     0m0.003s
+</code></pre>
+<p>The same holds for programs blocked on IO becoming available.</p>
+<p>For example, the following program waits for the user to enter a character and press enter:</p>
+<pre><code>#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+
+int main(void) {
+    printf(&quot;%c\n&quot;, getchar());
+    return EXIT_SUCCESS;
+}
+</code></pre>
+<p><a href="https://github.com/cirosantilli/cpp-cheat/tree/164bf9459c519d6c696e4318df62fceab8735320/c/interactive/getchar.c" rel="noreferrer">GitHub upstream</a>.</p>
+<p>And if you wait for about one second, it outputs just like the sleep example something like:</p>
+<pre><code>real    0m1.003s
+user    0m0.001s
+sys     0m0.003s
+</code></pre>
+<p>For this reason <code>time</code> can help you distinguish between CPU and IO bound programs: <a href="https://stackoverflow.com/questions/868568/what-do-the-terms-cpu-bound-and-i-o-bound-mean/33510470#33510470">What do the terms &quot;CPU bound&quot; and &quot;I/O bound&quot; mean?</a></p>
+<ul>
+<li>multithreaded linkers: <a href="https://stackoverflow.com/questions/5142753/can-gcc-use-multiple-cores-when-linking/64128746#64128746">Can gcc use multiple cores when linking?</a></li>
+<li>C++ parallel sort: <a href="https://stackoverflow.com/questions/51031060/are-c17-parallel-algorithms-implemented-already/55989883#55989883">Are C++17 Parallel Algorithms implemented already?</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>Real shows total turn-around time for a process;
+while User shows the execution time for user-defined instructions
+and Sys is for time for executing system calls!</p>
+
+<p>Real time includes the waiting time also (the waiting time for I/O etc.)</p>
+</div></body></html>

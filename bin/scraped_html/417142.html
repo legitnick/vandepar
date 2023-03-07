@@ -1,6 +1,8 @@
-<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the maximum length of a URL in different browsers?</p><div class="s-prose js-post-body"><p><strong>Question 1:</strong> What is the maximum length of a URL for each browser?</p>
-<p><strong>Question 2:</strong> Is a maximum URL length part of the HTTP specification?</p>
-</div><p class="this-has-helped">This answer has helped 5789 people.</p><div class="s-prose js-post-body"><h2>Short answer - de facto limit of 2000 characters</h2>
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the maximum length of a URL in different browsers?</p><div class="s-prose js-post-body"><ul>
+<li>What is the maximum length of a URL for each browser?</li>
+<li>Is a maximum URL length part of the HTTP specification?</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 5799 people.</p><div class="s-prose js-post-body"><h2>Short answer - de facto limit of 2000 characters</h2>
 <p>If you keep URLs under 2000 characters, they'll work in virtually any combination of client and server software.</p>
 <p>If you are targeting particular browsers, see below for more details on specific limits.</p>
 <h2>Longer answer - first, the standards...</h2>
@@ -66,7 +68,7 @@ Edge 16          2047          10240
 <p>See also <a href="https://stackoverflow.com/questions/417142/what-is-the-maximum-length-of-a-url-in-different-browsers/31250734#31250734">this answer</a> from Matas Vaitkevicius below.</p>
 <h2>Is this information up to date?</h2>
 <p>This is a popular question, and as the original research is ~14 years old I'll try to keep it up to date: As of <strong>Jan 2021</strong>, the advice still stands. Even though IE11 may possibly accept longer URLs, the ubiquity of older IE installations plus the search engine limitations mean staying under 2000 chars is the best general policy.</p>
-</div><p class="this-has-helped">This answer has helped 211 people.</p><div class="s-prose js-post-body"><p>The longest URLs I came across are <a href="http://en.wikipedia.org/wiki/Data_URI_scheme" rel="noreferrer">data URLs</a></p>
+</div><p class="this-has-helped">This answer has helped 212 people.</p><div class="s-prose js-post-body"><p>The longest URLs I came across are <a href="http://en.wikipedia.org/wiki/Data_URI_scheme" rel="noreferrer">data URLs</a></p>
 
 <p>Example image URL from Google image results (11747 characters)</p>
 
@@ -216,7 +218,7 @@ Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrom
 <pre><code>Mozilla/5.0 (compatible; MSIE 9.0; Windows NT 6.1; Trident/5.0)
 4043
 </code></pre>
-</div><p class="this-has-helped">This answer has helped 175 people.</p><div class="s-prose js-post-body"><p><em><a href="https://web.archive.org/web/20180308145804/http://www.boutell.com/newfaq/misc/urllength.html" rel="noreferrer">WWW FAQs: What is the maximum length of a URL?</a></em> has its own answer based on empirical testing and research. The short answer is that going over 2048 characters makes Internet&nbsp;Explorer unhappy and thus this is the limit you should use. See the page for a long answer.</p>
+</div><p class="this-has-helped">This answer has helped 176 people.</p><div class="s-prose js-post-body"><p><em><a href="https://web.archive.org/web/20180308145804/http://www.boutell.com/newfaq/misc/urllength.html" rel="noreferrer">WWW FAQs: What is the maximum length of a URL?</a></em> has its own answer based on empirical testing and research. The short answer is that going over 2048 characters makes Internet&nbsp;Explorer unhappy and thus this is the limit you should use. See the page for a long answer.</p>
 </div><p class="this-has-helped">This answer has helped 111 people.</p><div class="s-prose js-post-body"><p>On Apple platforms (iOS/macOS/tvOS/watchOS), the limit may be a <strong>2 GB</strong> long URL scheme, as seen by <a href="https://github.com/apple/swift-corelibs-foundation/blob/b23dc8e249987442811e9e0097c326d7083784ac/CoreFoundation/URL.subproj/CFURLComponents_URIParser.c#L708" rel="noreferrer">this comment in the source code of Swift</a>:</p>
 
 <blockquote>
@@ -245,91 +247,4 @@ NSString *js = [NSString stringWithFormat:@"window.location.href = \"%@\";", pat
     return YES;
 }
 </code></pre>
-</div><p class="this-has-helped">This answer has helped 109 people.</p><div class="s-prose js-post-body"><p>There is really no universal maximum URL length. The max length is determined only by what the client browser chooses to support, which varies widely. The 2,083 limit is only present in Internet Explorer (all versions up to 7.0). The max length in Firefox and Safari seems to be unlimited, although instability occurs with URLs reaching around 65,000 characters.
-Opera seems to have no max URL length whatsoever, and doesn't suffer instability at extremely long lengths.</p>
-</div><p class="this-has-helped">This answer has helped 73 people.</p><div class="s-prose js-post-body"><p>The <a href="https://www.rfc-editor.org/rfc/rfc3986" rel="nofollow noreferrer">URI RFC</a> (of which URLs are a subset) doesn't define a maximum length, however, it does <em>recommend</em> that the hostname part of the URI (if applicable) not exceed 255 characters in length:</p>
-<blockquote>
-<p>URI producers should use names that
-conform to the DNS syntax, even when
-use of DNS is not immediately
-apparent, and should limit these names
-to no more than 255 characters in
-length.</p>
-</blockquote>
-<p>As noted in other posts though, some browsers have a practical limitation on the length of a URL.</p>
-</div><p class="this-has-helped">This answer has helped 57 people.</p><div class="s-prose js-post-body"><p>The <a href="http://www.ietf.org/rfc/rfc2616.txt" rel="noreferrer">HTTP 1.1 specification</a> says:</p>
-
-<blockquote>
-  <p>URIs in HTTP can be represented in
-  absolute form or relative to some<br>
-  known base URI [11], depending upon
-  the context of their use. The two<br>
-  forms are differentiated by the fact
-  that absolute URIs always begin<br>
-  with a scheme name followed by a
-  colon. For definitive information on<br>
-  URL syntax and semantics, see "Uniform
-  Resource Identifiers (URI):    Generic
-  Syntax and Semantics," RFC 2396 [42]
-  (which replaces RFCs    1738 [4] and
-  RFC 1808 [11]). This specification
-  adopts the    definitions of
-  "URI-reference", "absoluteURI",
-  "relativeURI", "port",<br>
-  "host","abs_path", "rel_path", and
-  "authority" from that<br>
-  specification.</p>
-  
-  <p><strong>The HTTP protocol does not place
-  any a priori limit on the length of<br>
-  a URI. Servers MUST be able to handle
-  the URI of any resource they    serve,
-  and SHOULD be able to handle URIs of
-  unbounded length if they    provide
-  GET-based forms that could generate
-  such URIs.*</strong> A server    SHOULD return
-  414 (Request-URI Too Long) status if a
-  URI is longer    than the server can
-  handle (see section 10.4.15).</p>
-  
-  <p>Note: Servers ought to be cautious about depending on URI
-  lengths
-        above 255 bytes, because some older client or proxy
-        implementations might not properly support these lengths.</p>
-</blockquote>
-
-<p>As mentioned by @Brian, the HTTP clients (e.g. browsers) may have their own limits, and HTTP servers will have different limits.</p>
-</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p><a href="http://support.microsoft.com/kb/208427/EN-US" rel="noreferrer">Microsoft Support</a> says "Maximum URL length is 2,083 characters in Internet Explorer".</p>
-
-<p>IE has problems with URLs longer than that. Firefox seems to work fine with >4k chars.</p>
-</div><p class="this-has-helped">This answer has helped 44 people.</p><div class="s-prose js-post-body"><p>In <a href="http://www.nngroup.com/articles/url-as-ui/" rel="noreferrer">URL as UI</a> Jakob Nielsen recommends:</p>
-
-<blockquote>
-  <p>the social interface to the Web relies on email when users want to recommend Web pages to each other, and email is the second-most common way users get to new sites (search engines being the most common): make sure that all URLs on your site are less than 78 characters long so that they will not wrap across a line feed.</p>
-</blockquote>
-
-<p>This is not the maximum but I'd consider this a practical maximum if you want your URL to be shared.</p>
-</div><p class="this-has-helped">This answer has helped 39 people.</p><div class="s-prose js-post-body"><p><a href="http://www.sitemaps.org/" rel="noreferrer">Sitemaps protocol</a>, which is a way for webmasters to inform search engines about pages on their sites (also used by Google in Webmaster Tools), supports URLs with less than 2048 characters. So if you are planning to use this feature for Search Engine Optimization, take this into account.</p>
-</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>ASP.NET 2 and SQL Server reporting services 2005 have a limit of 2028. I found this out the hard way, where my dynamic URL generator would not pass over some parameters to a report beyond that point. This was under Internet&nbsp;Explorer&nbsp;8.</p>
-</div><p class="this-has-helped">This answer has helped 21 people.</p><div class="s-prose js-post-body"><p>Why is the Internet&nbsp;Explorer limit only 2K while IIS has a limit of 16K? I don't think it makes sense.</p>
-
-<p>So I want to start an experiment about Ajax request URL size limits.</p>
-
-<p>I have set my Tomcat HTTP connector's maxHttpHeaderSize="1048576". And prepared a very long URL.</p>
-
-<p>Then I send a request with the long URL like the following:</p>
-
-<pre><code>var url="/ajax/url-length.jsp";
-jQuery.ajax(url,{data:{q:"0".repeat(1048000-url.length-4)}});
-</code></pre>
-
-<p>jQuery reports done. Tomcat reports the URL requested is 1048015 bytes. It was tested with Chrome 50 and Internet&nbsp;Explorer&nbsp;11.</p>
-
-<p>So web browsers won't truncate or limit your URL intentionally when sending Ajax requests.</p>
-</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>Limit request line directive sets the maximum length of a URL. By default, it is set to 8190, which gives you a lot of room. However other servers and some browses, limit the length more.</p>
-
-<p>Because all parameters are passed on the URL line, items that were in password of hidden fields will also be displayed in the URL of course. Neither mobile should be used for real security measures and should be considered cosmetic security at best.</p>
-</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>It seems that Chrome at least has raised this limit. I pasted 20,000 characters into the bookmarklet and it took it.</p>
-</div><p class="this-has-helped">This answer has helped 13 people.</p><div class="s-prose js-post-body"><p>I have experience with SharePoint 2007, 2010 and there is a limit of the length URL you can create from the server side in this case SharePoint, so it depends mostly on, 1) the client (browser, version, and OS) and 2) the server technology, IIS, Apache, etc.</p>
-</div><p class="this-has-helped">This answer has helped 5 people.</p><div class="s-prose js-post-body"><p>According to the HTTP spec, there is no limit to a URL's length. Keep your URLs under 2048 characters; this will ensure the URLs work in all clients &amp; server configurations. Also, search engines like URLs to remain under approximately 2000 characters.</p>
 </div></body></html>

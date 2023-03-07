@@ -1,0 +1,77 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>LINQ&#39;s Distinct() on a particular property</p><div class="s-prose js-post-body"><p>I am playing with LINQ to learn about it, but I can't figure out how to use <a href="https://learn.microsoft.com/en-us/dotnet/api/system.linq.enumerable.distinct" rel="noreferrer"><code>Distinct</code></a> when I do not have a simple list (a simple list of integers is pretty easy to do, this is not the question). What I if want to use <code>Distinct</code> on a <code>List&lt;TElement&gt;</code> on <em>one</em> or <em>more</em> properties of the <code>TElement</code>?</p>
+<p>Example: If an object is <code>Person</code>, with property <code>Id</code>. How can I get all <code>Person</code> and use <code>Distinct</code> on them with the property <code>Id</code> of the object?</p>
+<pre class="lang-none prettyprint-override"><code>Person1: Id=1, Name=&quot;Test1&quot;
+Person2: Id=1, Name=&quot;Test1&quot;
+Person3: Id=2, Name=&quot;Test2&quot;
+</code></pre>
+<p>How can I get just <code>Person1</code> and <code>Person3</code>? Is that possible?</p>
+<p>If it's not possible with LINQ, what would be the best way to have a list of <code>Person</code> depending on some of its properties?</p>
+</div><p class="this-has-helped">This answer has helped 2358 people.</p><div class="s-prose js-post-body"><blockquote>
+<p>What if I want to obtain a distinct list based on <em>one</em> or <em>more</em> properties?</p>
+</blockquote>
+<p>Simple! You want to group them and pick a winner out of the group.</p>
+
+<pre class="lang-csharp prettyprint-override"><code>List&lt;Person&gt; distinctPeople = allPeople
+  .GroupBy(p =&gt; p.PersonId)
+  .Select(g =&gt; g.First())
+  .ToList();
+</code></pre>
+<p>If you want to define groups on multiple properties, here's how:</p>
+<pre class="lang-csharp prettyprint-override"><code>List&lt;Person&gt; distinctPeople = allPeople
+  .GroupBy(p =&gt; new {p.PersonId, p.FavoriteColor} )
+  .Select(g =&gt; g.First())
+  .ToList();
+</code></pre>
+<p>Note: Certain query providers are unable to resolve that each group must have at least one element, and that First is the appropriate method to call in that situation. If you find yourself working with such a query provider, FirstOrDefault may help get your query through the query provider.</p>
+<p>Note2: Consider this answer for an EF Core (prior to EF Core 6) compatible approach. <a href="https://stackoverflow.com/a/66529949/8155">https://stackoverflow.com/a/66529949/8155</a></p>
+</div><p class="this-has-helped">This answer has helped 1503 people.</p><div class="s-prose js-post-body"><p><strong>EDIT</strong>: This is now part of <a href="https://github.com/morelinq/MoreLINQ" rel="noreferrer">MoreLINQ</a>.</p>
+
+<p>What you need is a "distinct-by" effectively. I don't believe it's part of LINQ as it stands, although it's fairly easy to write:</p>
+
+<pre><code>public static IEnumerable&lt;TSource&gt; DistinctBy&lt;TSource, TKey&gt;
+    (this IEnumerable&lt;TSource&gt; source, Func&lt;TSource, TKey&gt; keySelector)
+{
+    HashSet&lt;TKey&gt; seenKeys = new HashSet&lt;TKey&gt;();
+    foreach (TSource element in source)
+    {
+        if (seenKeys.Add(keySelector(element)))
+        {
+            yield return element;
+        }
+    }
+}
+</code></pre>
+
+<p>So to find the distinct values using just the <code>Id</code> property, you could use:</p>
+
+<pre><code>var query = people.DistinctBy(p =&gt; p.Id);
+</code></pre>
+
+<p>And to use multiple properties, you can use anonymous types, which implement equality appropriately:</p>
+
+<pre><code>var query = people.DistinctBy(p =&gt; new { p.Id, p.Name });
+</code></pre>
+
+<p>Untested, but it should work (and it now at least compiles).</p>
+
+<p>It assumes the default comparer for the keys though - if you want to pass in an equality comparer, just pass it on to the <code>HashSet</code> constructor.</p>
+</div><p class="this-has-helped">This answer has helped 122 people.</p><div class="s-prose js-post-body"><p>Use:</p>
+<pre><code>List&lt;Person&gt; pList = new List&lt;Person&gt;();
+/* Fill list */
+
+var result = pList.Where(p =&gt; p.Name != null).GroupBy(p =&gt; p.Id)
+    .Select(grp =&gt; grp.FirstOrDefault());
+</code></pre>
+<p>The <code>where</code> helps you filter the entries (could be more complex) and the <code>groupby</code> and <code>select</code> perform the distinct function.</p>
+</div><p class="this-has-helped">This answer has helped 88 people.</p><div class="s-prose js-post-body"><p>You could also use query syntax if you want it to look all LINQ-like:</p>
+
+<pre><code>var uniquePeople = from p in people
+                   group p by new {p.ID} //or group by new {p.ID, p.Name, p.Whatever}
+                   into mygroup
+                   select mygroup.FirstOrDefault();
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 86 people.</p><div class="s-prose js-post-body"><p>I think it is enough:</p>
+
+<pre><code>list.Select(s =&gt; s.MyField).Distinct();
+</code></pre>
+</div></body></html>

@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>&quot;implements Runnable&quot; vs &quot;extends Thread&quot; in Java</p><div class="s-prose js-post-body"><p>From what time I've spent with threads in <code>Java</code>, I've found these two ways to write threads:</p>
+<p>With <strong>implements <code>Runnable</code>:</strong></p>
+<pre><code>public class MyRunnable implements Runnable {
+    public void run() {
+        //Code
+    }
+}
+//Started with a &quot;new Thread(new MyRunnable()).start()&quot; call
+</code></pre>
+<p>Or, with <strong>extends <code>Thread</code>:</strong></p>
+<pre><code>public class MyThread extends Thread {
+    public MyThread() {
+        super(&quot;MyThread&quot;);
+    }
+    public void run() {
+        //Code
+    }
+}
+//Started with a &quot;new MyThread().start()&quot; call
+</code></pre>
+<p>Is there any significant difference in these two blocks of code?</p>
+</div><p class="this-has-helped">This answer has helped 1808 people.</p><div class="s-prose js-post-body"><p>Yes: implements <code>Runnable</code> is the preferred way to do it, IMO. You're not really specialising the thread's behaviour.  You're just giving it something to run. That means <a href="http://en.wikipedia.org/wiki/Object_composition" rel="noreferrer">composition</a> is the <em>philosophically</em> &quot;purer&quot; way to go.</p>
+<p>In <em>practical</em> terms, it means you can implement <code>Runnable</code> and extend from another class as well... and you can also implement <code>Runnable</code> via a lambda expression as of Java 8.</p>
+</div><p class="this-has-helped">This answer has helped 621 people.</p><div class="s-prose js-post-body"><p><strong>tl;dr: implements Runnable is better.  However, the caveat is important</strong>.</p>
+<p>In general, I would recommend using something like <code>Runnable</code> rather than <code>Thread</code> because it allows you to keep your work only loosely coupled with your choice of concurrency.  For example, if you use a <code>Runnable</code> and decide later on that this doesn't in fact require its own <code>Thread</code>, you can just call threadA.run().</p>
+<p><strong>Caveat:</strong> Around here, I strongly discourage the use of raw Threads.  I much prefer the use of <a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Callable.html" rel="noreferrer">Callables</a> and <a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/FutureTask.html" rel="noreferrer">FutureTasks</a> (From the javadoc: &quot;A cancellable asynchronous computation&quot;).  The integration of timeouts, proper cancelling and the thread pooling of the modern concurrency support are all much more useful to me than piles of raw Threads.</p>
+<p><strong>Follow-up:</strong> There is a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/FutureTask.html#FutureTask-java.lang.Runnable-V-" rel="noreferrer"><code>FutureTask</code> constructor</a> that allows you to use Runnables (if that's what you are most comfortable with) and still get the benefit of the modern concurrency tools.  <a href="https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/FutureTask.html#FutureTask-java.lang.Runnable-V-" rel="noreferrer">To quote the javadoc</a>:</p>
+<p>If you don't need a particular result, consider using constructions of the form:</p>
+<pre><code>Future&lt;?&gt; f = new FutureTask&lt;Object&gt;(runnable, null)
+</code></pre>
+<p>So, if we replace their <code>runnable</code> with your <code>threadA</code>, we get the following:</p>
+<pre><code>new FutureTask&lt;Object&gt;(threadA, null)
+</code></pre>
+<p>Another option that allows you to stay closer to Runnables is a <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html" rel="noreferrer">ThreadPoolExecutor</a>.  You can use the <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html#execute%28java.lang.Runnable%29" rel="noreferrer">execute</a> method to pass in a Runnable to execute &quot;the given task sometime in the future&quot;.</p>
+<p>If you'd like to try using a thread pool, the code fragment above would become something like the following (using the <a href="http://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executors.html#newCachedThreadPool%28%29" rel="noreferrer">Executors.newCachedThreadPool()</a> factory method):</p>
+<pre><code>ExecutorService es = Executors.newCachedThreadPool();
+es.execute(new ThreadA());
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 290 people.</p><div class="s-prose js-post-body"><p>Moral of the story:</p>
+
+<p><em>Inherit only if you want to override some behavior.</em></p>
+
+<p>Or rather it should be read as:</p>
+
+<p><em>Inherit less, interface more.</em></p>
+</div><p class="this-has-helped">This answer has helped 88 people.</p><div class="s-prose js-post-body"><p>One thing that I'm surprised hasn't been mentioned yet is that implementing <code>Runnable</code> makes your class more flexible.</p>
+
+<p>If you extend thread then the action you're doing is always going to be in a thread.  However, if you implement <code>Runnable</code> it doesn't have to be.  You can run it in a thread, or pass it to some kind of executor service, or just pass it around as a task within a single threaded application (maybe to be run at a later time, but within the same thread).  The options are a lot more open if you just use <code>Runnable</code> than if you bind yourself to <code>Thread</code>.</p>
+</div><p class="this-has-helped">This answer has helped 86 people.</p><div class="s-prose js-post-body"><p>If you want to implements or extends any other class then <code>Runnable</code> interface is most preferable, otherwise, if you do not want any other class to extend or implement then <code>Thread</code> class is preferable. </p>
+
+<p><strong>The most common difference is</strong></p>
+
+<p><img src="https://i.stack.imgur.com/vLRdp.gif" alt="enter image description here"></p>
+
+<p>When you <code>extends Thread</code> class, after that you can’t extend any other class which you required. (As you know, Java does not allow inheriting more than one class).</p>
+
+<p>When you <code>implements Runnable</code>, you can save space for your class to extend any other class in the future or now.</p>
+
+<ul>
+<li><p>Java doesn't support multiple inheritances, which means you can only extend one class in Java so once you extended Thread class you lost your chance and cannot extend or inherit another class in Java.</p></li>
+<li><p>In Object-oriented programming, extending a class generally means, adding new functionality, and modifying or improving behaviors. If we are not making any modification on Thread then use Runnable interface instead.</p></li>
+<li><p>Runnable interface represents a Task which can be executed by either plain Thread or Executors or any other means. so logical separation of Task as Runnable than Thread is a good design decision.</p></li>
+<li><p>Separating task as Runnable means we can reuse the task and also has the liberty to execute it from different means. since you can not restart a Thread once it completes. again Runnable vs Thread for task, Runnable is winner.</p></li>
+<li><p>Java designer recognizes this and that's why Executors accept Runnable as Task and they have worker thread which executes those task.</p></li>
+<li><p>Inheriting all Thread methods are additional overhead just for representing a Task which can be done easily with Runnable.</p></li>
+</ul>
+
+<p>Courtesy from <a href="http://javarevisited.blogspot.com/2012/01/difference-thread-vs-runnable-interface.html" rel="noreferrer">javarevisited.blogspot.com</a></p>
+
+<p>These were some of the notable differences between Thread and Runnable in Java. If you know any other differences on Thread vs Runnable than please share it via comments. I personally use Runnable over Thread for this scenario and recommends to use Runnable or Callable interface based on your requirement.</p>
+
+<p><strong>However, the significant difference is.</strong></p>
+
+<p>When you <code>extends Thread</code> class, each of your thread creates a unique object and associate with it.
+When you <code>implements Runnable</code>, it shares the same object to multiple threads.</p>
+</div></body></html>

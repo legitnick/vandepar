@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Vertically align text next to an image?</p><div class="s-prose js-post-body"><p>Why won't <code>vertical-align: middle</code> work?  And yet, <code>vertical-align: top</code> <em>does</em> work.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>span{
+  vertical-align: middle;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div&gt;
+  &lt;img src="https://via.placeholder.com/30" alt="small img" /&gt;
+  &lt;span&gt;Doesn't work.&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 2543 people.</p><div class="s-prose js-post-body"><p>Actually, in this case it's quite simple: apply the vertical align to the image. Since it's all in one line, it's really the image you want aligned, not the text.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;!-- moved "vertical-align:middle" style from span to img --&gt;
+&lt;div&gt;
+  &lt;img style="vertical-align:middle" src="https://via.placeholder.com/60x60" alt="A grey image showing text 60 x 60"&gt;
+  &lt;span style=""&gt;Works.&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+<p>Tested in FF3.</p>
+<p>Now you can use flexbox for this type of layout.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>.box {
+   display: flex;
+   align-items:center;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div class="box"&gt;
+    &lt;img src="https://via.placeholder.com/60x60"&gt;
+    &lt;span style=""&gt;Works.&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 358 people.</p><div class="s-prose js-post-body"><p>Here are some simple techniques for vertical-align:</p>
+
+<h2>One-line vertical-align:middle</h2>
+
+<p>This one is easy: set the line-height of the text element to equal that of the container</p>
+
+<pre><code>&lt;div&gt;
+  &lt;img style="width:30px; height:30px;"&gt;
+  &lt;span style="line-height:30px;"&gt;Doesn't work.&lt;/span&gt;
+&lt;/div&gt;
+</code></pre>
+
+<h2>Multiple-lines vertical-align:bottom</h2>
+
+<p>Absolutely position an inner div relative to its container</p>
+
+<pre><code>&lt;div style="position:relative;width:30px;height:60px;"&gt;
+  &lt;div style="position:absolute;bottom:0"&gt;This is positioned on the bottom&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+
+<h2>Multiple-lines vertical-align:middle</h2>
+
+<pre><code>&lt;div style="display:table;width:30px;height:60px;"&gt;
+  &lt;div style="display:table-cell;height:30px;"&gt;This is positioned in the middle&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+
+<h2>If you must support ancient versions of IE &lt;= 7</h2>
+
+<p>In order to get this to work correctly across the board, you'll have to hack the CSS a bit. Luckily, there is an IE bug that works in our favor. Setting <code>top:50%</code> on the container and <code>top:-50%</code> on the inner div, you can achieve the same result. We can combine the two using another feature IE doesn't support: advanced CSS selectors.</p>
+
+<pre><code>&lt;style type="text/css"&gt;
+  #container {
+    width: 30px;
+    height: 60px;
+    position: relative;
+  }
+  #wrapper &gt; #container {
+    display: table;
+    position: static;
+  }
+  #container div {
+    position: absolute;
+    top: 50%;
+  }
+  #container div div {
+    position: relative;
+    top: -50%;
+  }
+  #container &gt; div {
+    display: table-cell;
+    vertical-align: middle;
+    position: static;
+  }
+&lt;/style&gt;
+
+&lt;div id="wrapper"&gt;
+  &lt;div id="container"&gt;
+    &lt;div&gt;&lt;div&gt;&lt;p&gt;Works in everything!&lt;/p&gt;&lt;/div&gt;&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+
+<h2>Variable container height vertical-align:middle</h2>
+
+<p>This solution requires a slightly more modern browser than the other solutions, as it makes use of the <code>transform: translateY</code> property. (<a href="http://caniuse.com/#feat=transforms2d" rel="noreferrer">http://caniuse.com/#feat=transforms2d</a>)</p>
+
+<p>Applying the following 3 lines of CSS to an element will vertically centre it within its parent regardless of the height of the parent element:</p>
+
+<pre><code>position: relative;
+top: 50%;
+transform: translateY(-50%);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 105 people.</p><div class="s-prose js-post-body"><p>Change your <code>div</code> into a flex container:</p>
+<pre class="lang-css prettyprint-override"><code>div { display: flex; }
+</code></pre>
+<br>
+Now there are two methods to center the alignments for all the content:
+<p><strong>Method 1:</strong></p>
+<pre class="lang-css prettyprint-override"><code>div { align-items: center; }
+</code></pre>
+<p><strong><a href="http://jsfiddle.net/Mori/35oh5dfL/" rel="nofollow noreferrer">DEMO</a></strong></p>
+<hr />
+<p><strong>Method 2:</strong></p>
+<pre class="lang-css prettyprint-override"><code>div * { margin: auto 0; }
+</code></pre>
+<p><strong><a href="http://jsfiddle.net/Mori/Qtng7/" rel="nofollow noreferrer">DEMO</a></strong></p>
+<hr />
+<p>Try different width and height values on the <code>img</code> and different font size values on the <code>span</code> and you'll see they always remain in the middle of the container.</p>
+</div><p class="this-has-helped">This answer has helped 104 people.</p><div class="s-prose js-post-body"><p>You have to apply <code>vertical-align: middle</code> to both elements to have it been centered perfectly.</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div&gt;
+  &lt;img style="vertical-align:middle" src="http://lorempixel.com/60/60/"&gt;
+  &lt;span style="vertical-align:middle"&gt;Perfectly centered&lt;/span&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>The <a href="https://stackoverflow.com/a/489394/3323185">accepted answer</a> does center the icon around half of the x-height of the text next to it (as defined in the <a href="http://www.w3.org/TR/CSS2/visudet.html#propdef-vertical-align" rel="noreferrer">CSS specs</a>). Which might be good enough but can look a little bit off, if the text has ascenders or descenders standing out just at top or bottom:</p>
+
+<p><img src="https://i.stack.imgur.com/V0WZM.png" alt="centered icon comparison"></p>
+
+<p>On the left, the text is not aligned, on the right it is as shown above. A live demo can be found in this <a href="http://christopheraue.net/2014/03/05/vertical-align/#centering-an-icon" rel="noreferrer">article about vertical-align</a>.</p>
+
+<p><strong>Has anyone talked about why <code>vertical-align: top</code> works in the scenario?</strong> The image in the question is probably taller than the text and thus defines the top edge of the line box. <code>vertical-align: top</code> on the span element then just positions it at the top of the line box. </p>
+
+<p>The main difference in behavior between <code>vertical-align: middle</code> and <code>top</code> is that the first moves elements relative to the box's baseline (which is placed wherever needed to fulfill all vertical alignments and thus feels rather <em>unpredictable</em>) and the second relative to the outer bounds of the line box (which is more tangible).</p>
+</div><p class="this-has-helped">This answer has helped 64 people.</p><div class="s-prose js-post-body"><p>The technique used in the accepted answer works only for single-lined text (<a href="http://jsfiddle.net/danield770/ULzcX/6/" rel="noreferrer">demo</a>), but not multi-line text (<a href="http://jsfiddle.net/danield770/ULzcX/7/" rel="noreferrer">demo</a>) - as noted there.</p>
+
+<p>If anyone needs to vertically center multi-lined text to an image, here are a few ways
+(Methods 1 and 2 inspired by <a href="http://css-tricks.com/centering-in-the-unknown/" rel="noreferrer">this CSS-Tricks article</a>)</p>
+
+<h2>Method #1: CSS tables (<strong><a href="http://jsfiddle.net/danield770/ULzcX/5/" rel="noreferrer">FIDDLE</a></strong>) (IE8+ (<a href="http://caniuse.com/css-table" rel="noreferrer">caniuse</a>))</h2>
+
+<p>CSS:</p>
+
+<pre><code>div {
+    display: table;
+}
+span {
+    vertical-align: middle;
+    display: table-cell;
+}
+</code></pre>
+
+<h2>Method #2: Pseudo element on container (<strong><a href="http://jsfiddle.net/danield770/ULzcX/8/" rel="noreferrer">FIDDLE</a></strong>) (IE8+)</h2>
+
+<p>CSS:</p>
+
+<pre><code>div {
+   height: 200px; /* height of image */
+}
+
+div:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  margin-right: -0.25em; /* Adjusts for spacing */
+}
+
+img {
+    position: absolute;
+}
+
+span {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 200px;  /* width of image */
+}
+</code></pre>
+
+<h2>Method #3: Flexbox (<strong><a href="http://jsfiddle.net/danield770/ULzcX/4/" rel="noreferrer">FIDDLE</a></strong>) (<a href="http://caniuse.com/flexbox" rel="noreferrer">caniuse</a>)</h2>
+
+<p><strong>CSS</strong> (The above fiddle contains vendor prefixes):</p>
+
+<pre><code>div {   
+    display: flex; 
+    align-items: center;    
+}
+img {
+    min-width: 200px; /* width of image */
+}
+</code></pre>
+</div></body></html>

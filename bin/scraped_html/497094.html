@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I find out which DOM element has the focus?</p><div class="s-prose js-post-body"><p>I would like to find out, in JavaScript, which element currently has focus. I've been looking through the DOM and haven't found what I need, yet. Is there a way to do this, and how?</p>
+
+<p>The reason I was looking for this:</p>
+
+<p>I'm trying to make keys like the arrows and <code>enter</code> navigate through a table of input elements. Tab works now, but enter, and arrows do not by default it seems. I've got the key handling part set up but now I need to figure out how to move the focus over in the event handling functions.</p>
+</div><p class="this-has-helped">This answer has helped 1857 people.</p><div class="s-prose js-post-body"><p>Use <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/activeElement" rel="noreferrer"><code>document.activeElement</code></a>, it is supported in all major browsers.</p>
+
+<p>Previously, if you were trying to find out what form field has focus, you could not. To emulate detection within older browsers, add a "focus" event handler to all fields and record the last-focused field in a variable. Add a "blur" handler to clear the variable upon a blur event for the last-focused field.</p>
+
+<p>If you need to remove the <code>activeElement</code> you can use blur; <code>document.activeElement.blur()</code>. It will change the <code>activeElement</code> to <code>body</code>.</p>
+
+<p>Related links:</p>
+
+<ul>
+<li><a href="https://developer.mozilla.org/en/DOM/document.activeElement#Browser_compatibility" rel="noreferrer">activeElement Browser Compatibility</a></li>
+<li><a href="https://stackoverflow.com/questions/3328320/jquery-alternative-for-document-activeelement">jQuery alternative for document.activeElement</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 151 people.</p><div class="s-prose js-post-body"><p>As said by JW, you can't find the current focused element, at least in a browser-independent way. But if your app is IE only (some are...), you can find it the following way:</p>
+<pre><code>document.activeElement
+</code></pre>
+<p>It looks like IE did not have everything wrong after all, this is part of HTML5 draft and seems to be supported by the latest version of Chrome, Safari and Firefox at least.</p>
+</div><p class="this-has-helped">This answer has helped 95 people.</p><div class="s-prose js-post-body"><p>If you can use jQuery, it now supports :focus, just make sure you are using version 1.6+.</p>
+
+<p>This statement will get you the currently focused element.</p>
+
+<pre><code>$(":focus")
+</code></pre>
+
+<p>From: <a href="https://stackoverflow.com/questions/516152/how-to-select-an-element-that-has-focus-on-it-with-jquery/2061798#2061798">How to select an element that has focus on it with jQuery</a></p>
+</div><p class="this-has-helped">This answer has helped 51 people.</p><div class="s-prose js-post-body"><p><code>document.activeElement</code> is now <a href="http://www.w3.org/TR/html5/editing.html#dom-document-activeelement">part of the HTML5 working draft</a> specification, but it might not yet be supported in some non-major/mobile/older browsers.  You can fall back to <code>querySelector</code> (if that is supported).  It's also worth mentioning that <code>document.activeElement</code> will return <code>document.body</code> if no element is focused &mdash; even if the browser window doesn't have focus.</p>
+
+<p>The following code will work around this issue and fall back to <code>querySelector</code> giving a little better support.</p>
+
+<pre><code>var focused = document.activeElement;
+if (!focused || focused == document.body)
+    focused = null;
+else if (document.querySelector)
+    focused = document.querySelector(":focus");
+</code></pre>
+
+<p>An addition thing to note is the performance difference between these two methods.  Querying the document with selectors will always be much slower than accessing the <code>activeElement</code> property.  See this <a href="http://jsperf.com/focus-pseudo-class-vs-activeelement">jsperf.com test</a>.</p>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>By itself, <code>document.activeElement</code> can still return an element if the document isn't focused (and thus <em>nothing in the document</em> is focused!)</p>
+
+<p>You <em>may</em> want that behavior, or it <em>may</em> not matter (e.g. within a <code>keydown</code> event), but if you need to know something is actually focused, you can additionally check <a href="https://developer.mozilla.org/en-US/docs/Web/API/Document/hasFocus" rel="noreferrer"><code>document.hasFocus()</code></a>.</p>
+
+<p>The following will give you the focused element if there is one, or else <code>null</code>. </p>
+
+<pre><code>var focused_element = null;
+if (
+    document.hasFocus() &amp;&amp;
+    document.activeElement !== document.body &amp;&amp;
+    document.activeElement !== document.documentElement
+) {
+    focused_element = document.activeElement;
+}
+</code></pre>
+
+<p>To check whether a <em>specific</em> element has focus, it's simpler:</p>
+
+<pre><code>var input_focused = document.activeElement === input &amp;&amp; document.hasFocus();
+</code></pre>
+
+<p>To check whether <em>anything</em> is focused, it's more complex again:</p>
+
+<pre><code>var anything_is_focused = (
+    document.hasFocus() &amp;&amp;
+    document.activeElement !== null &amp;&amp;
+    document.activeElement !== document.body &amp;&amp;
+    document.activeElement !== document.documentElement
+);
+</code></pre>
+
+<hr>
+
+<p><strong>Robustness Note</strong>: In the code where it the checks against <code>document.body</code> and <code>document.documentElement</code>, this is because some browsers return one of these or <code>null</code> when nothing is focused.</p>
+
+<p>It doesn't account for if the <code>&lt;body&gt;</code> (or maybe <code>&lt;html&gt;</code>) had a <code>tabIndex</code> attribute and thus <em>could actually be focused</em>. If you're writing a library or something and want it to be robust, you should probably handle that somehow.</p>
+
+<hr>
+
+<p>Here's a (<em>heavy</em> airquotes) "one-liner" version of getting the focused element, which is <em>conceptually more complicated</em> because you have to know about short-circuiting, and y'know, it obviously doesn't fit on one line, assuming you want it to be readable.<br>
+I'm not gonna recommend this one. But if you're a 1337 hax0r, idk... it's there.<br>
+You could also remove the <code>|| null</code> part if you don't mind getting <code>false</code> in some cases. (You could still get <code>null</code> if <code>document.activeElement</code> is <code>null</code>):</p>
+
+<pre><code>var focused_element = (
+    document.hasFocus() &amp;&amp;
+    document.activeElement !== document.body &amp;&amp;
+    document.activeElement !== document.documentElement &amp;&amp;
+    document.activeElement
+) || null;
+</code></pre>
+
+<hr>
+
+<p>For checking if a specific element is focused, alternatively you <em>could</em> use events, but this way requires setup (and potentially teardown), and importantly, <em>assumes an initial state</em>:</p>
+
+<pre><code>var input_focused = false;
+input.addEventListener("focus", function() {
+    input_focused = true;
+});
+input.addEventListener("blur", function() {
+    input_focused = false;
+});
+</code></pre>
+
+<p>You could fix the initial state assumption by using the non-evented way, but then you might as well just use that instead.</p>
+</div></body></html>

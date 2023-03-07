@@ -10,7 +10,7 @@ export async function getQuestionJSON(){
 
 
   const dateFro = await mem.getLatestDate();
-  const dateTo = dateFro + 1000*60*60*24*30;//a month, roughly
+  const dateTo = dateFro + 60*60*24*14;//14 days
   mem.setLatestDate(dateTo);
   //https://api.stackexchange.com/2.3/questions?pagesize=1&order=desc&min=30&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site=stackoverflow&filter=withbody&fromdate=1320969600&todate=1321660800
   const url = "https://api.stackexchange.com/2.3/questions?pagesize="+pagesize+"&order=desc&min=30&key=pwDNoBGQPWPm*rgcdmFBkw((&sort=votes&site="+site+"&filter=withbody&fromdate="+dateFro+"&todate="+dateTo;

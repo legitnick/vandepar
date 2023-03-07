@@ -1,0 +1,35 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Difference between == and === in JavaScript</p><div class="s-prose js-post-body"><p>What is the difference between <code>==</code> and <code>===</code> in JavaScript?  I have also seen <code>!=</code> and <code>!==</code> operators.  Are there more such operators?</p>
+</div><p class="this-has-helped">This answer has helped 2026 people.</p><div class="s-prose js-post-body"><p>Take a look here: <a href="http://longgoldenears.blogspot.com/2007/09/triple-equals-in-javascript.html" rel="noreferrer">http://longgoldenears.blogspot.com/2007/09/triple-equals-in-javascript.html</a></p>
+<p>The 3 equal signs mean &quot;equality without type coercion&quot;. Using the triple equals, the values must be equal in type as well.</p>
+<pre><code>0 == false   // true
+0 === false  // false, because they are of a different type
+1 == &quot;1&quot;     // true, automatic type conversion for value only
+1 === &quot;1&quot;    // false, because they are of a different type
+null == undefined // true
+null === undefined // false
+'0' == false // true
+'0' === false // false
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1211 people.</p><div class="s-prose js-post-body"><p><code>===</code> and <code>!==</code> are strict comparison operators:</p>
+<blockquote>
+<p>JavaScript has both strict and
+type-converting equality comparison.
+For <code>strict</code> equality the objects being
+compared must have the same type and:</p>
+<ul>
+<li>Two strings are strictly equal when they have the same sequence of
+characters, same length, and same
+characters in corresponding positions.</li>
+<li>Two numbers are strictly equal when they are numerically equal (have
+the same number value). <code>NaN</code> is not
+equal to anything, including <code>NaN</code>.
+Positive and negative zeros are equal
+to one another.</li>
+<li>Two Boolean operands are strictly equal if both are true or
+both are false.</li>
+<li>Two objects are strictly equal if they refer to the same <code>Object</code>.</li>
+<li><code>Null</code> and <code>Undefined</code> types are <code>==</code> (but not <code>===</code>). [I.e. (<code>Null==Undefined</code>) is <code>true</code> but (<code>Null===Undefined</code>) is <code>false</code>]</li>
+</ul>
+</blockquote>
+<p><a href="https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Operators/Comparison_Operators" rel="noreferrer">Comparison Operators - MDC</a></p>
+</div></body></html>

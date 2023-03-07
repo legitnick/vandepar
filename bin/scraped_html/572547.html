@@ -1,0 +1,274 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What does &quot;static&quot; mean in C?</p><div class="s-prose js-post-body"><p>I've seen the word <code>static</code> used in different places in C code; is this like a static function/class in C# (where the implementation is shared across objects)?  </p>
+</div><p class="this-has-helped">This answer has helped 1797 people.</p><div class="s-prose js-post-body"><ol>
+<li>A static variable inside a function keeps its value between invocations.</li>
+<li>A static global variable or a function is "seen" only in the file it's declared in</li>
+</ol>
+
+<p>(1) is the more foreign topic if you're a newbie, so here's an example:</p>
+
+<pre><code>#include &lt;stdio.h&gt;
+
+void foo()
+{
+    int a = 10;
+    static int sa = 10;
+
+    a += 5;
+    sa += 5;
+
+    printf("a = %d, sa = %d\n", a, sa);
+}
+
+
+int main()
+{
+    int i;
+
+    for (i = 0; i &lt; 10; ++i)
+        foo();
+}
+</code></pre>
+
+<p>This prints:</p>
+
+<pre><code>a = 15, sa = 15
+a = 15, sa = 20
+a = 15, sa = 25
+a = 15, sa = 30
+a = 15, sa = 35
+a = 15, sa = 40
+a = 15, sa = 45
+a = 15, sa = 50
+a = 15, sa = 55
+a = 15, sa = 60
+</code></pre>
+
+<p>This is useful for cases where a function needs to keep some state between invocations, and you don't want to use global variables. Beware, however, this feature should be used very sparingly - it makes your code not thread-safe and harder to understand.</p>
+
+<p>(2) Is used widely as an "access control" feature. If you have a .c file implementing some functionality, it usually exposes only a few "public" functions to users. The rest of its functions should be made <code>static</code>, so that the user won't be able to access them. This is encapsulation, a good practice.</p>
+
+<p>Quoting <a href="http://en.wikipedia.org/wiki/Static_variable" rel="noreferrer">Wikipedia</a>:</p>
+
+<blockquote>
+  <p>In the C programming language, static
+  is used with global variables and
+  functions to set their scope to the
+  containing file. In local variables,
+  static is used to store the variable
+  in the statically allocated memory
+  instead of the automatically allocated
+  memory. While the language does not
+  dictate the implementation of either
+  type of memory, statically allocated
+  memory is typically reserved in data
+  segment of the program at compile
+  time, while the automatically
+  allocated memory is normally
+  implemented as a transient call stack.</p>
+</blockquote>
+
+<p>And to answer your second question, it's not like in C#.</p>
+
+<p>In C++, however, <code>static</code> is also used to define class attributes (shared between all objects of the same class) and methods. In C there are no classes, so this feature is irrelevant.</p>
+</div><p class="this-has-helped">This answer has helped 280 people.</p><div class="s-prose js-post-body"><p>There is one more use not covered here, and that is as part of an array type declaration as an argument to a function:</p>
+
+<pre><code>int someFunction(char arg[static 10])
+{
+    ...
+}
+</code></pre>
+
+<p>In this context, this specifies that arguments passed to this function must be an array of type <code>char</code> with at least 10 elements in it. For more info see my question <a href="https://stackoverflow.com/questions/3430315/purpose-of-static-keyword-in-array-parameter-of-function">here</a>.</p>
+</div><p class="this-has-helped">This answer has helped 194 people.</p><div class="s-prose js-post-body"><p>Short answer ... <strong>it depends.</strong></p>
+
+<ol>
+<li><p>Static defined local variables do not lose their value between function calls. In other words they are global variables, but scoped to the local function they are defined in.</p></li>
+<li><p>Static global variables are not visible outside of the C file they are defined in.</p></li>
+<li><p>Static functions are not visible outside of the C file they are defined in.</p></li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 83 people.</p><div class="s-prose js-post-body"><p><strong>Multi-file variable scope example</strong></p>
+
+<p>Here I illustrate how static affects the scope of function definitions across multiple files.</p>
+
+<p>a.c</p>
+
+<pre><code>#include &lt;stdio.h&gt;
+
+/*
+Undefined behavior: already defined in main.
+Binutils 2.24 gives an error and refuses to link.
+https://stackoverflow.com/questions/27667277/why-does-borland-compile-with-multiple-definitions-of-same-object-in-different-c
+*/
+/*int i = 0;*/
+
+/* Works in GCC as an extension: https://stackoverflow.com/a/3692486/895245 */
+/*int i;*/
+
+/* OK: extern. Will use the one in main. */
+extern int i;
+
+/* OK: only visible to this file. */
+static int si = 0;
+
+void a() {
+    i++;
+    si++;
+    puts("a()");
+    printf("i = %d\n", i);
+    printf("si = %d\n", si);
+    puts("");
+}
+</code></pre>
+
+<p>main.c</p>
+
+<pre><code>#include &lt;stdio.h&gt;
+
+int i = 0;
+static int si = 0;
+
+void a();    
+
+void m() {
+    i++;
+    si++;
+    puts("m()");
+    printf("i = %d\n", i);
+    printf("si = %d\n", si);
+    puts("");
+}
+
+int main() {
+    m();
+    m();
+    a();
+    a();
+    return 0;
+}
+</code></pre>
+
+<p><a href="https://github.com/cirosantilli/cpp-cheat/tree/b075d2d54c62c684cd03c17bb39fa1d6a8fd9bd6/static" rel="noreferrer">GitHub upstream</a>.</p>
+
+<p>Compile and run:</p>
+
+<pre><code>gcc -c a.c -o a.o
+gcc -c main.c -o main.o
+gcc -o main main.o a.o
+</code></pre>
+
+<p>Output:</p>
+
+<pre><code>m()
+i = 1
+si = 1
+
+m()
+i = 2
+si = 2
+
+a()
+i = 3
+si = 1
+
+a()
+i = 4
+si = 2
+</code></pre>
+
+<p><strong>Interpretation</strong></p>
+
+<ul>
+<li>there are two separate variables for <code>si</code>, one for each file</li>
+<li>there is a single shared variable for <code>i</code></li>
+</ul>
+
+<p>As usual, the smaller the scope, the better, so always declare variables <code>static</code> if you can.</p>
+
+<p>In C programming, files are often used to represent "classes", and <code>static</code> variables represent private static members of the class.</p>
+
+<p><strong>What standards say about it</strong></p>
+
+<p><a href="http://www.open-std.org/JTC1/SC22/WG14/www/docs/n1256.pdf" rel="noreferrer">C99 N1256 draft</a> 6.7.1 "Storage-class specifiers" says that <code>static</code> is a "storage-class specifier".</p>
+
+<p>6.2.2/3 "Linkages of identifiers" says <code>static</code> implies <code>internal linkage</code>:</p>
+
+<blockquote>
+  <p>If the declaration of a file scope identifier for an object or a function contains the storage-class specifier static, the identifier has internal linkage.</p>
+</blockquote>
+
+<p>and 6.2.2/2 says that <code>internal linkage</code> behaves like in our example:</p>
+
+<blockquote>
+  <p>In the set of translation units and libraries that constitutes an entire program, each declaration of a particular identifier with external linkage denotes the same object or function. Within one translation unit, each declaration of an identifier with internal linkage denotes the same object or function. </p>
+</blockquote>
+
+<p>where "translation unit is a source file after preprocessing.</p>
+
+<p><strong>How GCC implements it for ELF (Linux)?</strong></p>
+
+<p>With the <code>STB_LOCAL</code> binding.</p>
+
+<p>If we compile:</p>
+
+<pre><code>int i = 0;
+static int si = 0;
+</code></pre>
+
+<p>and disassemble the symbol table with:</p>
+
+<pre><code>readelf -s main.o
+</code></pre>
+
+<p>the output contains:</p>
+
+<pre><code>Num:    Value          Size Type    Bind   Vis      Ndx Name
+  5: 0000000000000004     4 OBJECT  LOCAL  DEFAULT    4 si
+ 10: 0000000000000000     4 OBJECT  GLOBAL DEFAULT    4 i
+</code></pre>
+
+<p>so the binding is the only significant difference between them. <code>Value</code> is just their offset into the <code>.bss</code> section, so we expect it to differ.</p>
+
+<p><code>STB_LOCAL</code> is documented on the ELF spec at <a href="http://www.sco.com/developers/gabi/2003-12-17/ch4.symtab.html" rel="noreferrer">http://www.sco.com/developers/gabi/2003-12-17/ch4.symtab.html</a>:</p>
+
+<blockquote>
+  <p>STB_LOCAL Local symbols are not visible outside the object file containing their definition. Local symbols of the same name may exist in multiple files without interfering with each other</p>
+</blockquote>
+
+<p>which makes it a perfect choice to represent <code>static</code>.</p>
+
+<p>Variables without static are <code>STB_GLOBAL</code>, and the spec says:</p>
+
+<blockquote>
+  <p>When the link editor combines several relocatable object files, it does not allow multiple definitions of STB_GLOBAL symbols with the same name. </p>
+</blockquote>
+
+<p>which is coherent with the link errors on multiple non static definitions.</p>
+
+<p>If we crank up the optimization with <code>-O3</code>, the <code>si</code> symbol is removed entirely from the symbol table: it cannot be used from outside anyways. TODO why keep static variables on the symbol table at all when there is no optimization? Can they be used for anything? Maybe for debugging.</p>
+
+<p><strong>See also</strong></p>
+
+<ul>
+<li>analogous for <code>static</code> functions: <a href="https://stackoverflow.com/a/30319812/895245">https://stackoverflow.com/a/30319812/895245</a></li>
+<li>compare <code>static</code> with <code>extern</code>, which does "the opposite": <a href="https://stackoverflow.com/questions/1433204/how-do-i-use-extern-to-share-variables-between-source-files-in-c">How do I use extern to share variables between source files?</a></li>
+</ul>
+
+<p><strong>C++ anonymous namespaces</strong></p>
+
+<p>In C++, you might want to use anonymous namespaces instead of static, which achieves a similar effect, but further hides type definitions: <a href="https://stackoverflow.com/questions/154469/unnamed-anonymous-namespaces-vs-static-functions">Unnamed/anonymous namespaces vs. static functions</a></p>
+</div><p class="this-has-helped">This answer has helped 40 people.</p><div class="s-prose js-post-body"><p>It depends:</p>
+<pre><code>int foo()
+{
+   static int x;
+   return ++x;
+}
+</code></pre>
+<p>The function would return 1, 2, 3, etc. --- the variable is not on the stack.</p>
+<h3>a.c:</h3>
+<pre><code>static int foo()
+{
+}
+</code></pre>
+<p>It means that this function has scope only in this file. So a.c and b.c can have different <code>foo()</code>s, and foo is not exposed to shared objects. So if you defined foo in a.c you couldn't access it from <code>b.c</code> or from any other places.</p>
+<p>In most C libraries all &quot;private&quot; functions are static and most &quot;public&quot; are not.</p>
+</div></body></html>

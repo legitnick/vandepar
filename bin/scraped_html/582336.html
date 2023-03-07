@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I profile a Python script?</p><div class="s-prose js-post-body"><p><a href="http://en.wikipedia.org/wiki/Project_Euler" rel="noreferrer">Project Euler</a> and other coding contests often have a maximum time to run or people boast of how fast their particular solution runs. With Python, sometimes the approaches are somewhat kludgey - i.e., adding timing code to <code>__main__</code>.</p>
+
+<p>What is a good way to profile how long a Python program takes to run?</p>
+</div><p class="this-has-helped">This answer has helped 1685 people.</p><div class="s-prose js-post-body"><p>Python includes a profiler called <a href="https://docs.python.org/3/library/profile.html#module-cProfile" rel="noreferrer">cProfile</a>. It not only gives the total running time, but also times each function separately, and tells you how many times each function was called, making it easy to determine where you should make optimizations.</p>
+
+<p>You can call it from within your code, or from the interpreter, like this:</p>
+
+<pre><code>import cProfile
+cProfile.run('foo()')
+</code></pre>
+
+<p>Even more usefully, you can invoke the cProfile when running a script:</p>
+
+<pre><code>python -m cProfile myscript.py
+</code></pre>
+
+<p>To make it even easier, I made a little batch file called 'profile.bat':</p>
+
+<pre><code>python -m cProfile %1
+</code></pre>
+
+<p>So all I have to do is run:</p>
+
+<pre><code>profile euler048.py
+</code></pre>
+
+<p>And I get this:</p>
+
+<pre class="lang-none prettyprint-override"><code>1007 function calls in 0.061 CPU seconds
+
+Ordered by: standard name
+ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+    1    0.000    0.000    0.061    0.061 &lt;string&gt;:1(&lt;module&gt;)
+ 1000    0.051    0.000    0.051    0.000 euler048.py:2(&lt;lambda&gt;)
+    1    0.005    0.005    0.061    0.061 euler048.py:2(&lt;module&gt;)
+    1    0.000    0.000    0.061    0.061 {execfile}
+    1    0.002    0.002    0.053    0.053 {map}
+    1    0.000    0.000    0.000    0.000 {method 'disable' of '_lsprof.Profiler objects}
+    1    0.000    0.000    0.000    0.000 {range}
+    1    0.003    0.003    0.003    0.003 {sum}
+</code></pre>
+
+<p>EDIT: Updated link to a good video resource from PyCon 2013 titled 
+<a href="https://web.archive.org/web/20170318204046/http://lanyrd.com/2013/pycon/scdywg/" rel="noreferrer"><strong><em>Python Profiling</em></strong></a><br>
+<a href="https://www.youtube.com/watch?v=QJwVYlDzAXs" rel="noreferrer">Also via YouTube</a>.</p>
+</div><p class="this-has-helped">This answer has helped 510 people.</p><div class="s-prose js-post-body"><p>A while ago I made <a href="http://pycallgraph.slowchop.com/" rel="noreferrer"><code>pycallgraph</code></a> which generates a visualisation from your Python code. <strong>Edit:</strong> I've updated the example to work with 3.3, the latest release as of this writing.</p>
+
+<p>After a <code>pip install pycallgraph</code> and installing <a href="http://www.graphviz.org/" rel="noreferrer">GraphViz</a> you can run it from the command line:</p>
+
+<pre><code>pycallgraph graphviz -- ./mypythonscript.py
+</code></pre>
+
+<p>Or, you can profile particular parts of your code:</p>
+
+<pre><code>from pycallgraph import PyCallGraph
+from pycallgraph.output import GraphvizOutput
+
+with PyCallGraph(output=GraphvizOutput()):
+    code_to_profile()
+</code></pre>
+
+<p>Either of these will generate a <code>pycallgraph.png</code> file similar to the image below:</p>
+
+<p><img src="https://i.stack.imgur.com/aiNEA.png" alt="enter image description here"></p>
+</div><p class="this-has-helped">This answer has helped 231 people.</p><div class="s-prose js-post-body"><p>It's worth pointing out that using the profiler only works (by default) on the main thread, and you won't get any information from other threads if you use them.  This can be a bit of a gotcha as it is completely unmentioned in the <a href="http://docs.python.org/library/profile.html" rel="noreferrer">profiler documentation</a>.</p>
+
+<p>If you also want to profile threads, you'll want to look at the <a href="http://docs.python.org/library/threading.html#threading.setprofile" rel="noreferrer" title="threading.setprofile() function"><code>threading.setprofile()</code> function</a> in the docs.</p>
+
+<p>You could also create your own <code>threading.Thread</code> subclass to do it:</p>
+
+<pre><code>class ProfiledThread(threading.Thread):
+    # Overrides threading.Thread.run()
+    def run(self):
+        profiler = cProfile.Profile()
+        try:
+            return profiler.runcall(threading.Thread.run, self)
+        finally:
+            profiler.dump_stats('myprofile-%d.profile' % (self.ident,))
+</code></pre>
+
+<p>and use that <code>ProfiledThread</code> class instead of the standard one.  It might give you more flexibility, but I'm not sure it's worth it, especially if you are using third-party code which wouldn't use your class.</p>
+</div><p class="this-has-helped">This answer has helped 178 people.</p><div class="s-prose js-post-body"><p>The python wiki is a great page for profiling resources:
+<a href="http://wiki.python.org/moin/PythonSpeed/PerformanceTips#Profiling_Code" rel="noreferrer">http://wiki.python.org/moin/PythonSpeed/PerformanceTips#Profiling_Code</a></p>
+
+<p>as is the python docs:
+<a href="http://docs.python.org/library/profile.html" rel="noreferrer">http://docs.python.org/library/profile.html</a></p>
+
+<p>as shown by Chris Lawlor cProfile is a great tool and can easily be used to print to the screen:</p>
+
+<pre><code>python -m cProfile -s time mine.py &lt;args&gt;
+</code></pre>
+
+<p>or to file:</p>
+
+<pre><code>python -m cProfile -o output.file mine.py &lt;args&gt;
+</code></pre>
+
+<p>PS> If you are using Ubuntu, make sure to install python-profile</p>
+
+<pre><code>apt-get install python-profiler 
+</code></pre>
+
+<p>If you output to file you can get nice visualizations using the following tools</p>
+
+<p>PyCallGraph : a tool to create call graph images <br>
+  install:<br></p>
+
+<pre><code> pip install pycallgraph
+</code></pre>
+
+<p>run:</p>
+
+<pre><code> pycallgraph mine.py args
+</code></pre>
+
+<p>view:</p>
+
+<pre><code> gimp pycallgraph.png
+</code></pre>
+
+<p><em>You can use whatever you like to view the png file, I used gimp</em><br>
+Unfortunately I often get </p>
+
+<p>dot: graph is too large for cairo-renderer bitmaps. Scaling by 0.257079 to fit</p>
+
+<p>which makes my images unusably small.  So I generally create svg files:</p>
+
+<pre><code>pycallgraph -f svg -o pycallgraph.svg mine.py &lt;args&gt;
+</code></pre>
+
+<p>PS> make sure to install graphviz (which provides the dot program):</p>
+
+<pre><code>pip install graphviz
+</code></pre>
+
+<p>Alternative Graphing using gprof2dot via @maxy / @quodlibetor :</p>
+
+<pre><code>pip install gprof2dot
+python -m cProfile -o profile.pstats mine.py
+gprof2dot -f pstats profile.pstats | dot -Tsvg -o mine.svg
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 162 people.</p><div class="s-prose js-post-body"><p>@Maxy's comment on <a href="https://stackoverflow.com/a/7693928/25616">this answer</a> helped me out enough that I think it deserves its own answer: I already had cProfile-generated .pstats files and I didn't want to re-run things with pycallgraph, so I used <a href="https://github.com/jrfonseca/gprof2dot" rel="noreferrer">gprof2dot</a>, and got pretty svgs:</p>
+<pre><code>$ sudo apt-get install graphviz
+$ git clone https://github.com/jrfonseca/gprof2dot
+$ ln -s &quot;$PWD&quot;/gprof2dot/gprof2dot.py ~/bin
+$ cd $PROJECT_DIR
+$ gprof2dot.py -f pstats profile.pstats | dot -Tsvg -o callgraph.svg
+</code></pre>
+<p>and BLAM!</p>
+<p>It uses dot (the same thing that pycallgraph uses) so output looks similar. I get the impression that gprof2dot loses less information though:</p>
+<p><a href="https://i.stack.imgur.com/JjSvt.png" rel="noreferrer"><img src="https://i.stack.imgur.com/JjSvt.png" alt="gprof2dot example output" /></a></p>
+</div></body></html>

@@ -5,10 +5,10 @@ import * as mf from "./src/myFiles.js";
 import edit from "./src/video_edit.js";
 
 async function main () {
-//    scrape ();
-  //  await transformAll().catch(console.error);
-    await edit();
+  await Promise.all([scrape (),
+    //transformAll().catch(console.error),
+    edit()]);
 
-    main();
+  main();
 }
 main();

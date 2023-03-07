@@ -1,0 +1,227 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I selectively merge or pick changes from another branch in Git?</p><div class="s-prose js-post-body"><p>I'm using Git on a new project that has two parallel -- but currently experimental -- development branches:</p>
+<ul>
+<li><code>master</code>: import of existing codebase plus a few modifications that I'm generally sure of</li>
+<li><code>exp1</code>: experimental branch #1</li>
+<li><code>exp2</code>: experimental branch #2</li>
+</ul>
+<p><code>exp1</code> and <code>exp2</code> represent two very different architectural approaches. Until I get further along I have no way of knowing which one (if either) will work. As I make progress in one branch I sometimes have edits that would be useful in the other branch and would like to merge just those.</p>
+<p><strong>What is the best way to merge selective changes from one development branch to another while leaving behind everything else?</strong></p>
+<p>Approaches I've considered:</p>
+<ol>
+<li><p><code>git merge --no-commit</code> followed by manual unstaging of a large number of edits that I don't want to make common between the branches.</p>
+</li>
+<li><p>Manual copying of common files into a temporary directory followed by <code>git checkout</code> to move to the other branch and then more manual copying out of the temporary directory into the working tree.</p>
+</li>
+<li><p>A variation on the above. Abandon the <code>exp</code> branches for now and use two additional local repositories for experimentation.  This makes the manual copying of files much more straightforward.</p>
+</li>
+</ol>
+<p>All three of these approaches seem tedious and error-prone.  I'm hoping there is a better approach; something akin to a filter path parameter that would make <code>git-merge</code> more selective.</p>
+</div><p class="this-has-helped">This answer has helped 1146 people.</p><div class="s-prose js-post-body"><p><strong>tl;dr</strong></p>
+<pre><code>git checkout source_branch -- path/to/file
+# resolve conflicts if any
+git commit -am '...'
+</code></pre>
+<hr />
+<p>I had the exact same problem as mentioned by you above.  But I found <a href="http://jasonrudolph.com/blog/2009/02/25/git-tip-how-to-merge-specific-files-from-another-branch/" rel="noreferrer">this</a> clearer in explaining the answer.</p>
+<p>Summary:</p>
+<ul>
+<li><p>Check out the path(s) from the branch you want to merge,</p>
+<pre><code> $ git checkout source_branch -- &lt;paths&gt;...
+
+Hint: It also works without `--` like seen in the linked post.
+</code></pre>
+</li>
+<li><p>or to selectively merge hunks</p>
+<pre><code> $ git checkout -p source_branch -- &lt;paths&gt;...
+</code></pre>
+</li>
+</ul>
+<p>Alternatively, use reset and then add with the option <code>-p</code>,</p>
+<pre><code>    $ git reset &lt;paths&gt;...
+    $ git add -p &lt;paths&gt;...
+</code></pre>
+<ul>
+<li><p>Finally commit</p>
+<pre><code> $ git commit -m &quot;'Merge' these changes&quot;
+</code></pre>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 561 people.</p><div class="s-prose js-post-body"><p>You use the <a href="https://git-scm.com/docs/git-cherry-pick" rel="noreferrer">cherry-pick</a> command to get individual commits from one branch.</p>
+<p>If the change(s) you want are not in individual commits, then use the method shown here to <a href="http://plasmasturm.org/log/530/" rel="noreferrer">split the commit into individual commits</a>. Roughly speaking, you use <code>git rebase -i</code> to get the original commit to edit, then <code>git reset HEAD^</code> to selectively revert changes, then <code>git commit</code> to commit that bit as a new commit in the history.</p>
+<p><a href="http://web.archive.org/web/20130727101330/http://magazine.redhat.com:80/2008/05/02/shipping-quality-code-with-git/" rel="noreferrer">There is another nice method here</a> in Red Hat Magazine, where they use <code>git add --patch</code> or possibly <code>git add --interactive</code> which allows you to add just parts of a hunk, if you want to split different changes to an individual file (search in that page for &quot;split&quot;).</p>
+<p>Having split the changes, you can now cherry-pick just the ones you want.</p>
+</div><p class="this-has-helped">This answer has helped 445 people.</p><div class="s-prose js-post-body"><p>To selectively merge files from one branch into another branch, run</p>
+
+<pre><code>git merge --no-ff --no-commit branchX
+</code></pre>
+
+<p>where <code>branchX</code> is the branch you want to merge from into the current branch.</p>
+
+<p>The <code>--no-commit</code> option will stage the files that have been merged by Git without actually committing them. This will give you the opportunity to modify the merged files however you want to and then commit them yourself. </p>
+
+<p>Depending on how you want to merge files, there are four cases:</p>
+
+<h1>1) You want a true merge.</h1>
+
+<p>In this case, you accept the merged files the way Git merged them automatically and then commit them.</p>
+
+<h1>2) There are some files you don't want to merge.</h1>
+
+<p>For example, you want to retain the version in the current branch and ignore the version in the branch you are merging from.</p>
+
+<p>To select the version in the current branch, run:</p>
+
+<pre><code>git checkout HEAD file1
+</code></pre>
+
+<p>This will retrieve the version of <code>file1</code> in the current branch and overwrite the <code>file1</code> automerged by Git. </p>
+
+<h1>3) If you want the version in branchX (and not a true merge).</h1>
+
+<p>Run:</p>
+
+<pre><code>git checkout branchX file1
+</code></pre>
+
+<p>This will retrieve the version of <code>file1</code> in <code>branchX</code> and overwrite <code>file1</code> auto-merged by Git.</p>
+
+<h1>4) The last case is if you want to select only specific merges in <code>file1</code>.</h1>
+
+<p>In this case, you can edit the modified <code>file1</code> directly, update it to whatever you'd want the version of <code>file1</code> to become, and then commit.</p>
+
+<p>If Git cannot merge a file automatically, it will report the file as "<em>unmerged</em>"  and produce a copy where you will need to resolve the conflicts manually.</p>
+
+<p><br/></p>
+
+<hr>
+
+<p>To explain further with an example, let's say you want to merge <code>branchX</code> into the current branch:</p>
+
+<pre><code>git merge --no-ff --no-commit branchX
+</code></pre>
+
+<p>You then run the <code>git status</code> command to view the status of modified files.</p>
+
+<p>For example:</p>
+
+<pre><code>git status
+
+# On branch master
+# Changes to be committed:
+#
+#       modified:   file1
+#       modified:   file2
+#       modified:   file3
+# Unmerged paths:
+#   (use "git add/rm &lt;file&gt;..." as appropriate to mark resolution)
+#
+#       both modified:      file4
+#
+</code></pre>
+
+<p>Where <code>file1</code>, <code>file2</code>, and <code>file3</code> are the files git have successfully auto-merged. </p>
+
+<p>What this means is that changes in the <code>master</code> and <code>branchX</code> for all those three files have been combined together without any conflicts.</p>
+
+<p>You can inspect how the merge was done by running the <code>git diff --cached</code>;</p>
+
+<pre><code>git diff --cached file1
+git diff --cached file2
+git diff --cached file3
+</code></pre>
+
+<h3>If you find some merge undesirable then you can</h3>
+
+<ol>
+<li>edit the file directly</li>
+<li>save</li>
+<li><code>git commit</code></li>
+</ol>
+
+<h3>If you don't want to merge <code>file1</code> and want to retain the version in the current branch</h3>
+
+<p>Run</p>
+
+<pre><code>git checkout HEAD file1
+</code></pre>
+
+<h3>If you don't want to merge <code>file2</code> and only want the version in <code>branchX</code></h3>
+
+<p>Run</p>
+
+<pre><code>git checkout branchX file2
+</code></pre>
+
+<h3>If you want <code>file3</code> to be merged automatically, don't do anything.</h3>
+
+<p>Git has already merged it at this point.</p>
+
+<p><br/></p>
+
+<p><code>file4</code> above is a failed merge by Git. This means there are changes in both branches that occur on the same line. This is where you will need to resolve the conflicts manually. You can discard the merged done by editing the file directly or running the checkout command for the version in the branch you want <code>file4</code> to become.</p>
+
+<p><br/></p>
+
+<p>Finally, don't forget to <code>git commit</code>.</p>
+</div><p class="this-has-helped">This answer has helped 118 people.</p><div class="s-prose js-post-body"><p>I don't like the above approaches.  Using cherry-pick is great for picking a single change, but it is a pain if you want to bring in all the changes except for some bad ones.  Here is my approach.</p>
+
+<p>There is no <code>--interactive</code> argument you can pass to git merge.</p>
+
+<p>Here is the alternative:</p>
+
+<p>You have some changes in branch 'feature' and you want to bring some but not all of them over to 'master' in a not sloppy way (i.e. you don't want to cherry pick and commit each one)</p>
+
+<pre class="lang-bash prettyprint-override"><code>git checkout feature
+git checkout -b temp
+git rebase -i master
+
+# Above will drop you in an editor and pick the changes you want ala:
+pick 7266df7 First change
+pick 1b3f7df Another change
+pick 5bbf56f Last change
+
+# Rebase b44c147..5bbf56f onto b44c147
+#
+# Commands:
+# pick = use commit
+# edit = use commit, but stop for amending
+# squash = use commit, but meld into previous commit
+#
+# If you remove a line here THAT COMMIT WILL BE LOST.
+# However, if you remove everything, the rebase will be aborted.
+#
+
+git checkout master
+git pull . temp
+git branch -d temp
+</code></pre>
+
+<p>So just wrap that in a shell script, change master into $to and change feature into $from and you are good to go:</p>
+
+<pre class="lang-bash prettyprint-override"><code>#!/bin/bash
+# git-interactive-merge
+from=$1
+to=$2
+git checkout $from
+git checkout -b ${from}_tmp
+git rebase -i $to
+# Above will drop you in an editor and pick the changes you want
+git checkout $to
+git pull . ${from}_tmp
+git branch -d ${from}_tmp
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 112 people.</p><div class="s-prose js-post-body"><p>There is another way to go:</p>
+<pre><code>git checkout -p
+</code></pre>
+<p>It is a mix between <code>git checkout</code> and <code>git add -p</code> and might quite be exactly what you are looking for:</p>
+<pre><code>   -p, --patch
+       Interactively select hunks in the difference between the &lt;tree-ish&gt;
+       (or the index, if unspecified) and the working tree. The chosen
+       hunks are then applied in reverse to the working tree (and if a
+       &lt;tree-ish&gt; was specified, the index).
+
+       This means that you can use git checkout -p to selectively discard
+       edits from your current working tree. See the “Interactive Mode”
+       section of git-add(1) to learn how to operate the --patch mode.
+</code></pre>
+</div></body></html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Is there a &quot;null coalescing&quot; operator in JavaScript?</p><div class="s-prose js-post-body"><p>Is there a null coalescing operator in Javascript?</p>
+
+<p>For example, in C#, I can do this:</p>
+
+<pre><code>String someString = null;
+var whatIWant = someString ?? "Cookies!";
+</code></pre>
+
+<p>The best approximation I can figure out for Javascript is using the conditional operator:</p>
+
+<pre><code>var someString = null;
+var whatIWant = someString ? someString : 'Cookies!';
+</code></pre>
+
+<p>Which is sorta icky IMHO. Can I do better?</p>
+</div><p class="this-has-helped">This answer has helped 2302 people.</p><div class="s-prose js-post-body"><p><strong>Update</strong></p>
+<p>JavaScript now supports the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_Coalescing_Operator" rel="noreferrer">nullish coalescing operator (??)</a>. It returns its right-hand-side operand when its left-hand-side operand is <code>null</code> or <code>undefined</code>, and otherwise returns its left-hand-side operand.</p>
+<p><strong>Old Answer</strong></p>
+<p>Please check compatibility before using it.</p>
+<hr />
+<p>The JavaScript equivalent of the C# null coalescing operator (<code>??</code>) is using a logical OR (<code>||</code>):</p>
+<pre><code>var whatIWant = someString || &quot;Cookies!&quot;;
+</code></pre>
+<p>There are cases (clarified below) that the behaviour won't match that of C#, but this is the general, terse way of assigning default/alternative values in JavaScript.</p>
+<hr />
+<h2>Clarification</h2>
+<p>Regardless of the type of the first operand, if casting it to a Boolean results in <code>false</code>, the assignment will use the second operand. Beware of all the cases below:</p>
+<pre><code>alert(Boolean(null)); // false
+alert(Boolean(undefined)); // false
+alert(Boolean(0)); // false
+alert(Boolean(&quot;&quot;)); // false
+alert(Boolean(&quot;false&quot;)); // true -- gotcha! :)
+</code></pre>
+<p>This means:</p>
+<pre><code>var whatIWant = null || new ShinyObject(); // is a new shiny object
+var whatIWant = undefined || &quot;well defined&quot;; // is &quot;well defined&quot;
+var whatIWant = 0 || 42; // is 42
+var whatIWant = &quot;&quot; || &quot;a million bucks&quot;; // is &quot;a million bucks&quot;
+var whatIWant = &quot;false&quot; || &quot;no way&quot;; // is &quot;false&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 82 people.</p><div class="s-prose js-post-body"><pre><code>function coalesce() {
+    var len = arguments.length;
+    for (var i=0; i&lt;len; i++) {
+        if (arguments[i] !== null &amp;&amp; arguments[i] !== undefined) {
+            return arguments[i];
+        }
+    }
+    return null;
+}
+
+var xyz = {};
+xyz.val = coalesce(null, undefined, xyz.val, 5);
+
+// xyz.val now contains 5
+</code></pre>
+
+<p>this solution works like the SQL coalesce function, it accepts any number of arguments, and returns null if none of them have a value.  It behaves like the C# ?? operator in the sense that "", false, and 0 are considered NOT NULL and therefore count as actual values.  If you come from a .net background, this will be the most natural feeling solution.</p>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p>Yes, it is coming soon. See <a href="https://github.com/tc39/proposal-nullish-coalescing" rel="noreferrer">proposal here</a> and <a href="https://github.com/tc39/proposal-nullish-coalescing/issues/29" rel="noreferrer">implementation status here</a>.</p>
+
+<p>It looks like this:</p>
+
+<pre><code>x ?? y
+</code></pre>
+
+<h2>Example</h2>
+
+<pre><code>const response = {
+  settings: {
+    nullValue: null,
+    height: 400,
+    animationDuration: 0,
+    headerText: '',
+    showSplashScreen: false
+  }
+};
+
+const undefinedValue = response.settings?.undefinedValue ?? 'some other default'; // result: 'some other default'
+const nullValue = response.settings?.nullValue ?? 'some other default'; // result: 'some other default'
+const headerText = response.settings?.headerText ?? 'Hello, world!'; // result: ''
+const animationDuration = response.settings?.animationDuration ?? 300; // result: 0
+const showSplashScreen = response.settings?.showSplashScreen ?? true; // result: false
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 46 people.</p><div class="s-prose js-post-body"><p>If <code>||</code> as a replacement of C#'s <code>??</code> isn't good enough in your case, because it swallows empty strings and zeros, you can always write your own function:</p>
+
+<pre><code> function $N(value, ifnull) {
+    if (value === null || value === undefined)
+      return ifnull;
+    return value;
+ }
+
+ var whatIWant = $N(someString, 'Cookies!');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 17 people.</p><div class="s-prose js-post-body"><p>Nobody has mentioned in here the potential for <code>NaN</code>, which--to me--is also a null-ish value. So, I thought I'd add my two-cents.</p>
+<p>For the given code:</p>
+<pre><code>var a,
+    b = null,
+    c = parseInt('Not a number'),
+    d = 0,
+    e = '',
+    f = 1
+;
+</code></pre>
+<p>If you were to use the <code>||</code> operator, you get the first non-false value:</p>
+<pre><code>var result = a || b || c || d || e || f; // result === 1
+</code></pre>
+<p>If you use the new <code>??</code> (null coalescing) operator, you will get <code>c</code>, which has the value: <code>NaN</code></p>
+<pre><code>vas result = a ?? b ?? c ?? d ?? e ?? f; // result === NaN
+</code></pre>
+<p><strong>Neither</strong> of these seem right to me.  In my own little world of coalesce logic, which may differ from your world, I consider undefined, null, and NaN as all being &quot;null-ish&quot;.  So, I would expect to get back <code>d</code> (zero) from the coalesce method.</p>
+<p>If anyone's brain works like mine, and you want to exclude <code>NaN</code>, then this custom <code>coalesce</code> method (unlike <a href="https://stackoverflow.com/a/22265471/482256">the one posted here</a>) will accomplish that:</p>
+<pre><code>function coalesce() {
+    var i, undefined, arg;
+
+    for( i=0; i &lt; arguments.length; i++ ) {
+        arg = arguments[i];
+        if( arg !== null &amp;&amp; arg !== undefined
+            &amp;&amp; (typeof arg !== 'number' || arg.toString() !== 'NaN') ) {
+            return arg;
+        }
+    }
+    return null;
+}
+</code></pre>
+<p>For those who want the code as short as possible, and don't mind a little lack of clarity, you can also use this as suggested by @impinball. This takes advantage of the fact that NaN is never equal to NaN.  You can read up more on that here: <a href="https://stackoverflow.com/questions/10034149/why-is-nan-not-equal-to-nan">Why is NaN not equal to NaN?</a></p>
+<pre><code>function coalesce() {
+    var i, arg;
+
+    for( i=0; i &lt; arguments.length; i++ ) {
+        arg = arguments[i];
+        if( arg != null &amp;&amp; arg === arg ) { //arg === arg is false for NaN
+            return arg;
+        }
+    }
+    return null;
+}
+</code></pre>
+</div></body></html>

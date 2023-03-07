@@ -1,0 +1,103 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I check if a program exists from a Bash script?</p><div class="s-prose js-post-body"><p>How would I validate that a program exists, in a way that will either return an error and exit, or continue with the script?</p>
+
+<p>It seems like it should be easy, but it's been stumping me.</p>
+</div><p class="this-has-helped">This answer has helped 4204 people.</p><div class="s-prose js-post-body"><h2>Answer</h2>
+<p>POSIX compatible:</p>
+<pre><code>command -v &lt;the_command&gt;
+</code></pre>
+<p>Example use:</p>
+<pre><code>if ! command -v &lt;the_command&gt; &amp;&gt; /dev/null
+then
+    echo &quot;&lt;the_command&gt; could not be found&quot;
+    exit
+fi
+</code></pre>
+<p>For Bash specific environments:</p>
+<pre><code>hash &lt;the_command&gt; # For regular commands. Or...
+type &lt;the_command&gt; # To check built-ins and keywords
+</code></pre>
+<h2>Explanation</h2>
+<p>Avoid <code>which</code>. Not only is it an external process you're launching for doing very little (meaning builtins like <code>hash</code>, <code>type</code> or <code>command</code> are way cheaper), you can also rely on the builtins to actually do what you want, while the effects of external commands can easily vary from system to system.</p>
+<p>Why care?</p>
+<ul>
+<li>Many operating systems have a <code>which</code> that <strong>doesn't even set an exit status</strong>, meaning the <code>if which foo</code> won't even work there and will <strong>always</strong> report that <code>foo</code> exists, even if it doesn't (note that some POSIX shells appear to do this for <code>hash</code> too).</li>
+<li>Many operating systems make <code>which</code> do custom and evil stuff like change the output or even hook into the package manager.</li>
+</ul>
+<p>So, don't use <code>which</code>. Instead use one of these:</p>
+<pre><code>command -v foo &gt;/dev/null 2&gt;&amp;1 || { echo &gt;&amp;2 &quot;I require foo but it's not installed.  Aborting.&quot;; exit 1; }
+</code></pre>
+<pre><code>type foo &gt;/dev/null 2&gt;&amp;1 || { echo &gt;&amp;2 &quot;I require foo but it's not installed.  Aborting.&quot;; exit 1; }
+</code></pre>
+<pre><code>hash foo 2&gt;/dev/null || { echo &gt;&amp;2 &quot;I require foo but it's not installed.  Aborting.&quot;; exit 1; }
+</code></pre>
+<p>(Minor side-note: some will suggest <code>2&gt;&amp;-</code> is the same <code>2&gt;/dev/null</code> but shorter – <em>this is untrue</em>.  <code>2&gt;&amp;-</code> closes FD 2 which causes an <strong>error</strong> in the program when it tries to write to stderr, which is very different from successfully writing to it and discarding the output (and dangerous!))</p>
+<p>If your hash bang is <code>/bin/sh</code> then you should care about what POSIX says. <code>type</code> and <code>hash</code>'s exit codes aren't terribly well defined by POSIX, and <code>hash</code> is seen to exit successfully when the command doesn't exist (haven't seen this with <code>type</code> yet).  <code>command</code>'s exit status is well defined by POSIX, so that one is probably the safest to use.</p>
+<p>If your script uses <code>bash</code> though, POSIX rules don't really matter anymore and both <code>type</code> and <code>hash</code> become perfectly safe to use. <code>type</code> now has a <code>-P</code> to search just the <code>PATH</code> and <code>hash</code> has the side-effect that the command's location will be hashed (for faster lookup next time you use it), which is usually a good thing since you probably check for its existence in order to actually use it.</p>
+<p>As a simple example, here's a function that runs <code>gdate</code> if it exists, otherwise <code>date</code>:</p>
+<pre><code>gnudate() {
+    if hash gdate 2&gt;/dev/null; then
+        gdate &quot;$@&quot;
+    else
+        date &quot;$@&quot;
+    fi
+}
+</code></pre>
+<h1>Alternative with a complete feature set</h1>
+<p>You can use <a href="https://gitlab.com/bertrand-benoit/scripts-common" rel="noreferrer">scripts-common</a> to reach your need.</p>
+<p>To check if something is installed, you can do:</p>
+<pre class="lang-bash prettyprint-override"><code>checkBin &lt;the_command&gt; || errorMessage &quot;This tool requires &lt;the_command&gt;. Install it please, and then run this tool again.&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 808 people.</p><div class="s-prose js-post-body"><p>The following is a portable way to check whether a command exists in <code>$PATH</code> <em>and</em> is executable:</p>
+<pre><code>[ -x &quot;$(command -v foo)&quot; ]
+</code></pre>
+<p>Example:</p>
+<pre><code>if ! [ -x &quot;$(command -v git)&quot; ]; then
+  echo 'Error: git is not installed.' &gt;&amp;2
+  exit 1
+fi
+</code></pre>
+<p>The executable check is needed because bash returns a non-executable file if no executable file with that name is found in <code>$PATH</code>.</p>
+<p><s>Also note that if a non-executable file with the same name as the executable exists earlier in <code>$PATH</code>, dash returns the former, even though the latter would be executed. This is a bug and is in violation of the POSIX standard. [<a href="https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=874264" rel="noreferrer">Bug report</a>] [<a href="http://pubs.opengroup.org/onlinepubs/009696899/utilities/command.html" rel="noreferrer">Standard</a>]</s><br />
+<strong>Edit</strong>: This seems to be fixed as of dash 0.5.11 (Debian 11).</p>
+<p>In addition, this will fail if the command you are looking for has been defined as an alias.</p>
+</div><p class="this-has-helped">This answer has helped 232 people.</p><div class="s-prose js-post-body"><p>I agree with lhunath to discourage use of <code>which</code>, and his solution is perfectly valid <em>for Bash users</em>. However, to be more portable, <code>command -v</code> shall be used instead:</p>
+
+<pre><code>$ command -v foo &gt;/dev/null 2&gt;&amp;1 || { echo "I require foo but it's not installed.  Aborting." &gt;&amp;2; exit 1; }
+</code></pre>
+
+<p>Command <code>command</code> is POSIX compliant. See here for its specification: <em><a href="http://pubs.opengroup.org/onlinepubs/9699919799/utilities/command.html" rel="noreferrer">command - execute a simple command</a></em></p>
+
+<p>Note: <code>type</code> is POSIX compliant, but <code>type -P</code> is not.</p>
+</div><p class="this-has-helped">This answer has helped 109 people.</p><div class="s-prose js-post-body"><p>It depends on whether you want to know whether it exists in one of the directories in the <code>$PATH</code> variable or whether you know the absolute location of it. If you want to know if it is in the <code>$PATH</code> variable, use</p>
+
+<pre><code>if which programname &gt;/dev/null; then
+    echo exists
+else
+    echo does not exist
+fi
+</code></pre>
+
+<p>otherwise use</p>
+
+<pre><code>if [ -x /path/to/programname ]; then
+    echo exists
+else
+    echo does not exist
+fi
+</code></pre>
+
+<p>The redirection to <code>/dev/null/</code> in the first example suppresses the output of the <code>which</code> program.</p>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>I have a function defined in my .bashrc that makes this easier.</p>
+
+<pre><code>command_exists () {
+    type "$1" &amp;&gt; /dev/null ;
+}
+</code></pre>
+
+<p>Here's an example of how it's used (from my <code>.bash_profile</code>.)</p>
+
+<pre><code>if command_exists mvim ; then
+    export VISUAL="mvim --nofork"
+fi
+</code></pre>
+</div></body></html>

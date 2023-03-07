@@ -1,0 +1,142 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I convert a float number to a whole number in JavaScript?</p><div class="s-prose js-post-body"><p>I'd like to convert a float to a whole number in JavaScript. Actually, I'd like to know how to do BOTH of the standard conversions: by truncating and by rounding. And efficiently, not via converting to a string and parsing.</p>
+</div><p class="this-has-helped">This answer has helped 2134 people.</p><div class="s-prose js-post-body"><pre><code>var intvalue = Math.floor( floatvalue );
+var intvalue = Math.ceil( floatvalue ); 
+var intvalue = Math.round( floatvalue );
+
+// `Math.trunc` was added in ECMAScript 6
+var intvalue = Math.trunc( floatvalue );
+</code></pre>
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math" rel="noreferrer">Math object reference</a></p>
+<hr />
+<h3>Examples</h3>
+<strong>Positive</strong>
+<pre><code>// value=x        //  x=5          5&lt;x&lt;5.5      5.5&lt;=x&lt;6  
+
+Math.floor(value) //  5            5            5
+Math.ceil(value)  //  5            6            6
+Math.round(value) //  5            5            6
+Math.trunc(value) //  5            5            5
+parseInt(value)   //  5            5            5
+~~value           //  5            5            5
+value | 0         //  5            5            5
+value &gt;&gt; 0        //  5            5            5
+value &gt;&gt;&gt; 0       //  5            5            5
+value - value % 1 //  5            5            5
+</code></pre>
+<strong>Negative</strong>
+<pre><code>// value=x        // x=-5         -5&gt;x&gt;=-5.5   -5.5&gt;x&gt;-6
+
+Math.floor(value) // -5           -6           -6
+Math.ceil(value)  // -5           -5           -5
+Math.round(value) // -5           -5           -6
+Math.trunc(value) // -5           -5           -5
+parseInt(value)   // -5           -5           -5
+value | 0         // -5           -5           -5
+~~value           // -5           -5           -5
+value &gt;&gt; 0        // -5           -5           -5
+value &gt;&gt;&gt; 0       // 4294967291   4294967291   4294967291
+value - value % 1 // -5           -5           -5
+</code></pre>
+<strong>Positive - Larger numbers</strong>
+<pre><code>// x = Number.MAX_SAFE_INTEGER/10 // =900719925474099.1
+
+// value=x            x=900719925474099    x=900719925474099.4  x=900719925474099.5
+           
+Math.floor(value) //  900719925474099      900719925474099      900719925474099
+Math.ceil(value)  //  900719925474099      900719925474100      900719925474100
+Math.round(value) //  900719925474099      900719925474099      900719925474100
+Math.trunc(value) //  900719925474099      900719925474099      900719925474099
+parseInt(value)   //  900719925474099      900719925474099      900719925474099
+value | 0         //  858993459            858993459            858993459
+~~value           //  858993459            858993459            858993459
+value &gt;&gt; 0        //  858993459            858993459            858993459
+value &gt;&gt;&gt; 0       //  858993459            858993459            858993459
+value - value % 1 //  900719925474099      900719925474099      900719925474099
+</code></pre>
+<strong>Negative - Larger numbers</strong>
+<pre><code>// x = Number.MAX_SAFE_INTEGER/10 * -1 // -900719925474099.1
+
+// value = x      // x=-900719925474099   x=-900719925474099.5 x=-900719925474099.6
+
+Math.floor(value) // -900719925474099     -900719925474100     -900719925474100
+Math.ceil(value)  // -900719925474099     -900719925474099     -900719925474099
+Math.round(value) // -900719925474099     -900719925474099     -900719925474100
+Math.trunc(value) // -900719925474099     -900719925474099     -900719925474099
+parseInt(value)   // -900719925474099     -900719925474099     -900719925474099
+value | 0         // -858993459           -858993459           -858993459
+~~value           // -858993459           -858993459           -858993459
+value &gt;&gt; 0        // -858993459           -858993459           -858993459
+value &gt;&gt;&gt; 0       //  3435973837           3435973837           3435973837
+value - value % 1 // -900719925474099     -900719925474099     -900719925474099
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 339 people.</p><div class="s-prose js-post-body"><h2>Bitwise OR operator</h2>
+
+<p>A bitwise or operator can be used to truncate floating point figures and it works for positives as well as negatives:</p>
+
+<pre><code>function float2int (value) {
+    return value | 0;
+}
+</code></pre>
+
+<p>Results</p>
+
+<pre><code>float2int(3.1) == 3
+float2int(-3.1) == -3
+float2int(3.9) == 3
+float2int(-3.9) == -3
+</code></pre>
+
+<h2>Performance comparison?</h2>
+
+<p>I've created a <a href="http://jsperf.com/float-to-int-conversion-comparison" rel="noreferrer">JSPerf test</a> that compares performance between:</p>
+
+<ul>
+<li><code>Math.floor(val)</code></li>
+<li><code>val | 0</code> <sup>bitwise <strong>OR</strong></sup></li>
+<li><code>~~val</code> <sup>bitwise <strong>NOT</strong></sup></li>
+<li><code>parseInt(val)</code></li>
+</ul>
+
+<p>that only works with positive numbers. In this case you're safe to use bitwise operations well as <code>Math.floor</code> function.</p>
+
+<p>But if you need your code to <strong>work with positives as well as negatives</strong>, then a bitwise operation is the fastest (OR being the preferred one). <a href="http://jsperf.com/truncating-decimals" rel="noreferrer">This other JSPerf test</a> compares the same where it's pretty obvious that because of the additional sign checking <strong>Math is now the slowest</strong> of the four.</p>
+
+<h2>Note</h2>
+
+<p>As stated in comments, BITWISE operators operate on signed 32bit integers, therefore large numbers will be converted, example:</p>
+
+<pre><code>1234567890  | 0 =&gt; 1234567890
+12345678901 | 0 =&gt; -539222987
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>Note: You cannot use <code>Math.floor()</code> as a replacement for truncate, because <code>Math.floor(-3.1) = -4</code> and not <code>-3</code> !!</p>
+
+<p>A correct replacement for truncate would be:</p>
+
+<pre><code>function truncate(value)
+{
+    if (value &lt; 0) {
+        return Math.ceil(value);
+    }
+
+    return Math.floor(value);
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 50 people.</p><div class="s-prose js-post-body"><p>A double <a href="https://developer.mozilla.org/en/JavaScript/Reference/Operators/Bitwise_Operators#.7E_%28Bitwise_NOT%29">bitwise not</a> operator can be used to truncate floats.  The other operations you mentioned are available through <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Math/floor"><code>Math.floor</code></a>, <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Math/ceil"><code>Math.ceil</code></a>, and <a href="https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Math/round"><code>Math.round</code></a>.</p>
+
+<pre><code>&gt; ~~2.5
+2
+&gt; ~~(-1.4)
+-1
+</code></pre>
+
+<p><a href="http://james.padolsey.com/javascript/double-bitwise-not/">More details courtesy of James Padolsey.</a></p>
+</div><p class="this-has-helped">This answer has helped 43 people.</p><div class="s-prose js-post-body"><p>For truncate:</p>
+
+<pre><code>var intvalue = Math.floor(value);
+</code></pre>
+
+<p>For round:</p>
+
+<pre><code>var intvalue = Math.round(value);
+</code></pre>
+</div></body></html>

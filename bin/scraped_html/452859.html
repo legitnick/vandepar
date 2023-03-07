@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Inserting multiple rows in a single SQL query?</p><div class="s-prose js-post-body"><p>I have multiple set of data to insert at once, say 4 rows. My table has three columns: <code>Person</code>, <code>Id</code> and <code>Office</code>.</p>
+
+<pre><code>INSERT INTO MyTable VALUES ("John", 123, "Lloyds Office");
+INSERT INTO MyTable VALUES ("Jane", 124, "Lloyds Office");
+INSERT INTO MyTable VALUES ("Billy", 125, "London Office");
+INSERT INTO MyTable VALUES ("Miranda", 126, "Bristol Office");
+</code></pre>
+
+<p>Can I insert all 4 rows in a single SQL statement?</p>
+</div><p class="this-has-helped">This answer has helped 2583 people.</p><div class="s-prose js-post-body"><p>In SQL Server 2008 you can insert multiple rows using a single SQL INSERT statement.</p>
+
+<pre><code>INSERT INTO MyTable ( Column1, Column2 ) VALUES
+( Value1, Value2 ), ( Value1, Value2 )
+</code></pre>
+
+<p>For reference to this have a look at MOC Course 2778A - Writing SQL Queries in SQL Server 2008.</p>
+
+<p>For example:</p>
+
+<pre><code>INSERT INTO MyTable
+  ( Column1, Column2, Column3 )
+VALUES
+  ('John', 123, 'Lloyds Office'), 
+  ('Jane', 124, 'Lloyds Office'), 
+  ('Billy', 125, 'London Office'),
+  ('Miranda', 126, 'Bristol Office');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 875 people.</p><div class="s-prose js-post-body"><p>If you are inserting into a single table, you can write your query like this (maybe only in MySQL):</p>
+
+<pre><code>INSERT INTO table1 (First, Last)
+VALUES
+    ('Fred', 'Smith'),
+    ('John', 'Smith'),
+    ('Michael', 'Smith'),
+    ('Robert', 'Smith');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 152 people.</p><div class="s-prose js-post-body"><p><strong>NOTE:</strong> This answer is for SQL Server 2005. For SQL Server 2008 and later, there are much better methods as seen in the other answers.</p>
+
+<p>You can use <a href="http://blog.sqlauthority.com/2007/06/08/sql-server-insert-multiple-records-using-one-insert-statement-use-of-union-all/" rel="noreferrer">INSERT with SELECT UNION ALL</a>:</p>
+
+<pre><code>INSERT INTO MyTable  (FirstCol, SecondCol)
+    SELECT  'First' ,1
+    UNION ALL
+SELECT  'Second' ,2
+    UNION ALL
+SELECT  'Third' ,3
+...
+</code></pre>
+
+<p>Only for small datasets though, which should be fine for your 4 records.</p>
+</div><p class="this-has-helped">This answer has helped 89 people.</p><div class="s-prose js-post-body"><p><code>INSERT</code> statements that use <code>VALUES</code> syntax can insert multiple rows. To do this, include multiple lists of column values, each enclosed within parentheses and separated by commas. </p>
+
+<p><strong>Example:</strong></p>
+
+<pre><code>INSERT INTO tbl_name (a,b,c) VALUES(1,2,3),(4,5,6),(7,8,9);
+</code></pre>
+</div></body></html>

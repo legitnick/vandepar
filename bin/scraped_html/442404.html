@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Retrieve the position (X,Y) of an HTML element</p><div class="s-prose js-post-body"><p>I want to know how to get the X and Y position of HTML elements such as <code>img</code> and <code>div</code> in JavaScript.</p>
+</div><p class="this-has-helped">This answer has helped 2360 people.</p><div class="s-prose js-post-body"><p>The correct approach is to use <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/getBoundingClientRect" rel="noreferrer"><code>element.getBoundingClientRect()</code></a>:</p>
+
+<pre><code>var rect = element.getBoundingClientRect();
+console.log(rect.top, rect.right, rect.bottom, rect.left);
+</code></pre>
+
+<p>Internet Explorer has supported this since as long as you are likely to care about and it was finally standardized in <a href="http://www.w3.org/TR/cssom-view/#the-getclientrects-and-getboundingclientrect-methods" rel="noreferrer">CSSOM Views</a>. All other browsers adopted it <a href="http://www.quirksmode.org/dom/w3c_cssom.html#t21" rel="noreferrer">a long time ago</a>.</p>
+
+<p>Some browsers also return height and width properties, though this is non-standard.  If you're worried about older browser compatibility, check this answer's revisions for an optimised degrading implementation.</p>
+
+<p>The values returned by <code>element.getBoundingClientRect()</code> are relative to the viewport.  If you need it relative to another element, simply subtract one rectangle from the other:</p>
+
+<pre><code>var bodyRect = document.body.getBoundingClientRect(),
+    elemRect = element.getBoundingClientRect(),
+    offset   = elemRect.top - bodyRect.top;
+
+alert('Element is ' + offset + ' vertical pixels from &lt;body&gt;');
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 437 people.</p><div class="s-prose js-post-body"><p>This function returns an element's position relative to the whole document (page):</p>
+<pre><code>function getOffset(el) {
+  const rect = el.getBoundingClientRect();
+  return {
+    left: rect.left + window.scrollX,
+    top: rect.top + window.scrollY
+  };
+}
+</code></pre>
+<p>Using this we can get the X position:</p>
+<pre><code>getOffset(element).left
+</code></pre>
+<p>... or the Y position:</p>
+<pre><code>getOffset(element).top
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 366 people.</p><div class="s-prose js-post-body"><p>The libraries go to some lengths to get accurate offsets for an element.<br>
+here's a simple function that does the job in every circumstances that I've tried.</p>
+
+<pre><code>function getOffset( el ) {
+    var _x = 0;
+    var _y = 0;
+    while( el &amp;&amp; !isNaN( el.offsetLeft ) &amp;&amp; !isNaN( el.offsetTop ) ) {
+        _x += el.offsetLeft - el.scrollLeft;
+        _y += el.offsetTop - el.scrollTop;
+        el = el.offsetParent;
+    }
+    return { top: _y, left: _x };
+}
+var x = getOffset( document.getElementById('yourElId') ).left; 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 164 people.</p><div class="s-prose js-post-body"><p><strong>If you want it done only in javascript</strong>, here are some <strong>one liners</strong>  using <a href="https://developer.mozilla.org/docs/Web/API/Element/getBoundingClientRect" rel="noreferrer"><code>getBoundingClientRect()</code></a></p>
+
+<pre><code>window.scrollY + document.querySelector('#elementId').getBoundingClientRect().top // Y
+
+window.scrollX + document.querySelector('#elementId').getBoundingClientRect().left // X
+</code></pre>
+
+<p>The first line will return <code>offsetTop</code> say Y relative to document.
+The second line will return <code>offsetLeft</code> say X relative to document.</p>
+
+<p><a href="https://developer.mozilla.org/docs/Web/API/Element/getBoundingClientRect" rel="noreferrer"><code>getBoundingClientRect()</code></a> is a javascript function that returns the position of the element relative to viewport of window.</p>
+</div><p class="this-has-helped">This answer has helped 62 people.</p><div class="s-prose js-post-body"><p>HTML elements on most browsers will have:-</p>
+
+<pre><code>offsetLeft
+offsetTop
+</code></pre>
+
+<p>These specifiy the position of the element relative its nearest parent that has layout.  This parent can often be accessed bif the offsetParent property.</p>
+
+<p>IE and FF3 have</p>
+
+<pre><code>clientLeft
+clientTop
+</code></pre>
+
+<p>These properties are less common, they specify an elements position with its parents client area (padded area is part of the client area but border and margin is not).</p>
+</div></body></html>

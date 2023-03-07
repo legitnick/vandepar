@@ -1,0 +1,52 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I list all the files in a commit?</p><div class="s-prose js-post-body"><p>How can I print a plain list of all files that were part of a given commit?</p>
+<p>Although the following lists the files, it also includes unwanted diff information for each:</p>
+<pre><code>git show a303aa90779efdd2f6b9d90693e2cbbbe4613c1d
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 4601 people.</p><div class="s-prose js-post-body"><p><strong>Preferred Way</strong> (because it's a <em>plumbing</em> command; meant to be programmatic):</p>
+<pre><code>$ git diff-tree --no-commit-id --name-only bd61ad98 -r
+index.html
+javascript/application.js
+javascript/ie6.js
+</code></pre>
+<p><strong>Another Way</strong> (less preferred for scripts, because it's a <em>porcelain</em> command; meant to be user-facing)</p>
+<pre><code>$ git show --pretty=&quot;&quot; --name-only bd61ad98    
+index.html
+javascript/application.js
+javascript/ie6.js
+</code></pre>
+<hr />
+<ul>
+<li>The <code>--no-commit-id</code> suppresses the commit ID output.</li>
+<li>The <code>--pretty</code> argument specifies an empty format string to avoid the cruft at the beginning.</li>
+<li>The <code>--name-only</code> argument shows only the file names that were affected (Thanks Hank). Use <code>--name-status</code> instead, if you want to see what happened to each file (<strong>D</strong>eleted, <strong>M</strong>odified, <strong>A</strong>dded)</li>
+<li>The <code>-r</code> argument is to recurse into sub-trees</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 337 people.</p><div class="s-prose js-post-body"><p>If you want to get the list of changed files:</p>
+<pre><code>git diff-tree --no-commit-id --name-only -r &lt;commit-ish&gt;
+</code></pre>
+<p>If you want to get the list of all files in a commit, you can use</p>
+<pre><code>git ls-tree --name-only -r &lt;commit-ish&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 297 people.</p><div class="s-prose js-post-body"><p>I'll just assume that <a href="https://git-scm.com/docs/gitk" rel="noreferrer"><code>gitk</code></a> is not desired for this. In that case, try <code>git show --name-only &lt;sha&gt;</code>.</p>
+</div><p class="this-has-helped">This answer has helped 260 people.</p><div class="s-prose js-post-body"><p>I personally use the combination of <strong>--stat</strong> and <strong>--oneline</strong> with the <strong>show</strong> command:</p>
+
+<pre><code>git show --stat --oneline HEAD
+git show --stat --oneline b24f5fb
+git show --stat --oneline HEAD^^..HEAD
+</code></pre>
+
+<p>If you do not like/want the addition/removal stats, you can replace <strong>--stat</strong> with <strong>--name-only</strong></p>
+
+<pre><code>git show --name-only --oneline HEAD
+git show --name-only --oneline b24f5fb
+git show --name-only --oneline HEAD^^..HEAD
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 125 people.</p><div class="s-prose js-post-body"><p>You can also do </p>
+
+<pre><code>git log --name-only
+</code></pre>
+
+<p>and you can browse through various commits, commit messages and the changed files.</p>
+
+<p>Type q to get your prompt back.</p>
+</div></body></html>

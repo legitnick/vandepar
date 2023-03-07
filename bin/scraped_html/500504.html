@@ -1,0 +1,196 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Why is using &quot;for...in&quot; for array iteration a bad idea?</p><div class="s-prose js-post-body"><p>I've been told not to use <code>for...in</code> with arrays in JavaScript. Why not?</p>
+</div><p class="this-has-helped">This answer has helped 1713 people.</p><div class="s-prose js-post-body"><p>The reason is that one construct:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = []; // Create a new empty array.
+a[5] = 5;   // Perfectly legal JavaScript that resizes the array.
+
+for (var i = 0; i &lt; a.length; i++) {
+    // Iterate over numeric indexes from 0 to 5, as everyone expects.
+    console.log(a[i]);
+}
+
+/* Will display:
+   undefined
+   undefined
+   undefined
+   undefined
+   undefined
+   5
+*/</code></pre>
+</div>
+</div>
+</p>
+<p>can sometimes be totally different from the other:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = [];
+a[5] = 5;
+for (var x in a) {
+    // Shows only the explicitly set index of "5", and ignores 0-4
+    console.log(x);
+}
+
+/* Will display:
+   5
+*/</code></pre>
+</div>
+</div>
+</p>
+<p>Also consider that <a href="http://en.wikipedia.org/wiki/JavaScript" rel="noreferrer">JavaScript</a> libraries might do things like this, which will affect any array you create:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>// Somewhere deep in your JavaScript library...
+Array.prototype.foo = 1;
+
+// Now you have no idea what the below code will do.
+var a = [1, 2, 3, 4, 5];
+for (var x in a){
+    // Now foo is a part of EVERY array and 
+    // will show up here as a value of 'x'.
+    console.log(x);
+}
+
+/* Will display:
+   0
+   1
+   2
+   3
+   4
+   foo
+*/</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 424 people.</p><div class="s-prose js-post-body"><p>The <code>for-in</code> statement by itself is not a "bad practice", however it can be <em>mis-used</em>, for example, to <em>iterate</em> over arrays or array-like objects.</p>
+
+<p>The purpose of the <code>for-in</code> statement is to <em>enumerate</em> over object properties. This statement will go up in the prototype chain, also enumerating over <em>inherited</em> properties, a thing that <em>sometimes</em> is not desired.</p>
+
+<p>Also, the order of iteration is not guaranteed by the spec., meaning that if you want to "iterate" an array object, with this statement you cannot be sure that the properties (array indexes) will be visited in the numeric order.</p>
+
+<p>For example, in JScript (IE &lt;= 8), the order of enumeration even on Array objects is defined as the properties were created:</p>
+
+<pre><code>var array = [];
+array[2] = 'c';
+array[1] = 'b';
+array[0] = 'a';
+
+for (var p in array) {
+  //... p will be "2", "1" and "0" on IE
+}
+</code></pre>
+
+<p>Also, speaking about inherited properties, if you, for example, extend the <code>Array.prototype</code> object (like some libraries as MooTools do), that properties will be also enumerated:</p>
+
+<pre><code>Array.prototype.last = function () { return this[this.length-1]; };
+
+for (var p in []) { // an empty array
+  // last will be enumerated
+}
+</code></pre>
+
+<p>As I said before to <em>iterate</em> over arrays or array-like objects, the best thing is to use a <em>sequential loop</em>, such as a plain-old <code>for</code>/<code>while</code> loop.</p>
+
+<p>When you want to enumerate only the <em>own properties</em> of an object (the ones that aren't inherited), you can use the <code>hasOwnProperty</code> method:</p>
+
+<pre><code>for (var prop in obj) {
+  if (obj.hasOwnProperty(prop)) {
+    // prop is not inherited
+  }
+}
+</code></pre>
+
+<p>And some people even recommend calling the method directly from <code>Object.prototype</code> to avoid having problems if somebody adds a property named <code>hasOwnProperty</code> to our object:</p>
+
+<pre><code>for (var prop in obj) {
+  if (Object.prototype.hasOwnProperty.call(obj, prop)) {
+    // prop is not inherited
+  }
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 127 people.</p><div class="s-prose js-post-body"><p>There are three reasons why you shouldn't use <code>for..in</code> to iterate over array elements:</p>
+
+<ul>
+<li><p><code>for..in</code> will loop over all own and inherited properties of the array object which aren't <code>DontEnum</code>; that means if someone adds properties to the specific array object (there are valid reasons for this - I've done so myself) or changed <code>Array.prototype</code> (which is considered bad practice in code which is supposed to work well with other scripts), these properties will be iterated over as well; inherited properties can be excluded by checking <code>hasOwnProperty()</code>, but that won't help you with properties set in the array object itself</p></li>
+<li><p><code>for..in</code> isn't guaranteed to preserve element ordering</p></li>
+<li><p>it's slow because you have to walk all properties of the array object and its whole prototype chain and will still only get the property's name, ie to get the value, an additional lookup will be required</p></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 61 people.</p><div class="s-prose js-post-body"><p>Because for...in enumerates through the object that holds the array, not the array itself. If I add a function to the arrays prototype chain, that will also be included. I.e.</p>
+
+<pre><code>Array.prototype.myOwnFunction = function() { alert(this); }
+a = new Array();
+a[0] = 'foo';
+a[1] = 'bar';
+for(x in a){
+ document.write(x + ' = ' + a[x]);
+}
+</code></pre>
+
+<p>This will write:</p>
+
+<pre>
+0 = foo
+1 = bar
+myOwnFunction = function() { alert(this); }
+</pre>
+
+<p>And since you can never be sure that nothing will be added to the prototype chain just use a for loop to enumerate the array:</p>
+
+<pre><code>for(i=0,x=a.length;i&lt;x;i++){
+ document.write(i + ' = ' + a[i]);
+}
+</code></pre>
+
+<p>This will write:</p>
+
+<pre>
+0 = foo
+1 = bar
+</pre>
+</div><p class="this-has-helped">This answer has helped 56 people.</p><div class="s-prose js-post-body"><p>As of 2016 (ES6) we may use <code>for…of</code> for array iteration, as John Slegers already noticed. </p>
+
+<p>I would just like to add this simple demonstration code, to make things clearer:</p>
+
+<pre><code>Array.prototype.foo = 1;
+var arr = [];
+arr[5] = "xyz";
+
+console.log("for...of:");
+var count = 0;
+for (var item of arr) {
+    console.log(count + ":", item);
+    count++;
+    }
+
+console.log("for...in:");
+count = 0;
+for (var item in arr) {
+    console.log(count + ":", item);
+    count++;
+    }
+</code></pre>
+
+<p>The console shows:</p>
+
+<pre><code>for...of:
+
+0: undefined
+1: undefined
+2: undefined
+3: undefined
+4: undefined
+5: xyz
+
+for...in:
+
+0: 5
+1: foo
+</code></pre>
+
+<p>In other words:</p>
+
+<ul>
+<li><p><code>for...of</code> counts from 0 to 5, and also ignores <code>Array.prototype.foo</code>. It shows array <strong>values</strong>.</p></li>
+<li><p><code>for...in</code> lists only the <code>5</code>, ignoring undefined array indexes, but adding <code>foo</code>. It shows array <strong>property names</strong>.</p></li>
+</ul>
+</div></body></html>

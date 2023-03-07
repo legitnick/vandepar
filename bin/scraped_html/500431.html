@@ -1,0 +1,385 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is the scope of variables in JavaScript?</p><div class="s-prose js-post-body"><p>What is the scope of variables in javascript? Do they have the same scope inside as opposed to outside a function? Or does it even matter? Also, where are the variables stored if they are defined globally?</p>
+</div><p class="this-has-helped">This answer has helped 2677 people.</p><div class="s-prose js-post-body"><h2>TLDR</h2>
+<p>JavaScript has lexical (also called static) scoping and closures. This means you can tell the scope of an identifier by looking at the source code.</p>
+<p>The four scopes are:</p>
+<ol>
+<li>Global - visible by everything</li>
+<li>Function - visible within a function (and its sub-functions and blocks)</li>
+<li>Block - visible within a block (and its sub-blocks)</li>
+<li>Module - visible within a module</li>
+</ol>
+<p>Outside of the special cases of global and module scope, variables are declared using <code>var</code> (function scope), <code>let</code> (block scope), and <code>const</code> (block scope). Most other forms of identifier declaration have block scope in strict mode.</p>
+<h2>Overview</h2>
+<p>Scope is the region of the codebase over which an identifier is valid.</p>
+<p>A lexical environment is a mapping between identifier names and the values associated with them.</p>
+<p>Scope is formed of a linked nesting of lexical environments, with each level in the nesting corresponding to a lexical environment of an ancestor execution context.</p>
+<p>These linked lexical environments form a scope &quot;chain&quot;. Identifier resolution is the process of searching along this chain for a matching identifier.</p>
+<p>Identifier resolution only occurs in one direction: outwards. In this way, outer lexical environments cannot &quot;see&quot; into inner lexical environments.</p>
+<p>There are three pertinent factors in deciding the <a href="https://en.wikipedia.org/wiki/Scope_(computer_science)" rel="noreferrer">scope</a> of an <a href="https://www.ecma-international.org/ecma-262/10.0/index.html#sec-names-and-keywords" rel="noreferrer">identifier</a> in JavaScript:</p>
+<ol>
+<li>How an identifier was declared</li>
+<li>Where an identifier was declared</li>
+<li>Whether you are in <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode" rel="noreferrer">strict mode</a> or <a href="https://developer.mozilla.org/en-US/docs/Glossary/Sloppy_mode" rel="noreferrer">non-strict mode</a></li>
+</ol>
+<p>Some of the ways identifiers can be declared:</p>
+<ol>
+<li><code>var</code>, <code>let</code> and <code>const</code></li>
+<li>Function parameters</li>
+<li>Catch block parameter</li>
+<li>Function declarations</li>
+<li>Named function expressions</li>
+<li>Implicitly defined properties on the global object (i.e., missing out <code>var</code> in non-strict mode)</li>
+<li><code>import</code> statements</li>
+<li><code>eval</code></li>
+</ol>
+<p>Some of the locations identifiers can be declared:</p>
+<ol>
+<li>Global context</li>
+<li>Function body</li>
+<li>Ordinary block</li>
+<li>The top of a control structure (e.g., loop, if, while, etc.)</li>
+<li>Control structure body</li>
+<li>Modules</li>
+</ol>
+<h2>Declaration Styles</h2>
+<h3>var</h3>
+<p>Identifiers declared using <code>var</code> <strong>have function scope</strong>, apart from when they are declared directly in the global context, in which case they are added as properties on the global object and have global scope. There are separate rules for their use in <code>eval</code> functions.</p>
+<h3>let and const</h3>
+<p>Identifiers declared using <code>let</code> and <code>const</code> <strong>have block scope</strong>, apart from when they are declared directly in the global context, in which case they have global scope.</p>
+<p>Note: <code>let</code>, <code>const</code> and <code>var</code> <a href="https://stackoverflow.com/a/31222689/38522">are all hoisted</a>. This means that their logical position of definition is the top of their enclosing scope (block or function). However, variables declared using <code>let</code> and <code>const</code> cannot be read or assigned to until control has passed the point of declaration in the source code. The interim period is known as the temporal dead zone.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function f() {
+    function g() {
+        console.log(x)
+    }
+    let x = 1
+    g()
+}
+f() // 1 because x is hoisted even though declared with `let`!</code></pre>
+</div>
+</div>
+</p>
+<h3>Function parameter names</h3>
+<p>Function parameter names are scoped to the function body. Note that there is a slight complexity to this. Functions declared as default arguments close over the <a href="https://stackoverflow.com/questions/61208843/where-are-arguments-positioned-in-the-lexical-environment/">parameter list</a>, and not the body of the function.</p>
+<h3>Function declarations</h3>
+<p>Function declarations have block scope in strict mode and function scope in non-strict mode. Note: non-strict mode is a complicated set of emergent rules based on the quirky historical implementations of different browsers.</p>
+<h3>Named function expressions</h3>
+<p>Named function expressions are scoped to themselves (e.g., for the purpose of recursion).</p>
+<h3>Implicitly defined properties on the global object</h3>
+<p>In non-strict mode, implicitly defined properties on the global object have global scope, because the global object sits at the top of the scope chain. In strict mode, these are not permitted.</p>
+<h3>eval</h3>
+<p>In <code>eval</code> strings, variables declared using <code>var</code> will be placed in the current scope, or, if <code>eval</code> is used indirectly, as properties on the global object.</p>
+<h2>Examples</h2>
+<p>The following will throw a ReferenceError because the names<code>x</code>, <code>y</code>, and <code>z</code> have no meaning outside of the function <code>f</code>.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function f() {
+    var x = 1
+    let y = 1
+    const z = 1
+}
+console.log(typeof x) // undefined (because var has function scope!)
+console.log(typeof y) // undefined (because the body of the function is a block)
+console.log(typeof z) // undefined (because the body of the function is a block)</code></pre>
+</div>
+</div>
+</p>
+<p>The following will throw a ReferenceError for <code>y</code> and <code>z</code>, but not for <code>x</code>, because the visibility of <code>x</code> is not constrained by the block. Blocks that define the bodies of control structures like <code>if</code>, <code>for</code>, and <code>while</code>, behave similarly.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>{
+    var x = 1
+    let y = 1
+    const z = 1
+}
+console.log(x) // 1
+console.log(typeof y) // undefined because `y` has block scope
+console.log(typeof z) // undefined because `z` has block scope</code></pre>
+</div>
+</div>
+</p>
+<p>In the following, <code>x</code> is visible outside of the loop because <code>var</code> has function scope:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>for(var x = 0; x &lt; 5; ++x) {}
+console.log(x) // 5 (note this is outside the loop!)</code></pre>
+</div>
+</div>
+</p>
+<p>...because of this behavior, you need to be careful about closing over variables declared using <code>var</code> in loops. There is only one instance of variable <code>x</code> declared here, and it sits logically outside of the loop.</p>
+<p>The following prints <code>5</code>, five times, and then prints <code>5</code> a sixth time for the <code>console.log</code> outside the loop:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>for(var x = 0; x &lt; 5; ++x) {
+    setTimeout(() =&gt; console.log(x)) // closes over the `x` which is logically positioned at the top of the enclosing scope, above the loop
+}
+console.log(x) // note: visible outside the loop</code></pre>
+</div>
+</div>
+</p>
+<p>The following prints <code>undefined</code> because <code>x</code> is block-scoped. The callbacks are run one by one asynchronously. New behavior for <code>let</code> variables means that each anonymous function closed over a different variable named <code>x</code> (unlike it would have done with <code>var</code>), and so integers <code>0</code> through <code>4</code> are printed.:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>for(let x = 0; x &lt; 5; ++x) {
+    setTimeout(() =&gt; console.log(x)) // `let` declarations are re-declared on a per-iteration basis, so the closures capture different variables
+}
+console.log(typeof x) // undefined</code></pre>
+</div>
+</div>
+</p>
+<p>The following will NOT throw a <code>ReferenceError</code> because the visibility of <code>x</code> is not constrained by the block; it will, however, print <code>undefined</code> because the variable has not been initialised (because of the <code>if</code> statement).</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>if(false) {
+    var x = 1
+}
+console.log(x) // here, `x` has been declared, but not initialised</code></pre>
+</div>
+</div>
+</p>
+<p>A variable declared at the top of a <code>for</code> loop using <code>let</code> is scoped to the body of the loop:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>for(let x = 0; x &lt; 10; ++x) {} 
+console.log(typeof x) // undefined, because `x` is block-scoped</code></pre>
+</div>
+</div>
+</p>
+<p>The following will throw a <code>ReferenceError</code> because the visibility of <code>x</code> is constrained by the block:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>if(false) {
+    let x = 1
+}
+console.log(typeof x) // undefined, because `x` is block-scoped</code></pre>
+</div>
+</div>
+</p>
+<p>Variables declared using <code>var</code>, <code>let</code> or <code>const</code> are all scoped to modules:</p>
+<pre class="lang-js prettyprint-override"><code>// module1.js
+
+var x = 0
+export function f() {}
+
+//module2.js
+
+import f from 'module1.js'
+
+console.log(x) // throws ReferenceError
+</code></pre>
+<p>The following will declare a property on the global object because variables declared using <code>var</code> within the global context are added as properties to the global object:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var x = 1
+console.log(window.hasOwnProperty('x')) // true</code></pre>
+</div>
+</div>
+</p>
+<p><code>let</code> and <code>const</code> in the global context do not add properties to the global object, but still have global scope:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>let x = 1
+console.log(window.hasOwnProperty('x')) // false</code></pre>
+</div>
+</div>
+</p>
+<p>Function parameters can be considered to be declared in the function body:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function f(x) {}
+console.log(typeof x) // undefined, because `x` is scoped to the function</code></pre>
+</div>
+</div>
+</p>
+<p>Catch block parameters are scoped to the catch-block body:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>try {} catch(e) {}
+console.log(typeof e) // undefined, because `e` is scoped to the catch block</code></pre>
+</div>
+</div>
+</p>
+<p>Named function expressions are scoped only to the expression itself:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>(function foo() { console.log(foo) })()
+console.log(typeof foo) // undefined, because `foo` is scoped to its own expression</code></pre>
+</div>
+</div>
+</p>
+<p>In non-strict mode, implicitly defined properties on the global object are globally scoped. In strict mode, you get an error.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>x = 1 // implicitly defined property on the global object (no "var"!)
+
+console.log(x) // 1
+console.log(window.hasOwnProperty('x')) // true</code></pre>
+</div>
+</div>
+</p>
+<p>In non-strict mode, function declarations have function scope. In strict mode, they have block scope.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>'use strict'
+{
+    function foo() {}
+}
+console.log(typeof foo) // undefined, because `foo` is block-scoped</code></pre>
+</div>
+</div>
+</p>
+<h2>How it works under the hood</h2>
+<p>Scope is defined as the <a href="https://stackoverflow.com/a/1047479/38522">lexical</a> region of code over which an identifier is valid.</p>
+<p>In JavaScript, every function-object has a hidden <code>[[Environment]]</code> reference that is a reference to the <a href="https://www.ecma-international.org/ecma-262/10.0/index.html#sec-lexical-environments" rel="noreferrer">lexical environment</a> of the <a href="https://www.ecma-international.org/ecma-262/10.0/index.html#sec-execution-contexts" rel="noreferrer">execution context</a> (stack frame) within which it was created.</p>
+<p>When you invoke a function, the hidden <code>[[Call]]</code> method is called. This method creates a new execution context and establishes a link between the new execution context and the lexical environment of the function-object. It does this by copying the <code>[[Environment]]</code> value on the function-object, into an <a href="https://www.ecma-international.org/ecma-262/10.0/index.html#sec-lexical-environments" rel="noreferrer">outer reference</a> field on the lexical environment of the new execution context.</p>
+<p>Note that this link between the new execution context and the lexical environment of the function object is called a <a href="https://stackoverflow.com/a/111114/38522">closure</a>.</p>
+<p>Thus, in JavaScript, scope is implemented via lexical environments linked together in a &quot;chain&quot; by outer references. This chain of lexical environments is called the scope chain, and identifier resolution occurs by <a href="https://www.ecma-international.org/ecma-262/10.0/index.html#sec-getidentifierreference" rel="noreferrer">searching up the chain</a> for a matching identifier.</p>
+<p>Find out <a href="https://github.com/getify/You-Dont-Know-JS/tree/2nd-ed/scope-closures" rel="noreferrer">more</a>.</p>
+</div><p class="this-has-helped">This answer has helped 241 people.</p><div class="s-prose js-post-body"><p>Javascript uses scope chains to establish the scope for a given function. There is typically one global scope, and each function defined has its own nested scope. Any function defined within another function has a local scope which is linked to the outer function. It's always the position in the source that defines the scope.</p>
+
+<p>An element in the scope chain is basically a Map with a pointer to its parent scope.</p>
+
+<p>When resolving a variable, javascript starts at the innermost scope and searches outwards.</p>
+</div><p class="this-has-helped">This answer has helped 114 people.</p><div class="s-prose js-post-body"><p>Variables declared globally have a global scope. Variables declared within a function are scoped to that function, and shadow global variables of the same name.</p>
+
+<p>(I'm sure there are many subtleties that real JavaScript programmers will be able to point out in other answers. In particular I came across <a href="http://www.digital-web.com/articles/scope_in_javascript/" rel="noreferrer">this page</a> about what exactly <code>this</code> means at any time. Hopefully <a href="http://bowles.byethost3.com/javascript/section6/lesson6.htm#part4" rel="noreferrer">this more introductory link</a> is enough to get you started though.)</p>
+</div><p class="this-has-helped">This answer has helped 79 people.</p><div class="s-prose js-post-body"><h1>Old school JavaScript</h1>
+<p>Traditionally, JavaScript really only has two types of scope :</p>
+<ol>
+<li><strong>Global Scope</strong> : Variables are known throughout the application, from the start of the application <em>(*)</em></li>
+<li><strong>Functional Scope</strong> : Variables are known within <a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/function" rel="noreferrer"><strong>the function</strong></a> they are declared in, from the start of the function <em>(*)</em></li>
+</ol>
+<p>I will not elaborate on this, since there are already many other answers explaining the difference.</p>
+<hr />
+<h1>Modern JavaScript</h1>
+<p>The <a href="https://www.smashingmagazine.com/2015/10/es6-whats-new-next-version-javascript/" rel="noreferrer"><strong>most recent JavaScript specs</strong></a> now also allow a third scope :</p>
+<ol start="3">
+<li><strong>Block Scope</strong> : Identifiers are &quot;known&quot; <a href="https://stackoverflow.com/a/31222689/38522">from the top of the scope they are declared within</a>, but they cannot be assigned to or dereferenced (read) until after the line of their declaration. This interim period is called the &quot;temporal dead zone.&quot;</li>
+</ol>
+<hr />
+<h3>How do I create block scope variables?</h3>
+<p>Traditionally, you create your variables like this :</p>
+<pre><code>var myVariable = &quot;Some text&quot;;
+</code></pre>
+<p>Block scope variables are created like this :</p>
+<pre><code>let myVariable = &quot;Some text&quot;;
+</code></pre>
+<hr />
+<h3>So what is the difference between functional scope and block scope?</h3>
+<p>To understand the difference between functional scope and block scope, consider the following code :</p>
+<pre><code>// i IS NOT known here
+// j IS NOT known here
+// k IS known here, but undefined
+// l IS NOT known here
+
+function loop(arr) {
+    // i IS known here, but undefined
+    // j IS NOT known here
+    // k IS known here, but has a value only the second time loop is called
+    // l IS NOT known here
+
+    for( var i = 0; i &lt; arr.length; i++ ) {
+        // i IS known here, and has a value
+        // j IS NOT known here
+        // k IS known here, but has a value only the second time loop is called
+        // l IS NOT known here
+    };
+
+    // i IS known here, and has a value
+    // j IS NOT known here
+    // k IS known here, but has a value only the second time loop is called
+    // l IS NOT known here
+
+    for( let j = 0; j &lt; arr.length; j++ ) {
+        // i IS known here, and has a value
+        // j IS known here, and has a value
+        // k IS known here, but has a value only the second time loop is called
+        // l IS NOT known here
+    };
+
+    // i IS known here, and has a value
+    // j IS NOT known here
+    // k IS known here, but has a value only the second time loop is called
+    // l IS NOT known here
+}
+
+loop([1,2,3,4]);
+
+for( var k = 0; k &lt; arr.length; k++ ) {
+    // i IS NOT known here
+    // j IS NOT known here
+    // k IS known here, and has a value
+    // l IS NOT known here
+};
+
+for( let l = 0; l &lt; arr.length; l++ ) {
+    // i IS NOT known here
+    // j IS NOT known here
+    // k IS known here, and has a value
+    // l IS known here, and has a value
+};
+
+loop([1,2,3,4]);
+
+// i IS NOT known here
+// j IS NOT known here
+// k IS known here, and has a value
+// l IS NOT known here
+</code></pre>
+<p>Here, we can see that our variable <code>j</code> is only known in the first for loop, but not before and after. Yet, our variable <code>i</code> is known in the entire function.</p>
+<p>Also, consider that block scoped variables are not known before they are declared because they are not hoisted. You're also not allowed to redeclare the same block scoped variable within the same block. This makes block scoped variables less error prone than globally or functionally scoped variables, which are hoisted and which do not produce any errors in case of multiple declarations.</p>
+<hr />
+<h3>Is it safe to use block scope variables today?</h3>
+<p>Whether or not it is safe to use today, depends on your environment :</p>
+<ul>
+<li><p>If you're writing server-side JavaScript code (<a href="https://nodejs.org/en/" rel="noreferrer"><strong>Node.js</strong></a>), you can safely use the <code>let</code> statement.</p>
+</li>
+<li><p>If you're writing client-side JavaScript code and use a browser based transpiler (like <a href="https://github.com/google/traceur-compiler" rel="noreferrer"><strong>Traceur</strong></a> or <a href="https://github.com/babel/babel-standalone" rel="noreferrer"><strong>babel-standalone</strong></a>), you can safely use the <code>let</code> statement, however your code is likely to be anything but optimal with respect to performance.</p>
+</li>
+<li><p>If you're writing client-side JavaScript code and use a Node based transpiler (like the <a href="https://github.com/google/traceur-compiler/wiki/Compiling-Offline" rel="noreferrer"><strong>traceur shell script</strong></a> or <a href="https://babeljs.io/" rel="noreferrer"><strong>Babel</strong></a>), you can safely use the <code>let</code> statement. And because your browser will only know about the transpiled code, performance drawbacks should be limited.</p>
+</li>
+<li><p>If you're writing client-side JavaScript code and don't use a transpiler, you need to consider browser support.</p>
+<p>These are some browsers that don't support <code>let</code> at all :</p>
+<ul>
+<li><strong>Internet explorer 10</strong> and below</li>
+<li><strong>Firefox 43</strong> and below</li>
+<li><strong>Safari 9</strong> and below</li>
+<li><strong>Android browser 4</strong> and below</li>
+<li><strong>Opera 27</strong> and below</li>
+<li><strong>Chome 40</strong> and below</li>
+<li>ANY version of <strong>Opera Mini</strong> &amp; <strong>Blackberry Browser</strong></li>
+</ul>
+</li>
+</ul>
+<p><a href="https://i.stack.imgur.com/J9kEC.png" rel="noreferrer"><img src="https://i.stack.imgur.com/J9kEC.png" alt="enter image description here" /></a></p>
+<hr />
+<h3>How to keep track of browser support</h3>
+<p>For an up-to-date overview of which browsers support the <code>let</code> statement at the time of your reading this answer, see <a href="http://caniuse.com/#search=let" rel="noreferrer"><strong>this <code>Can I Use</code> page</strong></a>.</p>
+<hr />
+<p><em>(*) Globally and functionally scoped variables can be initialized and used before they are declared because JavaScript variables are <a href="https://developer.mozilla.org/en-US/docs/Glossary/Hoisting" rel="noreferrer"><strong>hoisted</strong></a>.</em> This means that declarations are always much to the top of the scope.</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>Here's an example:</p>
+
+<pre><code>&lt;script&gt;
+
+var globalVariable = 7; //==window.globalVariable
+
+function aGlobal( param ) { //==window.aGlobal(); 
+                            //param is only accessible in this function
+  var scopedToFunction = {
+    //can't be accessed outside of this function
+
+    nested : 3 //accessible by: scopedToFunction.nested
+  };
+
+  anotherGlobal = {
+    //global because there's no `var`
+  }; 
+
+}
+
+&lt;/script&gt;
+</code></pre>
+
+<p>You'll want to investigate closures, and how to use them to make <a href="http://www.crockford.com/javascript/private.html" rel="noreferrer">private members</a>.</p>
+</div></body></html>

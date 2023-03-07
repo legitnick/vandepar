@@ -1,0 +1,154 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Why can templates only be implemented in the header file?</p><div class="s-prose js-post-body"><p>Quote from <a href="http://books.google.com/books?id=n9VEG2Gp5pkC&amp;pg=PA10&amp;lpg=PA10&amp;dq=%22The%20only%20portable%20way%20of%20using%20templates%20at%20the%20moment%20is%20to%20implement%20them%20in%20header%20files%20by%20using%20inline%20functions.%22&amp;source=bl&amp;ots=Ref8pl8dPX&amp;sig=t4K5gvxtBblpcujNxodpwMfei8I&amp;hl=en&amp;ei=qkR6TvbiGojE0AHq4IzqAg&amp;sa=X&amp;oi=book_result&amp;ct=result&amp;resnum=3&amp;ved=0CC8Q6AEwAg#v=onepage&amp;q=%22The%20only%20portable%20way%20of%20using%20templates%20at%20the%20moment%20is%20to%20implement%20them%20in%20header%20files%20by%20using%20inline%20functions.%22&amp;f=false" rel="noreferrer">The C++ standard library: a tutorial and handbook</a>:</p>
+
+<blockquote>
+  <p>The only portable way of using templates at the moment is to implement them in header files by using inline functions.</p>
+</blockquote>
+
+<p>Why is this?</p>
+
+<p>(Clarification: header files are not the <em>only</em> portable solution. But they are the most convenient portable solution.)</p>
+</div><p class="this-has-helped">This answer has helped 1914 people.</p><div class="s-prose js-post-body"><p>Caveat: It is <em>not</em> necessary to put the implementation in the header file, see the alternative solution at the end of this answer.</p>
+
+<p>Anyway, the reason your code is failing is that, when instantiating a template, the compiler creates a new class with the given template argument. For example:</p>
+
+<pre><code>template&lt;typename T&gt;
+struct Foo
+{
+    T bar;
+    void doSomething(T param) {/* do stuff using T */}
+};
+
+// somewhere in a .cpp
+Foo&lt;int&gt; f; 
+</code></pre>
+
+<p>When reading this line, the compiler will create a new class (let's call it <code>FooInt</code>), which is equivalent to the following:</p>
+
+<pre><code>struct FooInt
+{
+    int bar;
+    void doSomething(int param) {/* do stuff using int */}
+}
+</code></pre>
+
+<p>Consequently, the compiler needs to have access to the implementation of the methods, to instantiate them with the template argument (in this case <code>int</code>). If these implementations were not in the header, they wouldn't be accessible, and therefore the compiler wouldn't be able to instantiate the template.</p>
+
+<p>A common solution to this is to write the template declaration in a header file, then implement the class in an implementation file (for example .tpp), and include this implementation file at the end of the header.</p>
+
+<p>Foo.h</p>
+
+<pre><code>template &lt;typename T&gt;
+struct Foo
+{
+    void doSomething(T param);
+};
+
+#include "Foo.tpp"
+</code></pre>
+
+<p>Foo.tpp</p>
+
+<pre><code>template &lt;typename T&gt;
+void Foo&lt;T&gt;::doSomething(T param)
+{
+    //implementation
+}
+</code></pre>
+
+<p>This way, implementation is still separated from declaration, but is accessible to the compiler.</p>
+
+<h1>Alternative solution</h1>
+
+<p>Another solution is to keep the implementation separated, and explicitly instantiate all the template instances you'll need:</p>
+
+<p>Foo.h</p>
+
+<pre><code>// no implementation
+template &lt;typename T&gt; struct Foo { ... };
+</code></pre>
+
+<p>Foo.cpp</p>
+
+<pre><code>// implementation of Foo's methods
+
+// explicit instantiations
+template class Foo&lt;int&gt;;
+template class Foo&lt;float&gt;;
+// You will only be able to use Foo with int or float
+</code></pre>
+
+<p>If my explanation isn't clear enough, you can have a look at the <a href="https://isocpp.org/wiki/faq/templates#templates-defn-vs-decl" rel="noreferrer">C++ Super-FAQ on this subject</a>.</p>
+</div><p class="this-has-helped">This answer has helped 341 people.</p><div class="s-prose js-post-body"><p>It's because of the requirement for separate compilation and because templates are instantiation-style polymorphism.</p>
+
+<p>Lets get a little closer to concrete for an explanation. Say I've got the following files:</p>
+
+<ul>
+<li>foo.h
+<ul>
+<li>declares the interface of <code>class MyClass&lt;T&gt;</code></li>
+</ul></li>
+<li>foo.cpp
+<ul>
+<li>defines the implementation of <code>class MyClass&lt;T&gt;</code></li>
+</ul></li>
+<li>bar.cpp
+<ul>
+<li>uses <code>MyClass&lt;int&gt;</code></li>
+</ul></li>
+</ul>
+
+<p>Separate compilation means I should be able to compile <strong>foo.cpp</strong> independently from <strong>bar.cpp</strong>. The compiler does all the hard work of analysis, optimization, and code generation on each compilation unit completely independently; we don't need to do whole-program analysis. It's only the linker that needs to handle the entire program at once, and the linker's job is substantially easier.</p>
+
+<p><strong>bar.cpp</strong> doesn't even need to exist when I compile <strong>foo.cpp</strong>, but I should still be able to link the <strong>foo.o</strong> I already had together with the <strong>bar.o</strong> I've only just produced, without needing to recompile <strong>foo.cpp</strong>. <strong>foo.cpp</strong> could even be compiled into a dynamic library, distributed somewhere else without <strong>foo.cpp</strong>, and linked with code they write years after I wrote <strong>foo.cpp</strong>.</p>
+
+<p>"Instantiation-style polymorphism" means that the template <code>MyClass&lt;T&gt;</code> isn't really a generic class that can be compiled to code that can work for any value of <code>T</code>. That would add overhead such as boxing, needing to pass function pointers to allocators and constructors, etc. The intention of C++ templates is to avoid having to write nearly identical <code>class MyClass_int</code>, <code>class MyClass_float</code>, etc, but to still be able to end up with compiled code that is mostly as if we <em>had</em> written each version separately. So a template is <em>literally</em> a template; a class template is <em>not</em> a class, it's a recipe for creating a new class for each <code>T</code> we encounter. A template cannot be compiled into code, only the result of instantiating the template can be compiled.</p>
+
+<p>So when <strong>foo.cpp</strong> is compiled, the compiler can't see <strong>bar.cpp</strong> to know that <code>MyClass&lt;int&gt;</code> is needed. It can see the template <code>MyClass&lt;T&gt;</code>, but it can't emit code for that (it's a template, not a class). And when <strong>bar.cpp</strong> is compiled, the compiler can see that it needs to create a <code>MyClass&lt;int&gt;</code>, but it can't see the template <code>MyClass&lt;T&gt;</code> (only its interface in <strong>foo.h</strong>) so it can't create it.</p>
+
+<p>If <strong>foo.cpp</strong> itself uses <code>MyClass&lt;int&gt;</code>, then code for that will be generated while compiling <strong>foo.cpp</strong>, so when <strong>bar.o</strong> is linked to <strong>foo.o</strong> they can be hooked up and will work. We can use that fact to allow a finite set of template instantiations to be implemented in a .cpp file by writing a single template. But there's no way for <strong>bar.cpp</strong> to use the template <em>as a template</em> and instantiate it on whatever types it likes; it can only use pre-existing versions of the templated class that the author of <strong>foo.cpp</strong> thought to provide.</p>
+
+<p>You might think that when compiling a template the compiler should "generate all versions", with the ones that are never used being filtered out during linking. Aside from the huge overhead and the extreme difficulties such an approach would face because "type modifier" features like pointers and arrays allow even just the built-in types to give rise to an infinite number of types, what happens when I now extend my program by adding:</p>
+
+<ul>
+<li>baz.cpp
+<ul>
+<li>declares and implements <code>class BazPrivate</code>, and uses <code>MyClass&lt;BazPrivate&gt;</code></li>
+</ul></li>
+</ul>
+
+<p>There is no possible way that this could work unless we either</p>
+
+<ol>
+<li>Have to recompile <strong>foo.cpp</strong> every time we change <em>any other file in the program</em>, in case it added a new novel instantiation of <code>MyClass&lt;T&gt;</code></li>
+<li>Require that <strong>baz.cpp</strong> contains (possibly via header includes) the full template of <code>MyClass&lt;T&gt;</code>, so that the compiler can generate <code>MyClass&lt;BazPrivate&gt;</code> during compilation of <strong>baz.cpp</strong>.</li>
+</ol>
+
+<p>Nobody likes (1), because whole-program-analysis compilation systems take <em>forever</em> to compile , and because it makes it impossible to distribute compiled libraries without the source code. So we have (2) instead.</p>
+</div><p class="this-has-helped">This answer has helped 273 people.</p><div class="s-prose js-post-body"><p>Plenty correct answers here, but I wanted to add this (for completeness):</p>
+<p>If you, at the bottom of the implementation cpp file, do explicit instantiation of all the types the template will be used with, the linker will be able to find them as usual.</p>
+<p>Edit: Adding example of explicit template instantiation. Used after the template has been defined, and all member functions has been defined.</p>
+<pre><code>template class vector&lt;int&gt;;
+</code></pre>
+<p>This will instantiate (and thus make available to the linker) the class and all its member functions (only). Similar syntax works for function templates, so if you have non-member operator overloads you may need to do the same for those.</p>
+<p>The above example is fairly useless since vector is fully defined in headers, except when a common include file (precompiled header?) uses <code>extern template class vector&lt;int&gt;</code> so as to keep it from instantiating it in all the <em>other</em> (1000?) files that use vector.</p>
+</div><p class="this-has-helped">This answer has helped 95 people.</p><div class="s-prose js-post-body"><p>Templates need to be <em>instantiated</em> by the compiler before actually compiling them into object code.  This instantiation can only be achieved if the template arguments are known. Now imagine a scenario where a template function is declared in <code>a.h</code>, defined in <code>a.cpp</code> and used in <code>b.cpp</code>. When <code>a.cpp</code> is compiled, it is not necessarily known that the upcoming compilation <code>b.cpp</code> will require an instance of the template, let alone which specific instance would that be. For more header and source files, the situation can quickly get more complicated.</p>
+
+<p>One can argue that compilers can be made smarter to "look ahead" for all uses of the template, but I'm sure that it wouldn't be difficult to create recursive or otherwise complicated scenarios. AFAIK, compilers don't do such look aheads.  As Anton pointed out, some compilers support explicit export declarations of template instantiations, but not all compilers support it (yet?).</p>
+</div><p class="this-has-helped">This answer has helped 75 people.</p><div class="s-prose js-post-body"><p>Actually, prior to C++11 the standard defined the <code>export</code> keyword that <em>would</em> make it possible to declare templates in a header file and implement them elsewhere. In a manner of speaking. Not really, as the only ones who ever <em>implemented</em> that feature <a href="http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2003/n1426.pdf" rel="nofollow noreferrer">pointed out</a>:</p>
+<blockquote>
+<p>Phantom advantage #1: Hiding source code. Many users, have said that they expect that by using export they will
+no longer have to ship definitions for member/nonmember function templates and member functions of class
+templates. This is not true. With export, library writers still have to ship full template source code or its direct
+equivalent (e.g., a system-specific parse tree) because the full information is required for instantiation. [...]</p>
+</blockquote>
+<blockquote>
+<p>Phantom advantage #2: Fast builds, reduced dependencies. Many users expect that export will allow true separate
+compilation of templates to object code which they expect would allow faster builds. It doesn’t because the
+compilation of exported templates is indeed separate but not to object code. Instead, export almost always makes
+builds slower, because at least the same amount of compilation work must still be done at prelink time. Export
+does not even reduce dependencies between template definitions because the dependencies are intrinsic,
+independent of file organization.</p>
+</blockquote>
+<p>None of the popular compilers implemented this keyword. The only implementation of the feature was in the frontend written by the Edison Design Group, which is used by the Comeau C++ compiler. All others required you to write templates in header files, because the compiler needs the template definition for proper instantiation (as others pointed out already).</p>
+<p>As a result, the ISO C++ standard committee decided to remove the <code>export</code> feature of templates with C++11.</p>
+</div></body></html>

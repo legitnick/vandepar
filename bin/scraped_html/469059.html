@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>&lt;button&gt; vs. &lt;input type=&quot;button&quot; /&gt;. Which to use?</p><div class="s-prose js-post-body"><p>When looking at most sites (including SO), most of them use:</p>
+
+<pre><code>&lt;input type="button" /&gt;
+</code></pre>
+
+<p>instead of:</p>
+
+<pre><code>&lt;button&gt;&lt;/button&gt;
+</code></pre>
+
+<ul>
+<li>What are the main differences between the two, if any?</li>
+<li>Are there valid reasons to use one instead of the other?</li>
+<li>Are there valid reasons to use combine them?</li>
+<li>Does using <code>&lt;button&gt;</code> come with compatibility issues, seeing it is not very widely used?</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 721 people.</p><div class="s-prose js-post-body"><ul>
+<li><a href="http://web.archive.org/web/20110721191046/http://particletree.com/features/rediscovering-the-button-element/" rel="noreferrer">Here's a page</a> describing the differences (basically you can put html into a <code>&lt;button&gt;&lt;/button&gt;</code>)</li>
+<li><a href="http://www.peterbe.com/plog/button-tag-in-IE" rel="noreferrer">And another page</a> describing why people avoid <code>&lt;button&gt;&lt;/button&gt;</code> (Hint: IE6)</li>
+</ul>
+
+<p>Another IE problem when using <code>&lt;button /&gt;</code>:</p>
+
+<blockquote>
+  <p>And while we're talking about IE, it's
+  got a couple of bugs related to the
+  width of buttons. It'll mysteriously
+  add extra padding when you're trying
+  to add styles, meaning you have to add
+  a tiny hack to get things under
+  control.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 396 people.</p><div class="s-prose js-post-body"><p>Just as a side note, <code>&lt;button&gt;</code> will implicitly submit, which can cause problems if you want to use a button in a form without it submitting. Thus, another reason to use <code>&lt;input type="button"&gt;</code> (or <code>&lt;button type="button"&gt;</code>)</p>
+
+<p><strong>Edit</strong> - <em>more details</em></p>
+
+<p>Without a type, <a href="https://www.w3.org/wiki/HTML/Elements/button" rel="noreferrer"><code>button</code> implicitly receives type of <code>submit</code></a>. It does not matter how many submit buttons or inputs there are in the form, any one of them which is explicitly or implicitly typed as submit, when clicked, will submit the form.</p>
+
+<p>There are 3 supported types for a button</p>
+
+<pre><code>submit ||  "submits the form when clicked (default)"
+reset  ||  "resets the fields in the form when clicked"
+button ||  "clickable, but without any event handler until one is assigned"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 190 people.</p><div class="s-prose js-post-body"><p><a href="http://web.archive.org/web/20110721191046/http://particletree.com/features/rediscovering-the-button-element/" rel="noreferrer">This article</a> seems to offer a pretty good overview of the difference.</p>
+
+<p>From the page:</p>
+
+<blockquote>
+  <p>Buttons created with the BUTTON element function just like buttons
+  created with the INPUT element, but
+  they offer richer rendering
+  possibilities: the BUTTON element may
+  have content. For example, a BUTTON
+  element that contains an image
+  functions like and may resemble an
+  INPUT element whose type is set to
+  “image”, but the BUTTON element type
+  allows content.</p>
+  
+  <p><em>The Button Element - W3C</em></p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 57 people.</p><div class="s-prose js-post-body"><p>Inside a <code>&lt;button&gt;</code> element you can put content, like text or images.</p>
+
+<pre><code>&lt;button type="button"&gt;Click Me!&lt;/button&gt; 
+</code></pre>
+
+<p>This is the difference between this element and buttons created with the <code>&lt;input&gt;</code> element.</p>
+</div><p class="this-has-helped">This answer has helped 45 people.</p><div class="s-prose js-post-body"><p>Quote</p>
+
+<blockquote>
+  <p>Important: If you use the button element in an HTML form, different browsers will submit different values. Internet Explorer will submit the text between the <code>&lt;button&gt;</code> and <code>&lt;/button&gt;</code> tags, while other browsers will submit the content of the value attribute. Use the input element to create buttons in an HTML form.</p>
+</blockquote>
+
+<p>From : <a href="http://www.w3schools.com/tags/tag_button.asp" rel="noreferrer">http://www.w3schools.com/tags/tag_button.asp</a></p>
+
+<p>If I understand correctly, the answer is compatibility and input consistency from browser to browser</p>
+</div></body></html>

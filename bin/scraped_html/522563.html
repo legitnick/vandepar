@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Accessing the index in &#39;for&#39; loops</p><div class="s-prose js-post-body"><p>How do I access the index while iterating over a sequence with a <code>for</code> loop?</p>
+<pre><code>xs = [8, 23, 45]
+
+for x in xs:
+    print(&quot;item #{} = {}&quot;.format(index, x))
+</code></pre>
+<p>Desired output:</p>
+<pre class="lang-none prettyprint-override"><code>item #1 = 8
+item #2 = 23
+item #3 = 45
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 8390 people.</p><div class="s-prose js-post-body"><p>Use the built-in function <a href="https://docs.python.org/3/library/functions.html#enumerate" rel="noreferrer" title="enumerate"><code>enumerate()</code></a>:</p>
+<pre><code>for idx, x in enumerate(xs):
+    print(idx, x)
+</code></pre>
+<p>It is <em><a href="https://stackoverflow.com/questions/25011078/what-does-pythonic-mean">non-pythonic</a></em> to manually index via <code>for i in range(len(xs)): x = xs[i]</code> or manually manage an additional state variable.</p>
+<p>Check out <a href="https://www.python.org/dev/peps/pep-0279/" rel="noreferrer" title="PEP 279">PEP 279</a> for more.</p>
+</div><p class="this-has-helped">This answer has helped 1237 people.</p><div class="s-prose js-post-body"><blockquote>
+<h1>Using a for loop, how do I access the loop index, from 1 to 5 in this case?</h1>
+</blockquote>
+<p>Use <code>enumerate</code> to get the index with the element as you iterate:</p>
+<pre><code>for index, item in enumerate(items):
+    print(index, item)
+</code></pre>
+<p>And note that Python's indexes start at zero, so you would get 0 to 4 with the above. If you want the count, 1 to 5, do this:</p>
+<pre><code>count = 0 # in case items is empty and you need it after the loop
+for count, item in enumerate(items, start=1):
+    print(count, item)
+</code></pre>
+<h1>Unidiomatic control flow</h1>
+<p>What you are asking for is the Pythonic equivalent of the following, which is the algorithm most programmers of lower-level languages would use:</p>
+<blockquote>
+<pre><code>index = 0            # Python's indexing starts at zero
+for item in items:   # Python's for loops are a &quot;for each&quot; loop 
+    print(index, item)
+    index += 1
+</code></pre>
+</blockquote>
+<p>Or in languages that do not have a for-each loop:</p>
+<blockquote>
+<pre><code>index = 0
+while index &lt; len(items):
+    print(index, items[index])
+    index += 1
+</code></pre>
+</blockquote>
+<p>or sometimes more commonly (but unidiomatically) found in Python:</p>
+<blockquote>
+<pre><code>for index in range(len(items)):
+    print(index, items[index])
+</code></pre>
+</blockquote>
+<h1>Use the Enumerate Function</h1>
+<p>Python's <a href="https://docs.python.org/2/library/functions.html#enumerate" rel="noreferrer"><code>enumerate</code> function</a> reduces the visual clutter by hiding the accounting for the indexes, and encapsulating the iterable into another iterable (an <code>enumerate</code> object) that yields a two-item tuple of the index and the item that the original iterable would provide. That looks like this:</p>
+<pre><code>for index, item in enumerate(items, start=0):   # default is zero
+    print(index, item)
+</code></pre>
+<p>This code sample is fairly well the <a href="http://python.net/%7Egoodger/projects/pycon/2007/idiomatic/handout.html#index-item-2-enumerate" rel="noreferrer">canonical</a> example of the difference between code that is idiomatic of Python and code that is not. Idiomatic code is sophisticated (but not complicated) Python, written in the way that it was intended to be used. Idiomatic code is expected by the designers of the language, which means that usually this code is not just more readable, but also more efficient.</p>
+<h2>Getting a count</h2>
+<p>Even if you don't need indexes as you go, but you need a count of the iterations (sometimes desirable) you can start with <code>1</code> and the final number will be your count.</p>
+<pre><code>count = 0 # in case items is empty
+for count, item in enumerate(items, start=1):   # default is zero
+    print(item)
+
+print('there were {0} items printed'.format(count))
+</code></pre>
+<p>The count seems to be more what you intend to ask for (as opposed to index) when you said you wanted from 1 to 5.</p>
+<hr />
+<h2>Breaking it down - a step by step explanation</h2>
+<p>To break these examples down, say we have a list of items that we want to iterate over with an index:</p>
+<pre><code>items = ['a', 'b', 'c', 'd', 'e']
+</code></pre>
+<p>Now we pass this iterable to enumerate, creating an enumerate object:</p>
+<pre><code>enumerate_object = enumerate(items) # the enumerate object
+</code></pre>
+<p>We can pull the first item out of this iterable that we would get in a loop with the <code>next</code> function:</p>
+<pre><code>iteration = next(enumerate_object) # first iteration from enumerate
+print(iteration)
+</code></pre>
+<p>And we see we get a tuple of <code>0</code>, the first index, and <code>'a'</code>, the first item:</p>
+<pre><code>(0, 'a')
+</code></pre>
+<p>we can use what is referred to as &quot;<a href="https://docs.python.org/2/tutorial/datastructures.html#tuples-and-sequences" rel="noreferrer">sequence unpacking</a>&quot; to extract the elements from this two-tuple:</p>
+<pre><code>index, item = iteration
+#   0,  'a' = (0, 'a') # essentially this.
+</code></pre>
+<p>and when we inspect <code>index</code>, we find it refers to the first index, 0, and <code>item</code> refers to the first item, <code>'a'</code>.</p>
+<pre><code>&gt;&gt;&gt; print(index)
+0
+&gt;&gt;&gt; print(item)
+a
+</code></pre>
+<h1>Conclusion</h1>
+<ul>
+<li>Python indexes start at zero</li>
+<li>To get these indexes from an iterable as you iterate over it, use the enumerate function</li>
+<li>Using enumerate in the idiomatic way (along with tuple unpacking) creates code that is more readable and maintainable:</li>
+</ul>
+<p>So do this:</p>
+<pre><code>for index, item in enumerate(items, start=0):   # Python indexes start at zero
+    print(index, item)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 252 people.</p><div class="s-prose js-post-body"><p>It's pretty simple to start it from <code>1</code> other than <code>0</code>:</p>
+<pre><code>for index, item in enumerate(iterable, start=1):
+   print index, item  # Used to print in python&lt;3.x
+   print(index, item) # Migrate to print() after 3.x+
+   
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 133 people.</p><div class="s-prose js-post-body"><pre><code>for i in range(len(ints)):
+   print(i, ints[i]) # print updated to print() in Python 3.x+ 
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 83 people.</p><div class="s-prose js-post-body"><h3>Tested on Python 3.11.2</h3>
+<p>Here's how you can access the indices with their corresponding array's elements using <em><strong>for loops</strong></em>, <em><strong>while loops</strong></em> and some <em><strong>looping functions</strong></em>.</p>
+<h3>1. Looping elements with counter and <code>+=</code> operator.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+counter = 0
+
+for value in items:
+    print(counter, value)
+    counter += 1
+</code></pre>
+<p>Result:</p>
+<pre><code>#    0 8
+#    1 23
+#    2 45
+#    3 12
+#    4 78
+</code></pre>
+<h3>2. Looping elements using <code>enumerate()</code> method.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+
+for i in enumerate(items):
+    print(&quot;index/value&quot;, i)
+</code></pre>
+<p>Result:</p>
+<pre><code>#    index/value (0, 8)
+#    index/value (1, 23)
+#    index/value (2, 45)
+#    index/value (3, 12)
+#    index/value (4, 78)
+</code></pre>
+<h3>3. Using <code>index</code> and <code>value</code> separately.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+
+for index, value in enumerate(items):
+    print(&quot;index&quot;, index, &quot;for value&quot;, value)
+</code></pre>
+<p>Result:</p>
+<pre><code>#    index 0 for value 8
+#    index 1 for value 23
+#    index 2 for value 45
+#    index 3 for value 12
+#    index 4 for value 78
+</code></pre>
+<h3>4. You can change the <code>index</code> number to any increment.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+
+for i, value in enumerate(items, start=1000):
+    print(i, value)
+</code></pre>
+<p>Result:</p>
+<pre><code>#    1000 8
+#    1001 23
+#    1002 45
+#    1003 12
+#    1004 78
+</code></pre>
+<h3>5. Automatic counter incrementation with <code>range(len(...))</code>.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+
+for i in range(len(items)):
+    print(&quot;Index:&quot;, i, &quot;Value:&quot;, items[i])
+</code></pre>
+<p>Result:</p>
+<pre><code>#    ('Index:', 0, 'Value:', 8)
+#    ('Index:', 1, 'Value:', 23)
+#    ('Index:', 2, 'Value:', 45)
+#    ('Index:', 3, 'Value:', 12)
+#    ('Index:', 4, 'Value:', 78)
+</code></pre>
+<h3>6. Using <code>for</code> loop inside function.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+
+def enum(items, start=0):
+    counter = start
+
+    for value in items:
+        print(counter, value)
+        counter += 1
+    
+enum(items)
+</code></pre>
+<p>Result:</p>
+<pre><code>#    0 8
+#    1 23
+#    2 45
+#    3 12
+#    4 78
+</code></pre>
+<h3>7. Of course, we can't forget about <code>while</code> loop.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+counter = 0
+
+while counter &lt; len(items):
+    print(counter, items[counter])
+    counter += 1
+</code></pre>
+<p>Result:</p>
+<pre><code>#    0 8
+#    1 23
+#    2 45
+#    3 12
+#    4 78
+</code></pre>
+<h3>8. <code>yield</code> statement returning a generator object.</h3>
+<pre><code>def createGenerator():        
+    items = [8, 23, 45, 12, 78]
+
+    for (j, k) in enumerate(items):
+        yield (j, k)
+        
+
+generator = createGenerator()
+
+for i in generator:
+    print(i)
+</code></pre>
+<p>Result:</p>
+<pre><code>#    (0, 8)
+#    (1, 23)
+#    (2, 45)
+#    (3, 12)
+#    (4, 78)
+</code></pre>
+<h3>9. Inline expression with for loop and <code>lambda</code>.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+
+xerox = lambda upperBound: [(i, items[i]) for i in range(0, upperBound)]
+print(xerox(5))
+</code></pre>
+<p>Result:</p>
+<pre><code>#    [(0, 8), (1, 23), (2, 45), (3, 12), (4, 78)]
+</code></pre>
+<h3>10. Iterate over two lists at once using Python's <code>zip()</code> function.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+indices = [0, 1, 2, 3, 4]
+
+for item, index in zip(items, indices):
+    print(&quot;{}: {}&quot;.format(index, item))
+</code></pre>
+<p>Result:</p>
+<pre><code>#    0: 8
+#    1: 23
+#    2: 45
+#    3: 12
+#    4: 78
+</code></pre>
+<h3>11. Loop over 2 lists with a while loop and <code>iter()</code> &amp; <code>next()</code> methods.</h3>
+<pre><code>items = [8, 23, 45, 12, 78]
+indices = range(len(items))
+
+iterator1 = iter(indices)
+iterator2 = iter(items)
+  
+try:
+    while True:
+        i = next(iterator1)
+        element = next(iterator2)
+        print(i, element)
+except StopIteration:
+    pass
+</code></pre>
+<p>Result:</p>
+<pre><code>#    0  8
+#    1  23
+#    2  45
+#    3  12
+#    4  78
+</code></pre>
+</div></body></html>

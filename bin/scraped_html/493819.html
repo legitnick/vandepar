@@ -1,0 +1,124 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Why is it string.join(list) instead of list.join(string)?</p><div class="s-prose js-post-body"><p>This has always confused me. It seems like this would be nicer:</p>
+<pre><code>[&quot;Hello&quot;, &quot;world&quot;].join(&quot;-&quot;)
+</code></pre>
+<p>Than this:</p>
+<pre><code>&quot;-&quot;.join([&quot;Hello&quot;, &quot;world&quot;])
+</code></pre>
+<p>Is there a specific reason it is like this?</p>
+</div><p class="this-has-helped">This answer has helped 1413 people.</p><div class="s-prose js-post-body"><p>It's because any iterable can be joined (e.g, list, tuple, dict, set), but its contents and the &quot;joiner&quot; <em>must be</em> strings.</p>
+<p>For example:</p>
+<pre><code>'_'.join(['welcome', 'to', 'stack', 'overflow'])
+'_'.join(('welcome', 'to', 'stack', 'overflow'))
+</code></pre>
+<pre><code>'welcome_to_stack_overflow'
+</code></pre>
+<p>Using something other than strings will raise the following error:</p>
+<blockquote>
+<p>TypeError: sequence item 0: expected str instance, int found</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 426 people.</p><div class="s-prose js-post-body"><p>This was discussed in the <a href="http://mail.python.org/pipermail/python-dev/1999-June/095366.html" rel="noreferrer" title="String methods... finally">String methods... finally</a> thread in the Python-Dev achive, and was accepted by Guido. This thread began in Jun 1999, and <code>str.join</code> was included in Python 1.6 which was released in Sep 2000 (and supported Unicode). Python 2.0 (supported <code>str</code> methods including <code>join</code>) was released in Oct 2000.</p>
+<ul>
+<li>There were four options proposed in this thread:
+<ul>
+<li><code>str.join(seq)</code></li>
+<li><code>seq.join(str)</code></li>
+<li><code>seq.reduce(str)</code></li>
+<li><code>join</code> as a built-in function</li>
+</ul>
+</li>
+<li>Guido wanted to support not only <code>list</code>s and <code>tuple</code>s, but all sequences/iterables.</li>
+<li><code>seq.reduce(str)</code> is difficult for newcomers.</li>
+<li><code>seq.join(str)</code> introduces unexpected dependency from sequences to str/unicode.</li>
+<li><code>join()</code> as a free-standing built-in function would support only specific data types. So using a built-in namespace is not good. If <code>join()</code> were to support many data types, creating an optimized implementation would be difficult: if implemented using the <code>__add__</code> method then it would be O(n²).</li>
+<li>The separator string (<code>sep</code>) should not be omitted. Explicit is better than implicit.</li>
+</ul>
+<p>Here are some additional thoughts (my own, and my friend's):</p>
+<ul>
+<li>Unicode support was coming, but it was not final. At that time UTF-8 was the most likely about to replace UCS-2/-4. To calculate total buffer length for UTF-8 strings, the method needs to know the character encoding.</li>
+<li>At that time, Python had already decided on a common sequence interface rule where a user could create a sequence-like (iterable) class. But Python didn't support extending built-in types until 2.2. At that time it was difficult to provide basic <code>iterable</code> class (which is mentioned in another comment).</li>
+</ul>
+<p>Guido's decision is recorded in a <a href="http://mail.python.org/pipermail/python-dev/1999-June/095436.html" rel="noreferrer" title="historical mail">historical mail</a>, deciding on <code>str.join(seq)</code>:</p>
+<blockquote>
+<p>Funny, but it does seem right!  Barry, go for it...  <br />
+Guido van Rossum</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 258 people.</p><div class="s-prose js-post-body"><p>Because the <code>join()</code> method is in the string class, instead of the list class.</p>
+<p>See <a href="http://www.faqs.org/docs/diveintopython/odbchelper_join.html" rel="nofollow noreferrer">http://www.faqs.org/docs/diveintopython/odbchelper_join.html</a>:</p>
+<blockquote>
+<p><strong>Historical note.</strong> When I first learned
+Python, I expected join to be a method
+of a list, which would take the
+delimiter as an argument. Lots of
+people feel the same way, and there’s
+a story behind the join method. Prior
+to Python 1.6, strings didn’t have all
+these useful methods. There was a
+separate string module which contained
+all the string functions; each
+function took a string as its first
+argument. The functions were deemed
+important enough to put onto the
+strings themselves, which made sense
+for functions like lower, upper, and
+split. But many hard-core Python
+programmers objected to the new join
+method, arguing that it should be a
+method of the list instead, or that it
+shouldn’t move at all but simply stay
+a part of the old string module (which
+still has lots of useful stuff in it).
+I use the new join method exclusively,
+but you will see code written either
+way, and if it really bothers you, you
+can use the old string.join function
+instead.</p>
+<p>--- Mark Pilgrim, Dive into Python</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><p>I agree that it's counterintuitive at first, but there's a good reason. Join can't be a method of a list because:</p>
+
+<ul>
+<li>it must work for different iterables too (tuples, generators, etc.) </li>
+<li>it must have different behavior between different types of strings.</li>
+</ul>
+
+<p>There are actually two join methods (Python 3.0):</p>
+
+<pre><code>&gt;&gt;&gt; b"".join
+&lt;built-in method join of bytes object at 0x00A46800&gt;
+&gt;&gt;&gt; "".join
+&lt;built-in method join of str object at 0x00A28D40&gt;
+</code></pre>
+
+<p>If join was a method of a list, then it would have to inspect its arguments to decide which one of them to call. And you can't join byte and str together, so the way they have it now makes sense. </p>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><blockquote>
+<p>Why is it <code>string.join(list)</code> instead of <code>list.join(string)</code>?</p>
+</blockquote>
+<p>This is because <code>join</code> is a &quot;string&quot; method! It creates a string from any iterable. If we stuck the method on lists, what about when we have iterables that aren't lists?</p>
+<p>What if you have a tuple of strings? If this were a <code>list</code> method, you would have to cast every such iterator of strings as a <code>list</code> before you could join the elements into a single string! For example:</p>
+<pre><code>some_strings = ('foo', 'bar', 'baz')
+</code></pre>
+<p>Let's roll our own list join method:</p>
+<pre><code>class OurList(list): 
+    def join(self, s):
+        return s.join(self)
+</code></pre>
+<p>And to use it, note that we have to first create a list from each iterable to join the strings in that iterable, wasting both memory and processing power:</p>
+<pre><code>&gt;&gt;&gt; l = OurList(some_strings) # step 1, create our list
+&gt;&gt;&gt; l.join(', ') # step 2, use our list join method!
+'foo, bar, baz'
+</code></pre>
+<p>So we see we have to add an extra step to use our list method, instead of just using the builtin string method:</p>
+<pre><code>&gt;&gt;&gt; ' | '.join(some_strings) # a single step!
+'foo | bar | baz'
+</code></pre>
+<h2>Performance Caveat for Generators</h2>
+<p>The algorithm Python uses to create the final string with <code>str.join</code> actually has to pass over the iterable twice, so if you provide it a generator expression, it has to materialize it into a list first before it can create the final string.</p>
+<p>Thus, while passing around generators is usually better than list comprehensions, <code>str.join</code> is an exception:</p>
+<pre><code>&gt;&gt;&gt; import timeit
+&gt;&gt;&gt; min(timeit.repeat(lambda: ''.join(str(i) for i in range(10) if i)))
+3.839168446022086
+&gt;&gt;&gt; min(timeit.repeat(lambda: ''.join([str(i) for i in range(10) if i])))
+3.339879313018173
+</code></pre>
+<p>Nevertheless, the <code>str.join</code> operation is still semantically a &quot;string&quot; operation, so it still makes sense to have it on the <code>str</code> object than on miscellaneous iterables.</p>
+</div></body></html>

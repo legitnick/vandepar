@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Make an existing Git branch track a remote branch?</p><div class="s-prose js-post-body"><p>I know how to make a new branch that tracks remote branches, but <strong>how do I make an existing branch track a remote branch?</strong></p>
+
+<p>I know I can just edit the <code>.git/config</code> file, but it seems there should be an easier way.</p>
+</div><p class="this-has-helped">This answer has helped 4742 people.</p><div class="s-prose js-post-body"><p>Given a branch <code>foo</code> and a remote <code>upstream</code>:</p>
+<p><strong>As of Git 1.8.0:</strong></p>
+<pre><code>git branch -u upstream/foo
+</code></pre>
+<p>Or, if local branch <code>foo</code> is not the current branch:</p>
+<pre><code>git branch -u upstream/foo foo
+</code></pre>
+<p>Or, if you like to type longer commands, these are equivalent to the above two:</p>
+<pre><code>git branch --set-upstream-to=upstream/foo
+
+git branch --set-upstream-to=upstream/foo foo
+</code></pre>
+<p><strong>As of Git 1.7.0 (before 1.8.0):</strong></p>
+<pre><code>git branch --set-upstream foo upstream/foo
+</code></pre>
+<p><strong>Notes:</strong></p>
+<ul>
+<li>All of the above commands will cause local branch <code>foo</code> to track remote branch <code>foo</code> from remote <code>upstream</code>.</li>
+<li>The old (1.7.x) syntax is deprecated in favor of the new (1.8+) syntax.  The new syntax is intended to be more intuitive and easier to remember.</li>
+<li>Defining an upstream branch will fail when run against newly-created remotes that have not already been fetched. In that case, run <code>git fetch upstream</code> beforehand.</li>
+</ul>
+<hr />
+<p>See also: <a href="https://stackoverflow.com/q/6089294/95706">Why do I need to do `--set-upstream` all the time?</a></p>
+</div><p class="this-has-helped">This answer has helped 271 people.</p><div class="s-prose js-post-body"><p>You can do the following (assuming you are checked out on master and want to push to a remote branch master):</p>
+
+<p>Set up the 'remote' if you don't have it already</p>
+
+<pre><code>git remote add origin ssh://...
+</code></pre>
+
+<p>Now configure master to know to track:</p>
+
+<pre><code>git config branch.master.remote origin
+git config branch.master.merge refs/heads/master
+</code></pre>
+
+<p>And push:</p>
+
+<pre><code>git push origin master
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 195 people.</p><div class="s-prose js-post-body"><p>I do this as a side-effect of pushing with the <code>-u</code> option as in</p>
+<pre><code>$ git push -u origin branch-name
+</code></pre>
+<p>The equivalent long option is <code>--set-upstream</code>.</p>
+<p>The <code>git-branch</code> command also understands <code>--set-upstream</code>, but its use can be confusing. <a href="https://lkml.org/lkml/2012/10/1/419" rel="noreferrer">Version 1.8.0</a> modifies the interface.</p>
+<blockquote>
+<p><code>git branch --set-upstream</code> is deprecated and may be removed in a relatively distant future.  <code>git branch [-u|--set-upstream-to]</code> has been introduced with a saner order of arguments.</p>
+<p>…</p>
+<p>It was tempting to say <code>git branch --set-upstream origin/master</code>, but that tells Git to arrange the local branch &quot;origin/master&quot; to integrate with the currently checked out branch, which is highly unlikely what the user meant. The option is deprecated; use the new <code>--set-upstream-to</code> (with a short-and-sweet <code>-u</code>) option instead.</p>
+</blockquote>
+<p>Say you have a local <code>foo</code> branch checked out and want it to use a branch by the same name as its upstream. Make this happen with</p>
+<pre><code>$ git branch --set-upstream-to=origin/foo
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 74 people.</p><div class="s-prose js-post-body"><p>For Git versions 1.8.0 and higher:</p>
+<p>Actually for the accepted answer to work:</p>
+<pre class="lang-bash prettyprint-override"><code>git remote add upstream &lt;remote-url&gt;
+git fetch upstream
+git branch -f --track qa upstream/qa
+# OR Git version 1.8.0 and higher:
+git branch --set-upstream-to=upstream/qa
+# Gitversions lower than 1.8.0
+git branch --set-upstream qa upstream/qa
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 61 people.</p><div class="s-prose js-post-body"><p>You might find the <a href="http://github.com/webmat/git_remote_branch" rel="noreferrer"><code>git_remote_branch</code></a> tool useful. It offers simple commands for creating, publishing, deleting, tracking &amp; renaming remote branches. One nice feature is that you can ask a <code>grb</code> command to explain what git commands it would execute.</p>
+
+<pre class="lang-bash prettyprint-override"><code>grb explain create my_branch github
+# git_remote_branch version 0.3.0
+
+# List of operations to do to create a new remote branch and track it locally:
+git push github master:refs/heads/my_branch
+git fetch github
+git branch --track my_branch github/my_branch
+git checkout my_branch
+</code></pre>
+</div></body></html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to add a class to a given element?</p><div class="s-prose js-post-body"><p>I have an element that already has a class:</p>
+<pre class="lang-html prettyprint-override"><code>&lt;div class=&quot;someclass&quot;&gt;
+    &lt;img ... id=&quot;image1&quot; name=&quot;image1&quot; /&gt;
+&lt;/div&gt;
+</code></pre>
+<p>Now, I want to create a JavaScript function that will add a class to the <code>div</code> (not replace, but add).</p>
+<p>How can I do that?</p>
+</div><p class="this-has-helped">This answer has helped 2587 people.</p><div class="s-prose js-post-body"><h1>If you're only targeting modern browsers:</h1>
+
+<p>Use <a href="https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/add" rel="noreferrer">element.classList.add</a> to add a class:</p>
+
+<pre><code>element.classList.add("my-class");
+</code></pre>
+
+<p>And <a href="https://developer.mozilla.org/en-US/docs/Web/API/DOMTokenList/remove" rel="noreferrer">element.classList.remove</a> to remove a class:</p>
+
+<pre><code>element.classList.remove("my-class");
+</code></pre>
+
+<h1>If you need to support Internet Explorer 9 or lower:</h1>
+
+<p>Add a space plus the name of your new class to the <code>className</code> property of the element. First, put an <code>id</code> on the element so you can easily get a reference.</p>
+
+<pre><code>&lt;div id="div1" class="someclass"&gt;
+    &lt;img ... id="image1" name="image1" /&gt;
+&lt;/div&gt;
+</code></pre>
+
+<p>Then </p>
+
+<pre><code>var d = document.getElementById("div1");
+d.className += " otherclass";
+</code></pre>
+
+<p>Note the space before <code>otherclass</code>. It's important to include the space otherwise it compromises existing classes that come before it in the class list. </p>
+
+<p>See also <a href="https://developer.mozilla.org/en-US/docs/Web/API/Element/className" rel="noreferrer">element.className on MDN</a>.</p>
+</div><p class="this-has-helped">This answer has helped 1403 people.</p><div class="s-prose js-post-body"><p>The easiest way to do this without any framework is to use <a href="https://developer.mozilla.org/en-US/docs/DOM/element.classList" rel="noreferrer">element.classList.add</a> method.</p>
+
+<pre><code>var element = document.getElementById("div1");
+element.classList.add("otherclass");
+</code></pre>
+
+<p><strong>Edit:</strong>
+And if you want to remove class from an element - </p>
+
+<pre><code>element.classList.remove("otherclass");
+</code></pre>
+
+<p>I prefer not having to add any empty space and duplicate entry handling myself (which is required when using the <code>document.className</code> approach). There are some <a href="http://caniuse.com/#feat=classlist" rel="noreferrer">browser limitations</a>, but you can work around them using <a href="https://github.com/Modernizr/Modernizr/wiki/HTML5-Cross-Browser-Polyfills#wiki-classlist" rel="noreferrer">polyfills</a>.</p>
+</div><p class="this-has-helped">This answer has helped 189 people.</p><div class="s-prose js-post-body"><p>find your target element "d" however you wish and then:</p>
+
+<pre><code>d.className += ' additionalClass'; //note the space
+</code></pre>
+
+<p>you can wrap that in cleverer ways to check pre-existence, and check for space requirements etc..</p>
+</div><p class="this-has-helped">This answer has helped 148 people.</p><div class="s-prose js-post-body"><h2>Add Class</h2>
+
+<ul>
+<li><p><strong>Cross Compatible</strong></p>
+
+<p>In the following example we add a <code>classname</code> to the <code>&lt;body&gt;</code> element.  This is IE-8 compatible.</p>
+
+<pre><code>var a = document.body;
+a.classList ? a.classList.add('classname') : a.className += ' classname';
+</code></pre>
+
+<p>This is shorthand for the following..</p>
+
+<pre><code>var a = document.body;
+if (a.classList) {
+    a.classList.add('wait');
+} else {
+    a.className += ' wait';
+}
+</code></pre></li>
+</ul>
+
+<hr>
+
+<ul>
+<li><p><strong>Performance</strong></p>
+
+<p>If your more concerned with performance over cross-compatibility you can shorten it to the following which is 4% faster.</p>
+
+<pre><code>var z = document.body;
+document.body.classList.add('wait');
+</code></pre></li>
+</ul>
+
+<hr>
+
+<ul>
+<li><p><strong>Convenience</strong></p>
+
+<p>Alternatively you could use jQuery but the resulting performance is significantly slower.  94% slower according to jsPerf</p>
+
+<pre><code>$('body').addClass('wait');
+</code></pre></li>
+</ul>
+
+<hr>
+
+<hr>
+
+<h2>Removing the class</h2>
+
+<ul>
+<li><p><strong>Performance</strong></p>
+
+<p>Using jQuery selectively is the best method for removing a class if your concerned with performance</p>
+
+<pre><code>var a = document.body, c = ' classname';
+$(a).removeClass(c);
+</code></pre></li>
+</ul>
+
+<hr>
+
+<ul>
+<li><p>Without jQuery it's 32% slower</p>
+
+<pre><code>var a = document.body, c = ' classname';
+a.className = a.className.replace( c, '' );
+a.className = a.className + c;
+</code></pre></li>
+</ul>
+
+<hr>
+
+<h2>References</h2>
+
+<ol>
+<li><a href="http://jsperf.com/addclass99">jsPerf Test Case: Adding a Class</a></li>
+<li><a href="http://jsperf.com/removeclass99">jsPerf Test Case: Removing a Class</a></li>
+</ol>
+
+<hr>
+
+<h2>Using Prototype</h2>
+
+<pre><code>Element("document.body").ClassNames.add("classname")
+Element("document.body").ClassNames.remove("classname")
+Element("document.body").ClassNames.set("classname")
+</code></pre>
+
+<h2>Using YUI</h2>
+
+<pre><code>YAHOO.util.Dom.hasClass(document.body,"classname")
+YAHOO.util.Dom.addClass(document.body,"classname")
+YAHOO.util.Dom.removeClass(document.body,"classname")
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>Another approach to add the class to element using pure JavaScript</p>
+
+<p><strong>For adding class:</strong></p>
+
+<pre><code>document.getElementById("div1").classList.add("classToBeAdded");
+</code></pre>
+
+<p><strong>For removing class:</strong></p>
+
+<pre><code>document.getElementById("div1").classList.remove("classToBeRemoved");
+</code></pre>
+</div></body></html>

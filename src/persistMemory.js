@@ -4,8 +4,9 @@ export async function getLatestDate(){
   await storage.init({
     dir:"bin/node-persist",
   });
-  let res = storage.getItem("latest");
-  if (res == undefined  )res =(Date.now() -  1000*60*60*24*30*12*14);//14 years ago
+  let res = await storage.getItem("latest");
+  if (res == undefined  )res = 1230969600; //await(Date.now() -  60*60*24*30*12*14);//14 years ago
+  console.log(res);
   return res;
 }
 //3.154e+10 ms in a year

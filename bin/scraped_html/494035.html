@@ -1,0 +1,82 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do you use a variable in a regular expression?</p><div class="s-prose js-post-body"><p>I would like to create a <code>String.replaceAll()</code> method in JavaScript and I'm thinking that using a regex would be most terse way to do it.  However, I can't figure out how to pass a variable in to a regex.  I can do this already which will replace all the instances of <code>"B"</code> with <code>"A"</code>.</p>
+
+<pre><code>"ABABAB".replace(/B/g, "A");
+</code></pre>
+
+<p>But I want to do something like this:</p>
+
+<pre><code>String.prototype.replaceAll = function(replaceThis, withThis) {
+    this.replace(/replaceThis/g, withThis);
+};
+</code></pre>
+
+<p>But obviously this will only replace the text <code>"replaceThis"</code>...so how do I pass this variable in to my regex string?</p>
+</div><p class="this-has-helped">This answer has helped 2321 people.</p><div class="s-prose js-post-body"><p>Instead of using the <code>/regex\d/g</code> syntax, you can construct a new <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Guide/Regular_Expressions" rel="noreferrer">RegExp</a> object:</p>
+<pre><code>var replace = &quot;regex\\d&quot;;
+var re = new RegExp(replace,&quot;g&quot;);
+</code></pre>
+<p>You can dynamically create regex objects this way. Then you will do:</p>
+<pre><code>&quot;mystring1&quot;.replace(re, &quot;newstring&quot;);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 269 people.</p><div class="s-prose js-post-body"><p>As Eric Wendelin mentioned, you can do something like this:</p>
+
+<pre><code>str1 = "pattern"
+var re = new RegExp(str1, "g");
+"pattern matching .".replace(re, "regex");
+</code></pre>
+
+<p>This yields <code>"regex matching ."</code>. However, it will fail if str1 is <code>"."</code>. You'd expect the result to be <code>"pattern matching regex"</code>, replacing the period with <code>"regex"</code>, but it'll turn out to be...</p>
+
+<pre><code>regexregexregexregexregexregexregexregexregexregexregexregexregexregexregexregexregexregex
+</code></pre>
+
+<p>This is because, although <code>"."</code> is a String, in the RegExp constructor it's still interpreted as a regular expression, meaning any non-line-break character, meaning every character in the string. For this purpose, the following function may be useful:</p>
+
+<pre><code> RegExp.quote = function(str) {
+     return str.replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+ };
+</code></pre>
+
+<p>Then you can do:</p>
+
+<pre><code>str1 = "."
+var re = new RegExp(RegExp.quote(str1), "g");
+"pattern matching .".replace(re, "regex");
+</code></pre>
+
+<p>yielding <code>"pattern matching regex"</code>.</p>
+</div><p class="this-has-helped">This answer has helped 147 people.</p><div class="s-prose js-post-body"><blockquote>
+  <p><code>"ABABAB".replace(/B/g, "A");</code></p>
+</blockquote>
+
+<p>As always: don't use regex unless you have to. For a simple string replace, the idiom is:</p>
+
+<pre><code>'ABABAB'.split('B').join('A')
+</code></pre>
+
+<p>Then you don't have to worry about the quoting issues mentioned in Gracenotes's answer.</p>
+</div><p class="this-has-helped">This answer has helped 131 people.</p><div class="s-prose js-post-body"><p>If you want to get <em>all</em> occurrences (<code>g</code>), be case insensitive (<code>i</code>), and use boundaries so that it isn't a word within another word (<code>\\b</code>):</p>
+<pre><code>re = new RegExp(`\\b${replaceThis}\\b`, 'gi');
+</code></pre>
+<hr />
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>let inputString = "I'm John, or johnny, but I prefer john.";
+let replaceThis = "John";
+let re = new RegExp(`\\b${replaceThis}\\b`, 'gi');
+console.log(inputString.replace(re, "Jack"));</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>This:</p>
+
+<pre><code>var txt=new RegExp(pattern,attributes);
+</code></pre>
+
+<p>is equivalent to this:</p>
+
+<pre><code>var txt=/pattern/attributes;
+</code></pre>
+
+<p>See <a href="http://www.w3schools.com/jsref/jsref_obj_regexp.asp" rel="noreferrer">http://www.w3schools.com/jsref/jsref_obj_regexp.asp</a>.</p>
+</div></body></html>

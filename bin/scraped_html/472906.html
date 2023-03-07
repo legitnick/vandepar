@@ -1,0 +1,152 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I get a consistent byte representation of strings in C# without manually specifying an encoding?</p><div class="s-prose js-post-body"><p>How do I convert a <code>string</code> to a <code>byte[]</code> in .NET (C#) without manually specifying a specific encoding?</p>
+
+<p>I'm going to encrypt the string. I can encrypt it without converting, but I'd still like to know why encoding comes to play here.</p>
+
+<p>Also, why should encoding even be taken into consideration? Can't I simply get what bytes the string has been stored in? Why is there a dependency on character encodings?</p>
+</div><p class="this-has-helped">This answer has helped 1936 people.</p><div class="s-prose js-post-body"><p><strong>Contrary to the answers here, you DON'T need to worry about encoding <em><strong>if</strong></em> the bytes don't need to be interpreted!</strong></p>
+<p>Like you mentioned, your goal is, simply, to <em>&quot;get what bytes the string has been stored in&quot;</em>.<br />
+(And, of course, to be able to re-construct the string from the bytes.)</p>
+<p><strong>For those goals, I honestly do <em>not</em> understand why people keep telling you that you need the encodings. You certainly do NOT need to worry about encodings for this.</strong></p>
+<p>Just do this instead:</p>
+<pre><code>static byte[] GetBytes(string str)
+{
+    byte[] bytes = new byte[str.Length * sizeof(char)];
+    System.Buffer.BlockCopy(str.ToCharArray(), 0, bytes, 0, bytes.Length);
+    return bytes;
+}
+
+// Do NOT use on arbitrary bytes; only use on GetBytes's output on the SAME system
+static string GetString(byte[] bytes)
+{
+    char[] chars = new char[bytes.Length / sizeof(char)];
+    System.Buffer.BlockCopy(bytes, 0, chars, 0, bytes.Length);
+    return new string(chars);
+}
+</code></pre>
+<p>As long as your program (or other programs) don't try to <em>interpret</em> the bytes somehow, which you obviously didn't mention you intend to do, then there is <strong>nothing</strong> wrong with this approach! Worrying about encodings just makes your life more complicated for no real reason.</p>
+<p><strong>Additional benefit to this approach: It doesn't matter if the string contains invalid characters, because you can still get the data and reconstruct the original string anyway!</strong></p>
+<p>It will be encoded and decoded just the same, because you are <em>just looking at the bytes</em>.</p>
+<p>If you used a specific encoding, though, it would've given you trouble with encoding/decoding invalid characters.</p>
+</div><p class="this-has-helped">This answer has helped 1141 people.</p><div class="s-prose js-post-body"><p>It depends on the encoding of your string (<a href="http://en.wikipedia.org/wiki/ASCII" rel="noreferrer">ASCII</a>, <a href="http://en.wikipedia.org/wiki/UTF-8" rel="noreferrer">UTF-8</a>, ...).</p>
+
+<p>For example:</p>
+
+<pre><code>byte[] b1 = System.Text.Encoding.UTF8.GetBytes (myString);
+byte[] b2 = System.Text.Encoding.ASCII.GetBytes (myString);
+</code></pre>
+
+<p>A small sample why encoding matters:</p>
+
+<pre><code>string pi = "\u03a0";
+byte[] ascii = System.Text.Encoding.ASCII.GetBytes (pi);
+byte[] utf8 = System.Text.Encoding.UTF8.GetBytes (pi);
+
+Console.WriteLine (ascii.Length); //Will print 1
+Console.WriteLine (utf8.Length); //Will print 2
+Console.WriteLine (System.Text.Encoding.ASCII.GetString (ascii)); //Will print '?'
+</code></pre>
+
+<p>ASCII simply isn't equipped to deal with special characters.</p>
+
+<p>Internally, the .NET framework uses <a href="https://en.wikipedia.org/wiki/UTF-16" rel="noreferrer">UTF-16</a> to represent strings, so if you simply want to get the exact bytes that .NET uses, use <code>System.Text.Encoding.Unicode.GetBytes (...)</code>.</p>
+
+<p>See <em><a href="http://msdn.microsoft.com/en-us/library/ms404377.aspx" rel="noreferrer">Character Encoding in the .NET Framework</a></em> (MSDN) for more information.</p>
+</div><p class="this-has-helped">This answer has helped 303 people.</p><div class="s-prose js-post-body"><p>The accepted answer is very, very complicated. Use the included .NET classes for this:</p>
+
+<pre><code>const string data = "A string with international characters: Norwegian: ÆØÅæøå, Chinese: 喂 谢谢";
+var bytes = System.Text.Encoding.UTF8.GetBytes(data);
+var decoded = System.Text.Encoding.UTF8.GetString(bytes);
+</code></pre>
+
+<p>Don't reinvent the wheel if you don't have to...</p>
+</div><p class="this-has-helped">This answer has helped 120 people.</p><div class="s-prose js-post-body"><pre><code>BinaryFormatter bf = new BinaryFormatter();
+byte[] bytes;
+MemoryStream ms = new MemoryStream();
+
+string orig = "喂 Hello 谢谢 Thank You";
+bf.Serialize(ms, orig);
+ms.Seek(0, 0);
+bytes = ms.ToArray();
+
+MessageBox.Show("Original bytes Length: " + bytes.Length.ToString());
+
+MessageBox.Show("Original string Length: " + orig.Length.ToString());
+
+for (int i = 0; i &lt; bytes.Length; ++i) bytes[i] ^= 168; // pseudo encrypt
+for (int i = 0; i &lt; bytes.Length; ++i) bytes[i] ^= 168; // pseudo decrypt
+
+BinaryFormatter bfx = new BinaryFormatter();
+MemoryStream msx = new MemoryStream();            
+msx.Write(bytes, 0, bytes.Length);
+msx.Seek(0, 0);
+string sx = (string)bfx.Deserialize(msx);
+
+MessageBox.Show("Still intact :" + sx);
+
+MessageBox.Show("Deserialize string Length(still intact): " 
+    + sx.Length.ToString());
+
+BinaryFormatter bfy = new BinaryFormatter();
+MemoryStream msy = new MemoryStream();
+bfy.Serialize(msy, sx);
+msy.Seek(0, 0);
+byte[] bytesy = msy.ToArray();
+
+MessageBox.Show("Deserialize bytes Length(still intact): " 
+   + bytesy.Length.ToString());
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 103 people.</p><div class="s-prose js-post-body"><p>This is a popular question. It is important to understand what the question author is asking, and that it is different from what is likely the most common need. To discourage misuse of the code where it is not needed, I've answered the latter first.</p>
+<h1>Common Need</h1>
+<p>Every string has a character set and encoding. When you convert a <code>System.String</code> object to an array of <code>System.Byte</code> you still have a character set and encoding. <strong>For most usages, you'd know which character set and encoding you need and .NET makes it simple to &quot;copy with conversion.&quot;</strong> Just choose the appropriate <code>Encoding</code> class.</p>
+<pre><code>// using System.Text;
+Encoding.UTF8.GetBytes(&quot;.NET String to byte array&quot;)
+</code></pre>
+<p>The conversion may need to handle cases where the target character set or encoding doesn't support a character that's in the source. You have some choices: exception, substitution, or skipping. The default policy is to substitute a '?'.</p>
+<pre><code>// using System.Text;
+var text = Encoding.ASCII.GetString(Encoding.ASCII.GetBytes(&quot;You win €100&quot;)); 
+                                                      // -&gt; &quot;You win ?100&quot;
+</code></pre>
+<p>Clearly, conversions are not necessarily lossless!</p>
+<p>Note: For <code>System.String</code> the source character set is Unicode.</p>
+<p>The only confusing thing is that .NET uses the name of a character set for the name of one particular encoding of that character set. <code>Encoding.Unicode</code> should be called <code>Encoding.UTF16</code>.</p>
+<p><em>That's it for most usages. If that's what you need, stop reading here.</em> See the fun <a href="http://www.joelonsoftware.com/articles/Unicode.html" rel="nofollow noreferrer">Joel Spolsky article</a> if you don't understand what encoding is.</p>
+<h1>Specific Need</h1>
+<p>Now, the question author asks is, &quot;Every string is stored as an array of bytes, right? Why can't I simply have those bytes?&quot;</p>
+<p>He doesn't want any conversion.</p>
+<p>From the <a href="http://www.microsoft.com/en-us/download/confirmation.aspx?id=7029" rel="nofollow noreferrer">C# spec</a>:</p>
+<blockquote>
+<p>Character and string processing in C# uses Unicode encoding. The char
+type represents a UTF-16 code unit, and the string type represents a
+sequence of UTF-16 code units.</p>
+</blockquote>
+<p>So, we know that if we ask for the null conversion (i.e., from UTF-16 to UTF-16), we'll get the desired result:</p>
+<pre><code>Encoding.Unicode.GetBytes(&quot;.NET String to byte array&quot;)
+</code></pre>
+<p>But to avoid the mention of encodings, we must do it another way. If an intermediate data type is acceptable, there is a conceptual shortcut for this:</p>
+<pre><code>&quot;.NET String to byte array&quot;.ToCharArray()
+</code></pre>
+<p>That doesn't get us the desired datatype but <a href="https://stackoverflow.com/a/10380166/2226988">Mehrdad's answer</a> shows how to convert this Char array to a Byte array using <a href="http://msdn.microsoft.com/en-us/library/system.buffer.blockcopy%28v=vs.110%29.aspx" rel="nofollow noreferrer">BlockCopy</a>. However, this copies the string twice! And, it too explicitly uses encoding-specific code: the datatype <code>System.Char</code>.</p>
+<p>The only way to get to the actual bytes the String is stored in is to use a pointer. The <code>fixed</code> statement allows taking the address of values. From the C# spec:</p>
+<blockquote>
+<p>[For] an expression of type string, ... the initializer computes the
+address of the first character in the string.</p>
+</blockquote>
+<p>To do so, the compiler writes code skipping over the other parts of the string object with <code>RuntimeHelpers.OffsetToStringData</code>. So, to get the raw bytes, just create a pointer to the string and copy the number of bytes needed.</p>
+<pre><code>// using System.Runtime.InteropServices
+unsafe byte[] GetRawBytes(String s)
+{
+    if (s == null) return null;
+    var codeunitCount = s.Length;
+    /* We know that String is a sequence of UTF-16 code units 
+       and such code units are 2 bytes */
+    var byteCount = codeunitCount * 2; 
+    var bytes = new byte[byteCount];
+    fixed(void* pRaw = s)
+    {
+        Marshal.Copy((IntPtr)pRaw, bytes, 0, byteCount);
+    }
+    return bytes;
+}
+</code></pre>
+<p>As @CodesInChaos pointed out, the result depends on the endianness of the machine. But the question author is not concerned with that.</p>
+</div></body></html>

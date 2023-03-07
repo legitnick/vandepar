@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Using Git with Visual Studio</p><div class="s-prose js-post-body"><p>As a long-time <a href="http://en.wikipedia.org/wiki/Microsoft_Visual_SourceSafe" rel="noreferrer">Visual SourceSafe</a> user (and hater) I was discussing switching to <a href="http://en.wikipedia.org/wiki/Apache_Subversion" rel="noreferrer">SVN</a> with a colleague; he suggested using <a href="http://en.wikipedia.org/wiki/Git_%28software%29" rel="noreferrer">Git</a> instead. Since, apparently, it can be used as peer-to-peer without a central server (we are a 3-developer team). </p>
+
+<p>I have not been able to find anything about tools that integrate Git with Visual Studio, though - does such a thing exist? </p>
+
+<p>What are the technologies available for using Git with Visual Studio? And what do I need to know about how they differ before I begin?</p>
+</div><p class="this-has-helped">This answer has helped 1071 people.</p><div class="s-prose js-post-body"><p>In Jan 2013, Microsoft <a href="https://devblogs.microsoft.com/bharry/git-init-vs/" rel="nofollow noreferrer">announced</a> that they are adding full Git support into all their ALM products. They have <a href="http://visualstudiogallery.msdn.microsoft.com/abafc7d6-dcaa-40f4-8a5e-d6724bdb980c" rel="nofollow noreferrer">published a plugin</a> for Visual Studio 2012 that adds Git source control integration.</p>
+
+<p>Alternatively, there is a project called <a href="http://gitextensions.github.io/" rel="nofollow noreferrer">Git Extensions</a> that includes add-ins for Visual Studio 2005, 2008, 2010 and 2012, as well as Windows Explorer integration. It's regularly updated and having used it on a couple of projects, I've found it very useful.</p>
+
+<p>Another option is <a href="http://gitscc.codeplex.com/" rel="nofollow noreferrer">Git Source Control Provider</a>.</p>
+</div><p class="this-has-helped">This answer has helped 202 people.</p><div class="s-prose js-post-body"><p>I use Git with Visual Studio for my port of Protocol Buffers to C#. I don't use the GUI - I just keep a command line open as well as Visual Studio.</p>
+
+<p>For the most part it's fine - the only problem is when you want to rename a file. Both Git and Visual Studio would rather that <em>they</em> were the one to rename it. I think that renaming it in Visual Studio is the way to go though - just be careful what you do at the Git side afterwards. Although this has been a bit of a pain in the past, I've heard that it actually should be pretty seamless on the Git side, because it can notice that the contents will be mostly the same. (Not entirely the same, usually - you tend to rename a file when you're renaming the class, IME.)</p>
+
+<p>But basically - yes, it works fine. I'm a Git newbie, but I can get it to do everything I need it to. Make sure you have a git ignore file for bin and obj, and *.user.</p>
+</div><p class="this-has-helped">This answer has helped 93 people.</p><div class="s-prose js-post-body"><p><a href="http://gitscc.codeplex.com" rel="noreferrer">Git Source Control Provider</a> is new plug-in that integrates Git with Visual Studio.</p>
+</div><p class="this-has-helped">This answer has helped 52 people.</p><div class="s-prose js-post-body"><p>I've looked into this a bit at work (both with Subversion and Git). Visual Studio actually has a source control integration API to allow you to integrate third-party source control solutions into Visual Studio. However, most folks don't bother with it for a couple of reasons.</p>
+
+<p>The first is that the API pretty much assumes you are using a locked-checkout workflow. There are a lot of hooks in it that are either way expensive to implement, or just flat out make no sense when you are using the more modern edit-merge workflow.</p>
+
+<p>The second (which is related) is that when you are using the edit-merge workflow that both Subversion and Git encourage, you don't really <em>need</em> Visual Studio integration. The main killer thing about SourceSafe's integration with Visual Studio is that you (and the editor) can tell at a glance which files you own, which must be checked out before you can edit, and which you cannot check out even if you want to. Then it can help you do whatever revision-control voodoo you need to do when you want to edit a file. None of that is even part of a typical Git workflow. </p>
+
+<p>When you are using Git (or SVN typically), your revision-control interactions all take place either before your development session, or after it (once you have everything working and tested). At that point it really isn't too much of a pain to use a different tool. You aren't constantly having to switch back and forth.</p>
+</div><p class="this-has-helped">This answer has helped 38 people.</p><div class="s-prose js-post-body"><p>I find that Git, working on whole trees as it does, benefits less from IDE integration than source control tools that are either file based or follow a checkout-edit-commit pattern. Of course there are instances when it can be nice to click on a button to do some history examination, but I don't miss that very much.</p>
+
+<p>The real must-do is to get your .gitignore file full of the things that shouldn't be in a shared repository. Mine generally contain (amongst other stuff) the following:</p>
+
+<pre><code>*.vcproj.*.user
+*.ncb
+*.aps
+*.suo
+</code></pre>
+
+<p>but this is heavily C++ biased with little or no use of any class wizard style functionality.</p>
+
+<p>My usage pattern is something like the following.</p>
+
+<ol>
+<li><p>Code, code, code in Visual Studio.</p></li>
+<li><p>When happy (sensible intermediate point to commit code, switch to Git, stage changes and review diffs. If anything's obviously wrong switch back to Visual Studio and fix, otherwise commit.</p></li>
+</ol>
+
+<p>Any merge, branch, rebase or other fancy SCM stuff is easy to do in Git from the command prompt. Visual Studio is normally fairly happy with things changing under it, although it can sometimes need to reload some projects if you've altered the project files significantly.</p>
+
+<p>I find that the usefulness of Git outweighs any minor inconvenience of not having full IDE integration but it is, to some extent, a matter of taste.</p>
+</div></body></html>

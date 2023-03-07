@@ -1,0 +1,195 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Understanding Python super() with __init__() methods</p><div class="s-prose js-post-body"><p>Why is <code>super()</code> used?</p>
+<p>Is there a difference between using <code>Base.__init__</code> and <code>super().__init__</code>?</p>
+<pre><code>class Base(object):
+    def __init__(self):
+        print &quot;Base created&quot;
+        
+class ChildA(Base):
+    def __init__(self):
+        Base.__init__(self)
+        
+class ChildB(Base):
+    def __init__(self):
+        super(ChildB, self).__init__()
+        
+ChildA() 
+ChildB()
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 2271 people.</p><div class="s-prose js-post-body"><p><code>super()</code> lets you avoid referring to the base class explicitly, which can be nice. But the main advantage comes with multiple inheritance, where all sorts of <a href="http://www.artima.com/weblogs/viewpost.jsp?thread=236275" rel="noreferrer">fun stuff</a> can happen. See the <a href="https://docs.python.org/2/library/functions.html#super" rel="noreferrer">standard docs on super</a> if you haven't already.</p>
+
+<p>Note that <a href="https://docs.python.org/3/library/functions.html#super" rel="noreferrer">the syntax changed in Python 3.0</a>: you can just say <code>super().__init__()</code> instead of <code>super(ChildB, self).__init__()</code> which IMO is quite a bit nicer. The standard docs also refer to a <a href="https://rhettinger.wordpress.com/2011/05/26/super-considered-super/" rel="noreferrer">guide to using <code>super()</code></a> which is quite explanatory.</p>
+</div><p class="this-has-helped">This answer has helped 1179 people.</p><div class="s-prose js-post-body"><blockquote>
+<h2>I'm trying to understand <code>super()</code></h2>
+</blockquote>
+<p>The reason we use <code>super</code> is so that child classes that may be using cooperative multiple inheritance will call the correct next parent class function in the Method Resolution Order (MRO).</p>
+<p>In Python 3, we can call it like this:</p>
+<pre><code>class ChildB(Base):
+    def __init__(self):
+        super().__init__()
+</code></pre>
+<p>In Python 2, we were required to call <code>super</code> like this with the defining class's name and <code>self</code>, but we'll avoid this from now on because it's redundant, slower (due to the name lookups), and more verbose (so update your Python if you haven't already!):</p>
+<pre><code>        super(ChildB, self).__init__()
+</code></pre>
+<p>Without super, you are limited in your ability to use multiple inheritance because you hard-wire the next parent's call:</p>
+<pre><code>        Base.__init__(self) # Avoid this.
+</code></pre>
+<p>I further explain below.</p>
+<blockquote>
+<h2>&quot;What difference is there actually in this code?:&quot;</h2>
+</blockquote>
+<pre><code>class ChildA(Base):
+    def __init__(self):
+        Base.__init__(self)
+
+class ChildB(Base):
+    def __init__(self):
+        super().__init__()
+</code></pre>
+<p>The primary difference in this code is that in <code>ChildB</code> you get a layer of indirection in the <code>__init__</code> with <code>super</code>, which uses the class in which it is defined to determine the next class's <code>__init__</code> to look up in the MRO.</p>
+<p>I illustrate this difference in an answer at the <a href="https://stackoverflow.com/a/33469090/541136">canonical question, How to use 'super' in Python?</a>, which demonstrates <strong>dependency injection</strong> and <strong>cooperative multiple inheritance</strong>.</p>
+<h2>If Python didn't have <code>super</code></h2>
+<p>Here's code that's actually closely equivalent to <code>super</code> (how it's implemented in C, minus some checking and fallback behavior, and translated to Python):</p>
+<pre><code>class ChildB(Base):
+    def __init__(self):
+        mro = type(self).mro()
+        check_next = mro.index(ChildB) + 1 # next after *this* class.
+        while check_next &lt; len(mro):
+            next_class = mro[check_next]
+            if '__init__' in next_class.__dict__:
+                next_class.__init__(self)
+                break
+            check_next += 1
+</code></pre>
+<p>Written a little more like native Python:</p>
+<pre><code>class ChildB(Base):
+    def __init__(self):
+        mro = type(self).mro()
+        for next_class in mro[mro.index(ChildB) + 1:]: # slice to end
+            if hasattr(next_class, '__init__'):
+                next_class.__init__(self)
+                break
+</code></pre>
+<p>If we didn't have the <code>super</code> object, we'd have to write this manual code everywhere (or recreate it!) to ensure that we call the proper next method in the Method Resolution Order!</p>
+<p>How does super do this in Python 3 without being told explicitly which class and instance from the method it was called from?</p>
+<p>It gets the calling stack frame, and finds the class (implicitly stored as a local free variable, <code>__class__</code>, making the calling function a closure over the class) and the first argument to that function, which should be the instance or class that informs it which Method Resolution Order (MRO) to use.</p>
+<p>Since it requires that first argument for the MRO, <a href="https://bugs.python.org/issue31118" rel="noreferrer">using <code>super</code> with static methods is impossible as they do not have access to the MRO of the class from which they are called</a>.</p>
+<h2>Criticisms of other answers:</h2>
+<blockquote>
+<p>super() lets you avoid referring to the base class explicitly, which can be nice. . But the main advantage comes with multiple inheritance, where all sorts of fun stuff can happen. See the standard docs on super if you haven't already.</p>
+</blockquote>
+<p>It's rather hand-wavey and doesn't tell us much, but the point of <code>super</code> is not to avoid writing the parent class. The point is to ensure that the next method in line in the method resolution order (MRO) is called. This becomes important in multiple inheritance.</p>
+<p>I'll explain here.</p>
+<pre><code>class Base(object):
+    def __init__(self):
+        print(&quot;Base init'ed&quot;)
+
+class ChildA(Base):
+    def __init__(self):
+        print(&quot;ChildA init'ed&quot;)
+        Base.__init__(self)
+
+class ChildB(Base):
+    def __init__(self):
+        print(&quot;ChildB init'ed&quot;)
+        super().__init__()
+</code></pre>
+<p>And let's create a dependency that we want to be called after the Child:</p>
+<pre><code>class UserDependency(Base):
+    def __init__(self):
+        print(&quot;UserDependency init'ed&quot;)
+        super().__init__()
+</code></pre>
+<p>Now remember, <code>ChildB</code> uses super, <code>ChildA</code> does not:</p>
+<pre><code>class UserA(ChildA, UserDependency):
+    def __init__(self):
+        print(&quot;UserA init'ed&quot;)
+        super().__init__()
+
+class UserB(ChildB, UserDependency):
+    def __init__(self):
+        print(&quot;UserB init'ed&quot;)
+        super().__init__()
+</code></pre>
+<p>And <code>UserA</code> does not call the UserDependency method:</p>
+<pre><code>&gt;&gt;&gt; UserA()
+UserA init'ed
+ChildA init'ed
+Base init'ed
+&lt;__main__.UserA object at 0x0000000003403BA8&gt;
+</code></pre>
+<p>But <code>UserB</code> does in-fact call UserDependency because <code>ChildB</code> invokes <code>super</code>:</p>
+<pre><code>&gt;&gt;&gt; UserB()
+UserB init'ed
+ChildB init'ed
+UserDependency init'ed
+Base init'ed
+&lt;__main__.UserB object at 0x0000000003403438&gt;
+</code></pre>
+<h3>Criticism for another answer</h3>
+<p>In no circumstance should you do the following, which another answer suggests, as you'll definitely get errors when you subclass ChildB:</p>
+<pre><code>super(self.__class__, self).__init__()  # DON'T DO THIS! EVER.
+</code></pre>
+<p><sub>(That answer is not clever or particularly interesting, but in spite of direct criticism in the comments and over 17 downvotes, the answerer persisted in suggesting it until a kind editor fixed his problem.)</sub></p>
+<p>Explanation: Using <code>self.__class__</code> as a substitute for the class name in <code>super()</code> will lead to recursion. <code>super</code> lets us look up the next parent in the MRO (see the first section of this answer) for child classes. If you tell <code>super</code> we're in the child instance's method, it will then lookup the next method in line (probably this one) resulting in recursion, probably causing a logical failure (in the answerer's example, it does) or a <code>RuntimeError</code> when the recursion depth is exceeded.</p>
+<pre><code>&gt;&gt;&gt; class Polygon(object):
+...     def __init__(self, id):
+...         self.id = id
+...
+&gt;&gt;&gt; class Rectangle(Polygon):
+...     def __init__(self, id, width, height):
+...         super(self.__class__, self).__init__(id)
+...         self.shape = (width, height)
+...
+&gt;&gt;&gt; class Square(Rectangle):
+...     pass
+...
+&gt;&gt;&gt; Square('a', 10, 10)
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+  File &quot;&lt;stdin&gt;&quot;, line 3, in __init__
+TypeError: __init__() missing 2 required positional arguments: 'width' and 'height'
+</code></pre>
+<p>Python 3's new <code>super()</code> calling method with no arguments fortunately allows us to sidestep this issue.</p>
+</div><p class="this-has-helped">This answer has helped 277 people.</p><div class="s-prose js-post-body"><p>It's been noted that in Python 3.0+ you can use</p>
+
+<pre><code>super().__init__()
+</code></pre>
+
+<p>to make your call, which is concise and does not require you to reference the parent OR class names explicitly, which can be handy. I just want to add that for Python 2.7 or under, some people implement a name-insensitive behaviour by writing <code>self.__class__</code> instead of the class name, i.e.</p>
+
+<pre><code>super(self.__class__, self).__init__()  # DON'T DO THIS!
+</code></pre>
+
+<p>HOWEVER, this breaks calls to <code>super</code> for any classes that inherit from your class, where <code>self.__class__</code> could return a child class. For example:</p>
+
+<pre><code>class Polygon(object):
+    def __init__(self, id):
+        self.id = id
+
+class Rectangle(Polygon):
+    def __init__(self, id, width, height):
+        super(self.__class__, self).__init__(id)
+        self.shape = (width, height)
+
+class Square(Rectangle):
+    pass
+</code></pre>
+
+<p>Here I have a class <code>Square</code>, which is a sub-class of <code>Rectangle</code>. Say I don't want to write a separate constructor for <code>Square</code> because the constructor for <code>Rectangle</code> is good enough, but for whatever reason I want to implement a Square so I can reimplement some other method.</p>
+
+<p>When I create a <code>Square</code> using <code>mSquare = Square('a', 10,10)</code>, Python calls the constructor for <code>Rectangle</code> because I haven't given <code>Square</code> its own constructor. However, in the constructor for <code>Rectangle</code>, the call <code>super(self.__class__,self)</code> is going to return the superclass of <code>mSquare</code>, so it calls the constructor for <code>Rectangle</code> again. This is how the infinite loop happens, as was mentioned by @S_C. In this case, when I run <code>super(...).__init__()</code> I am calling the constructor for <code>Rectangle</code> but since I give it no arguments, I will get an error.</p>
+</div><p class="this-has-helped">This answer has helped 80 people.</p><div class="s-prose js-post-body"><p>Super has no side effects</p>
+<pre class="lang-py prettyprint-override"><code>Base = ChildB
+
+Base()
+</code></pre>
+<p>works as expected</p>
+<pre class="lang-py prettyprint-override"><code>Base = ChildA
+
+Base()
+</code></pre>
+<p>gets into infinite recursion.</p>
+</div><p class="this-has-helped">This answer has helped 74 people.</p><div class="s-prose js-post-body"><p>Just a heads up... with Python 2.7, and I believe ever since <code>super()</code> was introduced in version 2.2, you can only call <a href="http://docs.python.org/library/functions.html#super" rel="noreferrer"><code>super()</code></a> if one of the parents inherit from a class that eventually inherits <code>object</code> (<a href="http://docs.python.org/glossary.html#term-new-style-class" rel="noreferrer">new-style classes</a>).</p>
+
+<p>Personally, as for python 2.7 code, I'm going to continue using <code>BaseClassName.__init__(self, args)</code> until I actually get the advantage of using <code>super()</code>.</p>
+</div></body></html>

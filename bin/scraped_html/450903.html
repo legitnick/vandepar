@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I make a div not larger than its contents?</p><div class="s-prose js-post-body"><p>I have a layout similar to:</p>
+
+<pre><code>&lt;div&gt;
+    &lt;table&gt;
+    &lt;/table&gt;
+&lt;/div&gt;
+</code></pre>
+
+<p>I would like for the <code>div</code> to only expand to as wide as my <code>table</code> becomes.</p>
+</div><p class="this-has-helped">This answer has helped 2783 people.</p><div class="s-prose js-post-body"><p>The solution is to set your <code>div</code> to <code>display: inline-block</code>.</p>
+</div><p class="this-has-helped">This answer has helped 365 people.</p><div class="s-prose js-post-body"><p>You want a block element that has what CSS calls shrink-to-fit width and the spec does not provide a blessed way to get such a thing. In CSS2, shrink-to-fit is not a goal, but means to deal with a situation where browser "has to" get a width out of thin air. Those situations are: </p>
+
+<ul>
+<li>float  </li>
+<li>absolutely positioned element</li>
+<li>inline-block element</li>
+<li>table element</li>
+</ul>
+
+<p>when there are no width specified. I heard they think of adding what you want in CSS3. For now, make do with one of the above.</p>
+
+<p>The decision not to expose the feature directly may seem strange, but there is a good reason. It is expensive. Shrink-to-fit means formatting at least twice: you cannot start formatting an element until you know its width, and you cannot calculate the width w/o going through entire content. Plus, one does not need shrink-to-fit element as often as one may think. Why do you need extra div around your table? Maybe table caption is all you need.</p>
+</div><p class="this-has-helped">This answer has helped 260 people.</p><div class="s-prose js-post-body"><p>I think using</p>
+
+<pre class="lang-css prettyprint-override"><code>display: inline-block;
+</code></pre>
+
+<p>would work, however I'm not sure about the browser compatibility.</p>
+
+<hr>
+
+<p>Another solution would be to wrap your <code>div</code> in another <code>div</code> (if you want to maintain the block behavior):</p>
+
+<p>HTML:</p>
+
+<pre class="lang-html prettyprint-override"><code>&lt;div&gt;
+    &lt;div class="yourdiv"&gt;
+        content
+    &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+
+<p>CSS:</p>
+
+<pre class="lang-css prettyprint-override"><code>.yourdiv
+{
+    display: inline;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 251 people.</p><div class="s-prose js-post-body"><p><code>display: inline-block</code> adds an extra margin to your element.</p>
+
+<p>I would recommend this:</p>
+
+<pre class="lang-css prettyprint-override"><code>#element {
+    display: table; /* IE8+ and all other modern browsers */
+}
+</code></pre>
+
+<p><strong>Bonus:</strong> You can also now easily center that fancy new <code>#element</code> just by adding <code>margin: 0 auto</code>.</p>
+</div><p class="this-has-helped">This answer has helped 224 people.</p><div class="s-prose js-post-body"><p>You can try <a href="https://developer.mozilla.org/en-US/docs/Web/CSS/width" rel="noreferrer"><code>fit-content</code></a> (CSS3): </p>
+
+<pre class="lang-css prettyprint-override"><code>div {
+  width: fit-content; 
+  /* To adjust the height as well */ 
+  height: fit-content;
+}
+</code></pre>
+
+<ul>
+<li><a href="http://caniuse.com/#feat=intrinsic-width" rel="noreferrer">Browser support</a></li>
+<li><a href="http://www.w3.org/TR/css3-sizing/#fit-content" rel="noreferrer">Specification</a></li>
+</ul>
+</div></body></html>

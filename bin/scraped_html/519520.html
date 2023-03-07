@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Difference between static class and singleton pattern?</p><div class="s-prose js-post-body"><p>What real (i.e. practical) difference exists between a static class and a singleton pattern?</p>
+
+<p>Both can be invoked without instantiation, both provide only one "Instance" and neither of them is thread-safe. Is there any other difference?</p>
+</div><p class="this-has-helped">This answer has helped 1402 people.</p><div class="s-prose js-post-body"><p>What makes you say that either a singleton or a static method isn't thread-safe? Usually both <em>should</em> be implemented to be thread-safe.</p>
+
+<p>The big difference between a singleton and a bunch of static methods is that singletons can implement interfaces (or derive from useful base classes, although that's less common, in my experience), so you can pass around the singleton as if it were "just another" implementation.</p>
+</div><p class="this-has-helped">This answer has helped 527 people.</p><div class="s-prose js-post-body"><p>The true answer is by Jon Skeet, <a href="http://bytes.com/groups/net-c/271199-diff-between-singleton-class-static-class#post1084937" rel="noreferrer">on another forum here</a>.</p>
+
+<blockquote>
+  <p>A singleton allows access to a single
+  created instance - that instance (or
+  rather, a reference to that instance)
+  can be passed as a parameter to other
+  methods, and treated as a normal
+  object.</p>
+  
+  <p>A static class allows only static
+  methods.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 397 people.</p><div class="s-prose js-post-body"><ol>
+<li>Singleton objects are stored in <strong>Heap</strong>, but static objects are stored in <strong>stack</strong>.</li>
+<li>We can <strong>clone</strong> (if the designer did not disallow it) the singleton object, but we can not clone the static class object
+.</li>
+<li>Singleton classes follow the <strong>OOP</strong> (object oriented principles), static classes do not.</li>
+<li>We can implement an <code>interface</code> with a Singleton class, but a class's static methods (or e.g. a C# <code>static class</code>) cannot.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 185 people.</p><div class="s-prose js-post-body"><p>The Singleton pattern has several advantages over static classes. First, a singleton can extend classes and implement interfaces, while a static class cannot (it can extend classes, but it does not inherit their instance members). A singleton can be initialized lazily or asynchronously while a static class is generally initialized when it is first loaded, leading to potential class loader issues. However the most important advantage, though, is that singletons can be handled polymorphically without forcing their users to assume that there is only one instance.</p>
+</div><p class="this-has-helped">This answer has helped 90 people.</p><div class="s-prose js-post-body"><p><code>static</code> classes are not for anything that needs state. It is useful for putting a bunch of functions together i.e <code>Math</code> (or <code>Utils</code> in projects). So the class name just gives us a clue where we can find the functions and nothing more.</p>
+
+<p><code>Singleton</code> is my favorite pattern and I use it to manage something at a single point. It's more flexible than <code>static</code> classes and can maintain it's state. It can implement interfaces, inherit from other classes and allow inheritance.</p>
+
+<p>My rule for choosing between <code>static</code> and <code>singleton</code>:</p>
+
+<p>If there is a bunch of functions that should be kept together, then <code>static</code> is the choice.
+Anything else which needs single access to some resources, could be implemented as a <code>singleton</code>.</p>
+</div></body></html>

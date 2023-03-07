@@ -1,0 +1,71 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Removing multiple files from a Git repo that have already been deleted from disk</p><div class="s-prose js-post-body"><p>I have a Git repo that I have deleted four files from using <code>rm</code> (<strong>not</strong> <code>git rm</code>), and my Git status looks like this:</p>
+
+<pre><code>#    deleted:    file1.txt
+#    deleted:    file2.txt
+#    deleted:    file3.txt
+#    deleted:    file4.txt
+</code></pre>
+
+<p>How do I remove these files from Git without having to manually go through and add each file like this:</p>
+
+<pre><code>git rm file1 file2 file3 file4
+</code></pre>
+
+<p>Ideally, I'm looking for something that works in the same way that <code>git add .</code> does, if that's possible.</p>
+</div><p class="this-has-helped">This answer has helped 2357 people.</p><div class="s-prose js-post-body"><h3>For Git 1.x</h3>
+
+<pre><code>$ git add -u
+</code></pre>
+
+<p>This tells git to automatically stage tracked files -- including deleting the previously tracked files. </p>
+
+<h3>For Git 2.0</h3>
+
+<p>To stage your whole working tree:</p>
+
+<pre><code>$ git add -u :/
+</code></pre>
+
+<p>To stage just the current path:</p>
+
+<pre><code>$ git add -u .
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1389 people.</p><div class="s-prose js-post-body"><pre><code>git ls-files --deleted -z | xargs -0 git rm 
+</code></pre>
+
+<p>might be what you are looking for.. it works for me.. </p>
+</div><p class="this-has-helped">This answer has helped 749 people.</p><div class="s-prose js-post-body"><p>You can use </p>
+
+<pre><code>git add -u
+</code></pre>
+
+<p>To add the deleted files to the staging area, then commit them</p>
+
+<pre><code>git commit -m "Deleted files manually"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 360 people.</p><div class="s-prose js-post-body"><p>If you simply run:</p>
+
+<pre><code>git add -u
+</code></pre>
+
+<p>git will update its index to know that the files that you've deleted should actually be part of the next commit.  Then you can run "git commit" to check in that change.</p>
+
+<p>Or, if you run:</p>
+
+<pre><code>git commit -a
+</code></pre>
+
+<p>It will automatically take these changes (and any others) and commit them.</p>
+
+<p><em>Update</em>: If you only want to add deleted files, try:</p>
+
+<pre><code>git ls-files --deleted -z | xargs -0 git rm
+git commit
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 169 people.</p><div class="s-prose js-post-body"><p>You're probably looking for -A:</p>
+
+<pre><code>git add -A
+</code></pre>
+
+<p>this is similar to git add -u, but also adds new files.  This is roughly the equivalent of hg's <code>addremove</code> command (although the move detection is automatic).</p>
+</div></body></html>

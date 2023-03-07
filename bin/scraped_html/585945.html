@@ -1,0 +1,208 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to align content of a div to the bottom</p><div class="s-prose js-post-body"><p>Say I have the following CSS and HTML code:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>#header {
+  height: 150px;
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div id="header"&gt;
+  &lt;h1&gt;Header title&lt;/h1&gt;
+  Header content (one or multiple lines)
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+
+<p>The header section is fixed height, but the header content may change.</p>
+
+<p>I would like the content of the header to be vertically aligned to the bottom of the header section, so the last line of text "sticks" to the bottom of the header section.</p>
+
+<p>So if there is only one line of text, it would be like:</p>
+
+<pre>
+-----------------------------
+| Header title
+|
+|
+|
+| header content (resulting in one line)
+-----------------------------
+</pre>
+
+<p>And if there were three lines:</p>
+
+<pre>
+-----------------------------
+| Header title
+|
+| header content (which is so
+| much stuff that it perfectly
+| spans over three lines)
+-----------------------------
+</pre>
+
+<p>How can this be done in CSS?</p>
+</div><p class="this-has-helped">This answer has helped 1506 people.</p><div class="s-prose js-post-body"><p>Relative+absolute positioning is your best bet:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-css lang-css prettyprint-override"><code>#header {
+  position: relative;
+  min-height: 150px;
+}
+
+#header-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+#header, #header * {
+  background: rgba(40, 40, 100, 0.25);
+}</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;div id="header"&gt;
+  &lt;h1&gt;Title&lt;/h1&gt;
+  &lt;div id="header-content"&gt;And in the last place, where this might not be the case, they would be of long standing, would have taken deep root, and would not easily be extirpated. The scheme of revising the constitution, in order to correct recent breaches of it, as well as for other purposes, has been actually tried in one of the States.&lt;/div&gt;
+&lt;/div&gt;</code></pre>
+</div>
+</div>
+</p>
+<p>But you may run into issues with that.  When I tried it I had problems with dropdown menus appearing below the content.  It's just not pretty.</p>
+<p>Honestly, for vertical centering issues and, well, any vertical alignment issues with the items aren't fixed height, it's easier just to use tables.</p>
+<p>Example: <a href="https://stackoverflow.com/questions/522928/can-you-do-this-html-layout-without-using-tables">Can you do this HTML layout without using tables?</a></p>
+</div><p class="this-has-helped">This answer has helped 220 people.</p><div class="s-prose js-post-body"><p>If you're not worried about legacy browsers use a flexbox.</p>
+
+<p>The parent element needs its display type set to flex</p>
+
+<pre class="lang-css prettyprint-override"><code>div.parent {
+  display: flex;
+  height: 100%;
+}
+</code></pre>
+
+<p>Then you set the child element's align-self to flex-end.</p>
+
+<pre class="lang-css prettyprint-override"><code>span.child {
+  display: inline-block;
+  align-self: flex-end;
+}
+</code></pre>
+
+<p>Here's the resource I used to learn:
+<a href="http://css-tricks.com/snippets/css/a-guide-to-flexbox/" rel="noreferrer">http://css-tricks.com/snippets/css/a-guide-to-flexbox/</a></p>
+</div><p class="this-has-helped">This answer has helped 195 people.</p><div class="s-prose js-post-body"><p>Use CSS positioning:</p>
+
+<pre class="lang-css prettyprint-override"><code>/* Creates a new stacking context on the header */
+#header {
+  position: relative;
+}
+
+/* Positions header-content at the bottom of header's context */
+#header-content {
+  position: absolute;
+  bottom: 0;
+}
+</code></pre>
+
+<p>As <a href="https://stackoverflow.com/questions/585945/how-to-align-content-of-a-div-to-the-bottom-with-css/585965#585965">cletus noted</a>, you need identify the header-content to make this work.</p>
+
+<pre class="lang-html prettyprint-override"><code>&lt;span id="header-content"&gt;some header content&lt;/span&gt;
+
+&lt;div style="height:100%; position:relative;"&gt;
+    &lt;div style="height:10%; position:absolute; bottom:0px;"&gt;bottom&lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 145 people.</p><div class="s-prose js-post-body"><p>I use these properties and it works!</p>
+
+<pre class="lang-css prettyprint-override"><code>#header {
+  display: table-cell;
+  vertical-align: bottom;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 68 people.</p><div class="s-prose js-post-body"><p>After struggling with this same issue for some time, I finally figured out a solution that meets all of my requirements:</p>
+
+<ul>
+<li>Does not require that I know the container's height.</li>
+<li>Unlike relative+absolute solutions, the content doesn't float in its own layer (i.e., it embeds normally in the container div).</li>
+<li>Works across browsers (IE8+).</li>
+<li>Simple to implement.</li>
+</ul>
+
+<p>The solution just takes one <code>&lt;div&gt;</code>, which I call the "aligner":</p>
+
+<p><b>CSS</b></p>
+
+<pre><code>.bottom_aligner {
+    display: inline-block;
+    height: 100%;
+    vertical-align: bottom;
+    width: 0px;
+}
+</code></pre>
+
+<p><b>html</b></p>
+
+<pre><code>&lt;div class="bottom_aligner"&gt;&lt;/div&gt;
+... Your content here ...
+</code></pre>
+
+<p>This trick works by creating a tall, skinny div, which pushes the text baseline to the bottom of the container.</p>
+
+<p>Here is a complete example that achieves what the OP was asking for.  I've made the "bottom_aligner" thick and red for demonstration purposes only.</p>
+
+<p>CSS:</p>
+
+<pre><code>.outer-container {
+  border: 2px solid black;
+  height: 175px;
+  width: 300px;
+}
+
+.top-section {
+  background: lightgreen;
+  height: 50%;
+}
+
+.bottom-section {
+  background: lightblue;
+  height: 50%;
+  margin: 8px;
+}
+
+.bottom-aligner {
+  display: inline-block;
+  height: 100%;
+  vertical-align: bottom;
+  width: 3px;
+  background: red;
+}
+
+.bottom-content {
+  display: inline-block;
+}
+
+.top-content {
+  padding: 8px;
+}
+</code></pre>
+
+<p>HTML:</p>
+
+<pre><code>&lt;body&gt;
+  &lt;div class="outer-container"&gt;
+    &lt;div class="top-section"&gt;
+      This text
+      &lt;br&gt; is on top.
+    &lt;/div&gt;
+    &lt;div class="bottom-section"&gt;
+      &lt;div class="bottom-aligner"&gt;&lt;/div&gt;
+      &lt;div class="bottom-content"&gt;
+        I like it here
+        &lt;br&gt; at the bottom.
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+</code></pre>
+
+<p><img src="https://i.stack.imgur.com/8Eks6.jpg" alt="Align bottom content"></p>
+</div></body></html>

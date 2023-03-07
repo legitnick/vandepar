@@ -1,0 +1,76 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What do two question marks together mean in C#?</p><div class="s-prose js-post-body"><p>Ran across this line of code:</p>
+
+<pre><code>FormsAuth = formsAuth ?? new FormsAuthenticationWrapper();
+</code></pre>
+
+<p>What do the two question marks mean, is it some kind of ternary operator?
+It's hard to look up in Google.</p>
+</div><p class="this-has-helped">This answer has helped 2565 people.</p><div class="s-prose js-post-body"><p>It's the null coalescing operator, and quite like the ternary (immediate-if) operator. See also <a href="https://learn.microsoft.com/en-in/dotnet/csharp/language-reference/operators/null-coalescing-operator" rel="noreferrer">?? Operator - MSDN</a>.</p>
+
+<pre><code>FormsAuth = formsAuth ?? new FormsAuthenticationWrapper();
+</code></pre>
+
+<p>expands to:</p>
+
+<pre><code>FormsAuth = formsAuth != null ? formsAuth : new FormsAuthenticationWrapper();
+</code></pre>
+
+<p>which further expands to:</p>
+
+<pre><code>if(formsAuth != null)
+    FormsAuth = formsAuth;
+else
+    FormsAuth = new FormsAuthenticationWrapper();
+</code></pre>
+
+<p>In English, it means "If whatever is to the left is not null, use that, otherwise use what's to the right."</p>
+
+<p>Note that you can use any number of these in sequence. The following statement will assign the first non-null <code>Answer#</code> to <code>Answer</code> (if all Answers are null then the <code>Answer</code> is null):</p>
+
+<pre><code>string Answer = Answer1 ?? Answer2 ?? Answer3 ?? Answer4;
+</code></pre>
+
+<hr>
+
+<p>Also it's worth mentioning while the expansion above is conceptually equivalent, the result of each expression is only evaluated once. This is important if for example an expression is a method call with side effects. (Credit to @Joey for pointing this out.)</p>
+</div><p class="this-has-helped">This answer has helped 324 people.</p><div class="s-prose js-post-body"><p>Just because no-one else has said the magic words yet: it's the <strong>null coalescing operator</strong>. It's defined in section 7.12 of the <a href="http://download.microsoft.com/download/3/8/8/388e7205-bc10-4226-b2a8-75351c669b09/CSharp%20Language%20Specification.doc" rel="noreferrer">C# 3.0 language specification</a>.</p>
+
+<p>It's very handy, particularly because of the way it works when it's used multiple times in an expression. An expression of the form:</p>
+
+<pre><code>a ?? b ?? c ?? d
+</code></pre>
+
+<p>will give the result of expression <code>a</code> if it's non-null, otherwise try <code>b</code>, otherwise try <code>c</code>, otherwise try <code>d</code>. It short-circuits at every point.</p>
+
+<p>Also, if the type of <code>d</code> is non-nullable, the type of the whole expression is non-nullable too.</p>
+</div><p class="this-has-helped">This answer has helped 78 people.</p><div class="s-prose js-post-body"><p>It's the null coalescing operator.</p>
+
+<p><a href="http://msdn.microsoft.com/en-us/library/ms173224.aspx" rel="noreferrer">http://msdn.microsoft.com/en-us/library/ms173224.aspx</a></p>
+
+<p>Yes, nearly impossible to search for unless you know what it's called! :-)</p>
+
+<p>EDIT: And this is a cool feature from another question.  You can chain them.</p>
+
+<p><a href="https://stackoverflow.com/questions/9033/hidden-features-of-c#15765">Hidden Features of C#?</a></p>
+</div><p class="this-has-helped">This answer has helped 36 people.</p><div class="s-prose js-post-body"><p>Thanks everybody, here is the most succinct explanation I found on the MSDN site:</p>
+
+<pre><code>// y = x, unless x is null, in which case y = -1.
+int y = x ?? -1;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p><img src="https://i.stack.imgur.com/LHdqP.png" alt="enter image description here"></p>
+
+<p>The two question marks (??) indicate that its a Coalescing operator.</p>
+
+<p>Coalescing operator returns the first NON-NULL value from a chain. You can see <a href="http://www.youtube.com/watch?v=YJGGmTNHPeo" rel="noreferrer">this youtube video</a> which demonstrates the whole thing practically.</p>
+
+<p>But let me add more to what the video says.</p>
+
+<p>If you see the English meaning of coalescing it says “consolidate together”. For example below is a simple coalescing code which chains four strings.</p>
+
+<p>So if <code>str1</code> is <code>null</code> it will try <code>str2</code>, if <code>str2</code> is <code>null</code> it will try <code>str3</code> and so on until it finds a string with a non-null value.</p>
+
+<pre class="lang-cs prettyprint-override"><code>string final = str1 ?? str2 ?? str3 ?? str4;
+</code></pre>
+
+<p>In simple words Coalescing operator returns the first NON-NULL value from a chain. </p>
+</div></body></html>

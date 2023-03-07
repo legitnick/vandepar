@@ -1,0 +1,57 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Extracting extension from filename in Python</p><div class="s-prose js-post-body"><p>Is there a function to extract the extension from a filename?</p>
+</div><p class="this-has-helped">This answer has helped 2536 people.</p><div class="s-prose js-post-body"><p>Use <a href="https://docs.python.org/3/library/os.path.html#os.path.splitext" rel="noreferrer"><code>os.path.splitext</code></a>:</p>
+<pre><code>&gt;&gt;&gt; import os
+&gt;&gt;&gt; filename, file_extension = os.path.splitext('/path/to/somefile.ext')
+&gt;&gt;&gt; filename
+'/path/to/somefile'
+&gt;&gt;&gt; file_extension
+'.ext'
+</code></pre>
+<p>Unlike most manual string-splitting attempts, <code>os.path.splitext</code> will correctly treat <code>/a/b.c/d</code> as having no extension instead of having extension <code>.c/d</code>, and it will treat <code>.bashrc</code> as having no extension instead of having extension <code>.bashrc</code>:</p>
+<pre><code>&gt;&gt;&gt; os.path.splitext('/a/b.c/d')
+('/a/b.c/d', '')
+&gt;&gt;&gt; os.path.splitext('.bashrc')
+('.bashrc', '')
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 592 people.</p><div class="s-prose js-post-body"><p><em>New in version 3.4.</em></p>
+<pre><code>import pathlib
+
+print(pathlib.Path('yourPath.example').suffix) # '.example'
+print(pathlib.Path(&quot;hello/foo.bar.tar.gz&quot;).suffixes) # ['.bar', '.tar', '.gz']
+</code></pre>
+<p>I'm surprised no one has mentioned <a href="https://docs.python.org/3/library/pathlib.html" rel="noreferrer"><code>pathlib</code></a> yet, <code>pathlib</code> IS awesome!</p>
+</div><p class="this-has-helped">This answer has helped 483 people.</p><div class="s-prose js-post-body"><pre><code>import os.path
+extension = os.path.splitext(filename)[1]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 141 people.</p><div class="s-prose js-post-body"><pre><code>import os.path
+extension = os.path.splitext(filename)[1][1:]
+</code></pre>
+
+<p>To get only the text of the extension, without the dot.</p>
+</div><p class="this-has-helped">This answer has helped 108 people.</p><div class="s-prose js-post-body"><p>For simple use cases one option may be splitting from dot:</p>
+
+<pre><code>&gt;&gt;&gt; filename = "example.jpeg"
+&gt;&gt;&gt; filename.split(".")[-1]
+'jpeg'
+</code></pre>
+
+<p>No error when file doesn't have an extension:</p>
+
+<pre><code>&gt;&gt;&gt; "filename".split(".")[-1]
+'filename'
+</code></pre>
+
+<p>But you must be careful:</p>
+
+<pre><code>&gt;&gt;&gt; "png".split(".")[-1]
+'png'    # But file doesn't have an extension
+</code></pre>
+
+<p>Also will not work with hidden files in Unix systems:</p>
+
+<pre><code>&gt;&gt;&gt; ".bashrc".split(".")[-1]
+'bashrc'    # But this is not an extension
+</code></pre>
+
+<p>For general use, prefer <a href="https://docs.python.org/3/library/os.path.html#os.path.splitext" rel="noreferrer"><code>os.path.splitext</code></a></p>
+</div></body></html>

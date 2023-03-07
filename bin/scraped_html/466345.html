@@ -1,0 +1,78 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Convert string &quot;Jun 1 2005 1:33PM&quot; into datetime</p><div class="s-prose js-post-body"><p>How do I convert the following string to a <a href="https://docs.python.org/3/library/datetime.html#datetime-objects" rel="noreferrer"><code>datetime</code></a> object?</p>
+<pre><code>&quot;Jun 1 2005  1:33PM&quot;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 4389 people.</p><div class="s-prose js-post-body"><p><a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.strptime" rel="noreferrer"><code>datetime.strptime</code></a> parses an input string in the user-specified format into a <em>timezone-naive</em> <a href="https://docs.python.org/3/library/datetime.html#datetime-objects" rel="noreferrer"><code>datetime</code></a> object:</p>
+<pre><code>&gt;&gt;&gt; from datetime import datetime
+&gt;&gt;&gt; datetime.strptime('Jun 1 2005  1:33PM', '%b %d %Y %I:%M%p')
+datetime.datetime(2005, 6, 1, 13, 33)
+</code></pre>
+<p>To obtain a <a href="https://docs.python.org/3/library/datetime.html#date-objects" rel="noreferrer"><code>date</code></a> object using an existing <code>datetime</code> object, convert it using <code>.date()</code>:</p>
+<pre><code>&gt;&gt;&gt; datetime.strptime('Jun 1 2005', '%b %d %Y').date()
+date(2005, 6, 1)
+</code></pre>
+<hr />
+<p><strong>Links:</strong></p>
+<ul>
+<li><p><code>strptime</code> docs: <a href="https://docs.python.org/2/library/datetime.html#datetime.datetime.strptime" rel="noreferrer" title="datetime.datetime.strptime">Python 2</a>, <a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.strptime" rel="noreferrer">Python 3</a></p>
+</li>
+<li><p><code>strptime</code>/<code>strftime</code> format string docs: <a href="https://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior" rel="noreferrer" title="strftime-and-strptime-behavior">Python 2</a>, <a href="https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior" rel="noreferrer">Python 3</a></p>
+</li>
+<li><p><a href="http://strftime.org/" rel="noreferrer">strftime.org</a> format string cheatsheet</p>
+</li>
+</ul>
+<p><strong>Notes:</strong></p>
+<ul>
+<li><code>strptime</code> = &quot;string parse time&quot;</li>
+<li><code>strftime</code> = &quot;string format time&quot;</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 1056 people.</p><div class="s-prose js-post-body"><p>Use the third-party <a href="https://dateutil.readthedocs.io" rel="noreferrer"><code>dateutil</code></a> library:</p>
+<pre><code>from dateutil import parser
+parser.parse(&quot;Aug 28 1999 12:00AM&quot;)  # datetime.datetime(1999, 8, 28, 0, 0)
+</code></pre>
+<p>It can handle most date formats and is more convenient than <code>strptime</code> since it usually guesses the correct format. It is also very useful for writing tests, where readability is more important than performance.</p>
+<p>Install it with:</p>
+<pre><code>pip install python-dateutil
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 514 people.</p><div class="s-prose js-post-body"><p>Check out <a href="http://docs.python.org/3/library/time.html#time.strptime" rel="noreferrer">strptime</a> in the <a href="http://docs.python.org/3/library/time.html" rel="noreferrer">time</a> module.  It is the inverse of <a href="http://docs.python.org/3/library/time.html#time.strftime" rel="noreferrer">strftime</a>.</p>
+
+<pre><code>$ python
+&gt;&gt;&gt; import time
+&gt;&gt;&gt; my_time = time.strptime('Jun 1 2005  1:33PM', '%b %d %Y %I:%M%p')
+time.struct_time(tm_year=2005, tm_mon=6, tm_mday=1,
+                 tm_hour=13, tm_min=33, tm_sec=0,
+                 tm_wday=2, tm_yday=152, tm_isdst=-1)
+
+timestamp = time.mktime(my_time)
+# convert time object to datetime
+from datetime import datetime
+my_datetime = datetime.fromtimestamp(timestamp)
+# convert time object to date
+from datetime import date
+my_date = date.fromtimestamp(timestamp)
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 264 people.</p><div class="s-prose js-post-body"><h2>Python &gt;= 3.7</h2>
+<p>To convert a <strong>YYYY-MM-DD</strong> string to a datetime object, <a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.fromisoformat" rel="noreferrer">datetime.fromisoformat</a> could be used.</p>
+<pre class="lang-py prettyprint-override"><code>from datetime import datetime
+
+date_string = &quot;2012-12-12 10:10:10&quot;
+print (datetime.fromisoformat(date_string))
+2012-12-12 10:10:10
+</code></pre>
+<p>Caution from the documentation:</p>
+<blockquote>
+<p>This does <em>not</em> support parsing arbitrary ISO 8601 strings - it is only intended as the inverse operation of <a href="https://docs.python.org/3/library/datetime.html#datetime.datetime.isoformat" rel="noreferrer"><code>datetime.isoformat()</code></a>. A more full-featured ISO 8601 parser, <code>dateutil.parser.isoparse</code> is available in the third-party package <a href="https://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.isoparse" rel="noreferrer"><code>dateutil</code></a>.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 133 people.</p><div class="s-prose js-post-body"><p>I have put together a project that can convert some really neat expressions. Check out <strong><a href="http://github.com/stevepeak/timestring" rel="noreferrer">timestring</a></strong>.</p>
+<h2>Here are some examples below:</h2>
+<code>pip install timestring</code>
+<pre><code>&gt;&gt;&gt; import timestring
+&gt;&gt;&gt; timestring.Date('monday, aug 15th 2015 at 8:40 pm')
+&lt;timestring.Date 2015-08-15 20:40:00 4491909392&gt;
+&gt;&gt;&gt; timestring.Date('monday, aug 15th 2015 at 8:40 pm').date
+datetime.datetime(2015, 8, 15, 20, 40)
+&gt;&gt;&gt; timestring.Range('next week')
+&lt;timestring.Range From 03/10/14 00:00:00 to 03/03/14 00:00:00 4496004880&gt;
+&gt;&gt;&gt; (timestring.Range('next week').start.date, timestring.Range('next week').end.date)
+(datetime.datetime(2014, 3, 10, 0, 0), datetime.datetime(2014, 3, 14, 0, 0))
+</code></pre>
+</div></body></html>

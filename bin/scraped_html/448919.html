@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I remove a commit on GitHub?</p><div class="s-prose js-post-body"><p>I "accidentally" pushed a commit to GitHub.</p>
+
+<p>Is it possible to remove this commit?</p>
+
+<p>I want to revert my GitHub repository as it was before this commit.</p>
+</div><p class="this-has-helped">This answer has helped 1428 people.</p><div class="s-prose js-post-body"><blockquote>
+<p><strong>Note:</strong> please see an alternative to <code>git rebase -i</code> in the comments below—</p>
+<p><code>git reset --soft HEAD^</code></p>
+</blockquote>
+<p>First, remove the commit on your local repository. You can do this using <code>git rebase -i</code>. For example, if it's your last commit, you can do <code>git rebase -i HEAD~2</code> and delete the second line within the editor window that pops up.</p>
+<p>Then, force push to GitHub by using <code>git push origin +branchName --force</code></p>
+<p>See <a href="http://www-cs-students.stanford.edu/%7Eblynn/gitmagic/ch05.html#_8230_and_then_some" rel="noreferrer">Git Magic Chapter 5: Lessons of History - And Then Some</a> for more information (i.e. if you want to remove older commits).</p>
+<p>Oh, and if your working tree is dirty, you have to do a <code>git stash</code> first, and then a <code>git stash apply</code> after.</p>
+</div><p class="this-has-helped">This answer has helped 1091 people.</p><div class="s-prose js-post-body"><pre><code>git push -f origin HEAD^:master
+</code></pre>
+
+<p>That should "undo" the push.</p>
+</div><p class="this-has-helped">This answer has helped 493 people.</p><div class="s-prose js-post-body"><p>For an easy revert, here's another possibility (everything since the commit will be deleted):</p>
+<pre><code>git reset --hard commit_hash_you_want_to_return_to
+</code></pre>
+<p>For example, if you want to reset your branch to a commit in the past like <code>71c27777543ccfcb0376dcdd8f6777df055ef479</code>:</p>
+<pre><code>git reset --hard 71c27777543ccfcb0376dcdd8f6777df055ef479
+</code></pre>
+<p>The next step would be to push your branch modifications to <code>origin</code> (remote repo):</p>
+<pre><code>git push --force
+</code></pre>
+<hr />
+<h3>Attention</h3>
+<p>Keep in mind that if other contributors are working with your branch, they might experience conflicts or other issues, for <strong>you are changing</strong> the history of the branch, <strong>but just for you</strong>, and not for those who are already using your branch. Beware.</p>
+</div><p class="this-has-helped">This answer has helped 146 people.</p><div class="s-prose js-post-body"><ol>
+<li><p><code>git log</code>
+to find out the commit you want to revert</p></li>
+<li><p><code>git push origin +7f6d03:master</code>
+while 7f6d03 is the commit before the wrongly pushed commit.
+<code>+</code> was for <code>force push</code></p></li>
+</ol>
+
+<p>And that's it.</p>
+
+<p><a href="http://samwize.com/2014/01/15/how-to-remove-a-commit-that-is-already-pushed-to-github/" rel="noreferrer">Here</a> is a very good guide that solves your problem, easy and simple!</p>
+</div><p class="this-has-helped">This answer has helped 100 people.</p><div class="s-prose js-post-body"><h2><strong>In case you like to keep the commit changes after deletion:</strong></h2>
+
+<p><em>Note that this solution works if the commit to be removed is the last committed one.</em></p>
+
+<hr>
+
+<p>1 - Copy the commit reference  you like to go back to from the log:</p>
+
+<pre><code>git log
+</code></pre>
+
+<p>2 - Reset git to the commit reference:</p>
+
+<pre><code> git reset &lt;commit_ref&gt;
+</code></pre>
+
+<p>3 - Stash/store the local changes from the wrong commit to use later after pushing to remote:</p>
+
+<pre><code> git stash
+</code></pre>
+
+<p>4 - Push the changes to remote repository, (-f or --force):</p>
+
+<pre><code>git push -f
+</code></pre>
+
+<p>5 - Get back the stored changes to local repository:</p>
+
+<pre><code>git stash apply
+</code></pre>
+
+<p>7 - In case you have untracked/new files in the changes, you need to add them to git before committing:</p>
+
+<pre><code>git add .
+</code></pre>
+
+<p>6 - Add whatever extra changes you need, then commit the needed files, (or use a dot '.' instead of stating each file name, to commit all files in the local repository:</p>
+
+<pre><code>git commit -m "&lt;new_commit_message&gt;" &lt;file1&gt; &lt;file2&gt; ...
+</code></pre>
+
+<p>or </p>
+
+<pre><code>git commit -m "&lt;new_commit_message&gt;" .
+</code></pre>
+</div></body></html>

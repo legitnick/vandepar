@@ -1,0 +1,211 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Difference between &quot;git add -A&quot; and &quot;git add .&quot;</p><div class="s-prose js-post-body"><p>What is the difference between <a href="https://git-scm.com/docs/git-add#Documentation/git-add.txt--A" rel="noreferrer"><code>git add [--all | -A]</code></a> and <a href="https://git-scm.com/docs/git-add" rel="noreferrer"><code>git add .</code></a>?</p>
+</div><p class="this-has-helped">This answer has helped 4781 people.</p><div class="s-prose js-post-body"><p><em>This answer only applies to <strong>Git version 1.x</strong>. For Git version 2.x, see other answers.</em></p>
+<hr />
+<p><strong>Summary:</strong></p>
+<ul>
+<li><p><code>git add -A</code> stages <strong>all changes</strong></p>
+</li>
+<li><p><code>git add .</code> stages new files and modifications, <strong>without deletions</strong> (on the current directory and its subdirectories).</p>
+</li>
+<li><p><code>git add -u</code> stages modifications and deletions, <strong>without new files</strong></p>
+</li>
+</ul>
+<hr />
+<p><strong>Detail:</strong></p>
+<p><code>git add -A</code> is equivalent to  <code>git add .; git add -u</code>.</p>
+<p>The important point about <code>git add .</code> is that it looks at the working tree and adds all those paths to the staged changes if they are either changed or are new and not ignored, it does not stage any 'rm' actions.</p>
+<p><code>git add -u</code> looks at all the <em>already</em> tracked files and stages the changes to those files if they are different or if they have been removed. It does not add any new files, it only stages changes to already tracked files.</p>
+<p><code>git add -A</code> is a handy shortcut for doing both of those.</p>
+<p>You can test the differences out with something like this (note that for Git version 2.x your output for <code>git add .</code> <code>git status</code> <strong>will</strong> be different):</p>
+<pre class="lang-sh prettyprint-override"><code>git init
+echo Change me &gt; change-me
+echo Delete me &gt; delete-me
+git add change-me delete-me
+git commit -m initial
+
+echo OK &gt;&gt; change-me
+rm delete-me
+echo Add me &gt; add-me
+
+git status
+# Changed but not updated:
+#   modified:   change-me
+#   deleted:    delete-me
+# Untracked files:
+#   add-me
+
+git add .
+git status
+
+# Changes to be committed:
+#   new file:   add-me
+#   modified:   change-me
+# Changed but not updated:
+#   deleted:    delete-me
+
+git reset
+
+git add -u
+git status
+
+# Changes to be committed:
+#   modified:   change-me
+#   deleted:    delete-me
+# Untracked files:
+#   add-me
+
+git reset
+
+git add -A
+git status
+
+# Changes to be committed:
+#   new file:   add-me
+#   modified:   change-me
+#   deleted:    delete-me
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1282 people.</p><div class="s-prose js-post-body"><h3>Git Version 1.x</h3>
+<div class="s-table-container">
+<table class="s-table">
+<thead>
+<tr>
+<th>Command</th>
+<th>New Files</th>
+<th>Modified Files</th>
+<th>Deleted Files</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git add -A</code></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>Stage all (new, modified, deleted) files</td>
+</tr>
+<tr>
+<td><code>git add .</code></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>❌</td>
+<td>Stage new and modified files only in current folder</td>
+</tr>
+<tr>
+<td><code>git add -u</code></td>
+<td>❌</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>Stage modified and deleted files only</td>
+</tr>
+</tbody>
+</table>
+</div><h3>Git Version 2.x</h3>
+<div class="s-table-container">
+<table class="s-table">
+<thead>
+<tr>
+<th>Command</th>
+<th>New Files</th>
+<th>Modified Files</th>
+<th>Deleted Files</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git add -A</code></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>Stage all (new, modified, deleted) files</td>
+</tr>
+<tr>
+<td><code>git add .</code></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>Stage all (new, modified, deleted) files in current folder</td>
+</tr>
+<tr>
+<td><code>git add --ignore-removal .</code></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>❌</td>
+<td>Stage new and modified files only</td>
+</tr>
+<tr>
+<td><code>git add -u</code></td>
+<td>❌</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>Stage modified and deleted files only</td>
+</tr>
+</tbody>
+</table>
+</div><h3>Long-form flags:</h3>
+<ul>
+<li><code>git add -A</code> is equivalent to <code>git add --all</code></li>
+<li><code>git add -u</code> is equivalent to <code>git add --update</code></li>
+</ul>
+<h3>Further reading:</h3>
+<ul>
+<li><a href="https://stackoverflow.com/q/315911/12860895">Git for beginners: The definitive practical guide</a></li>
+<li><a href="https://try.github.io" rel="noreferrer">Resources to learn Git</a></li>
+<li><a href="https://learngitbranching.js.org" rel="noreferrer">Learn Git Branching</a></li>
+<li><a href="https://onlywei.github.io/explain-git-with-d3" rel="noreferrer">Explain Git With D3</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 205 people.</p><div class="s-prose js-post-body"><p>With <a href="https://github.com/git/git/blob/f99a38c0121456822f8a9dfb7928eefceaa98201/Documentation/RelNotes/2.0.0.txt#L32-L36" rel="noreferrer"><strong>Git 2.0, <code>git add -A</code> is default: <code>git add .</code> equals <code>git add -A .</code></strong></a>.  </p>
+
+<blockquote>
+  <p><code>git add &lt;path&gt;</code> is the same as "<code>git add -A &lt;path&gt;</code>" now, so that
+  "<code>git add dir/</code>" will notice paths you removed from the directory and
+  record the removal.<br>
+  In older versions of Git, "<code>git add &lt;path&gt;</code>" ignored removals.  </p>
+  
+  <p>You can say "<code>git add --ignore-removal &lt;path&gt;</code>" to
+  add only added or modified paths in <code>&lt;path&gt;</code>, if you really want to.</p>
+</blockquote>
+
+<p><code>git add -A</code> is like <code>git add :/</code> (<a href="https://stackoverflow.com/a/31951899/6309">add everything from top git repo folder</a>).<br>
+Note that git 2.7 (Nov. 2015) will allow you to add a folder named "<code>:</code>"!<br>
+See <a href="https://github.com/git/git/commit/29abb33978f713cd0a5cc3687bf61077b0928840" rel="noreferrer">commit 29abb33</a> (25 Oct 2015) by <a href="https://github.com/gitster" rel="noreferrer">Junio C Hamano (<code>gitster</code>)</a>.  </p>
+
+<hr>
+
+<p>Note that <a href="https://github.com/git/git/blob/master/Documentation/RelNotes/1.8.3.txt#L19-L30" rel="noreferrer">starting git 2.0 (Q1 or Q2 2014)</a>, when talking about <strong><code>git add .</code></strong> (current path within the working tree), you must use '<code>.</code>' in the other <code>git add</code> commands as well.</p>
+
+<p>That means:</p>
+
+<blockquote>
+  <p>"<code>git add -A .</code>" is equivalent to "<code>git add .; git add -u .</code>"</p>
+</blockquote>
+
+<p>(Note the extra '<code>.</code>' for <code>git add -A</code> and <code>git add -u</code>)</p>
+
+<p>Because <code>git add -A</code> or <code>git add -u</code> would operate (starting git 2.0 only) on the <strong>entire working tree</strong>, and not just on the current path.</p>
+
+<blockquote>
+  <p>Those commands will <strong>operate on the entire tree in Git 2.0 for consistency with "<code>git commit -a</code>" and other commands</strong>.
+  Because there will be no mechanism to make "<code>git add -u</code>" behave as if "<code>git add -u .</code>", it is important for those who are used to "<code>git add -u</code>" (without pathspec) updating the index only for paths in the current subdirectory to start training their fingers to explicitly say "<code>git add -u .</code>" when they mean it before Git 2.0 comes.</p>
+  
+  <p><strong>A warning is issued when these commands are run without a pathspec and when you have local changes outside the current directory</strong>, because the behaviour in Git 2.0 will be different
+  from today's version in such a situation.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 147 people.</p><div class="s-prose js-post-body"><p>From <a href="https://stackoverflow.com/questions/572549/difference-between-git-add-a-and-git-add/572660#572660">Charles' instructions</a>, after testing my proposed understanding would be as follows:</p>
+<pre class="lang-bash prettyprint-override"><code># For the next commit
+$ git add .   # Add only files created/modified to the index and not those deleted
+$ git add -u  # Add only files deleted/modified to the index and not those created
+$ git add -A  # Do both operations at once, add to all files to the index
+</code></pre>
+<p>This blog post might also be helpful to understand in what situation those commands may be applied: <em><a href="http://www.geekgumbo.com/2010/05/16/removing-deleted-files-from-your-git-working-directory/" rel="nofollow noreferrer">Removing Deleted Files from your Git Working Directory</a></em>.</p>
+<p><em>this is no longer true in 2.0. <code>add .</code> equals to <code>add -A</code> for the same path, the only difference is if there are new files in other paths of the tree</em></p>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><p>In <strong>Git 2.x</strong>:</p>
+
+<ul>
+<li><p>If you are located directly at the <em>working directory</em>, then <code>git add -A</code> and <code>git add .</code> work without the difference.</p></li>
+<li><p>If you are in any subdirectory of the <em>working directory</em>, <code>git add -A</code> will add all files from the entire <em>working directory</em>, and <code>git add .</code> will add files from your <em>current directory</em>.</p></li>
+</ul>
+
+<p>And that's all.</p>
+</div></body></html>

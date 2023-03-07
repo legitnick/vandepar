@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>When to use virtual destructors?</p><div class="s-prose js-post-body"><p>I have a solid understanding of most <code>OOP</code> theory but the one thing that confuses me a lot is virtual destructors.</p>
+<p>I thought that the destructor always gets called no matter what and for every object in the chain.</p>
+<p>When are you meant to make them virtual and why?</p>
+</div><p class="this-has-helped">This answer has helped 1863 people.</p><div class="s-prose js-post-body"><p>Virtual destructors are useful when you might potentially delete an instance of a derived class through a pointer to base class:</p>
+
+<pre><code>class Base 
+{
+    // some virtual methods
+};
+
+class Derived : public Base
+{
+    ~Derived()
+    {
+        // Do some important cleanup
+    }
+};
+</code></pre>
+
+<p>Here, you'll notice that I didn't declare Base's destructor to be <code>virtual</code>. Now, let's have a look at the following snippet:</p>
+
+<pre><code>Base *b = new Derived();
+// use b
+delete b; // Here's the problem!
+</code></pre>
+
+<p>Since Base's destructor is not <code>virtual</code> and <code>b</code> is a <code>Base*</code> pointing to a <code>Derived</code> object, <code>delete b</code> has <a href="https://stackoverflow.com/q/2397984/20984">undefined behaviour</a>:</p>
+
+<blockquote>
+  <p>[In <code>delete b</code>], if the static type of the
+  object to be deleted is different from its dynamic type, the static
+  type shall be a base class of the dynamic type of the object to be
+  deleted and <strong>the static type shall have a virtual destructor or the
+  behavior is undefined</strong>.</p>
+</blockquote>
+
+<p>In most implementations, the call to the destructor will be resolved like any non-virtual code, meaning that the destructor of the base class will be called but not the one of the derived class, resulting in a resources leak.</p>
+
+<p>To sum up, always make base classes' destructors <code>virtual</code> when they're meant to be manipulated polymorphically.</p>
+
+<p>If you want to prevent the deletion of an instance through a base class pointer, you can make the base class destructor protected and nonvirtual; by doing so, the compiler won't let you call <code>delete</code> on a base class pointer.</p>
+
+<p>You can learn more about virtuality and virtual base class destructor in <a href="http://www.gotw.ca/publications/mill18.htm" rel="noreferrer">this article from Herb Sutter</a>.</p>
+</div><p class="this-has-helped">This answer has helped 303 people.</p><div class="s-prose js-post-body"><p>A virtual constructor is not possible but virtual destructor is possible.
+Let us experiment.......</p>
+
+<pre><code>#include &lt;iostream&gt;
+
+using namespace std;
+
+class Base
+{
+public:
+    Base(){
+        cout &lt;&lt; "Base Constructor Called\n";
+    }
+    ~Base(){
+        cout &lt;&lt; "Base Destructor called\n";
+    }
+};
+
+class Derived1: public Base
+{
+public:
+    Derived1(){
+        cout &lt;&lt; "Derived constructor called\n";
+    }
+    ~Derived1(){
+        cout &lt;&lt; "Derived destructor called\n";
+    }
+};
+
+int main()
+{
+    Base *b = new Derived1();
+    delete b;
+}
+</code></pre>
+
+<p>The above code output the following:</p>
+
+<pre class="lang-none prettyprint-override"><code>Base Constructor Called
+Derived constructor called
+Base Destructor called
+</code></pre>
+
+<p>The construction of derived object follow the construction rule but when we delete the "b" pointer(base pointer) we have found that only the base destructor is called. But this must not happen. To do the appropriate thing, we have to make the base destructor virtual.
+Now let see what happens in the following:</p>
+
+<pre><code>#include &lt;iostream&gt;
+
+using namespace std;
+
+class Base
+{ 
+public:
+    Base(){
+        cout &lt;&lt; "Base Constructor Called\n";
+    }
+    virtual ~Base(){
+        cout &lt;&lt; "Base Destructor called\n";
+    }
+};
+
+class Derived1: public Base
+{
+public:
+    Derived1(){
+        cout &lt;&lt; "Derived constructor called\n";
+    }
+    ~Derived1(){
+        cout &lt;&lt; "Derived destructor called\n";
+    }
+};
+
+int main()
+{
+    Base *b = new Derived1();
+    delete b;
+}
+</code></pre>
+
+<p>The output changed as following:</p>
+
+<pre class="lang-none prettyprint-override"><code>Base Constructor Called
+Derived Constructor called
+Derived destructor called
+Base destructor called
+</code></pre>
+
+<p>So the destruction of the base pointer (which takes an allocation on derived object!) follows the destruction rule, i.e first the Derived, then the Base.
+On the other hand, there is nothing like a virtual constructor.       </p>
+</div><p class="this-has-helped">This answer has helped 216 people.</p><div class="s-prose js-post-body"><p>Declare destructors virtual in polymorphic base classes.  This is Item 7 in Scott Meyers' <a href="https://rads.stackoverflow.com/amzn/click/com/0201924889" rel="noreferrer" rel="nofollow noreferrer">Effective C++</a>.  Meyers goes on to summarize that if a class has <em>any</em> virtual function, it should have a virtual destructor, and that classes not designed to be base classes or not designed to be used polymorphically should <em>not</em> declare virtual destructors.</p>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><p>Make the destructor virtual whenever your class is polymorphic.</p>
+</div><p class="this-has-helped">This answer has helped 49 people.</p><div class="s-prose js-post-body"><p>Also be aware that deleting a base class pointer when there is no virtual destructor will result in <strong><em>undefined behavior</em></strong>.  Something that I learned just recently:</p>
+
+<p><a href="https://stackoverflow.com/questions/408196/how-should-overriding-delete-in-c-behave">How should overriding delete in C++ behave?</a></p>
+
+<p>I've been using C++ for years and I still manage to hang myself.</p>
+</div></body></html>

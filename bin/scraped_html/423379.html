@@ -1,0 +1,106 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Using global variables in a function</p><div class="s-prose js-post-body"><p>How do I create or use a global variable inside a function?</p>
+<p>How do I use a global variable that was defined in one function inside other functions?</p>
+<hr />
+<p><sub>Failing to use the <code>global</code> keyword where appropriate often causes <code>UnboundLocalError</code>. The precise rules for this are explained at <a href="https://stackoverflow.com/questions/370357">UnboundLocalError on local variable when reassigned after first use</a>. Generally, please close other questions as a duplicate of <em>that</em> question when an explanation is sought, and <em>this</em> question when someone simply needs to know the <code>global</code> keyword.</sub></p>
+</div><p class="this-has-helped">This answer has helped 5059 people.</p><div class="s-prose js-post-body"><p>You can use a global variable within other functions by declaring it as <code>global</code> <strong>within each function that assigns a value to it</strong>:</p>
+<pre><code>globvar = 0
+
+def set_globvar_to_one():
+    global globvar    # Needed to modify global copy of globvar
+    globvar = 1
+
+def print_globvar():
+    print(globvar)     # No need for global declaration to read value of globvar
+
+set_globvar_to_one()
+print_globvar()       # Prints 1
+</code></pre>
+<p>Since it's unclear whether <code>globvar = 1</code> is creating a local variable or changing a global variable, Python defaults to creating a local variable, and makes you explicitly choose the other behavior with the <code>global</code> keyword.</p>
+<p>See other answers if you want to share a global variable across modules.</p>
+</div><p class="this-has-helped">This answer has helped 885 people.</p><div class="s-prose js-post-body"><p>If I'm understanding your situation correctly, what you're seeing is the result of how Python handles local (function) and global (module) namespaces.</p>
+<p>Say you've got a module like this:</p>
+<pre><code># sample.py
+_my_global = 5
+
+def func1():
+    _my_global = 42
+
+def func2():
+    print _my_global
+
+func1()
+func2()
+</code></pre>
+<p>You might expecting this to print 42, but instead it prints 5.  As has already been mentioned, if you add a '<code>global</code>' declaration to <code>func1()</code>, then <code>func2()</code> will print 42.</p>
+<pre><code>def func1():
+    global _my_global 
+    _my_global = 42
+</code></pre>
+<p>What's going on here is that Python assumes that any name that is <em>assigned to</em>, anywhere within a function, is local to that function unless explicitly told otherwise.  If it is only <em>reading</em> from a name, and the name doesn't exist locally, it will try to look up the name in any containing scopes (e.g. the module's global scope).</p>
+<p>When you assign 42 to the name <code>_my_global</code>, therefore, Python creates a local variable that shadows the global variable of the same name.  That local goes out of scope and is <a href="http://www.digi.com/wiki/developer/index.php/Python_Garbage_Collection" rel="noreferrer">garbage-collected</a> when <code>func1()</code> returns; meanwhile, <code>func2()</code> can never see anything other than the (unmodified) global name.  Note that this namespace decision happens at compile time, not at runtime -- if you were to read the value of <code>_my_global</code> inside <code>func1()</code> before you assign to it, you'd get an <code>UnboundLocalError</code>, because Python has already decided that it must be a local variable but it has not had any value associated with it yet.  But by using the '<code>global</code>' statement, you tell Python that it should look elsewhere for the name instead of assigning to it locally.</p>
+<p>(I believe that this behavior originated largely through an optimization of local namespaces -- without this behavior,  Python's VM would need to perform at least three name lookups each time a new name is assigned to inside a function (to ensure that the name didn't already exist at module/builtin level), which would significantly slow down a very common operation.)</p>
+</div><p class="this-has-helped">This answer has helped 270 people.</p><div class="s-prose js-post-body"><p>You may want to explore the notion of <a href="http://docs.python.org/reference/datamodel.html" rel="noreferrer">namespaces</a>. In Python, the <a href="http://docs.python.org/tutorial/modules.html" rel="noreferrer">module</a> is the natural place for <em>global</em> data:</p>
+<blockquote>
+<p>Each module has its own private symbol table, which is used as the global symbol table by all functions defined in the module. Thus, the author of a module can use global variables in the module without worrying about accidental clashes with a user’s global variables. On the other hand, if you know what you are doing you can touch a module’s global variables with the same notation used to refer to its functions, <code>modname.itemname</code>.</p>
+</blockquote>
+<p>A specific use of global-in-a-module is described here - <a href="https://docs.python.org/3/faq/programming.html#how-do-i-share-global-variables-across-modules" rel="noreferrer">How do I share global variables across modules?</a>, and for completeness the contents are shared here:</p>
+<blockquote>
+<p>The canonical way to share information across modules within a single program is to create a special configuration module (often called <strong>config</strong> or <strong>cfg</strong>). Just import the configuration module in all modules of your application; the module then becomes available as a global name. Because there is only one instance of each module, any changes made to the module object get reflected everywhere. For example:</p>
+</blockquote>
+<blockquote>
+<p>File: config.py</p>
+</blockquote>
+<blockquote>
+<pre><code>x = 0   # Default value of the 'x' configuration setting
+</code></pre>
+</blockquote>
+<blockquote>
+<p>File: mod.py</p>
+</blockquote>
+<pre><code>import config
+config.x = 1
+</code></pre>
+<blockquote>
+<p>File: main.py</p>
+</blockquote>
+<pre><code>import config
+import mod
+print config.x
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 115 people.</p><div class="s-prose js-post-body"><p>Python uses a simple heuristic to decide which scope it should load a variable from, between local and global.  If a variable name appears on the left hand side of an assignment, but is not declared global, it is assumed to be local.  If it does not appear on the left hand side of an assignment, it is assumed to be global.  </p>
+
+<pre><code>&gt;&gt;&gt; import dis
+&gt;&gt;&gt; def foo():
+...     global bar
+...     baz = 5
+...     print bar
+...     print baz
+...     print quux
+... 
+&gt;&gt;&gt; dis.disassemble(foo.func_code)
+  3           0 LOAD_CONST               1 (5)
+              3 STORE_FAST               0 (baz)
+
+  4           6 LOAD_GLOBAL              0 (bar)
+              9 PRINT_ITEM          
+             10 PRINT_NEWLINE       
+
+  5          11 LOAD_FAST                0 (baz)
+             14 PRINT_ITEM          
+             15 PRINT_NEWLINE       
+
+  6          16 LOAD_GLOBAL              1 (quux)
+             19 PRINT_ITEM          
+             20 PRINT_NEWLINE       
+             21 LOAD_CONST               0 (None)
+             24 RETURN_VALUE        
+&gt;&gt;&gt; 
+</code></pre>
+
+<p>See how baz, which appears on the left side of an assignment in <code>foo()</code>, is the only <code>LOAD_FAST</code> variable.</p>
+</div><p class="this-has-helped">This answer has helped 74 people.</p><div class="s-prose js-post-body"><p>If you want to refer to a global variable in a function, you can use the <strong>global</strong> keyword to declare which variables are global. You don't have to use it in all cases (as someone here incorrectly claims) - if the name referenced in an expression cannot be found in local scope or scopes in the functions in which this function is defined, it is looked up among global variables.</p>
+
+<p>However, if you assign to a new variable not declared as global in the function, it is implicitly declared as local, and it can overshadow any existing global variable with the same name.</p>
+
+<p>Also, global variables are useful, contrary to some OOP zealots who claim otherwise - especially for smaller scripts, where OOP is overkill.</p>
+</div></body></html>

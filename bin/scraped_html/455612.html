@@ -1,0 +1,100 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Limiting floats to two decimal points</p><div class="s-prose js-post-body"><p>I want <code>a</code> to be rounded to <em>13.95</em>. I tried using <a href="https://docs.python.org/2/library/functions.html#round" rel="noreferrer"><code>round</code></a>, but I get:</p>
+<pre><code>&gt;&gt;&gt; a
+13.949999999999999
+&gt;&gt;&gt; round(a, 2)
+13.949999999999999
+</code></pre>
+<hr />
+<p><sub>For the analogous issue with the standard library Decimal class, see <a href="https://stackoverflow.com/questions/1995615">How can I format a decimal to always show 2 decimal places?</a>.</sub></p>
+</div><p class="this-has-helped">This answer has helped 2193 people.</p><div class="s-prose js-post-body"><p>You are running into the <a href="https://en.wikipedia.org/wiki/IEEE_754" rel="noreferrer">old problem</a> with floating point numbers that not all numbers can be represented exactly. The command line is just showing you the full floating point form from memory.</p>
+
+<p>With floating point representation, your rounded version is the same number. Since computers are binary, they store floating point numbers as an integer and then divide it by a power of two so 13.95 will be represented in a similar fashion to 125650429603636838/(2**53).</p>
+
+<p>Double precision numbers have 53 bits (16 digits) of precision and regular floats have 24 bits (8 digits) of precision. The <a href="http://docs.python.org/tutorial/floatingpoint.html" rel="noreferrer">floating point type in Python uses double precision</a> to store the values.</p>
+
+<p>For example,</p>
+
+<pre><code>&gt;&gt;&gt; 125650429603636838/(2**53)
+13.949999999999999
+
+&gt;&gt;&gt; 234042163/(2**24)
+13.949999988079071
+
+&gt;&gt;&gt; a = 13.946
+&gt;&gt;&gt; print(a)
+13.946
+&gt;&gt;&gt; print("%.2f" % a)
+13.95
+&gt;&gt;&gt; round(a,2)
+13.949999999999999
+&gt;&gt;&gt; print("%.2f" % round(a, 2))
+13.95
+&gt;&gt;&gt; print("{:.2f}".format(a))
+13.95
+&gt;&gt;&gt; print("{:.2f}".format(round(a, 2)))
+13.95
+&gt;&gt;&gt; print("{:.15f}".format(round(a, 2)))
+13.949999999999999
+</code></pre>
+
+<p>If you are after only two decimal places (to display a currency value, for example), then you have a couple of better choices:</p>
+
+<ol>
+<li>Use integers and store values in cents, not dollars and then divide by 100 to convert to dollars.</li>
+<li>Or use a fixed point number like <a href="https://docs.python.org/library/decimal.html" rel="noreferrer">decimal</a>.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 773 people.</p><div class="s-prose js-post-body"><p>There are new format specifications, <a href="http://docs.python.org/library/string.html#format-specification-mini-language" rel="noreferrer"><strong>String Format Specification Mini-Language</strong></a>:</p>
+
+<p>You can do the same as:</p>
+
+<pre><code>"{:.2f}".format(13.949999999999999)
+</code></pre>
+
+<p><strong>Note 1:</strong> the above returns a string. In order to get as float, simply wrap with <code>float(...)</code>:</p>
+
+<pre><code>float("{:.2f}".format(13.949999999999999))
+</code></pre>
+
+<p><strong>Note 2:</strong> wrapping with <code>float()</code> doesn't change anything:</p>
+
+<pre><code>&gt;&gt;&gt; x = 13.949999999999999999
+&gt;&gt;&gt; x
+13.95
+&gt;&gt;&gt; g = float("{:.2f}".format(x))
+&gt;&gt;&gt; g
+13.95
+&gt;&gt;&gt; x == g
+True
+&gt;&gt;&gt; h = round(x, 2)
+&gt;&gt;&gt; h
+13.95
+&gt;&gt;&gt; x == h
+True
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 406 people.</p><div class="s-prose js-post-body"><p>The built-in <code>round()</code> works just fine in Python 2.7 or later.</p>
+
+<p>Example:</p>
+
+<pre><code>&gt;&gt;&gt; round(14.22222223, 2)
+14.22
+</code></pre>
+
+<p>Check out <a href="https://docs.python.org/3/library/functions.html#round" rel="noreferrer">the documentation</a>.</p>
+</div><p class="this-has-helped">This answer has helped 295 people.</p><div class="s-prose js-post-body"><p>Let me give an example in Python 3.6's <a href="https://en.wikipedia.org/wiki/Python_(programming_language)#Expressions" rel="noreferrer">f-string</a>/template-string format, which I think is beautifully neat:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt; f'{a:.2f}'
+</code></pre>
+<p>It works well with longer examples too, with operators and not needing parentheses:</p>
+<pre class="lang-none prettyprint-override"><code>&gt;&gt;&gt; print(f'Completed in {time.time() - start:.2f}s')
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 176 people.</p><div class="s-prose js-post-body"><p>I feel that the simplest approach is to use the <code>format()</code> function.</p>
+
+<p>For example:</p>
+
+<pre><code>a = 13.949999999999999
+format(a, '.2f')
+
+13.95
+</code></pre>
+
+<p>This produces a float number as a string rounded to two decimal points.</p>
+</div></body></html>

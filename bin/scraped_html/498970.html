@@ -1,0 +1,73 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Trim string in JavaScript</p><div class="s-prose js-post-body"><p>How do I remove all whitespace from the start and end of the string?</p>
+</div><p class="this-has-helped">This answer has helped 937 people.</p><div class="s-prose js-post-body"><p>All browsers since IE9+ have <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/trim" rel="noreferrer"><code>trim()</code></a> method for strings:</p>
+<pre><code>&quot; \n test \n &quot;.trim(); // returns &quot;test&quot; here
+</code></pre>
+<p>For those browsers who does not support <code>trim()</code>, you can use this polyfill from <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/Trim" rel="noreferrer">MDN</a>:</p>
+<pre><code>if (!String.prototype.trim) {
+    (function() {
+        // Make sure we trim BOM and NBSP
+        var rtrim = /^[\s\uFEFF\xA0]+|[\s\uFEFF\xA0]+$/g;
+        String.prototype.trim = function() {
+            return this.replace(rtrim, '');
+        };
+    })();
+}
+</code></pre>
+<hr />
+<p>That said, if using <code>jQuery</code>, <code>$.trim(str)</code> is also available and handles undefined/null.</p>
+<hr />
+<p>See this:</p>
+<pre><code>String.prototype.trim=function(){return this.replace(/^\s+|\s+$/g, '');};
+
+String.prototype.ltrim=function(){return this.replace(/^\s+/,'');};
+
+String.prototype.rtrim=function(){return this.replace(/\s+$/,'');};
+
+String.prototype.fulltrim=function(){return this.replace(/(?:(?:^|\n)\s+|\s+(?:$|\n))/g,'').replace(/\s+/g,' ');};
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 483 people.</p><div class="s-prose js-post-body"><p>The trim from <a href="http://api.jquery.com/jQuery.trim/" rel="noreferrer">jQuery</a> is convenient if you are already using that framework. </p>
+
+<pre><code>$.trim('  your string   ');
+</code></pre>
+
+<p>I tend to use jQuery often, so trimming strings with it is natural for me.  But it's possible that there is backlash against jQuery out there? :) </p>
+</div><p class="this-has-helped">This answer has helped 166 people.</p><div class="s-prose js-post-body"><p>Although there are a bunch of correct answers above, it should be noted that the <code>String</code> object in JavaScript has a native <code>.trim()</code> method as of <em>ECMAScript 5</em>.  Thus ideally any attempt to prototype the trim method should really check to see if it already exists first.</p>
+
+<pre><code>if(!String.prototype.trim){  
+  String.prototype.trim = function(){  
+    return this.replace(/^\s+|\s+$/g,'');  
+  };  
+}
+</code></pre>
+
+<p><strong>Added natively in:</strong>
+JavaScript 1.8.1 / ECMAScript 5</p>
+
+<p>Thus supported in:</p>
+
+<p>Firefox: <strong>3.5+</strong></p>
+
+<p>Safari: <strong>5+</strong></p>
+
+<p>Internet Explorer: <strong>IE9+</strong> (in Standards mode only!) <a href="http://blogs.msdn.com/b/ie/archive/2010/06/25/enhanced-scripting-in-ie9-ecmascript-5-support-and-more.aspx" rel="noreferrer">http://blogs.msdn.com/b/ie/archive/2010/06/25/enhanced-scripting-in-ie9-ecmascript-5-support-and-more.aspx</a></p>
+
+<p>Chrome: <strong>5+</strong></p>
+
+<p>Opera: <strong>10.5+</strong></p>
+
+<p>ECMAScript 5 Support Table: <a href="http://kangax.github.com/es5-compat-table/" rel="noreferrer">http://kangax.github.com/es5-compat-table/</a></p>
+</div><p class="this-has-helped">This answer has helped 129 people.</p><div class="s-prose js-post-body"><p>There are <a href="http://blog.stevenlevithan.com/archives/faster-trim-javascript" rel="noreferrer">a lot of implementations</a> that can be used. The most obvious seems to be something like this:</p>
+
+<pre><code>String.prototype.trim = function() {
+    return this.replace(/^\s+|\s+$/g, "");
+};
+
+" foo bar ".trim();  // "foo bar"
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 47 people.</p><div class="s-prose js-post-body"><p>Simple version here <a href="http://www.whadiz.com/what-is.aspx/programming/javascript/javascript-trim" rel="noreferrer">What is a general function for JavaScript trim?</a></p>
+
+<pre><code>function trim(str) {
+        return str.replace(/^\s+|\s+$/g,"");
+}
+</code></pre>
+</div></body></html>

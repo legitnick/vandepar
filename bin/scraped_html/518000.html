@@ -1,0 +1,305 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Is JavaScript a pass-by-reference or pass-by-value language?</p><div class="s-prose js-post-body"><p>The primitive types (number, string, etc.) are passed by value, but objects are unknown, because they can be both passed-by-value (in case we consider that a variable holding an object is in fact a reference to the object) and passed-by-reference (when we consider that the variable to the object holds the object itself).</p>
+
+<p>Although it doesn't really matter at the end, I want to know what is the correct way to present the arguments passing conventions. Is there an excerpt from JavaScript specification, which defines what should be the semantics regarding this?</p>
+</div><p class="this-has-helped">This answer has helped 1953 people.</p><div class="s-prose js-post-body"><p>It's interesting in JavaScript. Consider this example:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function changeStuff(a, b, c)
+{
+  a = a * 10;
+  b.item = "changed";
+  c = {item: "changed"};
+}
+
+var num = 10;
+var obj1 = {item: "unchanged"};
+var obj2 = {item: "unchanged"};
+
+changeStuff(num, obj1, obj2);
+
+console.log(num);
+console.log(obj1.item);
+console.log(obj2.item);</code></pre>
+</div>
+</div>
+</p>
+<p>This produces the output:</p>
+<pre class="lang-none prettyprint-override"><code>10
+changed
+unchanged
+</code></pre>
+<ul>
+<li>If <code>obj1</code> was not a reference at all, then changing <code>obj1.item</code> would have no effect on the <code>obj1</code> outside of the function.</li>
+<li>If the argument was a proper reference, then everything would have changed. <code>num</code> would be <code>100</code>, and <code>obj2.item</code> would read <code>&quot;changed&quot;</code>. Instead, <code>num</code> stays <code>10</code> and <code>obj2.item</code> remains <code>&quot;unchanged</code>&quot;.</li>
+</ul>
+<p>Instead, the situation is that the item passed in is passed by value. But the item that is passed by value is <em>itself</em> a reference.
+Technically, this is called <a href="http://en.wikipedia.org/wiki/Evaluation_strategy#Call_by_sharing" rel="noreferrer">call-by-sharing</a>.</p>
+<p>In practical terms, this means that if you change the parameter itself (as with <code>num</code> and <code>obj2</code>), that won't affect the item that was fed into the parameter. But if you change the <em>internals</em> of the parameter, that will propagate back up (as with <code>obj1</code>).</p>
+</div><p class="this-has-helped">This answer has helped 612 people.</p><div class="s-prose js-post-body"><p>It's always pass by value, but for objects the value of the variable is a reference.  Because of this, when you pass an object and change its <em>members</em>, those changes persist outside of the function.  This makes it <em>look</em> like pass by reference.  But if you actually change the value of the object variable you will see that the change does not persist, proving it's really pass by value.</p>
+
+<p>Example:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function changeObject(x) {
+  x = { member: "bar" };
+  console.log("in changeObject: " + x.member);
+}
+
+function changeMember(x) {
+  x.member = "bar";
+  console.log("in changeMember: " + x.member);
+}
+
+var x = { member: "foo" };
+
+console.log("before changeObject: " + x.member);
+changeObject(x);
+console.log("after changeObject: " + x.member); /* change did not persist */
+
+console.log("before changeMember: " + x.member);
+changeMember(x);
+console.log("after changeMember: " + x.member); /* change persists */</code></pre>
+</div>
+</div>
+</p>
+
+<p>Output:</p>
+
+<pre><code>before changeObject: foo
+in changeObject: bar
+after changeObject: foo
+
+before changeMember: foo
+in changeMember: bar
+after changeMember: bar
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 167 people.</p><div class="s-prose js-post-body"><p>The variable doesn't "hold" the object; it holds a reference. You can assign that reference to another variable, and now both reference the same object. It's always pass by value (even when that value is a reference...).</p>
+
+<p>There's no way to alter the value held by a variable passed as a parameter, which would be possible if JavaScript supported passing by reference.</p>
+</div><p class="this-has-helped">This answer has helped 145 people.</p><div class="s-prose js-post-body"><p>My two cents... This is the way I understand it. (Feel free to correct me if I'm wrong)</p>
+<p>It's time to throw out everything you know about pass by value / reference.</p>
+<p><strong>Because in JavaScript, it doesn't matter whether it's passed by value or by reference or whatever.
+What matters is mutation vs assignment of the parameters passed into a function.</strong></p>
+<p>OK, let me do my best to explain what I mean. Let's say you have a few objects.</p>
+<pre><code>var object1 = {};
+var object2 = {};
+</code></pre>
+<p>What we have done is &quot;assignment&quot;... We've assigned 2 separate empty objects to the variables &quot;object1&quot; and &quot;object2&quot;.</p>
+<p>Now, let's say that we like object1 better... So, we &quot;assign&quot; a new variable.</p>
+<pre><code>var favoriteObject = object1;
+</code></pre>
+<p>Next, for whatever reason, we decide that we like object 2 better. So, we do a little re-assignment.</p>
+<pre><code>favoriteObject = object2;
+</code></pre>
+<p>Nothing happened to object1 or to object2. We haven't changed any data at all. All we did was re-assign what our favorite object is. It is important to know that object2 and favoriteObject are both assigned to the same object. We can change that object via either of those variables.</p>
+<pre><code>object2.name = 'Fred';
+console.log(favoriteObject.name) // Logs Fred
+favoriteObject.name = 'Joe';
+console.log(object2.name); // Logs Joe
+</code></pre>
+<p>OK, now let's look at primitives like strings for example</p>
+<pre><code>var string1 = 'Hello world';
+var string2 = 'Goodbye world';
+</code></pre>
+<p>Again, we pick a favorite.</p>
+<pre><code>var favoriteString = string1;
+</code></pre>
+<p>Both our favoriteString and string1 variables are assigned to 'Hello world'. Now, what if we want to change our favoriteString??? What will happen???</p>
+<pre><code>favoriteString = 'Hello everyone';
+console.log(favoriteString); // Logs 'Hello everyone'
+console.log(string1); // Logs 'Hello world'
+</code></pre>
+<p>Uh oh.... What has happened. We couldn't change string1 by changing favoriteString... Why?? Because we didn't <em>change</em> our string <em>object</em>. All we did was &quot;RE ASSIGN&quot; the favoriteString <em>variable</em> to a new string. This essentially disconnected it from string1. In the previous example, when we renamed our object, we didn't assign anything. (Well, not to the <em>variable itself</em>, ... we did, however, assign the name property to a new string.) Instead, we mutated the object which keeps the connections between the 2 variables and the underlying objects. (Even if we had wanted to modify or <em>mutate</em> the string object <em>itself</em>, we couldn't have, because strings are actually immutable in JavaScript.)</p>
+<p>Now, on to functions and passing parameters.... When you call a function, and pass a parameter, what you are essentially doing is an &quot;assignment&quot; to a new variable, and it works exactly the same as if you assigned using the equal (=) sign.</p>
+<p>Take these examples.</p>
+<pre><code>var myString = 'hello';
+
+// Assign to a new variable (just like when you pass to a function)
+var param1 = myString;
+param1 = 'world'; // Re assignment
+
+console.log(myString); // Logs 'hello'
+console.log(param1);   // Logs 'world'
+</code></pre>
+<p>Now, the same thing, but with a function</p>
+<pre><code>function myFunc(param1) {
+    param1 = 'world';
+
+    console.log(param1);   // Logs 'world'
+}
+
+var myString = 'hello';
+// Calls myFunc and assigns param1 to myString just like param1 = myString
+myFunc(myString);
+
+console.log(myString); // logs 'hello'
+</code></pre>
+<p>OK, now let’s give a few examples using objects instead... first, without the function.</p>
+<pre><code>var myObject = {
+    firstName: 'Joe',
+    lastName: 'Smith'
+};
+
+// Assign to a new variable (just like when you pass to a function)
+var otherObj = myObject;
+
+// Let's mutate our object
+otherObj.firstName = 'Sue'; // I guess Joe decided to be a girl
+
+console.log(myObject.firstName); // Logs 'Sue'
+console.log(otherObj.firstName); // Logs 'Sue'
+
+// Now, let's reassign the variable
+otherObj = {
+    firstName: 'Jack',
+    lastName: 'Frost'
+};
+
+// Now, otherObj and myObject are assigned to 2 very different objects
+// And mutating one object has no influence on the other
+console.log(myObject.firstName); // Logs 'Sue'
+console.log(otherObj.firstName); // Logs 'Jack';
+</code></pre>
+<p>Now, the same thing, but with a function call</p>
+<pre><code>function myFunc(otherObj) {
+
+    // Let's mutate our object
+    otherObj.firstName = 'Sue';
+    console.log(otherObj.firstName); // Logs 'Sue'
+
+    // Now let's re-assign
+    otherObj = {
+        firstName: 'Jack',
+        lastName: 'Frost'
+    };
+    console.log(otherObj.firstName); // Logs 'Jack'
+
+    // Again, otherObj and myObject are assigned to 2 very different objects
+    // And mutating one object doesn't magically mutate the other
+}
+
+var myObject = {
+    firstName: 'Joe',
+    lastName: 'Smith'
+};
+
+// Calls myFunc and assigns otherObj to myObject just like otherObj = myObject
+myFunc(myObject);
+
+console.log(myObject.firstName); // Logs 'Sue', just like before
+</code></pre>
+<p>OK, if you read through this entire post, perhaps you now have a better understanding of how function calls work in JavaScript. It doesn't matter whether something is passed by reference or by value... What matters is assignment vs mutation.</p>
+<p>Every time you pass a variable to a function, you are &quot;Assigning&quot; to whatever the name of the parameter variable is, just like if you used the equal (=) sign.</p>
+<p>Always remember that the equals sign (=) means assignment.
+Always remember that passing a parameter to a function <em>in JavaScript</em> also means assignment.
+They are the same and the 2 variables are connected in exactly the same way (which is to say they aren't, unless you count that they are assigned to the same object).</p>
+<p>The only time that &quot;modifying a variable&quot; affects a different variable is when the underlying object is mutated (in which case you haven't modified the variable, but the object itself.</p>
+<p>There is no point in making a distinction between objects and primitives, because it works the same exact way as if you didn't have a function and just used the equal sign to assign to a new variable.</p>
+<p>The only gotcha is when the name of the variable you pass into the function is the same as the name of the function parameter. When this happens, you have to treat the parameter inside the function as if it was a whole new variable private to the function (because it is)</p>
+<pre><code>function myFunc(myString) {
+    // myString is private and does not affect the outer variable
+    myString = 'hello';
+}
+
+var myString = 'test';
+myString = myString; // Does nothing, myString is still 'test';
+
+myFunc(myString);
+console.log(myString); // Logs 'test'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 90 people.</p><div class="s-prose js-post-body">
+<p>These phrases/concepts were originally defined long before JS was created and they don't accurately describe the semantics for javascript. I think trying to apply them to JS causes more confusion than not.</p>
+<p>So don't get hung up on &quot;pass by reference/value&quot;.</p>
+<p>Consider the following:</p>
+<ol>
+<li>Variables are <em>pointers</em> to values.</li>
+<li>Reassigning a variable merely points that pointer at a new value.</li>
+<li>Reassigning a variable will never affect other variables that were pointing at that same object because each variable has its own pointer.</li>
+</ol>
+<p>So if I had to give it a name I'd say <strong>&quot;pass-by-pointer&quot;</strong> -- we don't deal with pointers in JS but the underlying engine does.</p>
+<br/>
+<pre><code>// code
+var obj = {
+    name: 'Fred',
+    num: 1
+};
+
+// illustration
+               'Fred'
+              /
+             /
+(obj) ---- {}
+             \
+              \
+               1
+</code></pre>
+<br/>
+<pre><code>// code
+obj.name = 'George';
+
+
+// illustration
+                 'Fred'
+
+
+(obj) ---- {} ----- 'George'
+             \
+              \
+               1
+</code></pre>
+<br/>
+<pre><code>// code
+obj = {};
+
+// illustration
+                 'Fred'
+
+
+(obj)      {} ----- 'George'
+  |          \
+  |           \
+ { }            1
+</code></pre>
+<br/>
+<pre><code>// code
+var obj = {
+    text: 'Hello world!'
+};
+
+/* function parameters get their own pointer to 
+ * the arguments that are passed in, just like any other variable */
+someFunc(obj);
+
+
+// illustration
+(caller scope)        (someFunc scope)
+           \             /
+            \           /
+             \         /
+              \       /
+               \     /
+                 { }
+                  |
+                  |
+                  |
+            'Hello world'
+</code></pre>
+<p>Some final comments:</p>
+<ul>
+<li>The phrases &quot;pass by value/reference&quot; are only used to describe the <em>behavior</em> of a language, not necessarily the actual underlying implementation. As a result of this abstraction, critical details that are essential for a decent explanation are lost, which inevitably leads to the current situation where a single term doesn't adequately describe the actual behavior without additional info.</li>
+<li>It's tempting to think that <em>primitives</em> are enforced by special rules while <em>objects</em> are not, but primitives are simply the end of the pointer chain.</li>
+<li>As a final example, consider why a common attempt to clear an array doesn't work as expected.</li>
+</ul>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var a = [1, 2];
+var b = a;
+
+a = [];
+console.log(b); // [1,2]
+// doesn't work because `b` is still pointing at the original array</code></pre>
+</div>
+</div>
+</p>
+</div></body></html>

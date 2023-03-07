@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I get the current time?</p><div class="s-prose js-post-body"><p>How do I get the current time?</p>
+</div><p class="this-has-helped">This answer has helped 3768 people.</p><div class="s-prose js-post-body"><p>Use <a href="https://docs.python.org/3/library/datetime.html" rel="noreferrer"><code>datetime</code></a>:</p>
+<pre><code>&gt;&gt;&gt; import datetime
+&gt;&gt;&gt; now = datetime.datetime.now()
+&gt;&gt;&gt; now
+datetime.datetime(2009, 1, 6, 15, 8, 24, 78915)
+&gt;&gt;&gt; print(now)
+2009-01-06 15:08:24.789150
+</code></pre>
+<p>For just the clock time without the date:</p>
+<pre><code>&gt;&gt;&gt; now.time()
+datetime.time(15, 8, 24, 78915)
+&gt;&gt;&gt; print(now.time())
+15:08:24.789150
+</code></pre>
+<hr />
+<p>To save typing, you can import the <code>datetime</code> object from the <a href="https://docs.python.org/3/library/datetime.html" rel="noreferrer"><code>datetime</code></a> module:</p>
+<pre><code>&gt;&gt;&gt; from datetime import datetime
+</code></pre>
+<p>Then remove the prefix <code>datetime.</code> from all of the above.</p>
+</div><p class="this-has-helped">This answer has helped 1163 people.</p><div class="s-prose js-post-body"><p>Use <a href="http://docs.python.org/3.3/library/time.html?highlight=time.strftime#time.strftime" rel="noreferrer"><code>time.strftime()</code></a>:</p>
+<pre><code>&gt;&gt;&gt; from time import gmtime, strftime
+&gt;&gt;&gt; strftime(&quot;%Y-%m-%d %H:%M:%S&quot;, gmtime())
+'2009-01-05 22:14:39'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 835 people.</p><div class="s-prose js-post-body"><pre><code>from datetime import datetime
+datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+</code></pre>
+<p>Example output: <code>'2013-09-18 11:16:32'</code></p>
+<p>See list of <a href="https://docs.python.org/library/datetime.html#strftime-and-strptime-format-codes" rel="noreferrer"><code>strftime</code> directives</a>.</p>
+</div><p class="this-has-helped">This answer has helped 519 people.</p><div class="s-prose js-post-body"><p>Similar to <a href="https://stackoverflow.com/questions/415511/how-to-get-current-time-in-python/415519#415519">Harley's answer</a>, but use the <code>str()</code> function for a quick-n-dirty, slightly more human readable format:</p>
+
+<pre><code>&gt;&gt;&gt; from datetime import datetime
+&gt;&gt;&gt; str(datetime.now())
+'2011-05-03 17:45:35.177000'
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 508 people.</p><div class="s-prose js-post-body"><blockquote>
+<h1>How do I get the current time in Python?</h1>
+</blockquote>
+<h2>The <code>time</code> module</h2>
+<p>The <code>time</code> module provides functions that tell us the time in &quot;seconds since the epoch&quot; as well as other utilities.</p>
+<pre><code>import time
+</code></pre>
+<h3>Unix Epoch Time</h3>
+<p>This is the format you should get timestamps in for saving in databases. It is a simple floating-point number that can be converted to an integer. It is also good for arithmetic in seconds, as it represents the number of seconds since Jan 1, 1970, 00:00:00, and it is memory light relative to the other representations of time we'll be looking at next:</p>
+<pre><code>&gt;&gt;&gt; time.time()
+1424233311.771502
+</code></pre>
+<p>This timestamp does not account for leap-seconds, so it's not linear - leap seconds are ignored. So while it is not equivalent to the international UTC standard, it is close, and therefore quite good for most cases of record-keeping.</p>
+<p>This is not ideal for human scheduling, however. If you have a future event you wish to take place at a certain point in time, you'll want to store that time with a string that can be parsed into a <code>datetime</code> object or a serialized <code>datetime</code> object (these will be described later).</p>
+<h3><code>time.ctime</code></h3>
+<p>You can also represent the current time in the way preferred by your operating system (which means it can change when you change your system preferences, so don't rely on this to be standard across all systems, as I've seen others expect). This is typically user friendly, but doesn't typically result in strings one can sort chronologically:</p>
+<pre><code>&gt;&gt;&gt; time.ctime()
+'Tue Feb 17 23:21:56 2015'
+</code></pre>
+<p>You can hydrate timestamps into human readable form with <code>ctime</code> as well:</p>
+<pre><code>&gt;&gt;&gt; time.ctime(1424233311.771502)
+'Tue Feb 17 23:21:51 2015'
+</code></pre>
+<p>This conversion is also not good for record-keeping (except in text that will only be parsed by humans - and with improved Optical Character Recognition and Artificial Intelligence, I think the number of these cases will diminish).</p>
+<h2><code>datetime</code> module</h2>
+<p>The <code>datetime</code> module is also quite useful here:</p>
+<pre><code>&gt;&gt;&gt; import datetime
+</code></pre>
+<h3><code>datetime.datetime.now</code></h3>
+<p>The <code>datetime.now</code> is a class method that returns the current time. It uses the <code>time.localtime</code> without the timezone info (if not given, otherwise see timezone aware below). It has a representation (which would allow you to recreate an equivalent object) echoed on the shell, but when printed (or coerced to a <code>str</code>), it is in human readable (and nearly ISO) format, and the lexicographic sort is equivalent to the chronological sort:</p>
+<pre><code>&gt;&gt;&gt; datetime.datetime.now()
+datetime.datetime(2015, 2, 17, 23, 43, 49, 94252)
+&gt;&gt;&gt; print(datetime.datetime.now())
+2015-02-17 23:43:51.782461
+</code></pre>
+<h3>datetime's <code>utcnow</code></h3>
+<p>You can get a datetime object in UTC time, a global standard, by doing this:</p>
+<pre><code>&gt;&gt;&gt; datetime.datetime.utcnow()
+datetime.datetime(2015, 2, 18, 4, 53, 28, 394163)
+&gt;&gt;&gt; print(datetime.datetime.utcnow())
+2015-02-18 04:53:31.783988
+</code></pre>
+<p>UTC is a time standard that is nearly equivalent to the GMT timezone. (While GMT and UTC do not change for Daylight Savings Time, their users may switch to other timezones, like British Summer Time, during the Summer.)</p>
+<h3>datetime timezone aware</h3>
+<p>However, none of the datetime objects we've created so far can be easily converted to various timezones. We can solve that problem with the <code>pytz</code> module:</p>
+<pre><code>&gt;&gt;&gt; import pytz
+&gt;&gt;&gt; then = datetime.datetime.now(pytz.utc)
+&gt;&gt;&gt; then
+datetime.datetime(2015, 2, 18, 4, 55, 58, 753949, tzinfo=&lt;UTC&gt;)
+</code></pre>
+<p>Equivalently, in Python 3 we have the <code>timezone</code> class with a utc <code>timezone</code> instance attached, which also makes the object timezone aware (but to convert to another timezone without the handy <code>pytz</code> module is left as an exercise to the reader):</p>
+<pre><code>&gt;&gt;&gt; datetime.datetime.now(datetime.timezone.utc)
+datetime.datetime(2015, 2, 18, 22, 31, 56, 564191, tzinfo=datetime.timezone.utc)
+</code></pre>
+<p>And we see we can easily convert to timezones from the original UTC object.</p>
+<pre><code>&gt;&gt;&gt; print(then)
+2015-02-18 04:55:58.753949+00:00
+&gt;&gt;&gt; print(then.astimezone(pytz.timezone('US/Eastern')))
+2015-02-17 23:55:58.753949-05:00
+</code></pre>
+<p>You can also make a naive datetime object aware with the <code>pytz</code> timezone <code>localize</code> method, or by replacing the tzinfo attribute (with <code>replace</code>, this is done blindly), but these are more last resorts than best practices:</p>
+<pre><code>&gt;&gt;&gt; pytz.utc.localize(datetime.datetime.utcnow())
+datetime.datetime(2015, 2, 18, 6, 6, 29, 32285, tzinfo=&lt;UTC&gt;)
+&gt;&gt;&gt; datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+datetime.datetime(2015, 2, 18, 6, 9, 30, 728550, tzinfo=&lt;UTC&gt;)
+</code></pre>
+<p>The <code>pytz</code> module allows us to make our <code>datetime</code> objects timezone aware and convert the times to the hundreds of timezones available in the <code>pytz</code> module.</p>
+<p>One could ostensibly serialize this object for UTC time and store <em>that</em> in a database, but it would require far more memory and be more prone to error than simply storing the Unix Epoch time, which I demonstrated first.</p>
+<p>The other ways of viewing times are much more error-prone, especially when dealing with data that may come from different time zones. You want there to be no confusion as to which timezone a string or serialized datetime object was intended for.</p>
+<p>If you're displaying the time with Python for the user, <code>ctime</code> works nicely, not in a table (it doesn't typically sort well), but perhaps in a clock. However, I personally recommend, when dealing with time in Python, either using Unix time, or a timezone aware UTC <code>datetime</code> object.</p>
+</div></body></html>

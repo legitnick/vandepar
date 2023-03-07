@@ -1,0 +1,232 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Strange OutOfMemory issue while loading an image to a Bitmap object</p><div class="s-prose js-post-body"><p>I have a <code>ListView</code> with a couple of image buttons on each row. When the user clicks the list row, it launches a new activity. I have had to build my own tabs because of an issue with the camera layout. The activity that gets launched for the result is a map. If I click on my button to launch the image preview (load an image off the SD card) the application returns from the activity back to the <code>ListView</code> activity to the result handler to relaunch my new activity which is nothing more than an image widget.</p>
+<p>The image preview on the <code>ListView</code> is being done with the cursor and <code>ListAdapter</code>. This makes it pretty simple, but I am not sure how I can put a resized image (I.e. Smaller bit size not pixel as the <code>src</code> for the image button on the fly. So I just resized the image that came off the phone camera.</p>
+<p>The issue is that I get an <code>OutOfMemoryError</code> when it tries to go back and re-launch the 2nd activity.</p>
+<ul>
+<li>Is there a way I can build the list adapter easily row by row, where I can resize on the fly (<em>bitwise</em>)?</li>
+</ul>
+<p>This would be preferable as I also need to make some changes to the properties of the widgets/elements in each row as I am unable to select a row with the touch screen because of the focus issue. (<em>I can use rollerball.</em>)</p>
+<ul>
+<li>I know I can do an out of band resize and save my image, but that is not really what I want to do, but some sample code for that would be nice.</li>
+</ul>
+<p>As soon as I disabled the image on the <code>ListView</code> it worked fine again.</p>
+<p>FYI: This is how I was doing it:</p>
+<pre class="lang-java prettyprint-override"><code>String[] from = new String[] { DBHelper.KEY_BUSINESSNAME, DBHelper.KEY_ADDRESS,
+    DBHelper.KEY_CITY, DBHelper.KEY_GPSLONG, DBHelper.KEY_GPSLAT,
+    DBHelper.KEY_IMAGEFILENAME  + &quot;&quot;};
+int[] to = new int[] { R.id.businessname, R.id.address, R.id.city, R.id.gpslong,
+    R.id.gpslat, R.id.imagefilename };
+notes = new SimpleCursorAdapter(this, R.layout.notes_row, c, from, to);
+setListAdapter(notes);
+</code></pre>
+<p>Where <code>R.id.imagefilename</code> is a <code>ButtonImage</code>.</p>
+<p>Here is my LogCat:</p>
+<pre><code>01-25 05:05:49.877: ERROR/dalvikvm-heap(3896): 6291456-byte external allocation too large for this process.
+01-25 05:05:49.877: ERROR/(3896): VM wont let us allocate 6291456 bytes
+01-25 05:05:49.877: ERROR/AndroidRuntime(3896): Uncaught handler: thread main exiting due to uncaught exception
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896): java.lang.OutOfMemoryError: bitmap size exceeds VM budget
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.graphics.BitmapFactory.nativeDecodeStream(Native Method)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.graphics.BitmapFactory.decodeStream(BitmapFactory.java:304)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.graphics.BitmapFactory.decodeFile(BitmapFactory.java:149)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.graphics.BitmapFactory.decodeFile(BitmapFactory.java:174)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.graphics.drawable.Drawable.createFromPath(Drawable.java:729)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.ImageView.resolveUri(ImageView.java:484)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.ImageView.setImageURI(ImageView.java:281)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.SimpleCursorAdapter.setViewImage(SimpleCursorAdapter.java:183)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.SimpleCursorAdapter.bindView(SimpleCursorAdapter.java:129)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.CursorAdapter.getView(CursorAdapter.java:150)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.AbsListView.obtainView(AbsListView.java:1057)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.ListView.makeAndAddView(ListView.java:1616)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.ListView.fillSpecific(ListView.java:1177)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.ListView.layoutChildren(ListView.java:1454)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.AbsListView.onLayout(AbsListView.java:937)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.View.layout(View.java:5611)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.LinearLayout.setChildFrame(LinearLayout.java:1119)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.LinearLayout.layoutHorizontal(LinearLayout.java:1108)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.LinearLayout.onLayout(LinearLayout.java:922)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.View.layout(View.java:5611)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.FrameLayout.onLayout(FrameLayout.java:294)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.View.layout(View.java:5611)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.LinearLayout.setChildFrame(LinearLayout.java:1119)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.LinearLayout.layoutVertical(LinearLayout.java:999)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.LinearLayout.onLayout(LinearLayout.java:920)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.View.layout(View.java:5611)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.widget.FrameLayout.onLayout(FrameLayout.java:294)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.View.layout(View.java:5611)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.ViewRoot.performTraversals(ViewRoot.java:771)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.view.ViewRoot.handleMessage(ViewRoot.java:1103)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.os.Handler.dispatchMessage(Handler.java:88)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.os.Looper.loop(Looper.java:123)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at android.app.ActivityThread.main(ActivityThread.java:3742)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at java.lang.reflect.Method.invokeNative(Native Method)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at java.lang.reflect.Method.invoke(Method.java:515)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at com.android.internal.os.ZygoteInit$MethodAndArgsCaller.run(ZygoteInit.java:739)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:497)
+01-25 05:05:49.917: ERROR/AndroidRuntime(3896):     at dalvik.system.NativeStart.main(Native Method)
+01-25 05:10:01.127: ERROR/AndroidRuntime(3943): ERROR: thread attach failed 
+</code></pre>
+<p>I also have a new error when displaying an image:</p>
+<pre><code>22:13:18.594: DEBUG/skia(4204): xxxxxxxxxxx jpeg error 20 Improper call to JPEG library in state %d
+22:13:18.604: INFO/System.out(4204): resolveUri failed on bad bitmap uri: 
+22:13:18.694: ERROR/dalvikvm-heap(4204): 6291456-byte external allocation too large for this process.
+22:13:18.694: ERROR/(4204): VM won't let us allocate 6291456 bytes
+22:13:18.694: DEBUG/skia(4204): xxxxxxxxxxxxxxxxxxxx allocPixelRef failed
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 919 people.</p><div class="s-prose js-post-body"><p>To fix the OutOfMemory error, you should do something like this:</p>
+
+<pre><code>BitmapFactory.Options options = new BitmapFactory.Options();
+options.inSampleSize = 8;
+Bitmap preview_bitmap = BitmapFactory.decodeStream(is, null, options);
+</code></pre>
+
+<p>This <code>inSampleSize</code> option reduces memory consumption.</p>
+
+<p>Here's a complete method. First it reads image size without decoding the content itself. Then it finds the best <code>inSampleSize</code> value, it should be a power of 2, and finally the image is decoded.</p>
+
+<pre><code>// Decodes image and scales it to reduce memory consumption
+private Bitmap decodeFile(File f) {
+    try {
+        // Decode image size
+        BitmapFactory.Options o = new BitmapFactory.Options();
+        o.inJustDecodeBounds = true;
+        BitmapFactory.decodeStream(new FileInputStream(f), null, o);
+
+        // The new size we want to scale to
+        final int REQUIRED_SIZE=70;
+
+        // Find the correct scale value. It should be the power of 2.
+        int scale = 1;
+        while(o.outWidth / scale / 2 &gt;= REQUIRED_SIZE &amp;&amp; 
+              o.outHeight / scale / 2 &gt;= REQUIRED_SIZE) {
+            scale *= 2;
+        }
+
+        // Decode with inSampleSize
+        BitmapFactory.Options o2 = new BitmapFactory.Options();
+        o2.inSampleSize = scale;
+        return BitmapFactory.decodeStream(new FileInputStream(f), null, o2);
+    } catch (FileNotFoundException e) {}
+    return null;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 690 people.</p><div class="s-prose js-post-body"><p>The <a href="http://developer.android.com/training/index.html" rel="noreferrer">Android Training</a> class, &quot;<a href="http://developer.android.com/training/displaying-bitmaps/index.html" rel="noreferrer">Displaying Bitmaps Efficiently</a>&quot;, offers some great information for understanding and dealing with the exception `java.lang.OutOfMemoryError: bitmap size exceeds VM budget when loading Bitmaps.</p>
+<hr />
+<h2>Read Bitmap Dimensions and Type</h2>
+<p>The <code>BitmapFactory</code> class provides several decoding methods (<code>decodeByteArray()</code>, <code>decodeFile()</code>, <code>decodeResource()</code>, etc.) for creating a <code>Bitmap</code> from various sources. Choose the most appropriate decode method based on your image data source. These methods attempt to allocate memory for the constructed bitmap and therefore can easily result in an <code>OutOfMemory</code> exception. Each type of decode method has additional signatures that let you specify decoding options via the <code>BitmapFactory.Options</code> class. Setting the <code>inJustDecodeBounds</code> property to <code>true</code> while decoding avoids memory allocation, returning <code>null</code> for the bitmap object but setting <code>outWidth</code>, <code>outHeight</code> and <code>outMimeType</code>. This technique allows you to read the dimensions and type of the image data prior to the construction (and memory allocation) of the bitmap.</p>
+<pre><code>BitmapFactory.Options options = new BitmapFactory.Options();
+options.inJustDecodeBounds = true;
+BitmapFactory.decodeResource(getResources(), R.id.myimage, options);
+int imageHeight = options.outHeight;
+int imageWidth = options.outWidth;
+String imageType = options.outMimeType;
+</code></pre>
+<p>To avoid <code>java.lang.OutOfMemory</code> exceptions, check the dimensions of a bitmap before decoding it unless you absolutely trust the source to provide you with predictably sized image data that comfortably fits within the available memory.</p>
+<hr />
+<h2>Load a scaled-down version into Memory</h2>
+<p>Now that the image dimensions are known, they can be used to decide if the full image should be loaded into memory or if a subsampled version should be loaded instead. Here are some factors to consider:</p>
+<ul>
+<li>Estimated memory usage of loading the full image in memory.</li>
+<li>The amount of memory you are willing to commit to loading this image given any other memory requirements of your application.</li>
+<li>Dimensions of the target ImageView or UI component that the image is to be loaded into.</li>
+<li>Screen size and density of the current device.</li>
+</ul>
+<p>For example, it’s not worth loading a 1024x768 pixel image into memory if it will eventually be displayed in a 128x96 pixel thumbnail in an <code>ImageView</code>.</p>
+<p>To tell the decoder to subsample the image, loading a smaller version into memory, set <code>inSampleSize</code> to <code>true</code> in your <code>BitmapFactory.Options</code> object. For example, an image with resolution 2048x1536 that is decoded with an <code>inSampleSize</code> of 4 produces a bitmap of approximately 512x384. Loading this into memory uses 0.75MB rather than 12MB for the full image (assuming a bitmap configuration of <code>ARGB_8888</code>). Here’s a method to calculate a sample size value that is a power of two based on a target width and height:</p>
+<pre><code>public static int calculateInSampleSize(
+        BitmapFactory.Options options, int reqWidth, int reqHeight) {
+    // Raw height and width of image
+    final int height = options.outHeight;
+    final int width = options.outWidth;
+    int inSampleSize = 1;
+
+    if (height &gt; reqHeight || width &gt; reqWidth) {
+
+        final int halfHeight = height / 2;
+        final int halfWidth = width / 2;
+
+        // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+        // height and width larger than the requested height and width.
+        while ((halfHeight / inSampleSize) &gt; reqHeight
+                &amp;&amp; (halfWidth / inSampleSize) &gt; reqWidth) {
+            inSampleSize *= 2;
+        }
+    }
+
+    return inSampleSize;
+}
+</code></pre>
+<blockquote>
+<p><strong>Note</strong>: A power of two value is calculated because the decoder uses a
+final value by rounding down to the nearest power of two, as per the
+<code>inSampleSize</code> documentation.</p>
+</blockquote>
+<p>To use this method, first decode with <code>inJustDecodeBounds</code> set to <code>true, pass the options through and then decode again using the new </code>inSampleSize<code>value and</code>inJustDecodeBounds<code>set to</code>false`:</p>
+<pre><code>public static Bitmap decodeSampledBitmapFromResource(Resources res, int resId,
+    int reqWidth, int reqHeight) {
+
+    // First decode with inJustDecodeBounds=true to check dimensions
+    final BitmapFactory.Options options = new BitmapFactory.Options();
+    options.inJustDecodeBounds = true;
+    BitmapFactory.decodeResource(res, resId, options);
+
+    // Calculate inSampleSize
+    options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+    // Decode bitmap with inSampleSize set
+    options.inJustDecodeBounds = false;
+    return BitmapFactory.decodeResource(res, resId, options);
+}
+</code></pre>
+<p>This method makes it easy to load a bitmap of arbitrarily large size into an <code>ImageView</code> that displays a 100x100 pixel thumbnail, as shown in the following example code:</p>
+<pre><code>mImageView.setImageBitmap(
+    decodeSampledBitmapFromResource(getResources(), R.id.myimage, 100, 100));
+</code></pre>
+<p>You can follow a similar process to decode bitmaps from other sources, by substituting the appropriate <code>BitmapFactory.decode*</code> method as needed.</p>
+</div><p class="this-has-helped">This answer has helped 383 people.</p><div class="s-prose js-post-body"><p>I've made a small improvement to Fedor's code. It basically does the same, but without the (in my opinion) ugly while loop and it always results in a power of two. Kudos to Fedor for making the original solution, I was stuck until I found his, and then I was able to make this one :)</p>
+
+<pre><code> private Bitmap decodeFile(File f){
+    Bitmap b = null;
+
+        //Decode image size
+    BitmapFactory.Options o = new BitmapFactory.Options();
+    o.inJustDecodeBounds = true;
+
+    FileInputStream fis = new FileInputStream(f);
+    BitmapFactory.decodeStream(fis, null, o);
+    fis.close();
+
+    int scale = 1;
+    if (o.outHeight &gt; IMAGE_MAX_SIZE || o.outWidth &gt; IMAGE_MAX_SIZE) {
+        scale = (int)Math.pow(2, (int) Math.ceil(Math.log(IMAGE_MAX_SIZE / 
+           (double) Math.max(o.outHeight, o.outWidth)) / Math.log(0.5)));
+    }
+
+    //Decode with inSampleSize
+    BitmapFactory.Options o2 = new BitmapFactory.Options();
+    o2.inSampleSize = scale;
+    fis = new FileInputStream(f);
+    b = BitmapFactory.decodeStream(fis, null, o2);
+    fis.close();
+
+    return b;
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 238 people.</p><div class="s-prose js-post-body"><p>I come from iOS experience and I was frustrated to discover an issue with something so basic as loading and showing an image. After all, everyone that is having this issue is trying to display reasonably sized images. Anyway, here are the two changes that fixed my problem (and made my app very responsive).</p>
+
+<p>1) Every time you do <code>BitmapFactory.decodeXYZ()</code>, make sure to pass in a <code>BitmapFactory.Options</code> with <code>inPurgeable</code> set to <code>true</code> (and preferably with <code>inInputShareable</code> also set to <code>true</code>).</p>
+
+<p>2) NEVER use <code>Bitmap.createBitmap(width, height, Config.ARGB_8888)</code>. I mean NEVER! I've never had that thing not raise memory error after few passes. No amount of <code>recycle()</code>, <code>System.gc()</code>, whatever helped. It always raised exception. The one other way that actually works is to have a dummy image in your drawables (or another Bitmap that you decoded using step 1 above), rescale that to whatever you want, then manipulate the resulting Bitmap (such as passing it on to a Canvas for more fun). So, what you should use instead is: <code>Bitmap.createScaledBitmap(srcBitmap, width, height, false)</code>. If for whatever reason you MUST use the brute force create method, then at least pass <code>Config.ARGB_4444</code>. </p>
+
+<p>This is almost guaranteed to save you hours if not days. All that talk about scaling the image, etc. does not really work (unless you consider getting wrong size or degraded image a solution). </p>
+</div><p class="this-has-helped">This answer has helped 98 people.</p><div class="s-prose js-post-body"><p>It's a <a href="http://code.google.com/p/android/issues/detail?id=8488" rel="noreferrer">known bug</a>, it's not because of large files. Since Android Caches the Drawables, it's going out of memory after using few images. But I've found an alternate way for it, by skipping the android default cache system.</p>
+
+<p><strong>Solution</strong>:
+Move the images to "assets" folder and use the following function to get BitmapDrawable:</p>
+
+<pre><code>public static Drawable getAssetImage(Context context, String filename) throws IOException {
+    AssetManager assets = context.getResources().getAssets();
+    InputStream buffer = new BufferedInputStream((assets.open("drawable/" + filename + ".png")));
+    Bitmap bitmap = BitmapFactory.decodeStream(buffer);
+    return new BitmapDrawable(context.getResources(), bitmap);
+}
+</code></pre>
+</div></body></html>

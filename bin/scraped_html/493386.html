@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to print without a newline or space</p><div class="s-prose js-post-body"><p>Consider these examples using <code>print</code> in Python:</p>
+<pre class="lang-py prettyprint-override"><code>&gt;&gt;&gt; for i in range(4): print('.')
+.
+.
+.
+.
+&gt;&gt;&gt; print('.', '.', '.', '.')
+. . . .
+</code></pre>
+<p>Either a newline or a space is added between each value. How can I avoid that, so that the output is <code>....</code> instead? In other words, how can I &quot;append&quot; strings to the standard output stream?</p>
+</div><p class="this-has-helped">This answer has helped 3205 people.</p><div class="s-prose js-post-body"><p>In Python 3, you can use the <code>sep=</code> and <code>end=</code> parameters of the <a href="https://docs.python.org/library/functions.html#print" rel="noreferrer"><code>print</code></a> function:</p>
+
+<p>To not add a newline to the end of the string:</p>
+
+<pre><code>print('.', end='')
+</code></pre>
+
+<p>To not add a space between all the function arguments you want to print:</p>
+
+<pre><code>print('a', 'b', 'c', sep='')
+</code></pre>
+
+<p>You can pass any string to either parameter, and you can use both parameters at the same time.</p>
+
+<p>If you are having trouble with buffering, you can flush the output by adding <code>flush=True</code> keyword argument:</p>
+
+<pre><code>print('.', end='', flush=True)
+</code></pre>
+
+<h2>Python 2.6 and 2.7</h2>
+
+<p>From Python 2.6 you can either import the <code>print</code> function from Python 3 using the <a href="https://docs.python.org/2/library/__future__.html" rel="noreferrer"><code>__future__</code> module</a>:</p>
+
+<pre><code>from __future__ import print_function
+</code></pre>
+
+<p>which allows you to use the Python 3 solution above.</p>
+
+<p>However, note that the <code>flush</code> keyword is not available in the version of the <code>print</code> function imported from <code>__future__</code> in Python 2; it only works in Python 3, more specifically 3.3 and later. In earlier versions you'll still need to flush manually with a call to <code>sys.stdout.flush()</code>. You'll also have to rewrite all other print statements in the file where you do this import.</p>
+
+<p>Or you can use <a href="https://docs.python.org/library/sys.html#sys.stdout" rel="noreferrer"><code>sys.stdout.write()</code></a></p>
+
+<pre><code>import sys
+sys.stdout.write('.')
+</code></pre>
+
+<p>You may also need to call</p>
+
+<pre><code>sys.stdout.flush()
+</code></pre>
+
+<p>to ensure <code>stdout</code> is flushed immediately.</p>
+</div><p class="this-has-helped">This answer has helped 301 people.</p><div class="s-prose js-post-body"><p>For Python 2 and earlier, it should be as simple as described in <em><a href="http://legacy.python.org/search/hypermail/python-1992/0115.html" rel="nofollow noreferrer">Re: How does one print without a CR?</a></em> by <a href="https://en.wikipedia.org/wiki/Guido_van_Rossum" rel="nofollow noreferrer">Guido van Rossum</a> (paraphrased):</p>
+<blockquote>
+<p>Is it possible to print something, but not automatically have a
+carriage return appended to it?</p>
+</blockquote>
+<p>Yes, append a comma after the last argument to print. For instance, this loop prints the numbers 0..9 on a line separated by spaces. Note the parameterless &quot;print&quot; that adds the final newline:</p>
+<pre><code>&gt;&gt;&gt; for i in range(10):
+...     print i,
+... else:
+...     print
+...
+0 1 2 3 4 5 6 7 8 9
+&gt;&gt;&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 178 people.</p><div class="s-prose js-post-body"><p><em>Note: The title of this question used to be something like &quot;How to printf in Python&quot;</em></p>
+<p>Since people may come here looking for it based on the title, Python also supports printf-style substitution:</p>
+<pre><code>&gt;&gt;&gt; strings = [ &quot;one&quot;, &quot;two&quot;, &quot;three&quot; ]
+&gt;&gt;&gt;
+&gt;&gt;&gt; for i in xrange(3):
+...     print &quot;Item %d: %s&quot; % (i, strings[i])
+...
+Item 0: one
+Item 1: two
+Item 2: three
+</code></pre>
+<p>And, you can handily multiply string values:</p>
+<pre><code>&gt;&gt;&gt; print &quot;.&quot; * 10
+..........
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 99 people.</p><div class="s-prose js-post-body"><p>Use the Python 3-style print function for Python 2.6+ <em>(it will also break any existing keyworded print statements in the same file)</em>.</p>
+<pre><code># For Python 2 to use the print() function, removing the print keyword
+from __future__ import print_function
+for x in xrange(10):
+    print('.', end='')
+</code></pre>
+<p>To not ruin all your Python 2 print keywords, create a separate <code>printf.py</code> file:</p>
+<pre><code># printf.py
+
+from __future__ import print_function
+
+def printf(str, *args):
+    print(str % args, end='')
+</code></pre>
+<p>Then, use it in your file:</p>
+<pre><code>from printf import printf
+for x in xrange(10):
+    printf('.')
+print 'done'
+#..........done
+</code></pre>
+<p>More examples showing the printf style:</p>
+<pre><code>printf('hello %s', 'world')
+printf('%i %f', 10, 3.14)
+#hello world10 3.140000
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 48 people.</p><div class="s-prose js-post-body"><p>How to print on the same line:</p>
+
+<pre><code>import sys
+for i in xrange(0,10):
+   sys.stdout.write(".")
+   sys.stdout.flush()
+</code></pre>
+</div></body></html>

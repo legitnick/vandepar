@@ -1,0 +1,65 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Case insensitive &#39;Contains(string)&#39;</p><div class="s-prose js-post-body"><p>Is there a way to make the following return true?</p>
+<pre><code>string title = &quot;ASTRINGTOTEST&quot;;
+title.Contains(&quot;string&quot;);
+</code></pre>
+<p>There doesn't seem to be an overload that allows me to set the case sensitivity. Currently I UPPERCASE them both, but that's just silly (by which I am referring to the <a href="http://en.wikipedia.org/wiki/Internationalization_and_localization" rel="noreferrer">i18n</a> issues that come with up- and down casing).</p>
+<p><strong>UPDATE</strong></p>
+<p>This question is ancient and since then I have realized I asked for a simple answer for a really vast and difficult topic if you care to investigate it fully.</p>
+<p>For most cases, in mono-lingual, English code bases <a href="https://stackoverflow.com/a/444818/11333">this</a> answer will suffice. I'm suspecting because most people coming here fall in this category this is the most popular answer.</p>
+<p><a href="https://stackoverflow.com/a/15464440/11333">This</a> answer however brings up the inherent problem that we can't compare text case insensitive until we know both texts are the same culture and we know  what that culture is. This is maybe a less popular answer, but I think it is more correct and that's why I marked it as such.</p>
+</div><p class="this-has-helped">This answer has helped 3055 people.</p><div class="s-prose js-post-body"><p>You could use the <a href="https://msdn.microsoft.com/en-us/library/ms224425(v=vs.110).aspx" rel="noreferrer"><code>String.IndexOf</code> Method</a> and pass <a href="https://msdn.microsoft.com/en-us/library/system.stringcomparer.ordinalignorecase(v=vs.110).aspx" rel="noreferrer"><code>StringComparison.OrdinalIgnoreCase</code></a> as the type of search to use:</p>
+<pre><code>string title = &quot;STRING&quot;;
+bool contains = title.IndexOf(&quot;string&quot;, StringComparison.OrdinalIgnoreCase) &gt;= 0;
+</code></pre>
+<p>Even better is defining a new extension method for string:</p>
+<pre><code>public static class StringExtensions
+{
+    public static bool Contains(this string source, string toCheck, StringComparison comp)
+    {
+        return source?.IndexOf(toCheck, comp) &gt;= 0;
+    }
+}
+</code></pre>
+<p>Note, that <a href="https://stackoverflow.com/questions/25666993/c-sharp-null-propagating-operator-conditional-access-expression-if-blocks">null propagation</a> <code>?.</code> is available since C# 6.0 (VS 2015), for older versions use</p>
+<pre><code>if (source == null) return false;
+return source.IndexOf(toCheck, comp) &gt;= 0;
+</code></pre>
+<p>USAGE:</p>
+<pre><code>string title = &quot;STRING&quot;;
+bool contains = title.Contains(&quot;string&quot;, StringComparison.OrdinalIgnoreCase);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 1566 people.</p><div class="s-prose js-post-body"><p>To test if the string <code>paragraph</code> contains the string <code>word</code> (thanks @QuarterMeister)</p>
+<pre><code>culture.CompareInfo.IndexOf(paragraph, word, CompareOptions.IgnoreCase) &gt;= 0
+</code></pre>
+<p>Where <code>culture</code> is the instance of <a href="http://msdn.microsoft.com/en-gb/library/system.globalization.cultureinfo(v=vs.110).aspx" rel="noreferrer"><code>CultureInfo</code></a> describing the language that the text is written in.</p>
+<p>This solution is transparent about <strong>the definition of case-insensitivity, which is language dependent</strong>. For example, the English language uses the characters <code>I</code> and <code>i</code> for the upper and lower case versions of the ninth letter, whereas the Turkish language uses these characters for the <a href="http://en.wikipedia.org/wiki/Dotted_and_dotless_I" rel="noreferrer">eleventh and twelfth letters</a> of its 29 letter-long alphabet. The Turkish upper case version of 'i' is the unfamiliar character 'İ'.</p>
+<p>Thus the strings <code>tin</code> and <code>TIN</code> are the same word <em>in English</em>, but different words <em>in Turkish</em>. As I understand, one means 'spirit' and the other is an onomatopoeia word. (Turks, please correct me if I'm wrong, or suggest a better example)</p>
+<p>To summarise, you can only answer the question 'are these two strings the same but in different cases' <em>if you know what language the text is in</em>. If you don't know, you'll have to take a punt. Given English's hegemony in software, you should probably resort to <a href="https://stackoverflow.com/questions/9760237/what-does-cultureinfo-invariantculture-mean"><code>CultureInfo.InvariantCulture</code></a>, because it will be wrong in familiar ways.</p>
+</div><p class="this-has-helped">This answer has helped 270 people.</p><div class="s-prose js-post-body"><p>You can use <code>IndexOf()</code> like this:</p>
+<pre><code>string title = &quot;STRING&quot;;
+
+if (title.IndexOf(&quot;string&quot;, 0, StringComparison.OrdinalIgnoreCase) != -1)
+{
+    // The string exists in the original
+}
+</code></pre>
+<p>Since 0 (zero) can be an index, you check against -1.</p>
+<p><a href="https://learn.microsoft.com/en-us/dotnet/api/system.string.indexof?view=net-6.0#system-string-indexof(system-string-system-int32-system-stringcomparison)" rel="noreferrer">Microsoft .NET Documentation:</a></p>
+<blockquote>
+<p>The zero-based index position of the value parameter from the start of the current instance if that string is found, or -1 if it is not. If value is Empty, the return value is startIndex.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 180 people.</p><div class="s-prose js-post-body"><h3>.NET Core 2.0+ (including .NET 5.0+)</h3>
+<p>.NET Core has had a pair of methods to deal with this since version 2.0 :</p>
+<ul>
+<li>String.Contains(Char, <strong>StringComparison</strong>)</li>
+<li>String.Contains(String, <strong>StringComparison</strong>)</li>
+</ul>
+<p>Example:</p>
+<pre><code>&quot;Test&quot;.Contains(&quot;test&quot;, System.StringComparison.CurrentCultureIgnoreCase);
+</code></pre>
+<p>It is now officially part of the .NET Standard 2.1, and therefore part of all the implementations of the Base Class Library that implement this version of the standard (or a higher one).</p>
+</div><p class="this-has-helped">This answer has helped 156 people.</p><div class="s-prose js-post-body"><p>Alternative solution using Regex:</p>
+
+<pre><code>bool contains = Regex.IsMatch("StRiNG to search", Regex.Escape("string"), RegexOptions.IgnoreCase);
+</code></pre>
+</div></body></html>

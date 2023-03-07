@@ -1,0 +1,48 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Difference between JOIN and INNER JOIN</p><div class="s-prose js-post-body"><p>Both these joins will give me the same results:</p>
+
+<pre><code>SELECT * FROM table JOIN otherTable ON table.ID = otherTable.FK
+</code></pre>
+
+<p>vs</p>
+
+<pre><code>SELECT * FROM table INNER JOIN otherTable ON table.ID = otherTable.FK
+</code></pre>
+
+<p>Is there any difference between the statements in performance or otherwise? </p>
+
+<p>Does it differ between different <strong>SQL</strong> implementations? </p>
+</div><p class="this-has-helped">This answer has helped 1466 people.</p><div class="s-prose js-post-body"><p>They are functionally equivalent, but <code>INNER JOIN</code> can be a bit clearer to read, especially if the query has other join types (i.e. <code>LEFT</code> or <code>RIGHT</code> or <code>CROSS</code>) included in it.</p>
+</div><p class="this-has-helped">This answer has helped 331 people.</p><div class="s-prose js-post-body"><p>No, there is no difference, pure <a href="http://en.wikipedia.org/wiki/Syntax_sugar" rel="noreferrer"><strong>syntactic sugar</strong></a>.</p>
+</div><p class="this-has-helped">This answer has helped 211 people.</p><div class="s-prose js-post-body"><p>INNER JOIN = JOIN</p>
+<ul>
+<li><p>INNER JOIN is the <strong>default if you don't specify</strong> the type when you use the word JOIN.</p>
+<p>You can also use LEFT OUTER JOIN or RIGHT OUTER JOIN, in which case the word OUTER is optional, or you can specify CROSS JOIN.</p>
+</li>
+</ul>
+<p>OR</p>
+<ul>
+<li><p>For an INNER JOIN, the syntax is:</p>
+<pre><code>SELECT ...
+FROM TableA
+[INNER] JOIN TableB
+</code></pre>
+<p>(In other words, the INNER keyword is <strong>optional</strong>--results are the same with or without it.)</p>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 72 people.</p><div class="s-prose js-post-body"><blockquote>
+  <p>Does it differ between different SQL implementations?</p>
+</blockquote>
+
+<p>Yes, <a href="http://en.wikipedia.org/wiki/Microsoft_Access" rel="noreferrer">Microsoft Access</a> doesn't allow just <code>join</code>. It requires <a href="http://msdn.microsoft.com/en-us/library/bb208854%28v=office.12%29.aspx" rel="noreferrer"><code>inner join</code></a>.</p>
+</div><p class="this-has-helped">This answer has helped 59 people.</p><div class="s-prose js-post-body"><p>Similarly with <code>OUTER JOINs</code>, the word <code>"OUTER"</code> is optional. It's the <code>LEFT</code> or <code>RIGHT</code> keyword that makes the <code>JOIN</code> an <code>"OUTER" JOIN</code>.</p>
+
+<p>However for some reason I always use <code>"OUTER"</code> as in <code>LEFT OUTER JOIN</code> and never <code>LEFT JOIN</code>, but I never use <code>INNER JOIN</code>, but rather I just use <code>"JOIN"</code>:</p>
+
+<pre><code>SELECT ColA, ColB, ...
+FROM MyTable AS T1
+     JOIN MyOtherTable AS T2
+         ON T2.ID = T1.ID
+     LEFT OUTER JOIN MyOptionalTable AS T3
+         ON T3.ID = T1.ID
+</code></pre>
+</div></body></html>

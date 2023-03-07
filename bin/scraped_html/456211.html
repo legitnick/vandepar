@@ -1,0 +1,143 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Activity restart on rotation Android</p><div class="s-prose js-post-body"><p>In my Android application, when I rotate the device (slide out the keyboard) then my <code>Activity</code> is restarted (<code>onCreate</code> is called). Now, this is probably how it's supposed to be, but I do a lot of initial setting up in the <code>onCreate</code> method, so I need either:</p>
+
+<ol>
+<li>Put all the initial setting up in another function so it's not all lost on device rotation or</li>
+<li>Make it so <code>onCreate</code> is not called again and the layout just adjusts or</li>
+<li>Limit the app to just portrait so that <code>onCreate</code> is not called.</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 995 people.</p><div class="s-prose js-post-body"><p><strong>Using the Application Class</strong></p>
+
+<p>Depending on what you're doing in your initialization you could consider creating a new class that extends <code>Application</code> and moving your initialization code into an overridden <code>onCreate</code> method within that class.</p>
+
+<pre><code>public class MyApplicationClass extends Application {
+  @Override
+  public void onCreate() {
+    super.onCreate();
+    // TODO Put your application initialization code here.
+  }
+}
+</code></pre>
+
+<p>The <code>onCreate</code> in the application class is only called when the entire application is created, so the Activity restarts on orientation or keyboard visibility changes won't trigger it.</p>
+
+<p>It's good practice to expose the instance of this class as a singleton and exposing the application variables you're initializing using getters and setters.</p>
+
+<p><em>NOTE: You'll need to specify the name of your new Application class in the manifest for it to be registered and used:</em></p>
+
+<pre><code>&lt;application
+    android:name="com.you.yourapp.MyApplicationClass"
+</code></pre>
+
+<p><strong>Reacting to Configuration Changes</strong> <em>[UPDATE: this is deprecated since API 13; <a href="http://www.androiddesignpatterns.com/2013/04/retaining-objects-across-config-changes.html" rel="noreferrer">see the recommended alternative</a>]</em></p>
+
+<p>As a further alternative, you can have your application listen for events that would cause a restart – like orientation and keyboard visibility changes – and handle them within your Activity.</p>
+
+<p>Start by adding the <code>android:configChanges</code> node to your Activity's manifest node</p>
+
+<pre><code> &lt;activity android:name=".MyActivity"
+      android:configChanges="orientation|keyboardHidden"
+      android:label="@string/app_name"&gt;
+</code></pre>
+
+<p>or for <a href="https://stackoverflow.com/a/9550231/2291">Android 3.2 (API level 13) and newer</a>:</p>
+
+<pre><code>&lt;activity android:name=".MyActivity"
+      android:configChanges="keyboardHidden|orientation|screenSize"
+      android:label="@string/app_name"&gt;
+</code></pre>
+
+<p>Then within the Activity override the <code>onConfigurationChanged</code> method and call <code>setContentView</code> to force the GUI layout to be re-done in the new orientation.</p>
+
+<pre><code>@Override
+public void onConfigurationChanged(Configuration newConfig) {
+  super.onConfigurationChanged(newConfig);
+  setContentView(R.layout.myLayout);
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 191 people.</p><div class="s-prose js-post-body"><p>Update for Android 3.2 and higher:</p>
+<blockquote>
+<p><strong>Caution</strong>: Beginning with Android 3.2 (API level 13), <strong>the &quot;screen size&quot; also changes</strong> when the device switches between portrait and landscape orientation. Thus, if you want to prevent runtime restarts due to orientation change when developing for API level 13 or higher (as declared by the minSdkVersion and targetSdkVersion attributes), you must include the <code>&quot;screenSize&quot;</code> value in addition to the <code>&quot;orientation&quot;</code> value. That is, you must declare <code>android:configChanges=&quot;orientation|screenSize&quot;</code>. However, if your application targets API level 12 or lower, then your activity always handles this configuration change itself (this configuration change does not restart your activity, even when running on an Android 3.2 or higher device).</p>
+</blockquote>
+<p>From <a href="http://web.archive.org/web/20120805085007/http://developer.android.com/guide/topics/resources/runtime-changes.html" rel="nofollow noreferrer">http://web.archive.org/web/20120805085007/http://developer.android.com/guide/topics/resources/runtime-changes.html</a></p>
+</div><p class="this-has-helped">This answer has helped 137 people.</p><div class="s-prose js-post-body"><p>Instead of trying to stop the <code>onCreate()</code> from being fired altogether, maybe try checking the <code>Bundle</code> <code>savedInstanceState</code> being passed into the event to see if it is null or not. </p>
+
+<p>For instance, if I have some logic that should be run when the <code>Activity</code> is truly created, not on every orientation change, I only run that logic in the <code>onCreate()</code> only if the <code>savedInstanceState</code> is null.  </p>
+
+<p>Otherwise, I still want the layout to redraw properly for the orientation.</p>
+
+<pre><code>public void onCreate(Bundle savedInstanceState) {
+
+        super.onCreate(savedInstanceState);
+
+        setContentView(R.layout.activity_game_list);
+
+        if(savedInstanceState == null){
+            setupCloudMessaging();
+        }
+}
+</code></pre>
+
+<p>not sure if this is the ultimate answer, but it works for me. </p>
+</div><p class="this-has-helped">This answer has helped 104 people.</p><div class="s-prose js-post-body"><p>what I did...</p>
+
+<p>in the manifest, to the activity section, added:</p>
+
+<pre><code>android:configChanges="keyboardHidden|orientation"
+</code></pre>
+
+<p>in the code for the activity, implemented:</p>
+
+<pre><code>//used in onCreate() and onConfigurationChanged() to set up the UI elements
+public void InitializeUI()
+{
+    //get views from ID's
+    this.textViewHeaderMainMessage = (TextView) this.findViewById(R.id.TextViewHeaderMainMessage);
+
+    //etc... hook up click listeners, whatever you need from the Views
+}
+
+//Called when the activity is first created.
+@Override
+public void onCreate(Bundle savedInstanceState)
+{
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.main);
+
+    InitializeUI();
+}
+
+//this is called when the screen rotates.
+// (onCreate is no longer called when screen rotates due to manifest, see: android:configChanges)
+@Override
+public void onConfigurationChanged(Configuration newConfig)
+{
+    super.onConfigurationChanged(newConfig);
+    setContentView(R.layout.main);
+
+    InitializeUI();
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 71 people.</p><div class="s-prose js-post-body"><p>What you describe is the default behavior.  You have to detect and handle these events yourself by adding:</p>
+
+<pre><code>android:configChanges
+</code></pre>
+
+<p>to your manifest and then the changes that you want to handle.  So for orientation, you would use:</p>
+
+<pre><code>android:configChanges="orientation"
+</code></pre>
+
+<p>and for the keyboard being opened or closed you would use:</p>
+
+<pre><code>android:configChanges="keyboardHidden"
+</code></pre>
+
+<p>If you want to handle both you can just separate them with the pipe command like:</p>
+
+<pre><code>android:configChanges="keyboardHidden|orientation"
+</code></pre>
+
+<p>This will trigger the onConfigurationChanged method in whatever Activity you call.  If you override the method you can pass in the new values.</p>
+
+<p>Hope this helps.</p>
+</div></body></html>

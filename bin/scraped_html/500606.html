@@ -1,0 +1,114 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Deleting array elements in JavaScript - delete vs splice</p><div class="s-prose js-post-body"><p>What is the difference between using <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Operators/delete" rel="noreferrer">the <code>delete</code> operator</a> on the array element as opposed to using <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer">the <code>Array.splice</code> method</a>? </p>
+
+<p>For example:</p>
+
+<pre><code>myArray = ['a', 'b', 'c', 'd'];
+
+delete myArray[1];
+//  or
+myArray.splice (1, 1);
+</code></pre>
+
+<p>Why even have the splice method if I can delete array elements like I can with objects?</p>
+</div><p class="this-has-helped">This answer has helped 1813 people.</p><div class="s-prose js-post-body"><p><code>delete</code> will delete the object property, but will not reindex the array or update its length. This makes it appears as if it is undefined:</p>
+
+<pre><code>&gt; myArray = ['a', 'b', 'c', 'd']
+  ["a", "b", "c", "d"]
+&gt; delete myArray[0]
+  true
+&gt; myArray[0]
+  undefined
+</code></pre>
+
+<p>Note that it is not in fact set to the value <code>undefined</code>, rather the property is removed from the array, making it <em>appear</em> undefined. The Chrome dev tools make this distinction clear by printing <code>empty</code> when logging the array.</p>
+
+<pre><code>&gt; myArray[0]
+  undefined
+&gt; myArray
+  [empty, "b", "c", "d"]
+</code></pre>
+
+<p><a href="https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer"><code>myArray.splice(start, deleteCount)</code></a> actually removes the element, reindexes the array, and changes its length.</p>
+
+<pre><code>&gt; myArray = ['a', 'b', 'c', 'd']
+  ["a", "b", "c", "d"]
+&gt; myArray.splice(0, 2)
+  ["a", "b"]
+&gt; myArray
+  ["c", "d"]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 349 people.</p><div class="s-prose js-post-body"><h1>Array.remove() Method</h1>
+
+<p><strong>John Resig</strong>, creator of jQuery created a very handy <code>Array.remove</code> method that I always use it in my projects.</p>
+
+<pre><code>// Array Remove - By John Resig (MIT Licensed)
+Array.prototype.remove = function(from, to) {
+  var rest = this.slice((to || from) + 1 || this.length);
+  this.length = from &lt; 0 ? this.length + from : from;
+  return this.push.apply(this, rest);
+};
+</code></pre>
+
+<p>and here's some examples of how it could be used:</p>
+
+<pre><code>// Remove the second item from the array
+array.remove(1);
+// Remove the second-to-last item from the array
+array.remove(-2);
+// Remove the second and third items from the array
+array.remove(1,2);
+// Remove the last and second-to-last items from the array
+array.remove(-2,-1);
+</code></pre>
+
+<p><a href="http://ejohn.org/blog/javascript-array-remove/" rel="noreferrer">John's website</a></p>
+</div><p class="this-has-helped">This answer has helped 107 people.</p><div class="s-prose js-post-body"><p>Because delete only removes the object from the element in the array, the length of the array won't change. Splice removes the object and shortens the array.</p>
+
+<p>The following code will display "a", "b", "undefined", "d"</p>
+
+<pre><code>myArray = ['a', 'b', 'c', 'd']; delete myArray[2];
+
+for (var count = 0; count &lt; myArray.length; count++) {
+    alert(myArray[count]);
+}
+</code></pre>
+
+<p>Whereas this will display "a", "b", "d"</p>
+
+<pre><code>myArray = ['a', 'b', 'c', 'd']; myArray.splice(2,1);
+
+for (var count = 0; count &lt; myArray.length; count++) {
+    alert(myArray[count]);
+}
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 77 people.</p><div class="s-prose js-post-body"><p>I stumbled onto this question while trying to understand how to remove every occurrence of an element from an Array. <a href="http://jsfiddle.net/y5NbD/5/" rel="noreferrer">Here's a comparison</a> of <code>splice</code> and <code>delete</code> for removing every <code>'c'</code> from the <code>items</code> Array.</p>
+
+<pre><code>var items = ['a', 'b', 'c', 'd', 'a', 'b', 'c', 'd'];
+
+while (items.indexOf('c') !== -1) {
+  items.splice(items.indexOf('c'), 1);
+}
+
+console.log(items); // ["a", "b", "d", "a", "b", "d"]
+
+items = ['a', 'b', 'c', 'd', 'a', 'b', 'c', 'd'];
+
+while (items.indexOf('c') !== -1) {
+  delete items[items.indexOf('c')];
+}
+
+console.log(items); // ["a", "b", undefined, "d", "a", "b", undefined, "d"]
+​
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>From <a href="https://developer.mozilla.org/en/Core_JavaScript_1.5_Reference/Operators/Special_Operators/delete_Operator" rel="noreferrer"> Core JavaScript 1.5 Reference > Operators > Special Operators > delete Operator</a> :</p>
+
+<blockquote>
+  <p>When you delete an array element, the
+  array length is not affected. For
+  example, if you delete a[3], a[4] is
+  still a[4] and a[3] is undefined. This
+  holds even if you delete the last
+  element of the array (delete
+  a[a.length-1]).</p>
+</blockquote>
+</div></body></html>

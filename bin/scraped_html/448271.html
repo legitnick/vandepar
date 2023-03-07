@@ -1,0 +1,107 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What is __init__.py for?</p><div class="s-prose js-post-body"><p>What is <a href="https://docs.python.org/3/tutorial/modules.html#packages" rel="noreferrer"><code>__init__.py</code></a> for in a Python source directory?</p>
+</div><p class="this-has-helped">This answer has helped 1930 people.</p><div class="s-prose js-post-body"><p>It used to be a required part of a package (<a href="https://docs.python.org/3/reference/import.html#regular-packages" rel="noreferrer">old, pre-3.3 "regular package"</a>, not <a href="https://docs.python.org/3/reference/import.html#namespace-packages" rel="noreferrer">newer 3.3+ "namespace package"</a>).</p>
+
+<p><a href="https://docs.python.org/3/reference/import.html#regular-packages" rel="noreferrer">Here's the documentation.</a></p>
+
+<blockquote>
+  <p>Python defines two types of packages, regular packages and namespace packages. Regular packages are traditional packages as they existed in Python 3.2 and earlier. A regular package is typically implemented as a directory containing an <code>__init__.py</code> file. When a regular package is imported, this <code>__init__.py</code> file is implicitly executed, and the objects it defines are bound to names in the package’s namespace. The <code>__init__.py</code> file can contain the same Python code that any other module can contain, and Python will add some additional attributes to the module when it is imported.</p>
+</blockquote>
+
+<p>But just click the link, it contains an example, more information, and an explanation of namespace packages, the kind of packages without <code>__init__.py</code>.</p>
+</div><p class="this-has-helped">This answer has helped 1199 people.</p><div class="s-prose js-post-body"><p>Files named <code>__init__.py</code> are used to mark directories on disk as Python package directories.
+If you have the files</p>
+<pre><code>mydir/spam/__init__.py
+mydir/spam/module.py
+</code></pre>
+<p>and <code>mydir</code> is on your path, you can import the code in <code>module.py</code> as</p>
+<pre><code>import spam.module
+</code></pre>
+<p>or</p>
+<pre><code>from spam import module
+</code></pre>
+<p>If you remove the <code>__init__.py</code> file, Python will no longer look for submodules inside that directory, so attempts to import the module will fail.</p>
+<p>The <code>__init__.py</code> file is usually empty, but can be used to export selected portions of the package under more convenient name, hold convenience functions, etc.
+Given the example above, the contents of the init module can be accessed as</p>
+<pre><code>import spam
+</code></pre>
+<p>based on <a href="https://web.archive.org/web/20200721150953/http://effbot.org/pyfaq/what-is-init-py-used-for.htm" rel="noreferrer">this</a></p>
+</div><p class="this-has-helped">This answer has helped 645 people.</p><div class="s-prose js-post-body"><p>In addition to labeling a directory as a Python package and defining <code>__all__</code>, <strong><code>__init__.py</code> allows you to define any variable at the package level.</strong> Doing so is often convenient if a package defines something that will be imported frequently, in an API-like fashion. This pattern promotes adherence to the Pythonic "flat is better than nested" philosophy.</p>
+
+<h2>An example</h2>
+
+<p>Here is an example from one of my projects, in which I frequently import a <code>sessionmaker</code> called <code>Session</code> to interact with my database. I wrote a "database" package with a few modules:</p>
+
+<pre><code>database/
+    __init__.py
+    schema.py
+    insertions.py
+    queries.py
+</code></pre>
+
+<p>My <code>__init__.py</code> contains the following code:</p>
+
+<pre><code>import os
+
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy import create_engine
+
+engine = create_engine(os.environ['DATABASE_URL'])
+Session = sessionmaker(bind=engine)
+</code></pre>
+
+<p>Since I define <code>Session</code> here, I can start a new session using the syntax below. This code would be the same executed from inside or outside of the "database" package directory.</p>
+
+<pre><code>from database import Session
+session = Session()
+</code></pre>
+
+<p>Of course, this is a small convenience -- the alternative would be to define <code>Session</code> in a new file like "create_session.py" in my database package, and start new sessions using:</p>
+
+<pre><code>from database.create_session import Session
+session = Session()
+</code></pre>
+
+<h2>Further reading</h2>
+
+<p>There is a pretty interesting reddit thread covering appropriate uses of <code>__init__.py</code> here:</p>
+
+<p><a href="http://www.reddit.com/r/Python/comments/1bbbwk/whats_your_opinion_on_what_to_include_in_init_py/">http://www.reddit.com/r/Python/comments/1bbbwk/whats_your_opinion_on_what_to_include_in_init_py/</a></p>
+
+<p>The majority opinion seems to be that <code>__init__.py</code> files should be very thin to avoid violating the "explicit is better than implicit" philosophy.</p>
+</div><p class="this-has-helped">This answer has helped 493 people.</p><div class="s-prose js-post-body"><p>There are 2 main reasons for <code>__init__.py</code></p>
+<ol>
+<li><p>For convenience: the other users will not need to know your functions' exact location in your package hierarchy (<a href="https://docs.python.org/3/reference/import.html#submodules" rel="noreferrer">documentation</a>).</p>
+<pre><code>your_package/
+  __init__.py
+  file1.py
+  file2.py
+    ...
+  fileN.py
+</code></pre>
+<pre><code># in __init__.py
+from .file1 import *
+from .file2 import *
+...
+from .fileN import *
+</code></pre>
+<pre><code># in file1.py
+def add():
+    pass
+</code></pre>
+<p>then others can call add() by</p>
+<pre><code> from your_package import add
+</code></pre>
+<p>without knowing file1's inside functions, like</p>
+<pre><code> from your_package.file1 import add
+</code></pre>
+</li>
+<li><p>If you want something to be initialized; for example, logging (which should be put in the top level):</p>
+<pre><code> import logging.config
+ logging.config.dictConfig(Your_logging_config)
+</code></pre>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 183 people.</p><div class="s-prose js-post-body"><p>The <code>__init__.py</code> file makes Python treat directories containing it as modules. </p>
+
+<p>Furthermore, this is the first file to be loaded in a module, so you can use it to execute code that you want to run each time a module is loaded, or specify the submodules to be exported.</p>
+</div></body></html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>window.onload vs document.onload</p><div class="s-prose js-post-body"><p>Which is more widely supported: <code>window.onload</code> or <code>document.onload</code>?</p>
+</div><p class="this-has-helped">This answer has helped 867 people.</p><div class="s-prose js-post-body"><h2>When do they fire?</h2>
+
+<p><a href="https://developer.mozilla.org/en-US/docs/Web/API/GlobalEventHandlers.onload" rel="noreferrer"><code>window.onload</code></a></p>
+
+<ul>
+<li>By default, it is fired when the entire page loads, <strong>including</strong> its content (images, CSS, scripts, etc.).</li>
+</ul>
+
+<p>In some browsers it now takes over the role of <code>document.onload</code> and fires when the DOM is ready as well.</p>
+
+<p><code>document.onload</code></p>
+
+<ul>
+<li>It is called when the DOM is ready which can be <strong>prior</strong> to images and other external content is loaded.</li>
+</ul>
+
+<h2>How well are they supported?</h2>
+
+<p><code>window.onload</code> appears to be the most widely supported. In fact, some of the most modern browsers have in a sense replaced <code>document.onload</code> with <code>window.onload</code>.</p>
+
+<p>Browser support issues are most likely the reason why many people are starting to use libraries such as <a href="http://jquery.com/" rel="noreferrer">jQuery</a> to handle the checking for the document being ready, like so:</p>
+
+<pre><code>$(document).ready(function() { /* code here */ });
+$(function() { /* code here */ });
+</code></pre>
+
+<hr>
+
+<p>For the purpose of history. <code>window.onload</code> vs <code>body.onload</code>:</p>
+
+<blockquote>
+  <p>A similar question was asked on <a href="http://www.codingforums.com/archive/index.php/t-106229.html" rel="noreferrer">codingforums</a> a while
+  back regarding the usage of <code>window.onload</code> over <code>body.onload</code>. The
+  result seemed to be that you should use <code>window.onload</code> because it is
+  good to separate your structure from the action.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 302 people.</p><div class="s-prose js-post-body"><p>The general idea is that <strong>window.onload fires</strong> when the document's window is <strong>ready for presentation</strong> and <strong>document.onload fires</strong> when the <strong>DOM tree</strong> (built from the markup code within the document) is <strong>completed</strong>.</p>
+
+<p>Ideally, subscribing to <a href="http://en.wikipedia.org/wiki/DOM_events" rel="noreferrer">DOM-tree events</a>, allows offscreen-manipulations through Javascript, incurring <strong>almost no CPU load</strong>. Contrarily, <strong><code>window.onload</code></strong> can <strong>take a while to fire</strong>, when multiple external resources have yet to be requested, parsed and loaded.</p>
+
+<p><strong>►Test scenario:</strong></p>
+
+<p>To observe the difference and <strong>how your browser</strong> of choice <strong>implements</strong> the aforementioned <strong>event handlers</strong>, simply insert the following code within your document's - <code>&lt;body&gt;</code>- tag.</p>
+
+<pre><code>&lt;script language="javascript"&gt;
+window.tdiff = []; fred = function(a,b){return a-b;};
+window.document.onload = function(e){ 
+    console.log("document.onload", e, Date.now() ,window.tdiff,  
+    (window.tdiff[0] = Date.now()) &amp;&amp; window.tdiff.reduce(fred) ); 
+}
+window.onload = function(e){ 
+    console.log("window.onload", e, Date.now() ,window.tdiff, 
+    (window.tdiff[1] = Date.now()) &amp;&amp; window.tdiff.reduce(fred) ); 
+}
+&lt;/script&gt;
+</code></pre>
+
+<p><strong>►Result:</strong></p>
+
+<p>Here is the resulting behavior, observable for Chrome v20 (and probably most current browsers). </p>
+
+<ul>
+<li>No <code>document.onload</code> event.</li>
+<li><code>onload</code> fires twice when declared inside the <code>&lt;body&gt;</code>, once when declared inside the <code>&lt;head&gt;</code> (where the event then acts as <code>document.onload</code> ).</li>
+<li>counting and acting dependent on the state of the counter allows to emulate both event behaviors. </li>
+<li>Alternatively declare the <code>window.onload</code> event handler within the confines of the HTML-<code>&lt;head&gt;</code> element.</li>
+</ul>
+
+<p><strong>►Example Project:</strong></p>
+
+<p>The code above is taken from <a href="https://github.com/lsauer/KeyBoarder/tree/gh-pages" rel="noreferrer">this project's</a> codebase (<code>index.html</code> and <code>keyboarder.js</code>).</p>
+
+<hr>
+
+<p>For a list of <a href="https://developer.mozilla.org/en-US/docs/DOM/window#Event_handlers" rel="noreferrer">event handlers of the window object</a>, please refer to the MDN documentation.</p>
+</div><p class="this-has-helped">This answer has helped 223 people.</p><div class="s-prose js-post-body"><p><strong>Add Event Listener</strong></p>
+<pre><code>&lt;script type=&quot;text/javascript&quot;&gt;
+  document.addEventListener(&quot;DOMContentLoaded&quot;, function(event) {
+      /* 
+        - Code to execute when only the HTML document is loaded.
+        - This doesn't wait for stylesheets, 
+          images, and subframes to finish loading. 
+      */
+  });
+&lt;/script&gt;
+</code></pre>
+<hr>
+<h1><code>Update March 2017</code></h1>
+<h2>1 Vanilla JavaScript</h2>
+<pre><code>window.addEventListener('load', function() {
+    console.log('All assets are loaded')
+})
+</code></pre>
+<hr>
+<h2>2 jQuery</h2>
+<pre><code>$(window).on('load', function() {
+    console.log('All assets are loaded')
+})
+</code></pre>
+<hr>
+Good Luck.
+</div><p class="this-has-helped">This answer has helped 105 people.</p><div class="s-prose js-post-body"><p>According to <a href="https://www.w3.org/TR/html5/syntax.html#the-end">Parsing HTML documents - The end</a>,</p>
+
+<ol>
+<li><p>The browser parses the HTML source and runs deferred scripts.</p></li>
+<li><p>A <code>DOMContentLoaded</code> is dispatched at the <code>document</code> when all the HTML has been parsed and  have run. The event bubbles to the <code>window</code>.</p></li>
+<li><p>The browser loads resources (like images) that delay the load event.</p></li>
+<li><p>A <code>load</code> event is dispatched at the <code>window</code>.</p></li>
+</ol>
+
+<p>Therefore, the order of execution will be</p>
+
+<ol>
+<li><code>DOMContentLoaded</code> event listeners of <code>window</code> in the capture phase</li>
+<li><code>DOMContentLoaded</code> event listeners of <code>document</code></li>
+<li><code>DOMContentLoaded</code> event listeners of <code>window</code> in the bubble phase</li>
+<li><code>load</code> event listeners (including <code>onload</code> event handler) of <code>window</code></li>
+</ol>
+
+<p><strong>A bubble <code>load</code> event listener (including <code>onload</code> event handler) in <code>document</code> should never be invoked.</strong> Only capture <code>load</code> listeners might be invoked, but due to the load of a sub-resource like a stylesheet, not due to the load of the document itself.</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>window.addEventListener('DOMContentLoaded', function() {
+  console.log('window - DOMContentLoaded - capture'); // 1st
+}, true);
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('document - DOMContentLoaded - capture'); // 2nd
+}, true);
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('document - DOMContentLoaded - bubble'); // 2nd
+});
+window.addEventListener('DOMContentLoaded', function() {
+  console.log('window - DOMContentLoaded - bubble'); // 3rd
+});
+
+window.addEventListener('load', function() {
+  console.log('window - load - capture'); // 4th
+}, true);
+document.addEventListener('load', function(e) {
+  /* Filter out load events not related to the document */
+  if(['style','script'].indexOf(e.target.tagName.toLowerCase()) &lt; 0)
+    console.log('document - load - capture'); // DOES NOT HAPPEN
+}, true);
+document.addEventListener('load', function() {
+  console.log('document - load - bubble'); // DOES NOT HAPPEN
+});
+window.addEventListener('load', function() {
+  console.log('window - load - bubble'); // 4th
+});
+
+window.onload = function() {
+  console.log('window - onload'); // 4th
+};
+document.onload = function() {
+  console.log('document - onload'); // DOES NOT HAPPEN
+};</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 14 people.</p><div class="s-prose js-post-body"><p>In Chrome, window.onload is different from <code>&lt;body onload=""&gt;</code>, whereas they are the same in both Firefox(version 35.0) and IE (version 11).</p>
+
+<p>You could explore that by the following snippet:</p>
+
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html xmlns="http://www.w3.org/1999/xhtml"&gt;
+    &lt;head&gt;
+        &lt;meta http-equiv="Content-Type" content="text/html; charset=utf-8" /&gt;
+        &lt;!--import css here--&gt;
+        &lt;!--import js scripts here--&gt;
+
+        &lt;script language="javascript"&gt;
+
+            function bodyOnloadHandler() {
+                console.log("body onload");
+            }
+
+            window.onload = function(e) {
+                console.log("window loaded");
+            };
+        &lt;/script&gt;
+    &lt;/head&gt;
+
+    &lt;body onload="bodyOnloadHandler()"&gt;
+
+        Page contents go here.
+
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+
+<p>And you will see both "window loaded"(which comes firstly) and "body onload" in Chrome console. However, you will see just "body onload" in Firefox and IE. If you run "<code>window.onload.toString()</code>" in the consoles of IE &amp; FF, you will see:</p>
+
+<blockquote>
+  <p>"function onload(event) { bodyOnloadHandler() }"</p>
+</blockquote>
+
+<p>which means that the assignment "window.onload = function(e)..." is overwritten.</p>
+</div></body></html>

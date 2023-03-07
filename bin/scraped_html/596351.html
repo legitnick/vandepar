@@ -1,0 +1,63 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I know which radio button is selected via jQuery?</p><div class="s-prose js-post-body"><p>I have two radio buttons and want to post the value of the selected one.
+How can I get the value with jQuery?</p>
+
+<p>I can get all of them like this:</p>
+
+<pre><code>$("form :radio")
+</code></pre>
+
+<p>How do I know which one is selected?</p>
+</div><p class="this-has-helped">This answer has helped 4261 people.</p><div class="s-prose js-post-body"><p>To get the value of the <strong>selected</strong> <code>radioName</code> item of a form with id <code>myForm</code>:</p>
+<pre><code>$('input[name=radioName]:checked', '#myForm').val()
+</code></pre>
+<p>Here's an example:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="false" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>$('#myForm input').on('change', function() {
+  alert($('input[name=radioName]:checked', '#myForm').val());
+});</code></pre>
+<pre class="snippet-code-html lang-html prettyprint-override"><code>&lt;script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"&gt;&lt;/script&gt;
+&lt;form id="myForm"&gt;
+  &lt;fieldset&gt;
+    &lt;legend&gt;Choose radioName&lt;/legend&gt;
+    &lt;label&gt;&lt;input type="radio" name="radioName" value="1" /&gt; 1&lt;/label&gt; &lt;br /&gt;
+    &lt;label&gt;&lt;input type="radio" name="radioName" value="2" /&gt; 2&lt;/label&gt; &lt;br /&gt;
+    &lt;label&gt;&lt;input type="radio" name="radioName" value="3" /&gt; 3&lt;/label&gt; &lt;br /&gt;
+  &lt;/fieldset&gt;
+&lt;/form&gt;</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 461 people.</p><div class="s-prose js-post-body"><p>Use this..  </p>
+
+<pre><code>$("#myform input[type='radio']:checked").val();
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 342 people.</p><div class="s-prose js-post-body"><p>If you already have a reference to a radio button group, for example:</p>
+
+<pre><code>var myRadio = $("input[name=myRadio]");
+</code></pre>
+
+<p>Use the <code>filter()</code> function, not <code>find()</code>. (<code>find()</code> is for locating child/descendant elements, whereas <code>filter()</code> searches top-level elements in your selection.)</p>
+
+<pre><code>var checkedValue = myRadio.filter(":checked").val();
+</code></pre>
+
+<hr>
+
+<p><em>Notes:</em> This answer was originally correcting another answer that recommended using <code>find()</code>, which seems to have since been changed. <code>find()</code> could still be useful for the situation where you already had a reference to a container element, but not to the radio buttons, e.g.:</p>
+
+<pre><code>var form = $("#mainForm");
+...
+var checkedValue = form.find("input[name=myRadio]:checked").val();
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 159 people.</p><div class="s-prose js-post-body"><p>This should work: </p>
+
+<pre><code>$("input[name='radioName']:checked").val()
+</code></pre>
+
+<p>Note the "" usaged around the input:checked and not '' like the Peter J's solution</p>
+</div><p class="this-has-helped">This answer has helped 86 people.</p><div class="s-prose js-post-body"><p>You can use the :checked selector along with the radio selector.</p>
+
+<pre><code> $("form:radio:checked").val();
+</code></pre>
+</div></body></html>

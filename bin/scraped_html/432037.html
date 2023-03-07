@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I center text horizontally and vertically in a TextView?</p><div class="s-prose js-post-body"><p>How do I center the text horizontally and vertically in a <code>TextView</code>, so that it appears exactly in the middle of the <code>TextView</code> in <code>Android</code>?</p>
+</div><p class="this-has-helped">This answer has helped 3394 people.</p><div class="s-prose js-post-body"><p>I'm assuming you're using XML layout.</p>
+<pre><code>&lt;TextView  
+    android:layout_width=&quot;match_parent&quot; 
+    android:layout_height=&quot;match_parent&quot; 
+    android:gravity=&quot;center&quot;
+    android:text=&quot;@string/**yourtextstring**&quot;
+/&gt;
+</code></pre>
+<p>You can also use gravity <code>center_vertical</code> or <code>center_horizontal</code> according to your need.</p>
+<p>As @stealthcopter commented, in java: <code>.setGravity(Gravity.CENTER);</code>.</p>
+<p>And for Kotlin users, <code>.gravity = Gravity.CENTER</code></p>
+</div><p class="this-has-helped">This answer has helped 483 people.</p><div class="s-prose js-post-body"><pre><code>android:gravity="center" 
+</code></pre>
+
+<p>This will do the trick</p>
+</div><p class="this-has-helped">This answer has helped 313 people.</p><div class="s-prose js-post-body"><p>You can also set it up dynamically using:</p>
+
+<pre><code>textView.setGravity(Gravity.CENTER_VERTICAL | Gravity.CENTER_HORIZONTAL);
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 125 people.</p><div class="s-prose js-post-body"><pre><code>android:layout_centerInParent="true"
+</code></pre>
+
+<p>This works when used with a RelativeLayout where the layout's height &amp; width are set to wrap_content.</p>
+</div><p class="this-has-helped">This answer has helped 89 people.</p><div class="s-prose js-post-body"><p>You can also use the combination:</p>
+
+<pre><code>android:gravity="left|center"
+</code></pre>
+
+<p>Then, if textview width is more than "fill_parent" the text will still be aligned to left (not centered as with gravity set only to "center").</p>
+</div></body></html>

@@ -1,0 +1,137 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What&#39;s the difference between the atomic and nonatomic attributes?</p><div class="s-prose js-post-body"><p>What do <code>atomic</code> and <code>nonatomic</code> mean in property declarations?</p>
+
+<pre><code>@property(nonatomic, retain) UITextField *userName;
+@property(atomic, retain) UITextField *userName;
+@property(retain) UITextField *userName;
+</code></pre>
+
+<p>What is the operational difference between these three?</p>
+</div><p class="this-has-helped">This answer has helped 1804 people.</p><div class="s-prose js-post-body"><p>The last two are identical; "atomic" is the default behavior (<strike>note that it is not actually a keyword; it is specified only by the absence of <code>nonatomic</code></strike> -- <code>atomic</code> was added as a keyword in recent versions of llvm/clang).</p>
+
+<p>Assuming that you are @synthesizing the method implementations, atomic vs. non-atomic changes the generated code.  If you are writing your own setter/getters, atomic/nonatomic/retain/assign/copy are merely advisory.  (Note:  @synthesize is now the default behavior in recent versions of LLVM.  There is also no need to declare instance variables;  they will be synthesized automatically, too, and will have an <code>_</code> prepended to their name to prevent accidental direct access).</p>
+
+<p>With "atomic", the synthesized setter/getter will ensure that a <em>whole</em> value is always returned from the getter or set by the setter, regardless of setter activity on any other thread.   That is, if thread A is in the middle of the getter while thread B calls the setter, an actual viable value -- an autoreleased object, most likely -- will be returned to the caller in A.</p>
+
+<p>In <code>nonatomic</code>, no such guarantees are made.   Thus, <code>nonatomic</code> is considerably faster than "atomic".</p>
+
+<p>What "atomic" does <strong>not</strong> do is make any guarantees about thread safety.  If thread A is calling the getter simultaneously with thread B and C calling the setter with different values, thread A may get any one of the three values returned -- the one prior to any setters being called or either of the values passed into the setters in B and C.  Likewise, the object may end up with the value from B or C, no way to tell.</p>
+
+<p>Ensuring data integrity -- one of the primary challenges of multi-threaded programming -- is achieved by other means.</p>
+
+<p>Adding to this:</p>
+
+<p><code>atomicity</code> of a single property also cannot guarantee thread safety when multiple dependent properties are in play.</p>
+
+<p>Consider:</p>
+
+<pre><code> @property(atomic, copy) NSString *firstName;
+ @property(atomic, copy) NSString *lastName;
+ @property(readonly, atomic, copy) NSString *fullName;
+</code></pre>
+
+<p>In this case, thread A could be renaming the object by calling <code>setFirstName:</code> and then calling <code>setLastName:</code>.   In the meantime, thread B may call <code>fullName</code> in between thread A's two calls and will receive the new first name coupled with the old last name.</p>
+
+<p>To address this, you need a <em>transactional model</em>.   I.e. some other kind of synchronization and/or exclusion that allows one to exclude access to <code>fullName</code> while the dependent properties are being updated.</p>
+</div><p class="this-has-helped">This answer has helped 365 people.</p><div class="s-prose js-post-body"><p>This is explained in Apple's <a href="http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/ObjectiveC/Chapters/ocProperties.html" rel="noreferrer">documentation</a>, but below are some examples of what is actually happening.</p>
+
+<p><strike>Note that there is no "atomic" keyword, if you do not specify "nonatomic", then the property is atomic, but specifying "atomic" explicitly will result in an error.</strike></p>
+
+<p>If you do not specify "nonatomic", then the property is atomic, but you can still specify "atomic" explicitly in recent versions if you want to.</p>
+
+<pre><code>//@property(nonatomic, retain) UITextField *userName;
+//Generates roughly
+
+- (UITextField *) userName {
+    return userName;
+}
+
+- (void) setUserName:(UITextField *)userName_ {
+    [userName_ retain];
+    [userName release];
+    userName = userName_;
+}
+</code></pre>
+
+<p>Now, the atomic variant is a bit more complicated:</p>
+
+<pre><code>//@property(retain) UITextField *userName;
+//Generates roughly
+
+- (UITextField *) userName {
+    UITextField *retval = nil;
+    @synchronized(self) {
+        retval = [[userName retain] autorelease];
+    }
+    return retval;
+}
+
+- (void) setUserName:(UITextField *)userName_ {
+    @synchronized(self) {
+      [userName_ retain];
+      [userName release];
+      userName = userName_;
+    }
+}
+</code></pre>
+
+<p>Basically, the atomic version has to take a lock in order to guarantee thread safety, and also is bumping the ref count on the object (and the autorelease count to balance it) so that the object is guaranteed to exist for the caller, otherwise there is a potential race condition if another thread is setting the value, causing the ref count to drop to 0.</p>
+
+<p>There are actually a large number of different variants of how these things work depending on whether the properties are scalar values or objects, and how retain, copy, readonly, nonatomic, etc interact. In general the property synthesizers just know how to do the "right thing" for all combinations.</p>
+</div><p class="this-has-helped">This answer has helped 174 people.</p><div class="s-prose js-post-body"><h3>Atomic</h3>
+<ul>
+<li>is the default behavior</li>
+<li>will ensure the present process is completed by the CPU, before another process accesses the variable</li>
+<li>is not fast, as it ensures the process is completed entirely</li>
+</ul>
+<h3>Non-Atomic</h3>
+<ul>
+<li>is NOT the default behavior</li>
+<li>faster (for synthesized code, that is, for variables created using @property and @synthesize)</li>
+<li>not thread-safe</li>
+<li>may result in unexpected behavior, when two different process access the same variable at the same time</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 143 people.</p><div class="s-prose js-post-body"><p>The best way to understand the difference is using the following example. </p>
+
+<p>Suppose there is an atomic string property called "name", and if you call <code>[self setName:@"A"]</code> from thread A, call <code>[self setName:@"B"]</code> from thread B, and call <code>[self name]</code> from thread C, then all operations on different threads will be performed serially which means if one thread is executing a setter or getter, then other threads will wait.</p>
+
+<p>This makes property "name" read/write safe, but if another thread, D, calls <code>[name release]</code> simultaneously then this operation might produce a crash because there is no setter/getter call involved here. Which means an object is read/write safe (ATOMIC), but not thread-safe as another threads can simultaneously send any type of messages to the object. The developer should ensure thread-safety for such objects.</p>
+
+<p>If the property "name" was nonatomic, then all threads in above example - A,B, C and D will execute simultaneously producing any unpredictable result. In case of atomic, either one of A, B or C will execute first, but D can still execute in parallel.</p>
+</div><p class="this-has-helped">This answer has helped 120 people.</p><div class="s-prose js-post-body"><p>The syntax and semantics are already well-defined by other excellent answers to this question. Because <em>execution</em> and <em>performance</em> are not detailed well, I will add my answer.</p>
+
+<blockquote>
+  <p>What is the functional difference between these 3?</p>
+</blockquote>
+
+<p>I'd always considered atomic as a default quite curious. At the abstraction level we work at, using atomic properties for a class as a vehicle to achieve 100% thread-safety is a corner case. For truly correct multithreaded programs, intervention by the programmer is almost certainly a requirement. Meanwhile, performance characteristics and execution have not yet been detailed in depth. Having written some heavily multithreaded programs over the years, I had been declaring my properties as <code>nonatomic</code> the entire time because atomic was not sensible for any purpose. During discussion of the details of atomic and nonatomic properties <a href="https://stackoverflow.com/questions/12010211/use-of-atomic-properties-in-objective-c-any-side-effects">this question</a>, I did some profiling encountered some curious results.</p>
+
+<p><strong>Execution</strong></p>
+
+<p>Ok. The first thing I would like to clear up is that the locking implementation is implementation-defined and abstracted. Louis uses <code>@synchronized(self)</code> in his example -- I have seen this as a common source of confusion. The implementation does not <em>actually</em> use <code>@synchronized(self)</code>; it uses object level <em>spin locks</em>. Louis's illustration is good for a high-level illustration using constructs we are all familiar with, but it's important to know it does not use <code>@synchronized(self)</code>.</p>
+
+<p>Another difference is that atomic properties will retain/release cycle your objects within the getter.</p>
+
+<p><strong>Performance</strong></p>
+
+<p>Here's the interesting part: Performance using atomic property accesses in <strong>uncontested</strong> (e.g. single-threaded) cases can be really very fast in some cases. In less than ideal cases, use of atomic accesses can cost more than 20 times the overhead of <code>nonatomic</code>. While the <strong>Contested</strong> case using 7 threads was 44 times slower for the three-byte struct (2.2&nbsp;GHz <a href="https://en.wikipedia.org/wiki/Intel_Core#Core_i7" rel="noreferrer">Core&nbsp;i7</a> Quad Core, x86_64). The three-byte struct is an example of a very slow property.</p>
+
+<p>Interesting side note: User-defined accessors of the three-byte struct were 52 times faster than the synthesized atomic accessors; or 84% the speed of synthesized nonatomic accessors.</p>
+
+<p>Objects in contested cases can also exceed 50 times.</p>
+
+<p>Due to the number of optimizations and variations in implementations, it's quite difficult to measure real-world impacts in these contexts. You might often hear something like "Trust it, unless you profile and find it is a problem". Due to the abstraction level, it's actually quite difficult to measure actual impact. Gleaning actual costs from profiles can be very time consuming, and due to abstractions, quite inaccurate. As well, ARC vs MRC can make a big difference.</p>
+
+<p>So let's step back, <em>not</em> focussing on the implementation of property accesses, we'll include the usual suspects like <code>objc_msgSend</code>, and examine some real-world high-level results for many calls to a <code>NSString</code> getter in <em>uncontested</em> cases (values in seconds):</p>
+
+<ul>
+<li>MRC | nonatomic | manually implemented getters: 2</li>
+<li>MRC | nonatomic | synthesized getter: 7</li>
+<li>MRC | atomic | synthesized getter: 47</li>
+<li>ARC | nonatomic | synthesized getter: 38 (note: ARC's adding ref count cycling here)</li>
+<li>ARC | atomic | synthesized getter: 47</li>
+</ul>
+
+<p>As you have probably guessed, reference count activity/cycling is a significant contributor with atomics and under ARC. You would also see greater differences in contested cases.</p>
+
+<p>Although I pay close attention to performance, I still say <strong>Semantics First!</strong>. Meanwhile, performance is a low priority for many projects. However, knowing execution details and costs of technologies you use certainly doesn't hurt. You should use the right technology for your needs, purposes, and abilities. Hopefully this will save you a few hours of comparisons, and help you make a better informed decision when designing your programs.</p>
+</div></body></html>

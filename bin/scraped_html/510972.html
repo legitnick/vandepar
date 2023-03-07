@@ -1,0 +1,95 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Getting the class name of an instance</p><div class="s-prose js-post-body"><p>How do I find out the name of the class used to create an instance of an object in Python?</p>
+<p>I'm not sure if I should use the <a href="https://docs.python.org/2/library/inspect.html" rel="noreferrer" title="inspect — Inspect live objects"><code>inspect</code></a> module or parse the <code>__class__</code> attribute.</p>
+</div><p class="this-has-helped">This answer has helped 2456 people.</p><div class="s-prose js-post-body"><p>Have you tried the <a href="https://docs.python.org/library/stdtypes.html#definition.__name__" rel="noreferrer"><code>__name__</code> attribute</a> of the class? ie <code>type(x).__name__</code> will give you the name of the class, which I think is what you want.</p>
+
+<pre><code>&gt;&gt;&gt; import itertools
+&gt;&gt;&gt; x = itertools.count(0)
+&gt;&gt;&gt; type(x).__name__
+'count'
+</code></pre>
+
+<p>If you're still using Python 2, note that the above method works with <a href="https://wiki.python.org/moin/NewClassVsClassicClass" rel="noreferrer">new-style classes</a> only (in Python 3+ all classes are "new-style" classes). Your code might use some old-style classes. The following works for both:</p>
+
+<pre><code>x.__class__.__name__
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 514 people.</p><div class="s-prose js-post-body"><p>Do you want the name of the class as a string?</p>
+
+<pre><code>instance.__class__.__name__
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 168 people.</p><div class="s-prose js-post-body"><p><a href="https://docs.python.org/3/library/functions.html#type" rel="noreferrer"><code>type()</code></a> ?</p>
+<pre><code>&gt;&gt;&gt; class A:
+...     def whoami(self):
+...         print(type(self).__name__)
+...
+&gt;&gt;&gt;
+&gt;&gt;&gt; class B(A):
+...     pass
+...
+&gt;&gt;&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt; o = B()
+&gt;&gt;&gt; o.whoami()
+'B'
+&gt;&gt;&gt;
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 51 people.</p><div class="s-prose js-post-body"><pre><code>class A:
+  pass
+
+a = A()
+str(a.__class__)
+</code></pre>
+
+<p>The sample code above (when input in the interactive interpreter) will produce <code>'__main__.A'</code> as opposed to <code>'A'</code> which is produced if the <code>__name__</code> attribute is invoked. By simply passing the result of <code>A.__class__</code> to the <code>str</code> constructor the parsing is handled for you. However, you could also use the following code if you want something more explicit.</p>
+
+<pre><code>"{0}.{1}".format(a.__class__.__module__,a.__class__.__name__)
+</code></pre>
+
+<p>This behavior can be preferable if you have classes with the same name defined in separate modules.</p>
+
+<p><strong>The sample code provided above was tested in Python 2.7.5.</strong></p>
+</div><p class="this-has-helped">This answer has helped 30 people.</p><div class="s-prose js-post-body"><p>In Python 2,</p>
+<pre><code>type(instance).__name__ != instance.__class__.__name__
+# if class A is defined like
+class A():
+   ...
+
+type(instance) == instance.__class__
+# if class A is defined like
+class A(object):
+  ...
+</code></pre>
+<p>Example:</p>
+<pre><code>&gt;&gt;&gt; class aclass(object):
+...   pass
+...
+&gt;&gt;&gt; a = aclass()
+&gt;&gt;&gt; type(a)
+&lt;class '__main__.aclass'&gt;
+&gt;&gt;&gt; a.__class__
+&lt;class '__main__.aclass'&gt;
+&gt;&gt;&gt;
+&gt;&gt;&gt; type(a).__name__
+'aclass'
+&gt;&gt;&gt;
+&gt;&gt;&gt; a.__class__.__name__
+'aclass'
+&gt;&gt;&gt;
+
+
+&gt;&gt;&gt; class bclass():
+...   pass
+...
+&gt;&gt;&gt; b = bclass()
+&gt;&gt;&gt;
+&gt;&gt;&gt; type(b)
+&lt;type 'instance'&gt;
+&gt;&gt;&gt; b.__class__
+&lt;class __main__.bclass at 0xb765047c&gt;
+&gt;&gt;&gt; type(b).__name__
+'instance'
+&gt;&gt;&gt;
+&gt;&gt;&gt; b.__class__.__name__
+'bclass'
+&gt;&gt;&gt;
+</code></pre>
+</div></body></html>

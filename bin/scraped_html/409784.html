@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>What&#39;s the simplest way to print a Java array?</p><div class="s-prose js-post-body"><p>In Java, arrays don't override <code>toString()</code>, so if you try to print one directly, you get the <code>className</code> + '@' + the hex of the <a href="https://en.wikipedia.org/wiki/Java_hashCode()" rel="noreferrer"><code>hashCode</code></a> of the array, as defined by <code>Object.toString()</code>:</p>
+<pre class="lang-java prettyprint-override"><code>int[] intArray = new int[] {1, 2, 3, 4, 5};
+System.out.println(intArray); // Prints something like '[I@3343c8b3'
+</code></pre>
+<p>But usually, we'd actually want something more like <code>[1, 2, 3, 4, 5]</code>. What's the simplest way of doing that? Here are some example inputs and outputs:</p>
+<pre class="lang-java prettyprint-override"><code>// Array of primitives:
+int[] intArray = new int[] {1, 2, 3, 4, 5};
+// Output: [1, 2, 3, 4, 5]
+
+// Array of object references:
+String[] strArray = new String[] {&quot;John&quot;, &quot;Mary&quot;, &quot;Bob&quot;};
+// Output: [John, Mary, Bob]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 3133 people.</p><div class="s-prose js-post-body"><p>Since Java 5 you can use <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html#toString(int%5B%5D)" rel="noreferrer"><code>Arrays.toString(arr)</code></a> or <a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Arrays.html#deepToString(java.lang.Object%5B%5D)" rel="noreferrer"><code>Arrays.deepToString(arr)</code></a> for arrays within arrays. Note that the <code>Object[]</code> version calls <code>.toString()</code> on each object in the array. The output is even decorated in the exact way you're asking.</p>
+<p>Examples:</p>
+<ul>
+<li><h3>Simple Array:</h3>
+<pre><code>String[] array = new String[] {&quot;John&quot;, &quot;Mary&quot;, &quot;Bob&quot;};
+System.out.println(Arrays.toString(array));
+</code></pre>
+<p>Output:</p>
+<pre><code>[John, Mary, Bob]
+</code></pre>
+</li>
+<li><h3>Nested Array:</h3>
+<pre><code>String[][] deepArray = new String[][] {{&quot;John&quot;, &quot;Mary&quot;}, {&quot;Alice&quot;, &quot;Bob&quot;}};
+// Gives undesired output:
+System.out.println(Arrays.toString(deepArray));
+// Gives the desired output:
+System.out.println(Arrays.deepToString(deepArray));
+</code></pre>
+<p>Output:</p>
+<pre><code>[[Ljava.lang.String;@106d69c, [Ljava.lang.String;@52e922]
+[[John, Mary], [Alice, Bob]]
+</code></pre>
+</li>
+<li><h3><code>double</code> Array:</h3>
+<pre><code>double[] doubleArray = { 7.0, 9.0, 5.0, 1.0, 3.0 };
+System.out.println(Arrays.toString(doubleArray));
+</code></pre>
+<p>Output:</p>
+<pre><code>[7.0, 9.0, 5.0, 1.0, 3.0 ]
+</code></pre>
+</li>
+<li><h3><code>int</code> Array:</h3>
+<pre><code>int[] intArray = { 7, 9, 5, 1, 3 };
+System.out.println(Arrays.toString(intArray));
+</code></pre>
+<p>Output:</p>
+<pre><code>[7, 9, 5, 1, 3 ]
+</code></pre>
+</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 421 people.</p><div class="s-prose js-post-body"><p>Always check the standard libraries first.  </p>
+
+<pre><code>import java.util.Arrays;
+</code></pre>
+
+<p>Then try:</p>
+
+<pre><code>System.out.println(Arrays.toString(array));
+</code></pre>
+
+<p>or if your array contains other arrays as elements:</p>
+
+<pre><code>System.out.println(Arrays.deepToString(array));
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 115 people.</p><div class="s-prose js-post-body"><p>This is nice to know, however, as for "always check the standard libraries first" I'd never have stumbled upon the trick of <code>Arrays.toString( myarray )</code></p>
+
+<p>--since I was concentrating on the type of myarray to see how to do this. I didn't want to have to iterate through the thing: I wanted an easy call to make it come out similar to what I see in the Eclipse debugger and myarray.toString() just wasn't doing it.</p>
+
+<pre><code>import java.util.Arrays;
+.
+.
+.
+System.out.println( Arrays.toString( myarray ) );
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 110 people.</p><div class="s-prose js-post-body"><p>In JDK1.8 you can use aggregate operations and a lambda expression:</p>
+
+<pre><code>String[] strArray = new String[] {"John", "Mary", "Bob"};
+
+// #1
+Arrays.asList(strArray).stream().forEach(s -&gt; System.out.println(s));
+
+// #2
+Stream.of(strArray).forEach(System.out::println);
+
+// #3
+Arrays.stream(strArray).forEach(System.out::println);
+
+/* output:
+John
+Mary
+Bob
+*/
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 55 people.</p><div class="s-prose js-post-body"><h2>Arrays.toString</h2>
+<p>As a direct answer, <a href="https://stackoverflow.com/a/409795/365237">the solution provided by several, including @Esko</a>, using the <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Arrays.html#toString%28java.lang.Object%5B%5D%29" rel="noreferrer"><code>Arrays.toString</code></a> and <a href="https://docs.oracle.com/javase/7/docs/api/java/util/Arrays.html#deepToString%28java.lang.Object%5B%5D%29" rel="noreferrer"><code>Arrays.deepToString</code></a> methods, is simply the best.</p>
+<h2>Java 8 - Stream.collect(joining()), Stream.forEach</h2>
+<p>Below I try to list some of the other methods suggested, attempting to improve a little, with the most notable addition being the use of the <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Stream.html#collect-java.util.stream.Collector-" rel="noreferrer"><code>Stream.collect</code></a> operator, using a <a href="https://docs.oracle.com/javase/8/docs/api/java/util/stream/Collectors.html#joining-java.lang.CharSequence-" rel="noreferrer"><code>joining</code></a> <code>Collector</code>, to mimic what the <code>String.join</code> is doing.</p>
+<pre><code>int[] ints = new int[] {1, 2, 3, 4, 5};
+System.out.println(IntStream.of(ints).mapToObj(Integer::toString).collect(Collectors.joining(&quot;, &quot;)));
+System.out.println(IntStream.of(ints).boxed().map(Object::toString).collect(Collectors.joining(&quot;, &quot;)));
+System.out.println(Arrays.toString(ints));
+
+String[] strs = new String[] {&quot;John&quot;, &quot;Mary&quot;, &quot;Bob&quot;};
+System.out.println(Stream.of(strs).collect(Collectors.joining(&quot;, &quot;)));
+System.out.println(String.join(&quot;, &quot;, strs));
+System.out.println(Arrays.toString(strs));
+
+DayOfWeek [] days = { FRIDAY, MONDAY, TUESDAY };
+System.out.println(Stream.of(days).map(Object::toString).collect(Collectors.joining(&quot;, &quot;)));
+System.out.println(Arrays.toString(days));
+
+// These options are not the same as each item is printed on a new line:
+IntStream.of(ints).forEach(System.out::println);
+Stream.of(strs).forEach(System.out::println);
+Stream.of(days).forEach(System.out::println);
+</code></pre>
+</div></body></html>

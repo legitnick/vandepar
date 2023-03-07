@@ -1,0 +1,130 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How to insert an item into an array at a specific index (JavaScript)</p><div class="s-prose js-post-body"><p>I am looking for a JavaScript array insert method, in the style of:</p>
+<pre><code>arr.insert(index, item)
+</code></pre>
+<p>Preferably in jQuery, but any JavaScript implementation will do at this point.</p>
+</div><p class="this-has-helped">This answer has helped 6503 people.</p><div class="s-prose js-post-body"><p>You want the <strong><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer"><code>splice</code></a></strong> function on the native array object.</p>
+<p><code>arr.splice(index, 0, item);</code> will insert <code>item</code> into <code>arr</code> at the specified <code>index</code> (deleting <code>0</code> items first, that is, it's just an insert).</p>
+<p>In this example we will create an array and add an element to it into index 2:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var arr = [];
+arr[0] = "Jani";
+arr[1] = "Hege";
+arr[2] = "Stale";
+arr[3] = "Kai Jim";
+arr[4] = "Borge";
+
+console.log(arr.join()); // Jani,Hege,Stale,Kai Jim,Borge
+arr.splice(2, 0, "Lene");
+console.log(arr.join()); // Jani,Hege,Lene,Stale,Kai Jim,Borge</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 401 people.</p><div class="s-prose js-post-body"><p>You can implement the <code>Array.insert</code> method by doing this:</p>
+<pre><code>Array.prototype.insert = function ( index, ...items ) {
+    this.splice( index, 0, ...items );
+};
+</code></pre>
+<p>Then you can use it like:</p>
+<pre><code>var arr = [ 'A', 'B', 'E' ];
+arr.insert(2, 'C', 'D');
+
+// =&gt; arr == [ 'A', 'B', 'C', 'D', 'E' ]
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 280 people.</p><div class="s-prose js-post-body"><p>Other than splice, you can use this approach which will not mutate the original array, but it will create a new array with the added item. It is useful, when you need to avoid mutation. I'm using the <a href="https://en.wikipedia.org/wiki/ECMAScript#6th_Edition_%E2%80%93_ECMAScript_2015" rel="noreferrer">ES6</a> spread operator here.</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="true">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = [1, 2, 3, 4, 5]
+
+const insert = (arr, index, newItem) =&gt; [
+  // part of the array before the specified index
+  ...arr.slice(0, index),
+  // inserted item
+  newItem,
+  // part of the array after the specified index
+  ...arr.slice(index)
+]
+
+const result = insert(items, 1, 10)
+
+console.log(result)
+// [1, 10, 2, 3, 4, 5]</code></pre>
+</div>
+</div>
+</p>
+<p>This can be used to add more than one item by tweaking the function a bit to use the rest operator for the new items, and spread that in the returned result as well:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="true">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const items = [1, 2, 3, 4, 5]
+
+const insert = (arr, index, ...newItems) =&gt; [
+  // part of the array before the specified index
+  ...arr.slice(0, index),
+  // inserted items
+  ...newItems,
+  // part of the array after the specified index
+  ...arr.slice(index)
+]
+
+const result = insert(items, 1, 10, 20)
+
+console.log(result)
+// [1, 10, 20, 2, 3, 4, 5]</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 88 people.</p><div class="s-prose js-post-body"><h1>Custom array <code>insert</code> methods</h1>
+
+<h3><em>1. With multiple arguments and chaining support</em></h3>
+
+<pre><code>/* Syntax:
+   array.insert(index, value1, value2, ..., valueN) */
+
+Array.prototype.insert = function(index) {
+    this.splice.apply(this, [index, 0].concat(
+        Array.prototype.slice.call(arguments, 1)));
+    return this;
+};
+</code></pre>
+
+<p>It can insert multiple elements (as native <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer"><code>splice</code></a> does) and supports chaining:</p>
+
+<pre><code>["a", "b", "c", "d"].insert(2, "X", "Y", "Z").slice(1, 6);
+// ["b", "X", "Y", "Z", "c"]
+</code></pre>
+
+<hr>
+
+<h3><em>2. With array-type arguments merging and chaining support</em></h3>
+
+<pre><code>/* Syntax:
+   array.insert(index, value1, value2, ..., valueN) */
+
+Array.prototype.insert = function(index) {
+    index = Math.min(index, this.length);
+    arguments.length &gt; 1
+        &amp;&amp; this.splice.apply(this, [index, 0].concat([].pop.call(arguments)))
+        &amp;&amp; this.insert.apply(this, arguments);
+    return this;
+};
+</code></pre>
+
+<p>It can merge arrays from the arguments with the given array and also supports chaining:</p>
+
+<pre><code>["a", "b", "c", "d"].insert(2, "V", ["W", "X", "Y"], "Z").join("-");
+// "a-b-V-W-X-Y-Z-c-d"
+</code></pre>
+
+<p><strong>DEMO:</strong> <a href="http://jsfiddle.net/UPphH/" rel="noreferrer">http://jsfiddle.net/UPphH/</a></p>
+</div><p class="this-has-helped">This answer has helped 60 people.</p><div class="s-prose js-post-body"><p>Using <code>Array.prototype.splice()</code> is an easy way to achieve it</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const numbers = ['one', 'two', 'four', 'five']
+numbers.splice(2, 0, 'three');
+
+console.log(numbers)</code></pre>
+</div>
+</div>
+</p>
+<p>Read more about <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/splice" rel="noreferrer">Array.prototype.splice</a></p>
+</div></body></html>

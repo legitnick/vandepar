@@ -1,0 +1,156 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>Where should I put &lt;script&gt; tags in HTML markup?</p><div class="s-prose js-post-body"><p>When embedding JavaScript in an HTML document, where is the proper place to put the <code>&lt;script&gt;</code> tags and included JavaScript? I seem to recall that you are not supposed to place these in the <code>&lt;head&gt;</code> section, but placing at the beginning of the <code>&lt;body&gt;</code> section is bad, too, since the JavaScript will have to be parsed before the page is rendered completely (or something like that). This seems to leave the <em>end</em> of the <code>&lt;body&gt;</code> section as a logical place for <code>&lt;script&gt;</code> tags.</p>
+<p>So, where <em>is</em> the right place to put the <code>&lt;script&gt;</code> tags?</p>
+<p>(This question references <a href="https://stackoverflow.com/questions/436154/why-does-the-call-to-this-jquery-function-fail-in-firefox">this question</a>, in which it was suggested that JavaScript function calls should be moved from <code>&lt;a&gt;</code> tags to <code>&lt;script&gt;</code> tags. I'm specifically using jQuery, but more general answers are also appropriate.)</p>
+</div><p class="this-has-helped">This answer has helped 2313 people.</p><div class="s-prose js-post-body"><p>Here's what happens when a browser loads a website with a <code>&lt;script&gt;</code> tag on it:</p>
+<ol>
+<li>Fetch the HTML page (e.g. <em>index.html</em>)</li>
+<li>Begin parsing the HTML</li>
+<li>The parser encounters a <code>&lt;script&gt;</code> tag referencing an external script file.</li>
+<li>The browser requests the script file. Meanwhile, the parser blocks and stops parsing the other HTML on your page.</li>
+<li>After some time the script is downloaded and subsequently executed.</li>
+<li>The parser continues parsing the rest of the HTML document.</li>
+</ol>
+<p>Step #4 causes a bad user experience. Your website basically stops loading until you've downloaded all scripts. If there's one thing that users hate it's waiting for a website to load.</p>
+<h2>Why does this even happen?</h2>
+<p>Any script can insert its own HTML via <code>document.write()</code> or other DOM manipulations. This implies that the parser has to wait until the script has been downloaded and executed before it can safely parse the rest of the document. After all, the script <em>could</em> have inserted its own HTML in the document.</p>
+<p>However, most JavaScript developers no longer manipulate the DOM <em>while</em> the document is loading. Instead, they wait until the document has been loaded before modifying it. For example:</p>
+<pre><code>&lt;!-- index.html --&gt;
+&lt;html&gt;
+    &lt;head&gt;
+        &lt;title&gt;My Page&lt;/title&gt;
+        &lt;script src=&quot;my-script.js&quot;&gt;&lt;/script&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+        &lt;div id=&quot;user-greeting&quot;&gt;Welcome back, user&lt;/div&gt;
+    &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>JavaScript:</p>
+<pre><code>// my-script.js
+document.addEventListener(&quot;DOMContentLoaded&quot;, function() {
+    // this function runs when the DOM is ready, i.e. when the document has been parsed
+    document.getElementById(&quot;user-greeting&quot;).textContent = &quot;Welcome back, Bart&quot;;
+});
+</code></pre>
+<p>Because your browser does not know <em>my-script.js</em> isn't going to modify the document until it has been downloaded and executed, the parser stops parsing.</p>
+<h2>Antiquated recommendation</h2>
+<p>The old approach to solving this problem was to put <code>&lt;script&gt;</code> tags at the bottom of your <code>&lt;body&gt;</code>, because this ensures the parser isn't blocked until the very end.</p>
+<p>This approach has its own problem: the browser cannot start downloading the scripts until the entire document is parsed. For larger websites with large scripts and stylesheets, being able to download the script as soon as possible is very important for performance. If your website doesn't load within 2 seconds, people will go to another website.</p>
+<p>In an optimal solution, the browser would start downloading your scripts as soon as possible, while at the same time parsing the rest of your document.</p>
+<h2>The modern approach</h2>
+<p>Today, browsers support the <code>async</code> and <code>defer</code> attributes on scripts. These attributes tell the browser it's safe to continue parsing while the scripts are being downloaded.</p>
+<h3>async</h3>
+<pre><code>&lt;script src=&quot;path/to/script1.js&quot; async&gt;&lt;/script&gt;
+&lt;script src=&quot;path/to/script2.js&quot; async&gt;&lt;/script&gt;
+</code></pre>
+<p>Scripts with the async attribute are executed asynchronously. This means the script is executed as soon as it's downloaded, without blocking the browser in the meantime.
+This implies that it's possible that script 2 is downloaded and executed before script 1.</p>
+<p>According to <a href="http://caniuse.com/#feat=script-async" rel="noreferrer">http://caniuse.com/#feat=script-async</a>, 97.78% of all browsers support this.</p>
+<h3>defer</h3>
+<pre><code>&lt;script src=&quot;path/to/script1.js&quot; defer&gt;&lt;/script&gt;
+&lt;script src=&quot;path/to/script2.js&quot; defer&gt;&lt;/script&gt;
+</code></pre>
+<p>Scripts with the defer attribute are executed in order (i.e. first script 1, then script 2). This also does not block the browser.</p>
+<p>Unlike async scripts, defer scripts are only executed after the entire document has been loaded.</p>
+<p><em>(To learn more and see some really helpful visual representations of the differences between async, defer and normal scripts check the first two links at the references section of this answer)</em></p>
+<h1>Conclusion</h1>
+<p>The current state-of-the-art is to put scripts in the <code>&lt;head&gt;</code> tag and use the <code>async</code> or <code>defer</code> attributes. This allows your scripts to be downloaded ASAP without blocking your browser.</p>
+<p>The good thing is that your website should still load correctly on the 2% of browsers that do not support these attributes while speeding up the other 98%.</p>
+<h2>References</h2>
+<ul>
+<li><a href="https://www.growingwiththeweb.com/2014/02/async-vs-defer-attributes.html" rel="noreferrer">async vs defer attributes</a></li>
+<li><a href="https://flaviocopes.com/javascript-async-defer/" rel="noreferrer">Efficiently load JavaScript with defer and async</a></li>
+<li><a href="https://developers.google.com/speed/docs/insights/v5/get-started" rel="noreferrer">Remove Render-Blocking JavaScript</a></li>
+<li><a href="https://gist.github.com/jakub-g/385ee6b41085303a53ad92c7c8afd7a6#visual-representation" rel="noreferrer">Async, Defer, Modules: A Visual Cheatsheet</a></li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 253 people.</p><div class="s-prose js-post-body"><p>Just before the closing body tag, as stated on <em><a href="http://developer.yahoo.com/performance/rules.html#js_bottom" rel="noreferrer">Put Scripts at the Bottom</a></em>:</p>
+<blockquote>
+<p>Put Scripts at the Bottom</p>
+<p>The problem caused by scripts is that they block parallel downloads. The HTTP/1.1 specification suggests that browsers download no more than two components in parallel per hostname. If you serve your images from multiple hostnames, you can get more than two downloads to occur in parallel. While a script is downloading, however, the browser won't start any other downloads, even on different hostnames.</p>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 101 people.</p><div class="s-prose js-post-body"><p>Non-blocking script tags can be placed just about anywhere:</p>
+
+<pre><code>&lt;script src="script.js" async&gt;&lt;/script&gt;
+&lt;script src="script.js" defer&gt;&lt;/script&gt;
+&lt;script src="script.js" async defer&gt;&lt;/script&gt;
+</code></pre>
+
+<ul>
+<li><a href="http://www.w3.org/TR/html5/scripting-1.html#attr-script-async"><strong><code>async</code></strong></a> script will be executed asynchronously as soon as it is available</li>
+<li><a href="http://www.w3.org/TR/html5/scripting-1.html#attr-script-defer"><strong><code>defer</code></strong></a> script is executed when the document has finished parsing</li>
+<li><strong><code>async defer</code></strong> script falls back to the defer behavior if async is not supported</li>
+</ul>
+
+<p>Such scripts will be executed asynchronously/after document ready, which means you cannot do this:</p>
+
+<pre><code>&lt;script src="jquery.js" async&gt;&lt;/script&gt;
+&lt;script&gt;jQuery(something);&lt;/script&gt;
+&lt;!--
+  * might throw "jQuery is not defined" error
+  * defer will not work either
+--&gt;
+</code></pre>
+
+<p>Or this:</p>
+
+<pre><code>&lt;script src="document.write(something).js" async&gt;&lt;/script&gt;
+&lt;!--
+  * might issue "cannot write into document from an asynchronous script" warning
+  * defer will not work either
+--&gt;
+</code></pre>
+
+<p>Or this:</p>
+
+<pre><code>&lt;script src="jquery.js" async&gt;&lt;/script&gt;
+&lt;script src="jQuery(something).js" async&gt;&lt;/script&gt;
+&lt;!--
+  * might throw "jQuery is not defined" error (no guarantee which script runs first)
+  * defer will work in sane browsers
+--&gt;
+</code></pre>
+
+<p>Or this:</p>
+
+<pre><code>&lt;script src="document.getElementById(header).js" async&gt;&lt;/script&gt;
+&lt;div id="header"&gt;&lt;/div&gt;
+&lt;!--
+  * might not locate #header (script could fire before parser looks at the next line)
+  * defer will work in sane browsers
+--&gt;
+</code></pre>
+
+<p>Having said that, asynchronous scripts offer these advantages:</p>
+
+<ul>
+<li><strong>Parallel download of resources</strong>:<br>
+Browser can download stylesheets, images and other scripts in parallel without waiting for a script to download and execute.</li>
+<li><strong>Source order independence</strong>:<br>
+You can place the scripts inside head or body without worrying about blocking (useful if you are using a CMS). Execution order still matters though.</li>
+</ul>
+
+<p>It is possible to circumvent the execution order issues by using external scripts that support callbacks. Many third party JavaScript APIs now support non-blocking execution. Here is an example of <a href="http://salman-w.blogspot.com/2014/05/google-maps-asynchronous-loading.html">loading the Google Maps API asynchronously</a>.</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>The standard advice, promoted by the <em>Yahoo!</em> Exceptional Performance team, is to put the <code>&lt;script&gt;</code> tags at the end of the document's <code>&lt;body&gt;</code> element so they don't block rendering of the page.</p>
+<p>But there are some newer approaches that offer better performance, as described in <a href="https://stackoverflow.com/questions/435228/does-google-analytics-have-performance-overhead/435295#435295">this other answer of mine</a> about the load time of the Google Analytics JavaScript file:</p>
+<blockquote>
+<p>There are some <a href="http://stevesouders.com/docs/googleio-20080529.ppt" rel="nofollow noreferrer">great slides</a> by Steve Souders (client-side performance expert) about:</p>
+<ul>
+<li>Different techniques to load external JavaScript files in parallel</li>
+<li>their effect on loading time and page rendering</li>
+<li>what kind of &quot;in progress&quot; indicators the browser displays (e.g. 'loading' in the status bar, hourglass mouse cursor).</li>
+</ul>
+</blockquote>
+</div><p class="this-has-helped">This answer has helped 35 people.</p><div class="s-prose js-post-body"><p><strong>The modern approach is using ES6 'module' type scripts</strong>.</p>
+<pre><code>&lt;script type=&quot;module&quot; src=&quot;...&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p>By default, modules are loaded asynchronously and deferred. i.e. you can place them anywhere and they will load in parallel and execute when the page finishes loading.</p>
+<p>Further reading:</p>
+<ul>
+<li><p><a href="https://stackoverflow.com/questions/39652618/classic-scripts-vs-module-scripts-in-javascript/53821485#53821485">The differences between a script and a module</a></p>
+</li>
+<li><p><a href="https://developers.google.com/web/fundamentals/primers/modules#defer" rel="nofollow noreferrer">The execution of a module being deferred compared to a script(Modules are deferred by default)</a></p>
+</li>
+<li><p><a href="https://caniuse.com/#feat=es6-module" rel="nofollow noreferrer">Browser Support for ES6 Modules</a></p>
+</li>
+</ul>
+</div></body></html>

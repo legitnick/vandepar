@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do I check if an object has a key in JavaScript?</p><div class="s-prose js-post-body"><p>Which is the right thing to do?</p>
+
+<pre><code>if (myObj['key'] == undefined)
+</code></pre>
+
+<p>or</p>
+
+<pre><code>if (myObj['key'] == null)
+</code></pre>
+
+<p>or</p>
+
+<pre><code>if (myObj['key'])
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 3224 people.</p><div class="s-prose js-post-body"><p>Try the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/in" rel="noreferrer">JavaScript <strong>in</strong> operator</a>.</p>
+
+<pre><code>if ('key' in myObj)
+</code></pre>
+
+<p>And the inverse.</p>
+
+<pre><code>if (!('key' in myObj))
+</code></pre>
+
+<p><strong>Be careful!</strong> The <code>in</code> operator matches all object keys, including those in the object's prototype chain.</p>
+
+<p>Use <code>myObj.hasOwnProperty('key')</code> to check an object's own keys and will only return <code>true</code> if <code>key</code> is available on <code>myObj</code> directly:</p>
+
+<pre><code>myObj.hasOwnProperty('key')
+</code></pre>
+
+<p>Unless you have a specific reason to use the <code>in</code> operator, using <code>myObj.hasOwnProperty('key')</code> produces the result most code is looking for.</p>
+</div><p class="this-has-helped">This answer has helped 829 people.</p><div class="s-prose js-post-body"><p>You should use <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty" rel="noreferrer"><code>hasOwnProperty</code></a>. For example:</p>
+
+<pre><code>myObj.hasOwnProperty('myKey');
+</code></pre>
+
+<p><strong>Note:</strong> If you are using ESLint, the above may give you an error for violating the <a href="https://eslint.org/docs/rules/no-prototype-builtins" rel="noreferrer">no-prototype-builtins</a> rule, in that case the workaround is as below:</p>
+
+<pre><code>Object.prototype.hasOwnProperty.call(myObj, 'myKey');
+</code></pre>
+</div></body></html>

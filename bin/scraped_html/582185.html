@@ -1,0 +1,50 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How can I disable landscape mode in Android?</p><div class="s-prose js-post-body"><p>How can I disable landscape mode for some of the views in my Android app?</p>
+</div><p class="this-has-helped">This answer has helped 1794 people.</p><div class="s-prose js-post-body"><p>Add <code>android:screenOrientation=&quot;portrait&quot;</code> to the activity in the AndroidManifest.xml. For example:</p>
+<pre><code>&lt;activity android:name=&quot;.SomeActivity&quot;
+          android:label=&quot;@string/app_name&quot;
+          android:screenOrientation=&quot;portrait&quot; /&gt;
+</code></pre>
+<p>Since this has become a super-popular answer, I feel very guilty as forcing portrait is rarely the right solution to the problems it's frequently applied to. <br/>
+The major caveats with forced portrait:</p>
+<ul>
+<li>This does not absolve you of having to think about activity
+lifecycle events or properly saving/restoring state. There are plenty of
+things besides app rotation that can trigger an activity
+destruction/recreation, including unavoidable things like multitasking. There are no shortcuts; learn to use bundles and <code>retainInstance</code> fragments.</li>
+<li>Keep in mind that unlike the fairly uniform iPhone experience, there are some devices where portrait is not the clearly popular orientation. When users are on devices with hardware keyboards or game pads a la the Nvidia Shield, on <a href="https://support.google.com/chromebook/answer/7021273?hl=en" rel="noreferrer">Chromebooks</a>, on <a href="https://android-developers.googleblog.com/2018/11/get-your-app-ready-for-foldable-phones.html" rel="noreferrer">foldables</a>, or on <a href="https://www.samsung.com/global/galaxy/apps/samsung-dex/" rel="noreferrer">Samsung DeX</a>, forcing portrait can make your app experience either limiting or a giant usability hassle. If your app doesn't have a strong UX argument that would lead to a negative experience for supporting other orientations, you should probably not force landscape. I'm talking about things like &quot;this is a cash register app for one specific model of tablet always used in a fixed hardware dock.&quot;</li>
+</ul>
+<p>So most apps should just let the phone sensors, software, and physical configuration make their own decision about how the user wants to interact with your app. A few cases you may still want to think about, though, if you're not happy with the default behavior of <code>sensor</code> orientation in your use case:</p>
+<ul>
+<li>If your main concern is accidental orientation changes mid-activity that you think the device's sensors and software won't cope with well (for example, in a tilt-based game) consider supporting landscape and portrait, but using <code>nosensor</code> for the orientation. This forces landscape on most tablets and portrait on most phones, but I still wouldn't recommend this for most &quot;normal&quot; apps (some users just like to type in the landscape softkeyboard on their phones, and many tablet users read in portrait - and you should let them).</li>
+<li>If you <em>still</em> need to force portrait for some reason, <code>sensorPortrait</code> may be better than <code>portrait</code> for <a href="https://en.wikipedia.org/wiki/Android_Gingerbread" rel="noreferrer">Android 2.3</a> (Gingerbread) and later; this allows for upside-down portrait, which is quite common in tablet usage.</li>
+</ul>
+</div><p class="this-has-helped">This answer has helped 119 people.</p><div class="s-prose js-post-body"><p>I was not aware of the <code>AndroidManifest.xml</code> file switch until reading this post, so in my apps I have used this instead:</p>
+<pre><code>setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT); // Fixed portrait orientation
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 52 people.</p><div class="s-prose js-post-body"><p>Add <code>android:screenOrientation=&quot;portrait&quot;</code> in your manifest file where you declare your activity. Like this:</p>
+<pre><code>&lt;activity 
+    android:name=&quot;.yourActivity&quot;
+    ....
+    android:screenOrientation=&quot;portrait&quot; /&gt;
+</code></pre>
+<p>If you want to do it using Java code, try:</p>
+<pre><code>setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+</code></pre>
+<p>before you call <code>setContentView</code> method for your activity in <code>onCreate()</code>.</p>
+</div><p class="this-has-helped">This answer has helped 32 people.</p><div class="s-prose js-post-body"><p>A lot of the answers here are suggesting to use <code>"portrait"</code> in your AndroidManifest.xml file.  This might seem like a good solution - but as noted in the documentation, you are singling out devices that may only have landscape.  You are also forcing certain devices (that work best in landscape) to go into portrait, not getting the proper orientation.</p>
+
+<p>My suggestion is to use <code>"nosensor"</code> instead.  This will leave the device to use its default preferred orientation, will not block any purchases/downloads on Google Play, and will ensure the sensor doesn't mess up your (NDK, in my case) game.</p>
+</div><p class="this-has-helped">This answer has helped 20 people.</p><div class="s-prose js-post-body"><p>If you want to disable <strong><code>Landscape mode for your Android app</code></strong> (or a single activity) all you need to do is add:</p>
+<p><strong><code>android:screenOrientation=&quot;portrait&quot;</code></strong> to the activity tag in <em><code>AndroidManifest.xml</code></em> file.</p>
+<p>Like:</p>
+<pre><code>&lt;activity 
+    android:name=&quot;YourActivityName&quot;
+    android:icon=&quot;@drawable/ic_launcher&quot;
+    android:label=&quot;Your App Name&quot;
+    android:screenOrientation=&quot;portrait&quot;&gt;
+</code></pre>
+<p><strong>Another way: A programmatic approach.</strong></p>
+<p>If you want to do this programmatically, i.e., using Java code. You can do so by adding the below code in the Java class of the activity that you don't want to be displayed in landscape mode.</p>
+<pre><code>setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+</code></pre>
+</div></body></html>

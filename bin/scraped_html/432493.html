@@ -1,0 +1,160 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>How do you access the matched groups in a JavaScript regular expression?</p><div class="s-prose js-post-body"><p>I want to match a portion of a string using a <a href="https://en.wikipedia.org/wiki/Regular_expression" rel="noreferrer">regular expression</a> and then access that parenthesized substring:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var myString = "something format_abc"; // I want "abc"
+
+var arr = /(?:^|\s)format_(.*?)(?:\s|$)/.exec(myString);
+
+console.log(arr); // Prints: [" format_abc", "abc"] .. so far so good.
+console.log(arr[1]); // Prints: undefined  (???)
+console.log(arr[0]); // Prints: format_undefined (!!!)</code></pre>
+</div>
+</div>
+</p>
+<p>What am I doing wrong?</p>
+<hr />
+<p>I've discovered that there was nothing wrong with the regular expression code above: the actual string which I was testing against was this:</p>
+<pre><code>&quot;date format_%A&quot;
+</code></pre>
+<p>Reporting that &quot;%A&quot; is undefined seems a very strange behaviour, but it is not directly related to this question, so I've opened a new one, <em><a href="https://stackoverflow.com/questions/432826/why-is-a-matched-substring-returning-undefined-in-javascript">Why is a matched substring returning &quot;undefined&quot; in JavaScript?</a></em>.</p>
+<hr />
+<p>The issue was that <code>console.log</code> takes its parameters like a <code>printf</code> statement, and since the string I was logging (<code>&quot;%A&quot;</code>) had a special value, it was trying to find the value of the next parameter.</p>
+</div><p class="this-has-helped">This answer has helped 1967 people.</p><div class="s-prose js-post-body"><h2>Update: 2019-09-10</h2>
+<p>The old way to iterate over multiple matches was not very intuitive. This lead to the proposal of the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/matchAll" rel="noreferrer"><code>String.prototype.matchAll</code></a> method. This new method is in the <a href="https://tc39.es/ecma262/#sec-string.prototype.matchall" rel="noreferrer">ECMAScript 2020 specification</a>. It gives us a clean API and solves multiple problems. It is in major browsers and JS engines since <a href="https://v8.dev/features/string-matchall" rel="noreferrer">Chrome 73+ / Node 12+</a> and Firefox 67+.</p>
+<p>The method returns an iterator and is used as follows:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>const string = "something format_abc";
+const regexp = /(?:^|\s)format_(.*?)(?:\s|$)/g;
+const matches = string.matchAll(regexp);
+    
+for (const match of matches) {
+  console.log(match);
+  console.log(match.index)
+}</code></pre>
+</div>
+</div>
+</p>
+<p>As it returns an iterator, we can say it's lazy, this is useful when handling particularly large numbers of capturing groups, or very large strings. But if you need, the result can be easily transformed into an Array by using the <em>spread syntax</em> or the <code>Array.from</code> method:</p>
+<pre><code>function getFirstGroup(regexp, str) {
+  const array = [...str.matchAll(regexp)];
+  return array.map(m =&gt; m[1]);
+}
+
+// or:
+function getFirstGroup(regexp, str) {
+  return Array.from(str.matchAll(regexp), m =&gt; m[1]);
+}
+</code></pre>
+<p>In the meantime, while this proposal gets more wide support, you can use the <a href="https://www.npmjs.com/package/string.prototype.matchall" rel="noreferrer">official shim package</a>.</p>
+<p>Also, the internal workings of the method are simple. An equivalent implementation using a generator function would be as follows:</p>
+<pre><code>function* matchAll(str, regexp) {
+  const flags = regexp.global ? regexp.flags : regexp.flags + &quot;g&quot;;
+  const re = new RegExp(regexp, flags);
+  let match;
+  while (match = re.exec(str)) {
+    yield match;
+  }
+}
+</code></pre>
+<p>A copy of the original regexp is created; this is to avoid side-effects due to the mutation of the <code>lastIndex</code> property when going through the multple matches.</p>
+<p>Also, we need to ensure the regexp has the <em>global</em> flag to avoid an infinite loop.</p>
+<p>I'm also happy to see that even this StackOverflow question was referenced in the <a href="https://github.com/tc39/proposal-string-matchall#previous-discussions" rel="noreferrer">discussions of the proposal</a>.</p>
+<h2>original answer</h2>
+<p>You can access capturing groups like this:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var myString = "something format_abc";
+var myRegexp = /(?:^|\s)format_(.*?)(?:\s|$)/g;
+var myRegexp = new RegExp("(?:^|\s)format_(.*?)(?:\s|$)", "g");
+var matches = myRegexp.exec(myString);
+console.log(matches[1]); // abc</code></pre>
+</div>
+</div>
+</p>
+<p>And if there are multiple matches you can iterate over them:</p>
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var myString = "something format_abc";
+var myRegexp = new RegExp("(?:^|\s)format_(.*?)(?:\s|$)", "g");
+match = myRegexp.exec(myString);
+while (match != null) {
+  // matched text: match[0]
+  // match start: match.index
+  // capturing group n: match[n]
+  console.log(match[0])
+  match = myRegexp.exec(myString);
+}</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 201 people.</p><div class="s-prose js-post-body"><p>Here’s a method you can use to get the <em>n</em>​th capturing group for each match:</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>function getMatches(string, regex, index) {
+  index || (index = 1); // default to the first capturing group
+  var matches = [];
+  var match;
+  while (match = regex.exec(string)) {
+    matches.push(match[index]);
+  }
+  return matches;
+}
+
+
+// Example :
+var myString = 'something format_abc something format_def something format_ghi';
+var myRegEx = /(?:^|\s)format_(.*?)(?:\s|$)/g;
+
+// Get an array containing the first capturing group for every match
+var matches = getMatches(myString, myRegEx, 1);
+
+// Log results
+document.write(matches.length + ' matches found: ' + JSON.stringify(matches))
+console.log(matches);</code></pre>
+</div>
+</div>
+</p>
+</div><p class="this-has-helped">This answer has helped 65 people.</p><div class="s-prose js-post-body"><p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>var myString = "something format_abc";
+var arr = myString.match(/\bformat_(.*?)\b/);
+console.log(arr[0] + " " + arr[1]);</code></pre>
+</div>
+</div>
+</p>
+
+<p>The <code>\b</code> isn't exactly the same thing. (It works on <code>--format_foo/</code>, but doesn't work on <code>format_a_b</code>) But I wanted to show an alternative to your expression, which is fine. Of course, the <code>match</code> call is the important thing.</p>
+</div><p class="this-has-helped">This answer has helped 42 people.</p><div class="s-prose js-post-body"><p>Last but not least, I found one line of code that worked fine for me (JS ES6):</p>
+
+<p><div class="snippet" data-lang="js" data-hide="false" data-console="true" data-babel="false">
+<div class="snippet-code">
+<pre class="snippet-code-js lang-js prettyprint-override"><code>let reg = /#([\S]+)/igm; // Get hashtags.
+let string = 'mi alegría es total! ✌🙌\n#fiestasdefindeaño #PadreHijo #buenosmomentos #france #paris';
+
+let matches = (string.match(reg) || []).map(e =&gt; e.replace(reg, '$1'));
+console.log(matches);</code></pre>
+</div>
+</div>
+</p>
+
+<p>This will return:</p>
+
+<pre><code>['fiestasdefindeaño', 'PadreHijo', 'buenosmomentos', 'france', 'paris']
+</code></pre>
+</div><p class="this-has-helped">This answer has helped 35 people.</p><div class="s-prose js-post-body"><p>In regards to the multi-match parentheses examples above, I was looking for an answer here after not getting what I wanted from:</p>
+
+<pre><code>var matches = mystring.match(/(?:neededToMatchButNotWantedInResult)(matchWanted)/igm);
+</code></pre>
+
+<p>After looking at the slightly convoluted function calls with while and .push() above, it dawned on me that the problem can be solved very elegantly with mystring.replace() instead (the replacing is NOT the point, and isn't even done, the CLEAN, built-in recursive function call option for the second parameter is!):</p>
+
+<pre><code>var yourstring = 'something format_abc something format_def something format_ghi';
+
+var matches = [];
+yourstring.replace(/format_([^\s]+)/igm, function(m, p1){ matches.push(p1); } );
+</code></pre>
+
+<p>After this, I don't think I'm ever going to use .match() for hardly anything ever again.</p>
+</div></body></html>

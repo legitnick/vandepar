@@ -1,0 +1,186 @@
+<!DOCTYPE html><html lang="en"><head><style>@import url("https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,200;1,200;1,300&family=Work+Sans:wght@400;500&display=swap");</style><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="ie=edge"><head><link href="../../src/css/general.css" rel="stylesheet" /></head><p class='question-hyperlink'>When should I use a struct rather than a class in C#?</p><div class="s-prose js-post-body"><p>When should you use struct and not class in C#? My conceptual model is that structs are used in times when the item is <em>merely a collection of value types</em>.  A way to logically hold them all together into a cohesive whole.</p>
+
+<p>I came across these rules <a href="https://web.archive.org/web/20110829190107/http://www.johnnycantcode.com/Post/C_Classes_vs._Structs" rel="noreferrer" title="Archived from the original site: www.johnnycantcode.com/Post/C_Classes_vs._Structs">here</a>:</p>
+
+<ul>
+<li>A struct should represent a single
+value.</li>
+<li>A struct should have a memory
+footprint less than 16 bytes.</li>
+<li>A struct should not be changed after
+creation.</li>
+</ul>
+
+<p>Do these rules work? What does a struct mean semantically? </p>
+</div><p class="this-has-helped">This answer has helped 670 people.</p><div class="s-prose js-post-body"><p>The source referenced by the OP has some credibility ...but what about Microsoft - what is the stance on struct usage? I sought some extra <a href="http://msdn.microsoft.com/en-us/library/ms229017.aspx">learning from Microsoft</a>, and here is what I found:  </p>
+
+<blockquote>
+  <p><strong>Consider defining a structure instead of a class if instances of the
+  type are small and commonly short-lived or are commonly embedded in
+  other objects.</strong></p>
+  
+  <p><strong>Do not define a structure unless the type has all of the following characteristics:</strong>  </p>
+  
+  <ol>
+  <li>It logically represents a single value, similar to primitive types (integer, double, and so on).</li>
+  <li>It has an instance size smaller than 16 bytes.</li>
+  <li>It is immutable.</li>
+  <li>It will not have to be boxed frequently.  </li>
+  </ol>
+</blockquote>
+
+<h2>Microsoft consistently violates those rules</h2>
+
+<p>Okay, #2 and #3 anyway. Our beloved dictionary has 2 internal structs:  </p>
+
+<pre><code>[StructLayout(LayoutKind.Sequential)]  // default for structs
+private struct Entry  //&lt;Tkey, TValue&gt;
+{
+    //  View code at *Reference Source
+}
+
+[Serializable, StructLayout(LayoutKind.Sequential)]
+public struct Enumerator : 
+    IEnumerator&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;, IDisposable, 
+    IDictionaryEnumerator, IEnumerator
+{
+    //  View code at *Reference Source
+}
+</code></pre>
+
+<p>*<a href="http://referencesource.microsoft.com/#mscorlib/system/collections/generic/dictionary.cs,d3599058f8d79be0">Reference Source</a></p>
+
+<p>The 'JonnyCantCode.com' source got 3 out of 4 - quite forgivable since #4 probably wouldn't be an issue. If you find yourself boxing a struct, rethink your architecture.  </p>
+
+<p>Let's look at why Microsoft would use these structs:</p>
+
+<ol>
+<li>Each struct, <code>Entry</code> and <code>Enumerator</code>, represent single values.</li>
+<li>Speed</li>
+<li><code>Entry</code> is never passed as a parameter outside of the Dictionary class. Further investigation shows that in order to satisfy implementation of IEnumerable, Dictionary uses the <code>Enumerator</code> struct which it copies every time an enumerator is requested ...makes sense.</li>
+<li>Internal to the Dictionary class. <code>Enumerator</code> is public because Dictionary is enumerable and must have equal accessibility to the IEnumerator interface implementation - e.g. IEnumerator getter.  </li>
+</ol>
+
+<p><strong>Update</strong> - In addition, realize that when a struct implements an interface - as Enumerator does - and is cast to that implemented type, the struct becomes a reference type and is moved to the heap. Internal to the Dictionary class, Enumerator <em>is</em> still a value type. However, as soon as a method calls <code>GetEnumerator()</code>, a reference-type <code>IEnumerator</code> is returned.</p>
+
+<p>What we don't see here is any attempt or proof of requirement to keep structs immutable or maintaining an instance size of only 16 bytes or less:  </p>
+
+<ol>
+<li>Nothing in the structs above is declared <code>readonly</code> - <strong>not</strong> immutable</li>
+<li>Size of these struct could be well over 16 bytes</li>
+<li><code>Entry</code> has an undetermined lifetime (from <code>Add()</code>, to <code>Remove()</code>, <code>Clear()</code>, or garbage collection);</li>
+</ol>
+
+<p>And ...
+ 4. Both structs store TKey and TValue, which we all know are quite capable of being reference types (added bonus info)</p>
+
+<p>Hashed keys notwithstanding, dictionaries are fast in part because instancing a struct is quicker than a reference type. Here, I have a <code>Dictionary&lt;int, int&gt;</code> that stores 300,000 random integers with sequentially incremented keys.</p>
+
+<blockquote>
+  <p>Capacity: 312874<br>
+  MemSize:  2660827 bytes<br>
+  Completed Resize:  5ms<br>
+  Total time to fill:  889ms</p>
+</blockquote>
+
+<p><strong>Capacity</strong>:  number of elements available before the internal array must be resized.  </p>
+
+<p><strong>MemSize</strong>:  determined by serializing the dictionary into a MemoryStream and getting a byte length (accurate enough for our purposes).  </p>
+
+<p><strong>Completed Resize</strong>:  the time it takes to resize the internal array from 150862 elements to 312874 elements. When you figure that each element is sequentially copied via <code>Array.CopyTo()</code>, that ain't too shabby.  </p>
+
+<p><strong>Total time to fill</strong>: admittedly skewed due to logging and an <code>OnResize</code> event I added to the source; however, still impressive to fill 300k integers while resizing 15 times during the operation. Just out of curiosity, what would the total time to fill be if I already knew the capacity? <strong>13ms</strong>  </p>
+
+<p>So, now, what if <code>Entry</code> were a class? Would these times or metrics really differ that much?  </p>
+
+<blockquote>
+  <p>Capacity:  312874<br>
+  MemSize:  2660827 bytes<br>
+  Completed Resize:  26ms<br>
+  Total time to fill:  964ms</p>
+</blockquote>
+
+<p>Obviously, the big difference is in resizing. Any difference if Dictionary is initialized with the Capacity? Not enough to be concerned with ... <strong>12ms</strong>.  </p>
+
+<p>What happens is, because <code>Entry</code> is a struct, it does not require initialization like a reference type. This is both the beauty and the bane of the value type. In order to use <code>Entry</code> as a reference type, I had to insert the following code:</p>
+
+<pre><code>/*
+ *  Added to satisfy initialization of entry elements --
+ *  this is where the extra time is spent resizing the Entry array
+ * **/
+for (int i = 0 ; i &lt; prime ; i++)
+{
+    destinationArray[i] = new Entry( );
+}
+/*  *********************************************** */  
+</code></pre>
+
+<p>The reason I had to initialize each array element of <code>Entry</code> as a reference type can be found at <a href="http://msdn.microsoft.com/en-us/library/ms229031.aspx">MSDN: Structure Design</a>. In short:</p>
+
+<blockquote>
+  <p><strong>Do not provide a default constructor for a structure.</strong></p>
+  
+  <p>If a structure defines a default constructor, when arrays of the
+  structure are created, the common language runtime automatically
+  executes the default constructor on each array element.</p>
+  
+  <p>Some compilers, such as the C# compiler, do not allow structures to
+  have default constructors.</p>
+</blockquote>
+
+<p>It is actually quite simple and we will borrow from <a href="http://en.wikipedia.org/wiki/Three_Laws_of_Robotics">Asimov's <em>Three Laws of Robotics</em></a>:</p>
+
+<ol>
+<li>The struct must be safe to use</li>
+<li>The struct must perform its function efficiently, unless this would violate rule #1</li>
+<li>The struct must remain intact during its use unless its destruction is required to satisfy rule #1  </li>
+</ol>
+
+<p>...<em>what do we take away from this</em>: in short, be responsible with the use of value types. They are quick and efficient, but have the ability to cause many unexpected behaviors if not properly maintained (i.e. unintentional copies).  </p>
+</div><p class="this-has-helped">This answer has helped 187 people.</p><div class="s-prose js-post-body"><p>Whenever you:</p>
+
+<ol>
+<li>don't need polymorphism,</li>
+<li>want value semantics, and </li>
+<li>want to avoid heap allocation and the associated garbage collection overhead.  </li>
+</ol>
+
+<p>The caveat, however, is that structs (arbitrarily large) are more expensive to pass around than class references (usually one machine word), so classes could end up being faster in practice.</p>
+</div><p class="this-has-helped">This answer has helped 172 people.</p><div class="s-prose js-post-body"><p>I do not agree with the rules given in the original post. Here are my rules:</p>
+<ol>
+<li><p>You use structs for performance when stored in arrays. (see also <a href="https://stackoverflow.com/questions/597259/when-are-structs-the-answer/598182#598182">When are structs the answer?</a>)</p>
+</li>
+<li><p>You need them in code passing structured data to/from C/C++</p>
+</li>
+<li><p>Do not use structs unless you need them:</p>
+<ul>
+<li>They behave different from &quot;normal objects&quot; (<em>reference types</em>) under assignment and
+when passing as arguments, which can lead to unexpected behavior;
+this is particularly dangerous if the person looking at the code does
+not know they are dealing with a struct.</li>
+<li>They cannot be inherited.</li>
+<li>Passing structs as arguments is more expensive than classes.</li>
+</ul>
+</li>
+</ol>
+</div><p class="this-has-helped">This answer has helped 99 people.</p><div class="s-prose js-post-body"><p>Use a struct when you want value semantics as opposed to reference semantics.</p>
+<p>If you need reference semantics you need a class not a struct.</p>
+</div><p class="this-has-helped">This answer has helped 66 people.</p><div class="s-prose js-post-body"><p>In addition to the "it is a value" answer, one specific scenario for using structs is when you <strong><em>know</em></strong> that you have a set of data that is causing garbage collection issues, and you have lots of objects. For example, a large list/array of Person instances. The natural metaphor here is a class, but if you have large number of long-lived Person instance, they can end up clogging GEN-2 and causing GC stalls. If the scenario warrants it, one potential approach here is to use an array (not list) of Person <strong>structs</strong>, i.e. <code>Person[]</code>. Now, instead of having millions of objects in GEN-2, you have a single chunk on the LOH (I'm assuming no strings etc here - i.e. a pure value without any references). This has very little GC impact.</p>
+
+<p>Working with this data is awkward, as the data is probably over-sized for a struct, and you don't want to copy fat values all the time. However, accessing it directly in an array does not copy the struct - it is in-place (contrast to a list indexer, which does copy). This means lots of work with indexes:</p>
+
+<pre><code>int index = ...
+int id = peopleArray[index].Id;
+</code></pre>
+
+<p>Note that keeping the values themselves immutable will help here. For more complex logic, use a method with a by-ref parameter:</p>
+
+<pre><code>void Foo(ref Person person) {...}
+...
+Foo(ref peopleArray[index]);
+</code></pre>
+
+<p>Again, this is in-place - we have not copied the value.</p>
+
+<p>In very specific scenarios, this tactic can be very successful; however, it is a fairly advanced scernario that should be attempted only if you know what you are doing and why. The default here would be a class.</p>
+</div></body></html>
