@@ -1,7 +1,7 @@
 import { upload } from 'youtube-videos-uploader' //Typescript
 
 // recoveryemail is optional, only required to bypass login with recovery email if prompted for confirmation
-const credentials = { email: 'baka@mitai.com', pass: 'abrakadabra'  }
+const credentials = { email: process.env.GOOGLE_EMAIL, pass: process.env.GOOGLE_PASSWORD  }
 
 // minimum required options to upload video
 //const video1 = { path: './bin/video_complete/1125968.mp4', title: 'title 1', description: 'description 1' }
