@@ -6,7 +6,7 @@ import edit from "./src/video_edit.js";
 
 async function main () {
   await Promise.all([scrape (),
-    //transformAll().catch(console.error),
+    transformAll().catch(console.error),
     edit()]);
 
   main();
