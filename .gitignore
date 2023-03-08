@@ -8,4 +8,4 @@ bin/video_final/
 *.txt
 *.mp4
 .env
-yt_auth/
+yt-auth/
