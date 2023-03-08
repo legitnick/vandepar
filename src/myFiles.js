@@ -52,6 +52,7 @@ export const video_w_mus_ts_arr = ()=>fs.readdirSync(video_complete_dir).filter(
 export const video_to_ts_arr = ()=>video_w_mus_arr().filter(el=>!video_w_mus_ts_arr().includes(parseInt(el)+".ts"))
 export const video_to_final_arr = ()=>video_w_mus_ts_arr().filter(el=>!fs.readdirSync(video_final_dir).includes(parseInt(el)+".mp4"));
 
+export const video_final_dir_arr = fs.readdirSync(video_final_dir);
 //so repetitive, huh
 //also might wanna do some db?
 
