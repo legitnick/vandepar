@@ -7,3 +7,5 @@ bin/video_final/
 *.json
 *.txt
 *.mp4
+.env
+yt_auth/
